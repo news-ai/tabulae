@@ -3,13 +3,9 @@ package tabulae
 import (
 	"encoding/json"
 	"net/http"
-)
 
-var (
-	// The cities that we will serve
-	cities = []string{
-		"Amsterdam", "San Francisco", "Paris", "New York", "Portland",
-	}
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/user"
 )
 
 func init() {
@@ -19,8 +15,9 @@ func init() {
 }
 
 func handleIndex(rw http.ResponseWriter, req *http.Request) {
-	rw.Header().Set("Content-Type", "application/json")
-
-	encoder := json.NewEncoder(rw)
-	encoder.Encode(cities)
+	ctx := appengine.NewContext(req)
+	u := user.Current(ctx)
+	url, _ := user.LogoutURL(ctx, "/")
+	res.Header().Set("Content-Type", "text/html")
+	fmt.Fprintf(res, `Welcome, %s! (<a href="%s">sign out</a>)`, u, url)
 }
