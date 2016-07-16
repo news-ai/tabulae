@@ -1,21 +1,24 @@
 package routes
 
 import (
-	"github.com/news-ai/tabulae"
-    "github.com/news-ai/tabulae/models"
+	"encoding/json"
+	"fmt"
+	"net/http"
 
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/datastore"
+	"appengine"
+
+	"github.com/news-ai/tabulae/models"
 )
 
 func handleUser(c appengine.Context, r *http.Request) (interface{}, error) {
-    switch r.Method {
-    case "GET":
-        return models.getCurrentUser(c)
-    return nil, fmt.Errorf("method not implemented")
+	switch r.Method {
+	case "GET":
+		return models.GetCurrentUser(c)
+	}
+	return nil, fmt.Errorf("method not implemented")
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func UserHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	val, err := handleUser(c, r)
 	if err == nil {

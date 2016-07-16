@@ -1,19 +1,20 @@
 package tabulae
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/user"
+	"appengine"
+	"appengine/user"
+
+	"github.com/news-ai/tabulae/routes"
 )
 
 func init() {
 	// Register the index handler to the
 	// default DefaultServeMux.
 	http.HandleFunc("/", handleIndex)
-	http.HandleFunc("/api/user", userIndex)
+	http.HandleFunc("/api/user", routes.UserHandler)
 }
 
 func handleIndex(res http.ResponseWriter, req *http.Request) {
@@ -22,13 +23,4 @@ func handleIndex(res http.ResponseWriter, req *http.Request) {
 	url, _ := user.LogoutURL(ctx, "/")
 	res.Header().Set("Content-Type", "text/html")
 	fmt.Fprintf(res, `Welcome, %s! (<a href="%s">sign out</a>)`, u, url)
-}
-
-func userIndex(res http.ResponseWriter, req *http.Request) {
-	res.Header().Set("Content-Type", "application/json")
-	ctx := appengine.NewContext(req)
-	u := user.Current(ctx)
-
-	encoder := json.NewEncoder(res)
-	encoder.Encode(u)
 }

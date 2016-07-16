@@ -1,17 +1,33 @@
 package models
 
 import (
-	"github.com/news-ai/tabulae"
+	"encoding/json"
+	"io"
+	"time"
 
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/datastore"
+	"appengine"
+	"appengine/datastore"
+	"appengine/user"
 )
+
+type User struct {
+	Id       int64  `json:"id" datastore:"-"`
+	GoogleId string `json:"googleid"`
+
+	Email     string `json:"email"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+
+	Agency int64 `json:"agencyid" datastore:"-"`
+
+	Created time.Time `json:"created"`
+}
 
 func defaultUserList(c appengine.Context) *datastore.Key {
 	return datastore.NewKey(c, "UserList", "default", 0, nil)
 }
 
-func (u *tabulae.User) key(c appengine.Context) *datastore.Key {
+func (u *User) key(c appengine.Context) *datastore.Key {
 	if u.Id == 0 {
 		u.Created = time.Now()
 		return datastore.NewIncompleteKey(c, "User", defaultUserList(c))
@@ -19,7 +35,7 @@ func (u *tabulae.User) key(c appengine.Context) *datastore.Key {
 	return datastore.NewKey(c, "User", "", u.Id, defaultUserList(c))
 }
 
-func (u *tabulae.User) save(c appengine.Context) (*tabulae.User, error) {
+func (u *User) save(c appengine.Context) (*User, error) {
 	k, err := datastore.Put(c, u.key(c), u)
 	if err != nil {
 		return nil, err
@@ -28,21 +44,38 @@ func (u *tabulae.User) save(c appengine.Context) (*tabulae.User, error) {
 	return u, nil
 }
 
-func decodeUser(r io.ReadCloser) (*tabulae.User, error) {
+func decodeUser(r io.ReadCloser) (*User, error) {
 	defer r.Close()
-	var user tabulae.User
+	var user User
 	err := json.NewDecoder(r).Decode(&user)
 	return &user, err
 }
 
-func getCurrentUser(c appengine.Context) (tabulae.User, error) {
-	user := []tabulae.User{}
-	ks, err := datastore.NewQuery("User").Ancestor(defaultUserList(c)).Order("Created").GetAll(c, &user)
+func createNewUser(c appengine.Context, googleId string, email string) User {
+	newUser := User{}
+	newUser.Email = email
+	newUser.GoogleId = googleId
+	newUser.save(c)
+	return newUser
+}
+
+func GetCurrentUser(c appengine.Context) (User, error) {
+	currentUser := user.Current(c)
+	users := []User{}
+	ks, err := datastore.NewQuery("User").Filter("Email =", currentUser.Email).GetAll(c, &users)
 	if err != nil {
-		return nil, err
+		return User{}, err
 	}
-	for i := 0; i < len(todos); i++ {
-		user[i].Id = ks[i].IntID()
+	for i := 0; i < len(users); i++ {
+		users[i].Id = ks[i].IntID()
 	}
-	return user[0], nil
+
+	// If there is a user
+	if len(users) > 0 {
+		return users[0], nil
+	}
+
+	// Add the user if there is no user
+	newUser := createNewUser(c, currentUser.ID, currentUser.Email)
+	return newUser, nil
 }
