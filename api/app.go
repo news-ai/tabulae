@@ -1,26 +1,39 @@
 package tabulae
 
 import (
-	"fmt"
 	"net/http"
 
-	"appengine"
-	"appengine/user"
+	"github.com/codegangsta/negroni"
+	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 
 	"github.com/news-ai/tabulae/routes"
 )
 
 func init() {
-	// Register the index handler to the
-	// default DefaultServeMux.
-	http.HandleFunc("/", handleIndex)
-	http.HandleFunc("/api/user", routes.UserHandler)
-}
+	// Setting up Negroni Router
+	app := negroni.New()
+	app.Use(negroni.NewRecovery())
+	app.Use(negroni.NewLogger())
 
-func handleIndex(res http.ResponseWriter, req *http.Request) {
-	ctx := appengine.NewContext(req)
-	u := user.Current(ctx)
-	url, _ := user.LogoutURL(ctx, "/")
-	res.Header().Set("Content-Type", "text/html")
-	fmt.Fprintf(res, `Welcome, %s! (<a href="%s">sign out</a>)`, u, url)
+	// CORs
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://foo.com"},
+	})
+	app.Use(c)
+
+	// API router
+	api := mux.NewRouter().PathPrefix("/api").Subrouter().StrictSlash(true)
+	api.HandleFunc("/users", routes.UsersHandler)
+	// api.HandleFunc("/lists", routes.UsersHandler)
+	// api.HandleFunc("/agencies", routes.UsersHandler)
+
+	// Main router
+	main := mux.NewRouter().StrictSlash(true)
+	main.PathPrefix("/api").Handler(negroni.New(negroni.Wrap(api)))
+
+	// HTTP router
+	app.UseHandler(main)
+	http.Handle("/", context.ClearHandler(app))
 }
