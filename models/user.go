@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"strings"
 	"time"
 
 	"appengine"
@@ -56,21 +55,37 @@ func (u *User) create(c appengine.Context) (*User, error) {
 	_, err := u.save(c)
 
 	// Put user into a agency
-	splitEmail := strings.Split(currentUser.Email, "@")
-	if len(splitEmail) > 1 {
-		agency, err := GetAgencyByEmail(c, splitEmail[1])
+	agencyEmail, err := GetAgencyEmail(currentUser.Email)
+	if err != nil {
+		return u, err
+	} else {
+		agency, err := GetAgencyByEmail(c, agencyEmail)
 		if err != nil {
 			agency = Agency{}
-			agency.Email = splitEmail[1]
+			agency.Email = agencyEmail
 			agency.create(c)
 		}
 		u.Agency = IntIdToString(agency.Id)
 		u.save(c)
-	} else {
-		return u, errors.New("Email is invalid")
 	}
 
 	return u, err
+}
+
+func (u *User) update(c appengine.Context) (*User, error) {
+	user, err := getCurrentUser(c)
+	if user.Agency == "" {
+		agency := Agency{}
+		agency.Email, err = GetAgencyEmail(user.Email)
+		if err != nil {
+			return u, err
+		}
+		agency.create(c)
+		u.Agency = IntIdToString(agency.Id)
+		u.save(c)
+		return u, nil
+	}
+	return u, nil
 }
 
 // Gets every single user
@@ -125,6 +140,8 @@ func GetUser(c appengine.Context, id string) (User, error) {
 			// Add the user if there is no user
 			user := User{}
 			_, err = user.create(c)
+		} else {
+			user.update(c)
 		}
 		return user, err
 	default:
