@@ -31,6 +31,7 @@ func handleUsers(c appengine.Context, r *http.Request, id string) (interface{}, 
 func UsersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
+	u := GetUser(c, w)
 
 	// If there is an ID
 	vars := mux.Vars(r)
@@ -49,6 +50,11 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
+		err := ListAllowed(w, r, u)
+		if err != nil {
+			return
+		}
+
 		val, err := handleUsers(c, r, id)
 
 		if err == nil {
