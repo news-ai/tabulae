@@ -20,6 +20,7 @@ type User struct {
 	Agency int64 `json:"agencyid" datastore:"-"`
 
 	Created time.Time `json:"created"`
+	Updated time.Time `json:"updated"`
 }
 
 // Code to get data from App Engine
@@ -107,7 +108,7 @@ func GetUser(c appengine.Context, id string) (User, error) {
 			user := User{}
 			_, err = user.create(c)
 		}
-		return user, nil
+		return user, err
 	default:
 		user, err := getUser(c, id)
 		if err != nil {
