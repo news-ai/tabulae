@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/models"
 )
 
@@ -47,7 +48,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		c.Errorf("user error: %#v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		middleware.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
 		return
 	}
 }
@@ -78,7 +79,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			c.Errorf("user error: %#v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			middleware.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
 			return
 		}
 	}
