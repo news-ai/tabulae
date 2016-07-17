@@ -4,13 +4,11 @@ import (
 	"time"
 )
 
-type Contact struct {
+type Publication struct {
 	Id int64 `json:"id" datastore:"-"`
 
-	Name  string `json:"name"`
-	Email string `json:"email"`
-
-	WorksAt []int64 `json:"worksat" datastore:"-"`
+	Name string `json:"name"`
+	Url  string `json:"url"`
 
 	CreatedBy int64 `json:"createdby" datastore:"-"`
 

@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"strconv"
 	"time"
 
 	"appengine"
@@ -16,7 +15,7 @@ type Agency struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 
-	CreatedBy int64 `json:"createdby" datastore:"-"`
+	CreatedBy string `json:"createdby"`
 
 	Created time.Time `json:"created"`
 }
@@ -47,12 +46,10 @@ func (a *Agency) save(c appengine.Context) (*Agency, error) {
 
 func (a *Agency) create(c appengine.Context) (*Agency, error) {
 	currentUser := user.Current(c)
-	currentUserId, err := strconv.ParseInt(currentUser.ID, 10, 32)
-	if err != nil {
-		return &Agency{}, err
-	}
-	a.CreatedBy = currentUserId
-	_, err = a.save(c)
+
+	a.CreatedBy = currentUser.ID
+	a.Created = time.Now()
+	_, err := a.save(c)
 	return a, err
 }
 
@@ -81,6 +78,29 @@ func getAgency(c appengine.Context, id string) (Agency, error) {
 		return agencies[0], nil
 	}
 	return Agency{}, errors.New("No agency by this id")
+}
+
+func getAgencyByEmail(c appengine.Context, email string) (Agency, error) {
+	// Get the current signed in user details by Email
+	agencies := []Agency{}
+	ks, err := datastore.NewQuery("Agency").Filter("Email =", email).GetAll(c, &agencies)
+	if err != nil {
+		return Agency{}, err
+	}
+	if len(agencies) > 0 {
+		agencies[0].Id = ks[0].IntID()
+		return agencies[0], nil
+	}
+	return Agency{}, errors.New("No agency by this id")
+}
+
+func GetAgencyByEmail(c appengine.Context, email string) (Agency, error) {
+	// Get the id of the current agency
+	agency, err := getAgencyByEmail(c, email)
+	if err != nil {
+		return Agency{}, err
+	}
+	return agency, nil
 }
 
 func GetAgency(c appengine.Context, id string) (Agency, error) {

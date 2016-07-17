@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"appengine"
@@ -17,7 +18,7 @@ type User struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 
-	Agency int64 `json:"agencyid" datastore:"-"`
+	Agency string `json:"agencyid"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -48,10 +49,27 @@ func (u *User) save(c appengine.Context) (*User, error) {
 }
 
 func (u *User) create(c appengine.Context) (*User, error) {
+	// Create user
 	currentUser := user.Current(c)
-	u.Email = currentUser.ID
-	u.GoogleId = currentUser.Email
+	u.Email = currentUser.Email
+	u.GoogleId = currentUser.ID
 	_, err := u.save(c)
+
+	// Put user into a agency
+	splitEmail := strings.Split(currentUser.Email, "@")
+	if len(splitEmail) > 1 {
+		agency, err := GetAgencyByEmail(c, splitEmail[1])
+		if err != nil {
+			agency = Agency{}
+			agency.Email = splitEmail[1]
+			agency.create(c)
+		}
+		u.Agency = IntIdToString(agency.Id)
+		u.save(c)
+	} else {
+		return u, errors.New("Email is invalid")
+	}
+
 	return u, err
 }
 
