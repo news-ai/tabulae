@@ -2,5 +2,7 @@
 
 API for media monitoring
 
-Running: `goapp serve`
-Deploying: `goapp deploy github.com/news-ai/tabulae`
+In the `/api/` folder:
+
+- Running: `goapp serve`
+- Deploying: `goapp deploy`
