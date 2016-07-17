@@ -1,9 +1,7 @@
 package models
 
 import (
-	"encoding/json"
 	"errors"
-	"io"
 	"time"
 
 	"appengine"
@@ -24,10 +22,12 @@ type User struct {
 	Created time.Time `json:"created"`
 }
 
+// Code to get data from App Engine
 func defaultUserList(c appengine.Context) *datastore.Key {
 	return datastore.NewKey(c, "UserList", "default", 0, nil)
 }
 
+// Generates a new key for the data to be stored on App Engine
 func (u *User) key(c appengine.Context) *datastore.Key {
 	if u.Id == 0 {
 		u.Created = time.Now()
@@ -36,6 +36,7 @@ func (u *User) key(c appengine.Context) *datastore.Key {
 	return datastore.NewKey(c, "User", "", u.Id, defaultUserList(c))
 }
 
+// Function to save a new user into App Engine
 func (u *User) save(c appengine.Context) (*User, error) {
 	k, err := datastore.Put(c, u.key(c), u)
 	if err != nil {
@@ -45,14 +46,16 @@ func (u *User) save(c appengine.Context) (*User, error) {
 	return u, nil
 }
 
-func decodeUser(r io.ReadCloser) (*User, error) {
-	defer r.Close()
-	var user User
-	err := json.NewDecoder(r).Decode(&user)
-	return &user, err
+func (u *User) create(c appengine.Context) (*User, error) {
+	currentUser := user.Current(c)
+	u.Email = currentUser.ID
+	u.GoogleId = currentUser.Email
+	_, err := u.save(c)
+	return u, err
 }
 
-func GetUsers(c appengine.Context, id string) ([]User, error) {
+// Gets every single user
+func GetUsers(c appengine.Context) ([]User, error) {
 	// Get the current signed in user details by Email
 	users := []User{}
 	ks, err := datastore.NewQuery("User").GetAll(c, &users)
@@ -68,7 +71,7 @@ func GetUsers(c appengine.Context, id string) ([]User, error) {
 func getUser(c appengine.Context, id string) (User, error) {
 	// Get the current signed in user details by Email
 	users := []User{}
-	ks, err := datastore.NewQuery("User").Filter("Id =", id).GetAll(c, &users)
+	ks, err := datastore.NewQuery("User").Filter("ID =", id).GetAll(c, &users)
 	if err != nil {
 		return User{}, err
 	}
@@ -94,27 +97,18 @@ func getCurrentUser(c appengine.Context) (User, error) {
 	return User{}, errors.New("No user by this email")
 }
 
-func createUser(c appengine.Context) User {
-	currentUser := user.Current(c)
-	newUser := User{}
-	newUser.Email = currentUser.ID
-	newUser.GoogleId = currentUser.Email
-	newUser.save(c)
-	return newUser
-}
-
 func GetUser(c appengine.Context, id string) (User, error) {
 	// Get the details of the current user
-	if id == "me" {
+	switch id {
+	case "me":
 		user, err := getCurrentUser(c)
-
 		if err != nil {
 			// Add the user if there is no user
-			newUser := createUser(c)
-			user = newUser
+			user := User{}
+			_, err = user.create(c)
 		}
 		return user, nil
-	} else {
+	default:
 		user, err := getUser(c, id)
 		if err != nil {
 			return User{}, errors.New("No user by this id")

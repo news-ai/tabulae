@@ -19,13 +19,15 @@ func init() {
 
 	// CORs
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://foo.com"},
+		AllowedOrigins: []string{"https://newsai.org"},
 	})
 	app.Use(c)
 
 	// API router
 	api := mux.NewRouter().PathPrefix("/api").Subrouter().StrictSlash(true)
+	api.HandleFunc("/", routes.BaseHandler)
 	api.HandleFunc("/users", routes.UsersHandler)
+	api.HandleFunc("/users/{id}", routes.UserHandler)
 	// api.HandleFunc("/lists", routes.ListsHandler)
 	// api.HandleFunc("/agencies", routes.AgenciesHandler)
 
