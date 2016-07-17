@@ -28,8 +28,9 @@ func init() {
 	api.HandleFunc("/", routes.BaseHandler)
 	api.HandleFunc("/users", routes.UsersHandler)
 	api.HandleFunc("/users/{id}", routes.UserHandler)
+	api.HandleFunc("/agencies", routes.AgenciesHandler)
+	api.HandleFunc("/agencies/{id}", routes.AgencyHandler)
 	// api.HandleFunc("/lists", routes.ListsHandler)
-	// api.HandleFunc("/agencies", routes.AgenciesHandler)
 
 	// Main router
 	main := mux.NewRouter().StrictSlash(true)
