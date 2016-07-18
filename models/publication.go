@@ -1,7 +1,9 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
+	"net/http"
 	"time"
 
 	"appengine"
@@ -37,13 +39,15 @@ func (p *Publication) key(c appengine.Context) *datastore.Key {
 * Get methods
  */
 
-func getPublication(c appengine.Context, id string) (Publication, error) {
+func getPublication(c appengine.Context, id int64) (Publication, error) {
 	// Get the publication details by id
 	publications := []Publication{}
-	ks, err := datastore.NewQuery("Publication").Filter("ID =", id).GetAll(c, &publications)
+	publicationId := datastore.NewKey(c, "Publication", "", id, nil)
+	ks, err := datastore.NewQuery("Publication").Filter("__key__ =", publicationId).GetAll(c, &publications)
 	if err != nil {
 		return Publication{}, err
 	}
+
 	if len(publications) > 0 {
 		publications[0].Id = ks[0].IntID()
 		return publications[0], nil
@@ -131,7 +135,7 @@ func GetPublications(c appengine.Context) ([]Publication, error) {
 	return publications, nil
 }
 
-func GetPublication(c appengine.Context, id string) (Publication, error) {
+func GetPublication(c appengine.Context, id int64) (Publication, error) {
 	// Get a publication by id
 	publication, err := getPublication(c, id)
 	if err != nil {
@@ -161,6 +165,24 @@ func GetPublicationByName(c appengine.Context, name string) (Publication, error)
 /*
 * Create methods
  */
+
+// Method not completed
+func CreatePublication(c appengine.Context, w http.ResponseWriter, r *http.Request) (Publication, error) {
+	decoder := json.NewDecoder(r.Body)
+	var publication Publication
+	err := decoder.Decode(&publication)
+	if err != nil {
+		return Publication{}, err
+	}
+
+	// Create publication
+	_, err = publication.create(c)
+	if err != nil {
+		return Publication{}, err
+	}
+
+	return publication, nil
+}
 
 func CreatePublicationFromName(c appengine.Context, name string) (Publication, error) {
 	publication := Publication{}

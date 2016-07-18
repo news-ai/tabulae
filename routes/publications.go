@@ -13,7 +13,7 @@ import (
 	"github.com/news-ai/tabulae/models"
 )
 
-func handlePublication(c appengine.Context, r *http.Request, id string) (interface{}, error) {
+func handlePublication(c appengine.Context, r *http.Request, id int64) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return models.GetPublication(c, id)
@@ -21,10 +21,12 @@ func handlePublication(c appengine.Context, r *http.Request, id string) (interfa
 	return nil, fmt.Errorf("method not implemented")
 }
 
-func handlePublications(c appengine.Context, r *http.Request) (interface{}, error) {
+func handlePublications(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return models.GetPublications(c)
+	case "POST":
+		return models.CreatePublication(c, w, r)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }
@@ -40,7 +42,7 @@ func PublicationsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	val, err := handlePublications(c, r)
+	val, err := handlePublications(c, w, r)
 
 	if err == nil {
 		err = json.NewEncoder(w).Encode(val)
@@ -62,12 +64,20 @@ func PublicationHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 	if ok {
-		val, err := handlePublication(c, r, id)
+		// Convert ID to int64
+		currentId, err := models.StringIdToInt(id)
+		if err != nil {
+			c.Errorf("publication error: %#v", err)
+			middleware.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())
+			return
+		}
 
+		val, err := handlePublication(c, r, currentId)
 		if err == nil {
 			err = json.NewEncoder(w).Encode(val)
 		}
 
+		// If any error from handlePublication function
 		if err != nil {
 			c.Errorf("publication error: %#v", err)
 			middleware.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())

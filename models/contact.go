@@ -136,6 +136,16 @@ func CreateContact(c appengine.Context, w http.ResponseWriter, r *http.Request) 
 		return Contact{}, err
 	}
 
+	// WorksAt
+	for i := 0; i < len(contact.WorksAt); i++ {
+		publication, err := GetPublication(c, contact.WorksAt[i].Id)
+		if err != nil {
+			return Contact{}, err
+		}
+		contact.WorksAt[i] = publication
+	}
+
+	// Create contact
 	_, err = contact.create(c)
 	if err != nil {
 		return Contact{}, err
