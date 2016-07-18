@@ -16,12 +16,7 @@ type MediaList struct {
 	CreatedBy User `json:"createdby" datastore:"-"`
 
 	Created time.Time `json:"created"`
-}
-
-// Code to get data from App Engine:
-// There should be double Lists. The name of the container is MediaList.
-func defaultMediaListList(c appengine.Context) *datastore.Key {
-	return datastore.NewKey(c, "MediaList", "default", 0, nil)
+	Updated time.Time `json:"updated"`
 }
 
 // Generates a new key for the data to be stored on App Engine
@@ -30,7 +25,7 @@ func (ml *MediaList) key(c appengine.Context) *datastore.Key {
 		ml.Created = time.Now()
 		return datastore.NewIncompleteKey(c, "MediaList", nil)
 	}
-	return datastore.NewKey(c, "MediaList", "", 0, nil)
+	return datastore.NewKey(c, "MediaList", "", ml.Id, nil)
 }
 
 /*

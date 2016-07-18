@@ -13,20 +13,20 @@ import (
 	"github.com/news-ai/tabulae/models"
 )
 
-func handleUser(c appengine.Context, r *http.Request, id string) (interface{}, error) {
+func handleUser(c appengine.Context, r *http.Request, id string) (models.User, error) {
 	switch r.Method {
 	case "GET":
 		return models.GetUser(c, id)
 	}
-	return nil, fmt.Errorf("method not implemented")
+	return models.User{}, fmt.Errorf("method not implemented")
 }
 
-func handleUsers(c appengine.Context, r *http.Request) (interface{}, error) {
+func handleUsers(c appengine.Context, r *http.Request) ([]models.User, error) {
 	switch r.Method {
 	case "GET":
 		return models.GetUsers(c)
 	}
-	return nil, fmt.Errorf("method not implemented")
+	return []models.User{}, fmt.Errorf("method not implemented")
 }
 
 // Handler for when the user wants all the users.
@@ -72,6 +72,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		val, err := handleUser(c, r, id)
+		c.Debugf("hello: %v", val.WorksAt[0].Id)
 
 		if err == nil {
 			err = json.NewEncoder(w).Encode(val)

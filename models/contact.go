@@ -19,16 +19,12 @@ type Contact struct {
 	CreatedBy User `json:"createdby" datastore:"-"`
 
 	Created time.Time `json:"created"`
+	Updated time.Time `json:"updated"`
 }
 
 /*
 * Private methods
  */
-
-// Code to get data from App Engine
-func defaultContactList(c appengine.Context) *datastore.Key {
-	return datastore.NewKey(c, "ContactList", "default", 0, nil)
-}
 
 // Generates a new key for the data to be stored on App Engine
 func (ct *Contact) key(c appengine.Context) *datastore.Key {
@@ -36,7 +32,7 @@ func (ct *Contact) key(c appengine.Context) *datastore.Key {
 		ct.Created = time.Now()
 		return datastore.NewIncompleteKey(c, "Contact", nil)
 	}
-	return datastore.NewKey(c, "Contact", "", 0, nil)
+	return datastore.NewKey(c, "Contact", "", ct.Id, nil)
 }
 
 /*

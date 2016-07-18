@@ -30,20 +30,19 @@ type User struct {
 // Generates a new key for the data to be stored on App Engine
 func (u *User) key(c appengine.Context) *datastore.Key {
 	if u.Id == 0 {
-		u.Created = time.Now()
 		return datastore.NewIncompleteKey(c, "User", nil)
 	}
-	return datastore.NewKey(c, "User", "", 0, nil)
+	return datastore.NewKey(c, "User", "", u.Id, nil)
 }
 
 /*
 * Get methods
  */
 
-func getUser(c appengine.Context, id string) (User, error) {
+func getUser(c appengine.Context, queryType, query string) (User, error) {
 	// Get the current signed in user details by Id
 	users := []User{}
-	ks, err := datastore.NewQuery("User").Filter("ID =", id).GetAll(c, &users)
+	ks, err := datastore.NewQuery("User").Filter(queryType+" =", query).GetAll(c, &users)
 	if err != nil {
 		return User{}, err
 	}
@@ -51,22 +50,7 @@ func getUser(c appengine.Context, id string) (User, error) {
 		users[0].Id = ks[0].IntID()
 		return users[0], nil
 	}
-	return User{}, errors.New("No user by this id")
-}
-
-func getCurrentUser(c appengine.Context) (User, error) {
-	// Get the current signed in user details by Email
-	users := []User{}
-	currentUser := user.Current(c)
-	ks, err := datastore.NewQuery("User").Filter("Email =", currentUser.Email).GetAll(c, &users)
-	if err != nil {
-		return User{}, err
-	}
-	if len(users) > 0 {
-		users[0].Id = ks[0].IntID()
-		return users[0], nil
-	}
-	return User{}, errors.New("No user by this email")
+	return User{}, errors.New("No user by this " + queryType)
 }
 
 /*
@@ -78,6 +62,7 @@ func (u *User) create(c appengine.Context) (*User, error) {
 	currentUser := user.Current(c)
 	u.Email = currentUser.Email
 	u.GoogleId = currentUser.ID
+	u.Created = time.Now()
 	_, err := u.save(c)
 	CreateAgencyFromUser(c, u)
 	return u, err
@@ -89,6 +74,7 @@ func (u *User) create(c appengine.Context) (*User, error) {
 
 // Function to save a new user into App Engine
 func (u *User) save(c appengine.Context) (*User, error) {
+	u.Updated = time.Now()
 	k, err := datastore.Put(c, u.key(c), u)
 	if err != nil {
 		return nil, err
@@ -130,10 +116,11 @@ func GetUser(c appengine.Context, id string) (User, error) {
 	// Get the details of the current user
 	switch id {
 	case "me":
-		user, err := getCurrentUser(c)
+		currentUser := user.Current(c)
+		user, err := getUser(c, "Email", currentUser.Email)
 		return user, err
 	default:
-		user, err := getUser(c, id)
+		user, err := getUser(c, "Id", id)
 		if err != nil {
 			return User{}, errors.New("No user by this id")
 		}
@@ -143,7 +130,8 @@ func GetUser(c appengine.Context, id string) (User, error) {
 
 func GetCurrentUser(c appengine.Context) (User, error) {
 	// Get the current user
-	user, err := getCurrentUser(c)
+	currentUser := user.Current(c)
+	user, err := getUser(c, "Email", currentUser.Email)
 	if err != nil {
 		return User{}, err
 	}
@@ -155,7 +143,7 @@ func GetCurrentUser(c appengine.Context) (User, error) {
  */
 
 func NewOrUpdateUser(c appengine.Context) {
-	user, err := getCurrentUser(c)
+	user, err := GetCurrentUser(c)
 	if err != nil {
 		// Add the user if there is no user
 		user := User{}

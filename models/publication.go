@@ -30,7 +30,7 @@ func (p *Publication) key(c appengine.Context) *datastore.Key {
 		p.Created = time.Now()
 		return datastore.NewIncompleteKey(c, "Publication", nil)
 	}
-	return datastore.NewKey(c, "Publication", "", 0, nil)
+	return datastore.NewKey(c, "Publication", "", p.Id, nil)
 }
 
 /*

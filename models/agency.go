@@ -15,6 +15,7 @@ type Agency struct {
 	Email string `json:"email"`
 
 	Created time.Time `json:"created"`
+	Updated time.Time `json:"updated"`
 }
 
 /*
@@ -27,7 +28,7 @@ func (a *Agency) key(c appengine.Context) *datastore.Key {
 		a.Created = time.Now()
 		return datastore.NewIncompleteKey(c, "Agency", nil)
 	}
-	return datastore.NewKey(c, "Agency", "", 0, nil)
+	return datastore.NewKey(c, "Agency", "", a.Id, nil)
 }
 
 /*
