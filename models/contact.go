@@ -34,9 +34,9 @@ func defaultContactList(c appengine.Context) *datastore.Key {
 func (ct *Contact) key(c appengine.Context) *datastore.Key {
 	if ct.Id == 0 {
 		ct.Created = time.Now()
-		return datastore.NewIncompleteKey(c, "Contact", defaultContactList(c))
+		return datastore.NewIncompleteKey(c, "Contact", nil)
 	}
-	return datastore.NewKey(c, "Contact", "", ct.Id, defaultContactList(c))
+	return datastore.NewKey(c, "Contact", "", 0, nil)
 }
 
 /*

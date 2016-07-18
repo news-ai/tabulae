@@ -21,18 +21,13 @@ type Agency struct {
 * Private methods
  */
 
-// Code to get data from App Engine
-func defaultAgencyList(c appengine.Context) *datastore.Key {
-	return datastore.NewKey(c, "AgencyList", "default", 0, nil)
-}
-
 // Generates a new key for the data to be stored on App Engine
 func (a *Agency) key(c appengine.Context) *datastore.Key {
 	if a.Id == 0 {
 		a.Created = time.Now()
-		return datastore.NewIncompleteKey(c, "Agency", defaultAgencyList(c))
+		return datastore.NewIncompleteKey(c, "Agency", nil)
 	}
-	return datastore.NewKey(c, "Agency", "", a.Id, defaultAgencyList(c))
+	return datastore.NewKey(c, "Agency", "", 0, nil)
 }
 
 /*
@@ -146,7 +141,7 @@ func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
 			agency.Created = time.Now()
 			agency.create(c)
 		}
-		u.WorksAt = agency
+		u.WorksAt = append(u.WorksAt, agency)
 		u.save(c)
 		return agency, nil
 	}

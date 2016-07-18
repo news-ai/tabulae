@@ -28,9 +28,9 @@ func defaultMediaListList(c appengine.Context) *datastore.Key {
 func (ml *MediaList) key(c appengine.Context) *datastore.Key {
 	if ml.Id == 0 {
 		ml.Created = time.Now()
-		return datastore.NewIncompleteKey(c, "MediaList", defaultMediaListList(c))
+		return datastore.NewIncompleteKey(c, "MediaList", nil)
 	}
-	return datastore.NewKey(c, "MediaList", "", ml.Id, defaultMediaListList(c))
+	return datastore.NewKey(c, "MediaList", "", 0, nil)
 }
 
 /*

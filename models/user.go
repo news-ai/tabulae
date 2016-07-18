@@ -17,7 +17,7 @@ type User struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 
-	WorksAt Agency `json:"agency"`
+	WorksAt []Agency `json:"worksat"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -27,18 +27,13 @@ type User struct {
 * Private methods
  */
 
-// Code to get data from App Engine
-func defaultUserList(c appengine.Context) *datastore.Key {
-	return datastore.NewKey(c, "UserList", "default", 0, nil)
-}
-
 // Generates a new key for the data to be stored on App Engine
 func (u *User) key(c appengine.Context) *datastore.Key {
 	if u.Id == 0 {
 		u.Created = time.Now()
-		return datastore.NewIncompleteKey(c, "User", defaultUserList(c))
+		return datastore.NewIncompleteKey(c, "User", nil)
 	}
-	return datastore.NewKey(c, "User", "", u.Id, defaultUserList(c))
+	return datastore.NewKey(c, "User", "", 0, nil)
 }
 
 /*
@@ -103,7 +98,7 @@ func (u *User) save(c appengine.Context) (*User, error) {
 }
 
 func (u *User) update(c appengine.Context) (*User, error) {
-	if u.WorksAt.Name == "" {
+	if len(u.WorksAt) == 0 {
 		CreateAgencyFromUser(c, u)
 	}
 	return u, nil

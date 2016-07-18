@@ -24,18 +24,13 @@ type Publication struct {
 * Private methods
  */
 
-// Code to get data from App Engine
-func defaultPublicationList(c appengine.Context) *datastore.Key {
-	return datastore.NewKey(c, "PublicationList", "default", 0, nil)
-}
-
 // Generates a new key for the data to be stored on App Engine
 func (p *Publication) key(c appengine.Context) *datastore.Key {
 	if p.Id == 0 {
 		p.Created = time.Now()
-		return datastore.NewIncompleteKey(c, "Publication", defaultPublicationList(c))
+		return datastore.NewIncompleteKey(c, "Publication", nil)
 	}
-	return datastore.NewKey(c, "Publication", "", p.Id, defaultPublicationList(c))
+	return datastore.NewKey(c, "Publication", "", 0, nil)
 }
 
 /*
