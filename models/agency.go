@@ -148,3 +148,32 @@ func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
 	}
 	return Agency{}, nil
 }
+
+/*
+* Format methods
+ */
+
+func FormatAgencyId(c appengine.Context, agency *Agency) (*Agency, error) {
+	// Get the id of the current agency
+	agencyWithId, err := getAgencyByEmail(c, agency.Email)
+	agency.Id = agencyWithId.Id
+
+	if err != nil {
+		return agency, err
+	}
+
+	return agency, nil
+}
+
+func FormatAgenciesId(c appengine.Context, agencies []Agency) ([]Agency, error) {
+	// Get the id of the current agency
+	for i := 0; i < len(agencies); i++ {
+		_, err := FormatAgencyId(c, &agencies[i])
+
+		if err != nil {
+			return []Agency{}, err
+		}
+	}
+
+	return agencies, nil
+}

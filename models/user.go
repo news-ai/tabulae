@@ -48,9 +48,26 @@ func getUser(c appengine.Context, queryType, query string) (User, error) {
 	}
 	if len(users) > 0 {
 		users[0].Id = ks[0].IntID()
+		FormatAgenciesId(c, users[0].WorksAt)
 		return users[0], nil
 	}
 	return User{}, errors.New("No user by this " + queryType)
+}
+
+// Gets every single user
+func getUsers(c appengine.Context) ([]User, error) {
+	// Get the current signed in user details by Email
+	users := []User{}
+	ks, err := datastore.NewQuery("User").GetAll(c, &users)
+	c.Infof("%v", ks)
+	if err != nil {
+		return []User{}, err
+	}
+	for i := 0; i < len(users); i++ {
+		users[i].Id = ks[i].IntID()
+		FormatAgenciesId(c, users[i].WorksAt)
+	}
+	return users, nil
 }
 
 /*
@@ -98,16 +115,11 @@ func (u *User) update(c appengine.Context) (*User, error) {
 * Get methods
  */
 
-// Gets every single user
 func GetUsers(c appengine.Context) ([]User, error) {
-	// Get the current signed in user details by Email
-	users := []User{}
-	ks, err := datastore.NewQuery("User").GetAll(c, &users)
+	// Get the current user
+	users, err := getUsers(c)
 	if err != nil {
 		return []User{}, err
-	}
-	for i := 0; i < len(users); i++ {
-		users[i].Id = ks[i].IntID()
 	}
 	return users, nil
 }
