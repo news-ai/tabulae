@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
+	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/routes"
 )
 
@@ -16,6 +17,7 @@ func init() {
 	app := negroni.New()
 	app.Use(negroni.NewRecovery())
 	app.Use(negroni.NewLogger())
+	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 
 	// CORs
 	c := cors.New(cors.Options{
