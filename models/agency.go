@@ -49,6 +49,7 @@ func (a *Agency) create(c appengine.Context) (*Agency, error) {
 
 	a.CreatedBy = currentUser.ID
 	a.Created = time.Now()
+
 	_, err := a.save(c)
 	return a, err
 }
@@ -67,7 +68,7 @@ func GetAgencies(c appengine.Context) ([]Agency, error) {
 }
 
 func getAgency(c appengine.Context, id string) (Agency, error) {
-	// Get the current signed in user details by Email
+	// Get the agency by id
 	agencies := []Agency{}
 	ks, err := datastore.NewQuery("Agency").Filter("ID =", id).GetAll(c, &agencies)
 	if err != nil {
@@ -91,7 +92,7 @@ func getAgencyByEmail(c appengine.Context, email string) (Agency, error) {
 		agencies[0].Id = ks[0].IntID()
 		return agencies[0], nil
 	}
-	return Agency{}, errors.New("No agency by this id")
+	return Agency{}, errors.New("No agency by this email")
 }
 
 func GetAgencyByEmail(c appengine.Context, email string) (Agency, error) {
