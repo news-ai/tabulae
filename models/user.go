@@ -17,7 +17,7 @@ type User struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 
-	Agency string `json:"agencyid"`
+	WorksAt Agency `json:"agency"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -46,7 +46,7 @@ func (u *User) key(c appengine.Context) *datastore.Key {
  */
 
 func getUser(c appengine.Context, id string) (User, error) {
-	// Get the current signed in user details by Email
+	// Get the current signed in user details by Id
 	users := []User{}
 	ks, err := datastore.NewQuery("User").Filter("ID =", id).GetAll(c, &users)
 	if err != nil {
@@ -56,7 +56,7 @@ func getUser(c appengine.Context, id string) (User, error) {
 		users[0].Id = ks[0].IntID()
 		return users[0], nil
 	}
-	return User{}, errors.New("No user by this email")
+	return User{}, errors.New("No user by this id")
 }
 
 func getCurrentUser(c appengine.Context) (User, error) {
@@ -103,7 +103,7 @@ func (u *User) save(c appengine.Context) (*User, error) {
 }
 
 func (u *User) update(c appengine.Context) (*User, error) {
-	if u.Agency == "" {
+	if u.WorksAt.Name == "" {
 		CreateAgencyFromUser(c, u)
 	}
 	return u, nil
@@ -144,6 +144,15 @@ func GetUser(c appengine.Context, id string) (User, error) {
 		}
 		return user, nil
 	}
+}
+
+func GetCurrentUser(c appengine.Context) (User, error) {
+	// Get the current user
+	user, err := getCurrentUser(c)
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
 }
 
 /*

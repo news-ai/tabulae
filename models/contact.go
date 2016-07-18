@@ -6,7 +6,6 @@ import (
 
 	"appengine"
 	"appengine/datastore"
-	"appengine/user"
 )
 
 type Contact struct {
@@ -15,9 +14,9 @@ type Contact struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 
-	WorksAt []string `json:"worksat" datastore:"-"`
+	WorksAt []Publication `json:"worksat" datastore:"-"`
 
-	CreatedBy string `json:"createdby" datastore:"-"`
+	CreatedBy User `json:"createdby" datastore:"-"`
 
 	Created time.Time `json:"created"`
 }
@@ -67,12 +66,15 @@ func getContact(c appengine.Context, id string) (Contact, error) {
  */
 
 func (ct *Contact) create(c appengine.Context) (*Contact, error) {
-	currentUser := user.Current(c)
+	currentUser, err := GetCurrentUser(c)
+	if err != nil {
+		return ct, err
+	}
 
-	ct.CreatedBy = currentUser.ID
+	ct.CreatedBy = currentUser
 	ct.Created = time.Now()
 
-	_, err := ct.save(c)
+	_, err = ct.save(c)
 	return ct, err
 }
 

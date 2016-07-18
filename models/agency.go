@@ -6,7 +6,6 @@ import (
 
 	"appengine"
 	"appengine/datastore"
-	"appengine/user"
 )
 
 type Agency struct {
@@ -14,8 +13,6 @@ type Agency struct {
 
 	Name  string `json:"name"`
 	Email string `json:"email"`
-
-	CreatedBy string `json:"createdby"`
 
 	Created time.Time `json:"created"`
 }
@@ -75,11 +72,7 @@ func getAgencyByEmail(c appengine.Context, email string) (Agency, error) {
  */
 
 func (a *Agency) create(c appengine.Context) (*Agency, error) {
-	currentUser := user.Current(c)
-
-	a.CreatedBy = currentUser.ID
 	a.Created = time.Now()
-
 	_, err := a.save(c)
 	return a, err
 }
@@ -150,11 +143,10 @@ func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
 		if err != nil {
 			agency = Agency{}
 			agency.Email = agencyEmail
-			agency.CreatedBy = IntIdToString(u.Id)
 			agency.Created = time.Now()
 			agency.create(c)
 		}
-		u.Agency = IntIdToString(agency.Id)
+		u.WorksAt = agency
 		u.save(c)
 		return agency, nil
 	}

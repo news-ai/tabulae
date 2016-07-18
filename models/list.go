@@ -6,15 +6,14 @@ import (
 
 	"appengine"
 	"appengine/datastore"
-	"appengine/user"
 )
 
 type MediaList struct {
 	Id int64 `json:"id" datastore:"-"`
 
-	Contacts []string `json:"contacts"`
+	Contacts []Contact `json:"contacts"`
 
-	CreatedBy string `json:"createdby" datastore:"-"`
+	CreatedBy User `json:"createdby" datastore:"-"`
 
 	Created time.Time `json:"created"`
 }
@@ -57,12 +56,15 @@ func getMediaList(c appengine.Context, id string) (MediaList, error) {
  */
 
 func (ml *MediaList) create(c appengine.Context) (*MediaList, error) {
-	currentUser := user.Current(c)
+	currentUser, err := GetCurrentUser(c)
+	if err != nil {
+		return ml, err
+	}
 
-	ml.CreatedBy = currentUser.ID
+	ml.CreatedBy = currentUser
 	ml.Created = time.Now()
 
-	_, err := ml.save(c)
+	_, err = ml.save(c)
 	return ml, err
 }
 

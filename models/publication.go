@@ -6,7 +6,6 @@ import (
 
 	"appengine"
 	"appengine/datastore"
-	"appengine/user"
 )
 
 type Publication struct {
@@ -15,7 +14,7 @@ type Publication struct {
 	Name string `json:"name"`
 	Url  string `json:"url"`
 
-	CreatedBy string `json:"createdby" datastore:"-"`
+	CreatedBy User `json:"createdby" datastore:"-"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -91,12 +90,15 @@ func getPublicationByUrl(c appengine.Context, url string) (Publication, error) {
 
 // Function to create a new publication into App Engine
 func (p *Publication) create(c appengine.Context) (*Publication, error) {
-	currentUser := user.Current(c)
+	currentUser, err := GetCurrentUser(c)
+	if err != nil {
+		return p, err
+	}
 
-	p.CreatedBy = currentUser.ID
+	p.CreatedBy = currentUser
 	p.Created = time.Now()
 
-	_, err := p.save(c)
+	_, err = p.save(c)
 	return p, err
 }
 
