@@ -53,37 +53,13 @@ func (u *User) create(c appengine.Context) (*User, error) {
 	u.Email = currentUser.Email
 	u.GoogleId = currentUser.ID
 	_, err := u.save(c)
-
-	// Put user into a agency
-	agencyEmail, err := GetAgencyEmail(currentUser.Email)
-	if err != nil {
-		return u, err
-	} else {
-		agency, err := GetAgencyByEmail(c, agencyEmail)
-		if err != nil {
-			agency = Agency{}
-			agency.Email = agencyEmail
-			agency.create(c)
-		}
-		u.Agency = IntIdToString(agency.Id)
-		u.save(c)
-	}
-
+	CreateAgencyFromUser(c, u)
 	return u, err
 }
 
 func (u *User) update(c appengine.Context) (*User, error) {
-	user, err := getCurrentUser(c)
-	if user.Agency == "" {
-		agency := Agency{}
-		agency.Email, err = GetAgencyEmail(user.Email)
-		if err != nil {
-			return u, err
-		}
-		agency.create(c)
-		u.Agency = IntIdToString(agency.Id)
-		u.save(c)
-		return u, nil
+	if u.Agency == "" {
+		CreateAgencyFromUser(c, u)
 	}
 	return u, nil
 }

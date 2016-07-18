@@ -111,3 +111,23 @@ func GetAgency(c appengine.Context, id string) (Agency, error) {
 	}
 	return agency, nil
 }
+
+func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
+	agencyEmail, err := GetAgencyEmail(u.Email)
+	if err != nil {
+		return Agency{}, err
+	} else {
+		agency, err := GetAgencyByEmail(c, agencyEmail)
+		if err != nil {
+			agency = Agency{}
+			agency.Email = agencyEmail
+			agency.CreatedBy = IntIdToString(u.Id)
+			agency.Created = time.Now()
+			agency.create(c)
+		}
+		u.Agency = IntIdToString(agency.Id)
+		u.save(c)
+		return agency, nil
+	}
+	return Agency{}, nil
+}
