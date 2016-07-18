@@ -36,7 +36,8 @@ func init() {
 	api.HandleFunc("/publications/{id}", routes.PublicationHandler)
 	api.HandleFunc("/contacts", routes.ContactsHandler)
 	api.HandleFunc("/contacts/{id}", routes.ContactHandler)
-	// api.HandleFunc("/lists", routes.ListsHandler)
+	api.HandleFunc("/lists", routes.MediaListsHandler)
+	api.HandleFunc("/lists/{id}", routes.MediaListHandler)
 
 	// Main router
 	main := mux.NewRouter().StrictSlash(true)
