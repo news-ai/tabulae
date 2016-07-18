@@ -26,3 +26,11 @@ func GetAgencyEmail(email string) (string, error) {
 	}
 	return "", errors.New("Email is invalid")
 }
+
+func GetAgencyName(email string) (string, error) {
+	splitEmail := strings.Split(email, ".")
+	if len(splitEmail) > 1 {
+		return splitEmail[0], nil
+	}
+	return "", errors.New("Name is invalid")
+}

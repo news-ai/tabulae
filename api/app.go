@@ -9,7 +9,6 @@ import (
 	"github.com/rs/cors"
 
 	"github.com/news-ai/tabulae/middleware"
-	"github.com/news-ai/tabulae/routes"
 )
 
 func init() {
@@ -27,17 +26,16 @@ func init() {
 
 	// API router
 	api := mux.NewRouter().PathPrefix("/api").Subrouter().StrictSlash(true)
-	api.HandleFunc("/", routes.BaseHandler)
-	api.HandleFunc("/users", routes.UsersHandler)
-	api.HandleFunc("/users/{id}", routes.UserHandler)
-	api.HandleFunc("/agencies", routes.AgenciesHandler)
-	api.HandleFunc("/agencies/{id}", routes.AgencyHandler)
-	api.HandleFunc("/publications", routes.PublicationsHandler)
-	api.HandleFunc("/publications/{id}", routes.PublicationHandler)
-	api.HandleFunc("/contacts", routes.ContactsHandler)
-	api.HandleFunc("/contacts/{id}", routes.ContactHandler)
-	api.HandleFunc("/lists", routes.MediaListsHandler)
-	api.HandleFunc("/lists/{id}", routes.MediaListHandler)
+
+	// Register routes
+	apiRoutes := getRoutes()
+	for i := 0; i < len(apiRoutes); i++ {
+		api.HandleFunc(apiRoutes[i].HandlerName, apiRoutes[i].Routes["/"])
+		if len(apiRoutes[i].Routes) > 1 {
+			routeName := "/{id}"
+			api.HandleFunc(apiRoutes[i].HandlerName+routeName, apiRoutes[i].Routes[routeName])
+		}
+	}
 
 	// Main router
 	main := mux.NewRouter().StrictSlash(true)

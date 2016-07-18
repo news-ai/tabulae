@@ -21,11 +21,14 @@ func handleContact(c appengine.Context, r *http.Request, id string) (interface{}
 	return nil, fmt.Errorf("method not implemented")
 }
 
-func handleContacts(c appengine.Context, r *http.Request) (interface{}, error) {
+func handleContacts(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return models.GetContacts(c)
+	case "POST":
+		return models.CreateContact(c, w, r)
 	}
+
 	return nil, fmt.Errorf("method not implemented")
 }
 
@@ -40,7 +43,7 @@ func ContactsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	val, err := handleContacts(c, r)
+	val, err := handleContacts(c, w, r)
 
 	if err == nil {
 		err = json.NewEncoder(w).Encode(val)

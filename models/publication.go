@@ -14,7 +14,7 @@ type Publication struct {
 	Name string `json:"name"`
 	Url  string `json:"url"`
 
-	CreatedBy User `json:"createdby" datastore:"-"`
+	CreatedBy User `json:"createdby"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`

@@ -1,7 +1,9 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
+	"net/http"
 	"time"
 
 	"appengine"
@@ -14,9 +16,9 @@ type Contact struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 
-	WorksAt []Publication `json:"worksat" datastore:"-"`
+	WorksAt []Publication `json:"worksat"`
 
-	CreatedBy User `json:"createdby" datastore:"-"`
+	CreatedBy User `json:"createdby"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -124,6 +126,23 @@ func GetContact(c appengine.Context, id string) (Contact, error) {
 /*
 * Create methods
  */
+
+// Method not completed
+func CreateContact(c appengine.Context, w http.ResponseWriter, r *http.Request) (Contact, error) {
+	decoder := json.NewDecoder(r.Body)
+	var contact Contact
+	err := decoder.Decode(&contact)
+	if err != nil {
+		return Contact{}, err
+	}
+
+	_, err = contact.create(c)
+	if err != nil {
+		return Contact{}, err
+	}
+
+	return contact, nil
+}
 
 // func CreateContactFromWorksAt(c appengine.Context, u *User) (Agency, error) {
 // }

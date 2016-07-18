@@ -13,7 +13,7 @@ type MediaList struct {
 
 	Contacts []Contact `json:"contacts"`
 
-	CreatedBy User `json:"createdby" datastore:"-"`
+	CreatedBy User `json:"createdby"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`

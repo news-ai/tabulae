@@ -138,6 +138,7 @@ func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
 		agency, err := GetAgencyByEmail(c, agencyEmail)
 		if err != nil {
 			agency = Agency{}
+			agency.Name, err = GetAgencyName(agencyEmail)
 			agency.Email = agencyEmail
 			agency.Created = time.Now()
 			agency.create(c)
