@@ -122,24 +122,6 @@ func (p *Publication) save(c appengine.Context) (*Publication, error) {
 * Get methods
  */
 
-func GetPublicationByUrl(c appengine.Context, url string) (Publication, error) {
-	// Get the id of the current publication
-	publication, err := getPublicationByUrl(c, url)
-	if err != nil {
-		return Publication{}, err
-	}
-	return publication, nil
-}
-
-func GetPublicationByName(c appengine.Context, name string) (Publication, error) {
-	// Get the id of the current publication
-	publication, err := getPublicationByName(c, name)
-	if err != nil {
-		return Publication{}, err
-	}
-	return publication, nil
-}
-
 func GetPublications(c appengine.Context) ([]Publication, error) {
 	publications := []Publication{}
 	ks, err := datastore.NewQuery("Publication").GetAll(c, &publications)
@@ -155,6 +137,24 @@ func GetPublications(c appengine.Context) ([]Publication, error) {
 func GetPublication(c appengine.Context, id string) (Publication, error) {
 	// Get a publication by id
 	publication, err := getPublication(c, id)
+	if err != nil {
+		return Publication{}, err
+	}
+	return publication, nil
+}
+
+func GetPublicationByUrl(c appengine.Context, url string) (Publication, error) {
+	// Get the id of the current publication
+	publication, err := getPublicationByUrl(c, url)
+	if err != nil {
+		return Publication{}, err
+	}
+	return publication, nil
+}
+
+func GetPublicationByName(c appengine.Context, name string) (Publication, error) {
+	// Get the id of the current publication
+	publication, err := getPublicationByName(c, name)
 	if err != nil {
 		return Publication{}, err
 	}

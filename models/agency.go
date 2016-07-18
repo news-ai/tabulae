@@ -119,18 +119,18 @@ func GetAgencies(c appengine.Context) ([]Agency, error) {
 	return agencies, nil
 }
 
-func GetAgencyByEmail(c appengine.Context, email string) (Agency, error) {
-	// Get the id of the current agency
-	agency, err := getAgencyByEmail(c, email)
+func GetAgency(c appengine.Context, id string) (Agency, error) {
+	// Get the details of the current user
+	agency, err := getAgency(c, id)
 	if err != nil {
 		return Agency{}, err
 	}
 	return agency, nil
 }
 
-func GetAgency(c appengine.Context, id string) (Agency, error) {
-	// Get the details of the current user
-	agency, err := getAgency(c, id)
+func GetAgencyByEmail(c appengine.Context, email string) (Agency, error) {
+	// Get the id of the current agency
+	agency, err := getAgencyByEmail(c, email)
 	if err != nil {
 		return Agency{}, err
 	}

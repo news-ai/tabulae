@@ -34,6 +34,8 @@ func init() {
 	api.HandleFunc("/agencies/{id}", routes.AgencyHandler)
 	api.HandleFunc("/publications", routes.PublicationsHandler)
 	api.HandleFunc("/publications/{id}", routes.PublicationHandler)
+	api.HandleFunc("/contacts", routes.ContactsHandler)
+	api.HandleFunc("/contacts/{id}", routes.ContactHandler)
 	// api.HandleFunc("/lists", routes.ListsHandler)
 
 	// Main router
