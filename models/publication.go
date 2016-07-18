@@ -39,26 +39,9 @@ func (p *Publication) key(c appengine.Context) *datastore.Key {
 	return datastore.NewKey(c, "Publication", "", p.Id, defaultPublicationList(c))
 }
 
-// Function to save a new publication into App Engine
-func (p *Publication) save(c appengine.Context) (*Publication, error) {
-	k, err := datastore.Put(c, p.key(c), p)
-	if err != nil {
-		return nil, err
-	}
-	p.Id = k.IntID()
-	return p, nil
-}
-
-// Function to create a new publication into App Engine
-func (p *Publication) create(c appengine.Context) (*Publication, error) {
-	currentUser := user.Current(c)
-
-	p.CreatedBy = currentUser.ID
-	p.Created = time.Now()
-
-	_, err := p.save(c)
-	return p, err
-}
+/*
+* Get methods
+ */
 
 func getPublication(c appengine.Context, id string) (Publication, error) {
 	// Get the publication details by id
@@ -72,6 +55,20 @@ func getPublication(c appengine.Context, id string) (Publication, error) {
 		return publications[0], nil
 	}
 	return Publication{}, errors.New("No publication by this id")
+}
+
+func getPublicationByName(c appengine.Context, name string) (Publication, error) {
+	// Get a publication by the URL
+	publications := []Publication{}
+	ks, err := datastore.NewQuery("Publication").Filter("Name =", name).GetAll(c, &publications)
+	if err != nil {
+		return Publication{}, err
+	}
+	if len(publications) > 0 {
+		publications[0].Id = ks[0].IntID()
+		return publications[0], nil
+	}
+	return Publication{}, errors.New("No publication by this name")
 }
 
 func getPublicationByUrl(c appengine.Context, url string) (Publication, error) {
@@ -89,12 +86,54 @@ func getPublicationByUrl(c appengine.Context, url string) (Publication, error) {
 }
 
 /*
+* Create methods
+ */
+
+// Function to create a new publication into App Engine
+func (p *Publication) create(c appengine.Context) (*Publication, error) {
+	currentUser := user.Current(c)
+
+	p.CreatedBy = currentUser.ID
+	p.Created = time.Now()
+
+	_, err := p.save(c)
+	return p, err
+}
+
+/*
+* Update methods
+ */
+
+// Function to save a new publication into App Engine
+func (p *Publication) save(c appengine.Context) (*Publication, error) {
+	k, err := datastore.Put(c, p.key(c), p)
+	if err != nil {
+		return nil, err
+	}
+	p.Id = k.IntID()
+	return p, nil
+}
+
+/*
 * Public methods
  */
 
-func GetPublicationByEmail(c appengine.Context, email string) (Publication, error) {
+/*
+* Get methods
+ */
+
+func GetPublicationByUrl(c appengine.Context, url string) (Publication, error) {
 	// Get the id of the current publication
-	publication, err := getPublicationByUrl(c, email)
+	publication, err := getPublicationByUrl(c, url)
+	if err != nil {
+		return Publication{}, err
+	}
+	return publication, nil
+}
+
+func GetPublicationByName(c appengine.Context, name string) (Publication, error) {
+	// Get the id of the current publication
+	publication, err := getPublicationByName(c, name)
 	if err != nil {
 		return Publication{}, err
 	}
@@ -116,6 +155,20 @@ func GetPublications(c appengine.Context) ([]Publication, error) {
 func GetPublication(c appengine.Context, id string) (Publication, error) {
 	// Get a publication by id
 	publication, err := getPublication(c, id)
+	if err != nil {
+		return Publication{}, err
+	}
+	return publication, nil
+}
+
+/*
+* Create methods
+ */
+
+func CreatePublicationFromName(c appengine.Context, name string) (Publication, error) {
+	publication := Publication{}
+	publication.Name = name
+	_, err := publication.create(c)
 	if err != nil {
 		return Publication{}, err
 	}

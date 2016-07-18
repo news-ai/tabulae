@@ -20,6 +20,10 @@ type Agency struct {
 	Created time.Time `json:"created"`
 }
 
+/*
+* Private methods
+ */
+
 // Code to get data from App Engine
 func defaultAgencyList(c appengine.Context) *datastore.Key {
 	return datastore.NewKey(c, "AgencyList", "default", 0, nil)
@@ -34,38 +38,9 @@ func (a *Agency) key(c appengine.Context) *datastore.Key {
 	return datastore.NewKey(c, "Agency", "", a.Id, defaultAgencyList(c))
 }
 
-// Function to save a new agency into App Engine
-func (a *Agency) save(c appengine.Context) (*Agency, error) {
-	k, err := datastore.Put(c, a.key(c), a)
-	if err != nil {
-		return nil, err
-	}
-	a.Id = k.IntID()
-	return a, nil
-}
-
-func (a *Agency) create(c appengine.Context) (*Agency, error) {
-	currentUser := user.Current(c)
-
-	a.CreatedBy = currentUser.ID
-	a.Created = time.Now()
-
-	_, err := a.save(c)
-	return a, err
-}
-
-// Gets every single agency
-func GetAgencies(c appengine.Context) ([]Agency, error) {
-	agencies := []Agency{}
-	ks, err := datastore.NewQuery("Agency").GetAll(c, &agencies)
-	if err != nil {
-		return []Agency{}, err
-	}
-	for i := 0; i < len(agencies); i++ {
-		agencies[i].Id = ks[i].IntID()
-	}
-	return agencies, nil
-}
+/*
+* Get methods
+ */
 
 func getAgency(c appengine.Context, id string) (Agency, error) {
 	// Get the agency by id
@@ -95,6 +70,55 @@ func getAgencyByEmail(c appengine.Context, email string) (Agency, error) {
 	return Agency{}, errors.New("No agency by this email")
 }
 
+/*
+* Create methods
+ */
+
+func (a *Agency) create(c appengine.Context) (*Agency, error) {
+	currentUser := user.Current(c)
+
+	a.CreatedBy = currentUser.ID
+	a.Created = time.Now()
+
+	_, err := a.save(c)
+	return a, err
+}
+
+/*
+* Update methods
+ */
+
+// Function to save a new agency into App Engine
+func (a *Agency) save(c appengine.Context) (*Agency, error) {
+	k, err := datastore.Put(c, a.key(c), a)
+	if err != nil {
+		return nil, err
+	}
+	a.Id = k.IntID()
+	return a, nil
+}
+
+/*
+* Public methods
+ */
+
+/*
+* Get methods
+ */
+
+// Gets every single agency
+func GetAgencies(c appengine.Context) ([]Agency, error) {
+	agencies := []Agency{}
+	ks, err := datastore.NewQuery("Agency").GetAll(c, &agencies)
+	if err != nil {
+		return []Agency{}, err
+	}
+	for i := 0; i < len(agencies); i++ {
+		agencies[i].Id = ks[i].IntID()
+	}
+	return agencies, nil
+}
+
 func GetAgencyByEmail(c appengine.Context, email string) (Agency, error) {
 	// Get the id of the current agency
 	agency, err := getAgencyByEmail(c, email)
@@ -112,6 +136,10 @@ func GetAgency(c appengine.Context, id string) (Agency, error) {
 	}
 	return agency, nil
 }
+
+/*
+* Create methods
+ */
 
 func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
 	agencyEmail, err := GetAgencyEmail(u.Email)
