@@ -112,13 +112,6 @@ func GetUser(c appengine.Context, id string) (User, error) {
 	switch id {
 	case "me":
 		user, err := getCurrentUser(c)
-		if err != nil {
-			// Add the user if there is no user
-			user := User{}
-			_, err = user.create(c)
-		} else {
-			user.update(c)
-		}
 		return user, err
 	default:
 		user, err := getUser(c, id)
@@ -126,5 +119,16 @@ func GetUser(c appengine.Context, id string) (User, error) {
 			return User{}, errors.New("No user by this id")
 		}
 		return user, nil
+	}
+}
+
+func NewUser(c appengine.Context) {
+	user, err := getCurrentUser(c)
+	if err != nil {
+		// Add the user if there is no user
+		user := User{}
+		_, err = user.create(c)
+	} else {
+		user.update(c)
 	}
 }
