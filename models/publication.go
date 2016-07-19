@@ -173,6 +173,7 @@ func GetPublicationByName(c appengine.Context, name string) (Publication, error)
 
 // Method not completed
 func CreatePublication(c appengine.Context, w http.ResponseWriter, r *http.Request) (Publication, error) {
+	// Parse JSON
 	decoder := json.NewDecoder(r.Body)
 	var publication Publication
 	err := decoder.Decode(&publication)
@@ -180,13 +181,28 @@ func CreatePublication(c appengine.Context, w http.ResponseWriter, r *http.Reque
 		return Publication{}, err
 	}
 
-	// Create publication
-	_, err = publication.create(c)
+	// Validate Fields
+	if publication.Name == "" || publication.Url == "" {
+		return Publication{}, errors.New("Missing fields")
+	}
+
+	// Format URL properly
+	publication.Url, err = NormalizeUrl(publication.Url)
 	if err != nil {
 		return Publication{}, err
 	}
 
-	return publication, nil
+	presentPublication, err := GetPublicationByUrl(c, publication.Url)
+	if err != nil {
+		// Create publication
+		_, err = publication.create(c)
+		if err != nil {
+			return Publication{}, err
+		}
+		return publication, nil
+	}
+
+	return presentPublication, nil
 }
 
 func CreatePublicationFromName(c appengine.Context, name string) (Publication, error) {

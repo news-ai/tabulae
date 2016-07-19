@@ -17,7 +17,8 @@ type User struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 
-	WorksAt []Agency `json:"worksat"`
+	WorksAt   []Agency `json:"-"`
+	Employers []int64  `json:"employers"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -50,7 +51,12 @@ func getUserById(c appengine.Context, id int64) (User, error) {
 
 	if len(users) > 0 {
 		users[0].Id = ks[0].IntID()
-		FormatAgenciesId(c, users[0].WorksAt)
+		agencyId, err := FormatAgenciesId(c, users[0].WorksAt)
+		if err != nil {
+			return User{}, err
+		}
+
+		users[0].Employers = agencyId
 		return users[0], nil
 	}
 	return User{}, errors.New("No user by this id")
@@ -66,7 +72,11 @@ func filterUser(c appengine.Context, queryType, query string) (User, error) {
 
 	if len(users) > 0 {
 		users[0].Id = ks[0].IntID()
-		FormatAgenciesId(c, users[0].WorksAt)
+		agencyId, err := FormatAgenciesId(c, users[0].WorksAt)
+		if err != nil {
+			return User{}, err
+		}
+		users[0].Employers = agencyId
 		return users[0], nil
 	}
 	return User{}, errors.New("No user by this " + queryType)
@@ -77,13 +87,17 @@ func getUsers(c appengine.Context) ([]User, error) {
 	// Get the current signed in user details by Email
 	users := []User{}
 	ks, err := datastore.NewQuery("User").GetAll(c, &users)
-	c.Infof("%v", ks)
 	if err != nil {
 		return []User{}, err
 	}
+
 	for i := 0; i < len(users); i++ {
 		users[i].Id = ks[i].IntID()
-		FormatAgenciesId(c, users[i].WorksAt)
+		agencyId, err := FormatAgenciesId(c, users[i].WorksAt)
+		if err != nil {
+			return []User{}, err
+		}
+		users[i].Employers = agencyId
 	}
 	return users, nil
 }
@@ -146,8 +160,10 @@ func GetUser(c appengine.Context, id string) (User, error) {
 	// Get the details of the current user
 	switch id {
 	case "me":
-		currentUser := user.Current(c)
-		user, err := filterUser(c, "Email", currentUser.Email)
+		user, err := GetCurrentUser(c)
+		if err != nil {
+			return User{}, err
+		}
 		return user, err
 	default:
 		userId, err := StringIdToInt(id)

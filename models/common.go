@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -33,4 +34,13 @@ func GetAgencyName(email string) (string, error) {
 		return splitEmail[0], nil
 	}
 	return "", errors.New("Name is invalid")
+}
+
+func NormalizeUrl(initialUrl string) (string, error) {
+	u, err := url.Parse(initialUrl)
+	if err != nil {
+		return "", err
+	}
+	urlHost := strings.Replace(u.Host, "www.", "", 1)
+	return u.Scheme + "://" + urlHost, nil
 }
