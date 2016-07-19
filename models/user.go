@@ -17,6 +17,7 @@ type User struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 
+	// Same fields. WorksAt becomes Employers.
 	WorksAt   []Agency `json:"-"`
 	Employers []int64  `json:"employers"`
 
@@ -76,6 +77,7 @@ func filterUser(c appengine.Context, queryType, query string) (User, error) {
 		if err != nil {
 			return User{}, err
 		}
+
 		users[0].Employers = agencyId
 		return users[0], nil
 	}
@@ -97,6 +99,9 @@ func getUsers(c appengine.Context) ([]User, error) {
 		if err != nil {
 			return []User{}, err
 		}
+
+		c.Infof("%v", agencyId)
+
 		users[i].Employers = agencyId
 	}
 	return users, nil
