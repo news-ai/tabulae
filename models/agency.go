@@ -35,10 +35,11 @@ func (a *Agency) key(c appengine.Context) *datastore.Key {
 * Get methods
  */
 
-func getAgency(c appengine.Context, id string) (Agency, error) {
+func getAgency(c appengine.Context, id int64) (Agency, error) {
 	// Get the agency by id
 	agencies := []Agency{}
-	ks, err := datastore.NewQuery("Agency").Filter("ID =", id).GetAll(c, &agencies)
+	agencyId := datastore.NewKey(c, "Agency", "", id, nil)
+	ks, err := datastore.NewQuery("Agency").Filter("__key__ =", agencyId).GetAll(c, &agencies)
 	if err != nil {
 		return Agency{}, err
 	}
@@ -110,7 +111,12 @@ func GetAgencies(c appengine.Context) ([]Agency, error) {
 
 func GetAgency(c appengine.Context, id string) (Agency, error) {
 	// Get the details of the current user
-	agency, err := getAgency(c, id)
+	currentId, err := StringIdToInt(id)
+	if err != nil {
+		return Agency{}, err
+	}
+
+	agency, err := getAgency(c, currentId)
 	if err != nil {
 		return Agency{}, err
 	}

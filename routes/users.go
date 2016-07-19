@@ -17,6 +17,8 @@ func handleUser(c appengine.Context, r *http.Request, id string) (models.User, e
 	switch r.Method {
 	case "GET":
 		return models.GetUser(c, id)
+	case "PATCH":
+		return models.UpdateUser(c, r, id)
 	}
 	return models.User{}, fmt.Errorf("method not implemented")
 }

@@ -1,7 +1,9 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
+	"net/http"
 	"time"
 
 	"appengine"
@@ -206,4 +208,46 @@ func NewOrUpdateUser(c appengine.Context) {
 	} else {
 		user.update(c)
 	}
+}
+
+/*
+* Update methods
+ */
+
+func UpdateUser(c appengine.Context, r *http.Request, id string) (User, error) {
+	// Get the details of the current user
+	user, err := GetUser(c, id)
+	if err != nil {
+		return User{}, err
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var updatedUser User
+	err = decoder.Decode(&updatedUser)
+	if err != nil {
+		return User{}, err
+	}
+
+	user.FirstName = updatedUser.FirstName
+	user.LastName = updatedUser.LastName
+
+	// WorksAt
+	newWorksAt := []Agency{}
+	newEmployers := []int64{}
+	for i := 0; i < len(updatedUser.Employers); i++ {
+		employer, err := getAgency(c, updatedUser.Employers[i])
+		if err != nil {
+			return User{}, err
+		}
+		newWorksAt = append(newWorksAt, employer)
+		newEmployers = append(newEmployers, employer.Id)
+	}
+	if len(newWorksAt) > 0 {
+		user.Employers = newEmployers
+		user.WorksAt = newWorksAt
+	}
+
+	user.save(c)
+	return user, nil
+
 }
