@@ -39,13 +39,31 @@ func (u *User) key(c appengine.Context) *datastore.Key {
 * Get methods
  */
 
-func getUser(c appengine.Context, queryType, query string) (User, error) {
+func getUserById(c appengine.Context, id int64) (User, error) {
+	// Get the current signed in user details by Id
+	users := []User{}
+	userId := datastore.NewKey(c, "User", "", id, nil)
+	ks, err := datastore.NewQuery("User").Filter("__key__ =", userId).GetAll(c, &users)
+	if err != nil {
+		return User{}, err
+	}
+
+	if len(users) > 0 {
+		users[0].Id = ks[0].IntID()
+		FormatAgenciesId(c, users[0].WorksAt)
+		return users[0], nil
+	}
+	return User{}, errors.New("No user by this id")
+}
+
+func filterUser(c appengine.Context, queryType, query string) (User, error) {
 	// Get the current signed in user details by Id
 	users := []User{}
 	ks, err := datastore.NewQuery("User").Filter(queryType+" =", query).GetAll(c, &users)
 	if err != nil {
 		return User{}, err
 	}
+
 	if len(users) > 0 {
 		users[0].Id = ks[0].IntID()
 		FormatAgenciesId(c, users[0].WorksAt)
@@ -129,10 +147,14 @@ func GetUser(c appengine.Context, id string) (User, error) {
 	switch id {
 	case "me":
 		currentUser := user.Current(c)
-		user, err := getUser(c, "Email", currentUser.Email)
+		user, err := filterUser(c, "Email", currentUser.Email)
 		return user, err
 	default:
-		user, err := getUser(c, "Id", id)
+		userId, err := StringIdToInt(id)
+		if err != nil {
+			return User{}, err
+		}
+		user, err := getUserById(c, userId)
 		if err != nil {
 			return User{}, errors.New("No user by this id")
 		}
@@ -143,7 +165,7 @@ func GetUser(c appengine.Context, id string) (User, error) {
 func GetCurrentUser(c appengine.Context) (User, error) {
 	// Get the current user
 	currentUser := user.Current(c)
-	user, err := getUser(c, "Email", currentUser.Email)
+	user, err := filterUser(c, "Email", currentUser.Email)
 	if err != nil {
 		return User{}, err
 	}

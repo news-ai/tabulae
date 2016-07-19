@@ -7,7 +7,7 @@ import (
 )
 
 func StringIdToInt(id string) (int64, error) {
-	currentId, err := strconv.ParseInt(id, 10, 32)
+	currentId, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return 0, err
 	}

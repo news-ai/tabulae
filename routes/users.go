@@ -72,7 +72,6 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		val, err := handleUser(c, r, id)
-		c.Debugf("hello: %v", val.WorksAt[0].Id)
 
 		if err == nil {
 			err = json.NewEncoder(w).Encode(val)
