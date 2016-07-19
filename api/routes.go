@@ -50,6 +50,11 @@ func getRoutes() []Action {
 				"/{id}": routes.MediaListHandler,
 			},
 		},
+		Action{
+			"/upload", map[string]Handler{
+				"/": routes.UploadHandler,
+			},
+		},
 	}
 	return router
 }

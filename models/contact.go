@@ -16,6 +16,10 @@ type Contact struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 
+	LinkedIn  string `json:"linkedin"`
+	Twitter   string `json:"twitter"`
+	Instagram string `json:"instagram"`
+
 	WorksAt []Publication `json:"worksat"`
 
 	CreatedBy User `json:"createdby"`
