@@ -135,9 +135,14 @@ func GetPublications(c appengine.Context) ([]Publication, error) {
 	return publications, nil
 }
 
-func GetPublication(c appengine.Context, id int64) (Publication, error) {
+func GetPublication(c appengine.Context, id string) (Publication, error) {
 	// Get a publication by id
-	publication, err := getPublication(c, id)
+	currentId, err := StringIdToInt(id)
+	if err != nil {
+		return Publication{}, err
+	}
+
+	publication, err := getPublication(c, currentId)
 	if err != nil {
 		return Publication{}, err
 	}

@@ -13,7 +13,7 @@ import (
 	"github.com/news-ai/tabulae/models"
 )
 
-func handlePublication(c appengine.Context, r *http.Request, id int64) (interface{}, error) {
+func handlePublication(c appengine.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return models.GetPublication(c, id)
@@ -65,14 +65,7 @@ func PublicationHandler(w http.ResponseWriter, r *http.Request) {
 	id, ok := vars["id"]
 	if ok {
 		// Convert ID to int64
-		currentId, err := models.StringIdToInt(id)
-		if err != nil {
-			c.Errorf("publication error: %#v", err)
-			middleware.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())
-			return
-		}
-
-		val, err := handlePublication(c, r, currentId)
+		val, err := handlePublication(c, r, id)
 		if err == nil {
 			err = json.NewEncoder(w).Encode(val)
 		}
