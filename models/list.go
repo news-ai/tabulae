@@ -40,13 +40,14 @@ func (ml *MediaList) key(c appengine.Context) *datastore.Key {
 func getMediaList(c appengine.Context, id int64) (MediaList, error) {
 	// Get the MediaList by id
 	mediaLists := []MediaList{}
-	mediaListId := datastore.NewKey(c, "Agency", "", id, nil)
+	mediaListId := datastore.NewKey(c, "MediaList", "", id, nil)
 	ks, err := datastore.NewQuery("MediaList").Filter("__key__ =", mediaListId).GetAll(c, &mediaLists)
 	if err != nil {
 		return MediaList{}, err
 	}
 	if len(mediaLists) > 0 {
 		mediaLists[0].Id = ks[0].IntID()
+
 		return mediaLists[0], nil
 	}
 	return MediaList{}, errors.New("No media list by this id")

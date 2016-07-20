@@ -16,8 +16,6 @@ type Publication struct {
 	Name string `json:"name"`
 	Url  string `json:"url"`
 
-	CreatedBy User `json:"createdby"`
-
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
 }
@@ -89,15 +87,9 @@ func getPublicationByUrl(c appengine.Context, url string) (Publication, error) {
 
 // Function to create a new publication into App Engine
 func (p *Publication) create(c appengine.Context) (*Publication, error) {
-	currentUser, err := GetCurrentUser(c)
-	if err != nil {
-		return p, err
-	}
-
-	p.CreatedBy = currentUser
 	p.Created = time.Now()
 
-	_, err = p.save(c)
+	_, err := p.save(c)
 	return p, err
 }
 
@@ -213,4 +205,36 @@ func CreatePublicationFromName(c appengine.Context, name string) (Publication, e
 		return Publication{}, err
 	}
 	return publication, nil
+}
+
+/*
+* Format methods
+ */
+
+func FormatPublicationId(c appengine.Context, publication *Publication) (int64, error) {
+	// Get the id of the current agency
+	publicationWithId, err := getPublication(c, publication.Id)
+	publication.Id = publicationWithId.Id
+
+	if err != nil {
+		return 0, err
+	}
+
+	return publication.Id, nil
+}
+
+func FormatPublicationsId(c appengine.Context, publications []Publication) ([]int64, error) {
+	// Get the id of the current agency
+	publicationIds := []int64{}
+	for i := 0; i < len(publications); i++ {
+		publicationId, err := FormatPublicationId(c, &publications[i])
+
+		if err != nil {
+			return []int64{}, err
+		}
+
+		publicationIds = append(publicationIds, publicationId)
+	}
+
+	return publicationIds, nil
 }

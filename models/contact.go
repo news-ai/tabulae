@@ -20,9 +20,8 @@ type Contact struct {
 	Twitter   string `json:"twitter"`
 	Instagram string `json:"instagram"`
 
-	WorksAt []Publication `json:"worksat"`
-
-	CreatedBy User `json:"createdby"`
+	WorksAt   []Publication `json:"-"`
+	Employers []int64       `json:"employers"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -69,15 +68,9 @@ func getContact(c appengine.Context, id int64) (Contact, error) {
  */
 
 func (ct *Contact) create(c appengine.Context) (*Contact, error) {
-	currentUser, err := GetCurrentUser(c)
-	if err != nil {
-		return ct, err
-	}
-
-	ct.CreatedBy = currentUser
 	ct.Created = time.Now()
 
-	_, err = ct.save(c)
+	_, err := ct.save(c)
 	return ct, err
 }
 
@@ -112,7 +105,15 @@ func GetContacts(c appengine.Context) ([]Contact, error) {
 	}
 	for i := 0; i < len(contacts); i++ {
 		contacts[i].Id = ks[i].IntID()
+
+		publicationIds, err := FormatPublicationsId(c, contacts[i].WorksAt)
+		if err != nil {
+			return []Contact{}, err
+		}
+
+		contacts[i].Employers = append(contacts[i].Employers, publicationIds...)
 	}
+
 	return contacts, nil
 }
 
@@ -147,12 +148,12 @@ func CreateContact(c appengine.Context, w http.ResponseWriter, r *http.Request) 
 	}
 
 	// WorksAt
-	for i := 0; i < len(contact.WorksAt); i++ {
-		publication, err := getPublication(c, contact.WorksAt[i].Id)
+	for i := 0; i < len(contact.Employers); i++ {
+		publication, err := getPublication(c, contact.Employers[i])
 		if err != nil {
 			return Contact{}, err
 		}
-		contact.WorksAt[i] = publication
+		contact.WorksAt = append(contact.WorksAt, publication)
 	}
 
 	// Create contact
