@@ -15,10 +15,9 @@ type MediaList struct {
 
 	Name string `json:"name"`
 
-	MediaContacts []Contact `json:"-"`
-	Contacts      []int64   `json:"contacts"`
+	Contacts []int64 `json:"contacts"`
 
-	CreatedBy User `json:"createdby"`
+	CreatedBy int64 `json:"createdby"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`

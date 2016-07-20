@@ -14,6 +14,8 @@ type Agency struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 
+	CreatedBy int64 `json:"createdby"`
+
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
 }

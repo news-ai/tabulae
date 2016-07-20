@@ -20,8 +20,9 @@ type User struct {
 	LastName  string `json:"lastname"`
 
 	// Same fields. WorksAt becomes Employers.
-	WorksAt   []Agency `json:"-"`
-	Employers []int64  `json:"employers"`
+	Employers []int64 `json:"employers"`
+
+	CreatedBy int64 `json:"createdby"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`

@@ -16,6 +16,8 @@ type Publication struct {
 	Name string `json:"name"`
 	Url  string `json:"url"`
 
+	CreatedBy int64 `json:"createdby"`
+
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
 }
@@ -211,23 +213,22 @@ func CreatePublicationFromName(c appengine.Context, name string) (Publication, e
 * Format methods
  */
 
-func FormatPublicationId(c appengine.Context, publication *Publication) (int64, error) {
+func FormatPublicationId(c appengine.Context, publication int64) (int64, error) {
 	// Get the id of the current agency
-	publicationWithId, err := getPublication(c, publication.Id)
-	publication.Id = publicationWithId.Id
+	publicationWithId, err := getPublication(c, publication)
 
 	if err != nil {
 		return 0, err
 	}
 
-	return publication.Id, nil
+	return publicationWithId.Id, nil
 }
 
-func FormatPublicationsId(c appengine.Context, publications []Publication) ([]int64, error) {
+func FormatPublicationsId(c appengine.Context, publications []int64) ([]int64, error) {
 	// Get the id of the current agency
 	publicationIds := []int64{}
 	for i := 0; i < len(publications); i++ {
-		publicationId, err := FormatPublicationId(c, &publications[i])
+		publicationId, err := FormatPublicationId(c, publications[i])
 
 		if err != nil {
 			return []int64{}, err

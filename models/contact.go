@@ -20,8 +20,9 @@ type Contact struct {
 	Twitter   string `json:"twitter"`
 	Instagram string `json:"instagram"`
 
-	WorksAt   []Publication `json:"-"`
-	Employers []int64       `json:"employers"`
+	Employers []int64 `json:"employers"` // Type Publication
+
+	CreatedBy int64 `json:"createdby"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -106,7 +107,7 @@ func GetContacts(c appengine.Context) ([]Contact, error) {
 	for i := 0; i < len(contacts); i++ {
 		contacts[i].Id = ks[i].IntID()
 
-		publicationIds, err := FormatPublicationsId(c, contacts[i].WorksAt)
+		publicationIds, err := FormatPublicationsId(c, contacts[i].Employers)
 		if err != nil {
 			return []Contact{}, err
 		}
@@ -148,13 +149,15 @@ func CreateContact(c appengine.Context, w http.ResponseWriter, r *http.Request) 
 	}
 
 	// WorksAt
+	contactEmployers := []int64{}
 	for i := 0; i < len(contact.Employers); i++ {
 		publication, err := getPublication(c, contact.Employers[i])
 		if err != nil {
 			return Contact{}, err
 		}
-		contact.WorksAt = append(contact.WorksAt, publication)
+		contactEmployers = append(contactEmployers, publication.Id)
 	}
+	contact.Employers = contactEmployers
 
 	// Create contact
 	_, err = contact.create(c)
