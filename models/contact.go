@@ -45,10 +45,11 @@ func (ct *Contact) key(c appengine.Context) *datastore.Key {
 * Get methods
  */
 
-func getContact(c appengine.Context, id string) (Contact, error) {
+func getContact(c appengine.Context, id int64) (Contact, error) {
 	// Get the Contact by id
 	contacts := []Contact{}
-	ks, err := datastore.NewQuery("Contact").Filter("ID =", id).GetAll(c, &contacts)
+	contactId := datastore.NewKey(c, "Contact", "", id, nil)
+	ks, err := datastore.NewQuery("Contact").Filter("__key__ =", contactId).GetAll(c, &contacts)
 	if err != nil {
 		return Contact{}, err
 	}
@@ -120,7 +121,12 @@ func GetContacts(c appengine.Context) ([]Contact, error) {
 
 func GetContact(c appengine.Context, id string) (Contact, error) {
 	// Get the details of the current user
-	contact, err := getContact(c, id)
+	currentId, err := StringIdToInt(id)
+	if err != nil {
+		return Contact{}, err
+	}
+
+	contact, err := getContact(c, currentId)
 	if err != nil {
 		return Contact{}, err
 	}

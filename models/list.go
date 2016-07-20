@@ -1,7 +1,9 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
+	"net/http"
 	"time"
 
 	"appengine"
@@ -10,6 +12,8 @@ import (
 
 type MediaList struct {
 	Id int64 `json:"id" datastore:"-"`
+
+	Name string `json:"name"`
 
 	Contacts []Contact `json:"contacts"`
 
@@ -32,10 +36,11 @@ func (ml *MediaList) key(c appengine.Context) *datastore.Key {
 * Get methods
  */
 
-func getMediaList(c appengine.Context, id string) (MediaList, error) {
+func getMediaList(c appengine.Context, id int64) (MediaList, error) {
 	// Get the MediaList by id
 	mediaLists := []MediaList{}
-	ks, err := datastore.NewQuery("MediaList").Filter("ID =", id).GetAll(c, &mediaLists)
+	mediaListId := datastore.NewKey(c, "Agency", "", id, nil)
+	ks, err := datastore.NewQuery("MediaList").Filter("__key__ =", mediaListId).GetAll(c, &mediaLists)
 	if err != nil {
 		return MediaList{}, err
 	}
@@ -100,9 +105,82 @@ func GetMediaLists(c appengine.Context) ([]MediaList, error) {
 
 func GetMediaList(c appengine.Context, id string) (MediaList, error) {
 	// Get the details of the current user
-	mediaList, err := getMediaList(c, id)
+	currentId, err := StringIdToInt(id)
 	if err != nil {
 		return MediaList{}, err
 	}
+
+	mediaList, err := getMediaList(c, currentId)
+	if err != nil {
+		return MediaList{}, err
+	}
+	return mediaList, nil
+}
+
+/*
+* Create methods
+ */
+
+// Method not completed
+func CreateMediaList(c appengine.Context, w http.ResponseWriter, r *http.Request) (MediaList, error) {
+	decoder := json.NewDecoder(r.Body)
+	var medialist MediaList
+	err := decoder.Decode(&medialist)
+	if err != nil {
+		return MediaList{}, err
+	}
+
+	// Contacts in Media List
+	for i := 0; i < len(medialist.Contacts); i++ {
+		contact, err := getContact(c, medialist.Contacts[i].Id)
+		if err != nil {
+			return MediaList{}, err
+		}
+		medialist.Contacts[i] = contact
+	}
+
+	// Create contact
+	_, err = medialist.create(c)
+	if err != nil {
+		return MediaList{}, err
+	}
+
+	return medialist, nil
+}
+
+/*
+* Update methods
+ */
+
+func UpdateMediaList(c appengine.Context, r *http.Request, id string) (MediaList, error) {
+	// Get the details of the current media list
+	mediaList, err := GetMediaList(c, id)
+	if err != nil {
+		return MediaList{}, err
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var updatedMediaList MediaList
+	err = decoder.Decode(&updatedMediaList)
+	if err != nil {
+		return MediaList{}, err
+	}
+
+	mediaList.Name = updatedMediaList.Name
+
+	// Media List Contacts
+	newMediaListContacts := []Contact{}
+	for i := 0; i < len(updatedMediaList.Contacts); i++ {
+		contact, err := getContact(c, updatedMediaList.Contacts[i].Id)
+		if err != nil {
+			return MediaList{}, err
+		}
+		newMediaListContacts = append(newMediaListContacts, contact)
+	}
+	if len(newMediaListContacts) > 0 {
+		mediaList.Contacts = newMediaListContacts
+	}
+
+	mediaList.save(c)
 	return mediaList, nil
 }

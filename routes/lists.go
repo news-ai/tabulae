@@ -17,14 +17,18 @@ func handleMediaList(c appengine.Context, r *http.Request, id string) (interface
 	switch r.Method {
 	case "GET":
 		return models.GetMediaList(c, id)
+	case "PATCH":
+		return models.UpdateMediaList(c, r, id)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }
 
-func handleMediaLists(c appengine.Context, r *http.Request) (interface{}, error) {
+func handleMediaLists(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return models.GetMediaLists(c)
+	case "POST":
+		return models.CreateMediaList(c, w, r)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }
@@ -40,7 +44,7 @@ func MediaListsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	val, err := handleMediaLists(c, r)
+	val, err := handleMediaLists(c, w, r)
 
 	if err == nil {
 		err = json.NewEncoder(w).Encode(val)

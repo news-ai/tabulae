@@ -249,5 +249,4 @@ func UpdateUser(c appengine.Context, r *http.Request, id string) (User, error) {
 
 	user.save(c)
 	return user, nil
-
 }
