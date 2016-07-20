@@ -15,7 +15,8 @@ type MediaList struct {
 
 	Name string `json:"name"`
 
-	Contacts []Contact `json:"contacts"`
+	MediaContacts []Contact `json:"-"`
+	Contacts      []int64   `json:"contacts"`
 
 	CreatedBy User `json:"createdby"`
 
@@ -132,11 +133,11 @@ func CreateMediaList(c appengine.Context, w http.ResponseWriter, r *http.Request
 
 	// Contacts in Media List
 	for i := 0; i < len(medialist.Contacts); i++ {
-		contact, err := getContact(c, medialist.Contacts[i].Id)
+		contact, err := getContact(c, medialist.Contacts[i])
 		if err != nil {
 			return MediaList{}, err
 		}
-		medialist.Contacts[i] = contact
+		medialist.MediaContacts = append(medialist.MediaContacts, contact)
 	}
 
 	// Create contact
@@ -169,16 +170,19 @@ func UpdateMediaList(c appengine.Context, r *http.Request, id string) (MediaList
 	mediaList.Name = updatedMediaList.Name
 
 	// Media List Contacts
-	newMediaListContacts := []Contact{}
+	newMediaListMediaContacts := []Contact{}
+	newMediaListContacts := []int64{}
 	for i := 0; i < len(updatedMediaList.Contacts); i++ {
-		contact, err := getContact(c, updatedMediaList.Contacts[i].Id)
+		contact, err := getContact(c, updatedMediaList.Contacts[i])
 		if err != nil {
 			return MediaList{}, err
 		}
-		newMediaListContacts = append(newMediaListContacts, contact)
+		newMediaListContacts = append(newMediaListContacts, contact.Id)
+		newMediaListMediaContacts = append(newMediaListMediaContacts, contact)
 	}
 	if len(newMediaListContacts) > 0 {
 		mediaList.Contacts = newMediaListContacts
+		mediaList.MediaContacts = newMediaListMediaContacts
 	}
 
 	mediaList.save(c)
