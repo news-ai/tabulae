@@ -151,7 +151,7 @@ func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
 			agency.Created = time.Now()
 			agency.create(c)
 		}
-		u.WorksAt = append(u.WorksAt, agency)
+		u.Employers = append(u.Employers, agency.Id)
 		u.save(c)
 		return agency, nil
 	}

@@ -62,7 +62,7 @@ func (ml *MediaList) create(c appengine.Context) (*MediaList, error) {
 		return ml, err
 	}
 
-	ml.CreatedBy = currentUser
+	ml.CreatedBy = currentUser.Id
 	ml.Created = time.Now()
 
 	_, err = ml.save(c)
@@ -131,15 +131,6 @@ func CreateMediaList(c appengine.Context, w http.ResponseWriter, r *http.Request
 		return MediaList{}, err
 	}
 
-	// Contacts in Media List
-	for i := 0; i < len(medialist.Contacts); i++ {
-		contact, err := getContact(c, medialist.Contacts[i])
-		if err != nil {
-			return MediaList{}, err
-		}
-		medialist.MediaContacts = append(medialist.MediaContacts, contact)
-	}
-
 	// Create contact
 	_, err = medialist.create(c)
 	if err != nil {
@@ -168,22 +159,7 @@ func UpdateMediaList(c appengine.Context, r *http.Request, id string) (MediaList
 	}
 
 	mediaList.Name = updatedMediaList.Name
-
-	// Media List Contacts
-	newMediaListMediaContacts := []Contact{}
-	newMediaListContacts := []int64{}
-	for i := 0; i < len(updatedMediaList.Contacts); i++ {
-		contact, err := getContact(c, updatedMediaList.Contacts[i])
-		if err != nil {
-			return MediaList{}, err
-		}
-		newMediaListContacts = append(newMediaListContacts, contact.Id)
-		newMediaListMediaContacts = append(newMediaListMediaContacts, contact)
-	}
-	if len(newMediaListContacts) > 0 {
-		mediaList.Contacts = newMediaListContacts
-		mediaList.MediaContacts = newMediaListMediaContacts
-	}
+	mediaList.Contacts = updatedMediaList.Contacts
 
 	mediaList.save(c)
 	return mediaList, nil

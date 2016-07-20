@@ -19,10 +19,7 @@ type User struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 
-	// Same fields. WorksAt becomes Employers.
 	Employers []int64 `json:"employers"`
-
-	CreatedBy int64 `json:"createdby"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -55,12 +52,6 @@ func getUserById(c appengine.Context, id int64) (User, error) {
 
 	if len(users) > 0 {
 		users[0].Id = ks[0].IntID()
-		agencyId, err := FormatAgenciesId(c, users[0].WorksAt)
-		if err != nil {
-			return User{}, err
-		}
-
-		users[0].Employers = agencyId
 		return users[0], nil
 	}
 	return User{}, errors.New("No user by this id")
@@ -76,12 +67,6 @@ func filterUser(c appengine.Context, queryType, query string) (User, error) {
 
 	if len(users) > 0 {
 		users[0].Id = ks[0].IntID()
-		agencyId, err := FormatAgenciesId(c, users[0].WorksAt)
-		if err != nil {
-			return User{}, err
-		}
-
-		users[0].Employers = agencyId
 		return users[0], nil
 	}
 	return User{}, errors.New("No user by this " + queryType)
@@ -98,14 +83,6 @@ func getUsers(c appengine.Context) ([]User, error) {
 
 	for i := 0; i < len(users); i++ {
 		users[i].Id = ks[i].IntID()
-		agencyId, err := FormatAgenciesId(c, users[i].WorksAt)
-		if err != nil {
-			return []User{}, err
-		}
-
-		c.Infof("%v", agencyId)
-
-		users[i].Employers = agencyId
 	}
 	return users, nil
 }
@@ -141,7 +118,7 @@ func (u *User) save(c appengine.Context) (*User, error) {
 }
 
 func (u *User) update(c appengine.Context) (*User, error) {
-	if len(u.WorksAt) == 0 {
+	if len(u.Employers) == 0 {
 		CreateAgencyFromUser(c, u)
 	}
 	return u, nil
@@ -231,22 +208,6 @@ func UpdateUser(c appengine.Context, r *http.Request, id string) (User, error) {
 
 	user.FirstName = updatedUser.FirstName
 	user.LastName = updatedUser.LastName
-
-	// WorksAt
-	newWorksAt := []Agency{}
-	newEmployers := []int64{}
-	for i := 0; i < len(updatedUser.Employers); i++ {
-		employer, err := getAgency(c, updatedUser.Employers[i])
-		if err != nil {
-			return User{}, err
-		}
-		newWorksAt = append(newWorksAt, employer)
-		newEmployers = append(newEmployers, employer.Id)
-	}
-	if len(newWorksAt) > 0 {
-		user.Employers = newEmployers
-		user.WorksAt = newWorksAt
-	}
 
 	user.save(c)
 	return user, nil

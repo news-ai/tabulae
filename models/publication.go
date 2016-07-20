@@ -89,9 +89,15 @@ func getPublicationByUrl(c appengine.Context, url string) (Publication, error) {
 
 // Function to create a new publication into App Engine
 func (p *Publication) create(c appengine.Context) (*Publication, error) {
+	currentUser, err := GetCurrentUser(c)
+	if err != nil {
+		return p, err
+	}
+
+	p.CreatedBy = currentUser.Id
 	p.Created = time.Now()
 
-	_, err := p.save(c)
+	_, err = p.save(c)
 	return p, err
 }
 
