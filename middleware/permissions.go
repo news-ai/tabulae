@@ -7,9 +7,9 @@ import (
 )
 
 type Error struct {
-	MessageOne error
-	MessageTwo error
-	StatusCode int
+	ErrorMessage error `json:"error"`
+	Message      error `json:"message"`
+	StatusCode   int   `json:"code"`
 }
 
 func errorBase() map[string][]map[string]string {

@@ -53,7 +53,7 @@ func getAgency(c appengine.Context, id int64) (Agency, error) {
 }
 
 func getAgencyByEmail(c appengine.Context, email string) (Agency, error) {
-	// Get the current signed in user details by Email
+	// Get an agency by their email extension
 	agencies := []Agency{}
 	ks, err := datastore.NewQuery("Agency").Filter("Email =", email).GetAll(c, &agencies)
 	if err != nil {
@@ -112,7 +112,7 @@ func GetAgencies(c appengine.Context) ([]Agency, error) {
 }
 
 func GetAgency(c appengine.Context, id string) (Agency, error) {
-	// Get the details of the current user
+	// Get the details of the current agency
 	currentId, err := StringIdToInt(id)
 	if err != nil {
 		return Agency{}, err

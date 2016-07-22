@@ -43,7 +43,7 @@ func (u *User) key(c appengine.Context) *datastore.Key {
 * Get methods
  */
 
-func getUserById(c appengine.Context, id int64) (User, error) {
+func getUser(c appengine.Context, id int64) (User, error) {
 	// Get the current signed in user details by Id
 	users := []User{}
 	userId := datastore.NewKey(c, "User", "", id, nil)
@@ -57,21 +57,6 @@ func getUserById(c appengine.Context, id int64) (User, error) {
 		return users[0], nil
 	}
 	return User{}, errors.New("No user by this id")
-}
-
-func filterUser(c appengine.Context, queryType, query string) (User, error) {
-	// Get the current signed in user details by Id
-	users := []User{}
-	ks, err := datastore.NewQuery("User").Filter(queryType+" =", query).GetAll(c, &users)
-	if err != nil {
-		return User{}, err
-	}
-
-	if len(users) > 0 {
-		users[0].Id = ks[0].IntID()
-		return users[0], nil
-	}
-	return User{}, errors.New("No user by this " + queryType)
 }
 
 // Gets every single user
@@ -127,6 +112,25 @@ func (u *User) update(c appengine.Context) (*User, error) {
 }
 
 /*
+* Filter methods
+ */
+
+func filterUser(c appengine.Context, queryType, query string) (User, error) {
+	// Get the current signed in user details by Id
+	users := []User{}
+	ks, err := datastore.NewQuery("User").Filter(queryType+" =", query).GetAll(c, &users)
+	if err != nil {
+		return User{}, err
+	}
+
+	if len(users) > 0 {
+		users[0].Id = ks[0].IntID()
+		return users[0], nil
+	}
+	return User{}, errors.New("No user by this " + queryType)
+}
+
+/*
 * Public methods
  */
 
@@ -157,7 +161,7 @@ func GetUser(c appengine.Context, id string) (User, error) {
 		if err != nil {
 			return User{}, err
 		}
-		user, err := getUserById(c, userId)
+		user, err := getUser(c, userId)
 		if err != nil {
 			return User{}, errors.New("No user by this id")
 		}

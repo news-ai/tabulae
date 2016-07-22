@@ -17,5 +17,4 @@ func BaseHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-
 }

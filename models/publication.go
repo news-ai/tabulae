@@ -55,34 +55,6 @@ func getPublication(c appengine.Context, id int64) (Publication, error) {
 	return Publication{}, errors.New("No publication by this id")
 }
 
-func getPublicationByName(c appengine.Context, name string) (Publication, error) {
-	// Get a publication by the URL
-	publications := []Publication{}
-	ks, err := datastore.NewQuery("Publication").Filter("Name =", name).GetAll(c, &publications)
-	if err != nil {
-		return Publication{}, err
-	}
-	if len(publications) > 0 {
-		publications[0].Id = ks[0].IntID()
-		return publications[0], nil
-	}
-	return Publication{}, errors.New("No publication by this name")
-}
-
-func getPublicationByUrl(c appengine.Context, url string) (Publication, error) {
-	// Get a publication by the URL
-	publications := []Publication{}
-	ks, err := datastore.NewQuery("Publication").Filter("Url =", url).GetAll(c, &publications)
-	if err != nil {
-		return Publication{}, err
-	}
-	if len(publications) > 0 {
-		publications[0].Id = ks[0].IntID()
-		return publications[0], nil
-	}
-	return Publication{}, errors.New("No publication by this url")
-}
-
 /*
 * Create methods
  */
@@ -116,6 +88,24 @@ func (p *Publication) save(c appengine.Context) (*Publication, error) {
 }
 
 /*
+* Filter methods
+ */
+
+func filterPublication(c appengine.Context, queryType, query string) (Publication, error) {
+	// Get a publication by the URL
+	publications := []Publication{}
+	ks, err := datastore.NewQuery("Publication").Filter(queryType+" =", query).GetAll(c, &publications)
+	if err != nil {
+		return Publication{}, err
+	}
+	if len(publications) > 0 {
+		publications[0].Id = ks[0].IntID()
+		return publications[0], nil
+	}
+	return Publication{}, errors.New("No publication by this name")
+}
+
+/*
 * Public methods
  */
 
@@ -129,6 +119,7 @@ func GetPublications(c appengine.Context) ([]Publication, error) {
 	if err != nil {
 		return []Publication{}, err
 	}
+
 	for i := 0; i < len(publications); i++ {
 		publications[i].Id = ks[i].IntID()
 	}
@@ -151,7 +142,7 @@ func GetPublication(c appengine.Context, id string) (Publication, error) {
 
 func GetPublicationByUrl(c appengine.Context, url string) (Publication, error) {
 	// Get the id of the current publication
-	publication, err := getPublicationByUrl(c, url)
+	publication, err := filterPublication(c, "Url", url)
 	if err != nil {
 		return Publication{}, err
 	}
@@ -160,7 +151,7 @@ func GetPublicationByUrl(c appengine.Context, url string) (Publication, error) {
 
 func GetPublicationByName(c appengine.Context, name string) (Publication, error) {
 	// Get the id of the current publication
-	publication, err := getPublicationByName(c, name)
+	publication, err := filterPublication(c, "Name", name)
 	if err != nil {
 		return Publication{}, err
 	}

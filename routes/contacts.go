@@ -36,12 +36,6 @@ func handleContacts(c appengine.Context, w http.ResponseWriter, r *http.Request)
 func ContactsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-	u := GetUser(c, w)
-
-	err := IsAdmin(w, r, u)
-	if err != nil {
-		return
-	}
 
 	val, err := handleContacts(c, w, r)
 

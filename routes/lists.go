@@ -7,7 +7,6 @@ import (
 
 	"appengine"
 
-	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 
 	"github.com/news-ai/tabulae/middleware"
@@ -38,15 +37,6 @@ func handleMediaLists(c appengine.Context, w http.ResponseWriter, r *http.Reques
 func MediaListsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-	u := GetUser(c, w)
-
-	_, ok := context.GetOk(r, "user")
-	c.Infof("%v", ok)
-
-	err := IsAdmin(w, r, u)
-	if err != nil {
-		return
-	}
 
 	val, err := handleMediaLists(c, w, r)
 

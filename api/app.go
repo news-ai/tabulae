@@ -20,7 +20,8 @@ func init() {
 
 	// CORs
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"https://newsai.org"},
+		AllowedOrigins:   []string{"https://newsai.org", "http://localhost:3000"},
+		AllowCredentials: true,
 	})
 	app.Use(c)
 

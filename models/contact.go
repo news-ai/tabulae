@@ -60,10 +60,6 @@ func getContact(c appengine.Context, id int64) (Contact, error) {
 	return Contact{}, errors.New("No contact by this id")
 }
 
-// func getContactByWorksAt(c appengine.Context, worksat string) (Contact, error) {
-
-// }
-
 /*
 * Create methods
  */
@@ -118,9 +114,6 @@ func GetContacts(c appengine.Context) ([]Contact, error) {
 	return contacts, nil
 }
 
-// func GetContactByWorksAt(c appengine.Context, email string) (Contact, error) {
-// }
-
 func GetContact(c appengine.Context, id string) (Contact, error) {
 	// Get the details of the current user
 	currentId, err := StringIdToInt(id)
@@ -139,7 +132,6 @@ func GetContact(c appengine.Context, id string) (Contact, error) {
 * Create methods
  */
 
-// Method not completed
 func CreateContact(c appengine.Context, w http.ResponseWriter, r *http.Request) (Contact, error) {
 	decoder := json.NewDecoder(r.Body)
 	var contact Contact
@@ -167,6 +159,3 @@ func CreateContact(c appengine.Context, w http.ResponseWriter, r *http.Request) 
 
 	return contact, nil
 }
-
-// func CreateContactFromWorksAt(c appengine.Context, u *User) (Agency, error) {
-// }
