@@ -30,7 +30,6 @@ type Agency struct {
 // Generates a new key for the data to be stored on App Engine
 func (a *Agency) key(c appengine.Context) *datastore.Key {
 	if a.Id == 0 {
-		a.Created = time.Now()
 		return datastore.NewIncompleteKey(c, "Agency", nil)
 	}
 	return datastore.NewKey(c, "Agency", "", a.Id, nil)
@@ -71,6 +70,9 @@ func (a *Agency) create(c appengine.Context) (*Agency, error) {
 
 // Function to save a new agency into App Engine
 func (a *Agency) save(c appengine.Context) (*Agency, error) {
+	// Update the Updated time
+	a.Updated = time.Now()
+
 	k, err := datastore.Put(c, a.key(c), a)
 	if err != nil {
 		return nil, err
@@ -176,36 +178,4 @@ func FilterAgencyByEmail(c appengine.Context, email string) (Agency, error) {
 		return Agency{}, err
 	}
 	return agency, nil
-}
-
-/*
-* Format methods
- */
-
-func FormatAgencyId(c appengine.Context, agency *Agency) (int64, error) {
-	// Get the id of the current agency
-	agencyWithId, err := FilterAgencyByEmail(c, agency.Email)
-	agency.Id = agencyWithId.Id
-
-	if err != nil {
-		return 0, err
-	}
-
-	return agency.Id, nil
-}
-
-func FormatAgenciesId(c appengine.Context, agencies []Agency) ([]int64, error) {
-	// Get the id of the current agency
-	agencyIds := []int64{}
-	for i := 0; i < len(agencies); i++ {
-		agencyId, err := FormatAgencyId(c, &agencies[i])
-
-		if err != nil {
-			return []int64{}, err
-		}
-
-		agencyIds = append(agencyIds, agencyId)
-	}
-
-	return agencyIds, nil
 }

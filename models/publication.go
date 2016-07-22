@@ -29,7 +29,6 @@ type Publication struct {
 // Generates a new key for the data to be stored on App Engine
 func (p *Publication) key(c appengine.Context) *datastore.Key {
 	if p.Id == 0 {
-		p.Created = time.Now()
 		return datastore.NewIncompleteKey(c, "Publication", nil)
 	}
 	return datastore.NewKey(c, "Publication", "", p.Id, nil)
@@ -79,6 +78,10 @@ func (p *Publication) create(c appengine.Context) (*Publication, error) {
 
 // Function to save a new publication into App Engine
 func (p *Publication) save(c appengine.Context) (*Publication, error) {
+	// Update the Updated time
+	p.Updated = time.Now()
+
+	// Save the object
 	k, err := datastore.Put(c, p.key(c), p)
 	if err != nil {
 		return nil, err
@@ -154,17 +157,19 @@ func CreatePublication(c appengine.Context, w http.ResponseWriter, r *http.Reque
 	}
 
 	// Validate Fields
-	if publication.Name == "" || publication.Url == "" {
+	if publication.Name == "" {
 		return Publication{}, errors.New("Missing fields")
 	}
 
 	// Format URL properly
-	publication.Url, err = NormalizeUrl(publication.Url)
-	if err != nil {
-		return Publication{}, err
+	if publication.Url != "" {
+		publication.Url, err = NormalizeUrl(publication.Url)
+		if err != nil {
+			return Publication{}, err
+		}
 	}
 
-	presentPublication, err := FilterPublicationByUrl(c, publication.Url)
+	presentPublication, err := FilterPublicationByName(c, publication.Name)
 	if err != nil {
 		// Create publication
 		_, err = publication.create(c)
@@ -175,16 +180,6 @@ func CreatePublication(c appengine.Context, w http.ResponseWriter, r *http.Reque
 	}
 
 	return presentPublication, nil
-}
-
-func CreatePublicationFromName(c appengine.Context, name string) (Publication, error) {
-	publication := Publication{}
-	publication.Name = name
-	_, err := publication.create(c)
-	if err != nil {
-		return Publication{}, err
-	}
-	return publication, nil
 }
 
 /*
@@ -207,35 +202,4 @@ func FilterPublicationByName(c appengine.Context, name string) (Publication, err
 		return Publication{}, err
 	}
 	return publication, nil
-}
-
-/*
-* Format methods
- */
-
-func FormatPublicationId(c appengine.Context, publication int64) (int64, error) {
-	// Get the id of the current agency
-	publicationWithId, err := getPublication(c, publication)
-
-	if err != nil {
-		return 0, err
-	}
-
-	return publicationWithId.Id, nil
-}
-
-func FormatPublicationsId(c appengine.Context, publications []int64) ([]int64, error) {
-	// Get the id of the current agency
-	publicationIds := []int64{}
-	for i := 0; i < len(publications); i++ {
-		publicationId, err := FormatPublicationId(c, publications[i])
-
-		if err != nil {
-			return []int64{}, err
-		}
-
-		publicationIds = append(publicationIds, publicationId)
-	}
-
-	return publicationIds, nil
 }
