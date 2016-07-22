@@ -1,4 +1,4 @@
-package tabulae
+package router
 
 import (
 	"net/http"
@@ -13,7 +13,7 @@ type Action struct {
 	Routes      Resource
 }
 
-func getRoutes() []Action {
+func GetRoutes() []Action {
 	router := []Action{
 		Action{
 			"/", map[string]Handler{

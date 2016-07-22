@@ -26,7 +26,7 @@ func handlePublications(c appengine.Context, w http.ResponseWriter, r *http.Requ
 	case "GET":
 		if len(r.URL.Query()) > 0 {
 			if val, ok := r.URL.Query()["name"]; ok && len(val) > 0 {
-				return models.GetPublicationByName(c, val[0])
+				return models.FilterPublicationByName(c, val[0])
 			}
 		} else {
 			u := GetUser(c, w)

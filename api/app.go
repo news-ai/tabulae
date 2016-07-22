@@ -9,6 +9,7 @@ import (
 	"github.com/rs/cors"
 
 	"github.com/news-ai/tabulae/middleware"
+	"github.com/news-ai/tabulae/router"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func init() {
 	api := mux.NewRouter().PathPrefix("/api").Subrouter().StrictSlash(true)
 
 	// Register routes
-	apiRoutes := getRoutes()
+	apiRoutes := router.GetRoutes()
 	for i := 0; i < len(apiRoutes); i++ {
 		api.HandleFunc(apiRoutes[i].HandlerName, apiRoutes[i].Routes["/"])
 		if len(apiRoutes[i].Routes) > 1 {

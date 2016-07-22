@@ -2,7 +2,7 @@ package models
 
 import (
 	"errors"
-	"net/http"
+	// "net/http"
 	"time"
 
 	"appengine"
@@ -163,9 +163,9 @@ func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
 * Update methods
  */
 
-func UpdateAgency(c appengine.Context, r *http.Request, id string) (Agency, error) {
+// func UpdateAgency(c appengine.Context, r *http.Request, id string) (Agency, error) {
 
-}
+// }
 
 /*
 * Filter methods
