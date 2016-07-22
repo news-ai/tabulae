@@ -9,6 +9,8 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
+
+	"github.com/gorilla/context"
 )
 
 type User struct {
@@ -177,13 +179,20 @@ func GetCurrentUser(c appengine.Context) (User, error) {
 * Create methods
  */
 
-func NewOrUpdateUser(c appengine.Context) {
-	user, err := GetCurrentUser(c)
-	if err != nil {
-		// Add the user if there is no user
-		user := User{}
-		_, err = user.create(c)
+func NewOrUpdateUser(c appengine.Context, r *http.Request) {
+	_, ok := context.GetOk(r, "user")
+	if !ok {
+		user, err := GetCurrentUser(c)
+		if err != nil {
+			// Add the user if there is no user
+			user := User{}
+			_, err = user.create(c)
+		} else {
+			user.update(c)
+		}
+		context.Set(r, "user", user)
 	} else {
+		user := context.Get(r, "user").(User)
 		user.update(c)
 	}
 }

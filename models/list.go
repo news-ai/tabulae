@@ -47,6 +47,14 @@ func getMediaList(c appengine.Context, id int64) (MediaList, error) {
 	if len(mediaLists) > 0 {
 		mediaLists[0].Id = ks[0].IntID()
 
+		user, err := GetCurrentUser(c)
+		if err != nil {
+			return MediaList{}, errors.New("Could not get user")
+		}
+		if mediaLists[0].CreatedBy != user.Id {
+			return MediaList{}, errors.New("Forbidden")
+		}
+
 		return mediaLists[0], nil
 	}
 	return MediaList{}, errors.New("No media list by this id")

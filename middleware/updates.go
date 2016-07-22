@@ -10,6 +10,6 @@ import (
 
 func UpdateOrCreateUser(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	c := appengine.NewContext(r)
-	models.NewOrUpdateUser(c)
+	models.NewOrUpdateUser(c, r)
 	next(w, r)
 }

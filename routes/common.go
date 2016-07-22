@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"appengine"
+	"appengine/file"
 	"appengine/user"
 
 	"github.com/news-ai/tabulae/middleware"
@@ -21,4 +22,15 @@ func IsAdmin(w http.ResponseWriter, r *http.Request, u *user.User) error {
 		return errors.New("Admin login only")
 	}
 	return nil
+}
+
+func getStorageBucket(c appengine.Context, bucket string) (string, error) {
+	if bucket == "" {
+		var err error
+		if bucket, err = file.DefaultBucketName(c); err != nil {
+			return bucket, err
+		}
+		return bucket, nil
+	}
+	return bucket, nil
 }
