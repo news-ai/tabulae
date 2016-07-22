@@ -33,6 +33,13 @@ func handleAgencies(c appengine.Context, r *http.Request) (interface{}, error) {
 func AgenciesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
+	u := GetUser(c, w)
+
+	err := IsAdmin(w, r, u)
+	if err != nil {
+		middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+		return
+	}
 
 	val, err := handleAgencies(c, r)
 

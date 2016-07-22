@@ -22,15 +22,20 @@ func handlePublication(c appengine.Context, r *http.Request, id string) (interfa
 }
 
 func handlePublications(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	c.Infof("%v", r.URL.Query())
 	switch r.Method {
 	case "GET":
 		if len(r.URL.Query()) > 0 {
 			if val, ok := r.URL.Query()["name"]; ok && len(val) > 0 {
 				return models.GetPublicationByName(c, val[0])
 			}
+		} else {
+			u := GetUser(c, w)
+			err := IsAdmin(w, r, u)
+			if err != nil {
+				return nil, err
+			}
+			return models.GetPublications(c)
 		}
-		return models.GetPublications(c)
 	case "POST":
 		return models.CreatePublication(c, w, r)
 	}

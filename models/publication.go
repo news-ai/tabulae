@@ -102,7 +102,7 @@ func filterPublication(c appengine.Context, queryType, query string) (Publicatio
 		publications[0].Id = ks[0].IntID()
 		return publications[0], nil
 	}
-	return Publication{}, errors.New("No publication by this name")
+	return Publication{}, errors.New("No publication by this " + queryType)
 }
 
 /*

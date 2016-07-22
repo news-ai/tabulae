@@ -52,20 +52,6 @@ func getAgency(c appengine.Context, id int64) (Agency, error) {
 	return Agency{}, errors.New("No agency by this id")
 }
 
-func getAgencyByEmail(c appengine.Context, email string) (Agency, error) {
-	// Get an agency by their email extension
-	agencies := []Agency{}
-	ks, err := datastore.NewQuery("Agency").Filter("Email =", email).GetAll(c, &agencies)
-	if err != nil {
-		return Agency{}, err
-	}
-	if len(agencies) > 0 {
-		agencies[0].Id = ks[0].IntID()
-		return agencies[0], nil
-	}
-	return Agency{}, errors.New("No agency by this email")
-}
-
 /*
 * Create methods
  */
@@ -88,6 +74,24 @@ func (a *Agency) save(c appengine.Context) (*Agency, error) {
 	}
 	a.Id = k.IntID()
 	return a, nil
+}
+
+/*
+* Filter methods
+ */
+
+func filterAgency(c appengine.Context, queryType, query string) (Agency, error) {
+	// Get an agency by their email extension
+	agencies := []Agency{}
+	ks, err := datastore.NewQuery("Publication").Filter(queryType+" =", query).GetAll(c, &agencies)
+	if err != nil {
+		return Agency{}, err
+	}
+	if len(agencies) > 0 {
+		agencies[0].Id = ks[0].IntID()
+		return agencies[0], nil
+	}
+	return Agency{}, errors.New("No agency by this " + queryType)
 }
 
 /*
@@ -127,7 +131,7 @@ func GetAgency(c appengine.Context, id string) (Agency, error) {
 
 func GetAgencyByEmail(c appengine.Context, email string) (Agency, error) {
 	// Get the id of the current agency
-	agency, err := getAgencyByEmail(c, email)
+	agency, err := filterAgency(c, "Email", email)
 	if err != nil {
 		return Agency{}, err
 	}
@@ -164,7 +168,7 @@ func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
 
 func FormatAgencyId(c appengine.Context, agency *Agency) (int64, error) {
 	// Get the id of the current agency
-	agencyWithId, err := getAgencyByEmail(c, agency.Email)
+	agencyWithId, err := GetAgencyByEmail(c, agency.Email)
 	agency.Id = agencyWithId.Id
 
 	if err != nil {

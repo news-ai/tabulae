@@ -102,13 +102,6 @@ func GetContacts(c appengine.Context) ([]Contact, error) {
 	}
 	for i := 0; i < len(contacts); i++ {
 		contacts[i].Id = ks[i].IntID()
-
-		publicationIds, err := FormatPublicationsId(c, contacts[i].Employers)
-		if err != nil {
-			return []Contact{}, err
-		}
-
-		contacts[i].Employers = append(contacts[i].Employers, publicationIds...)
 	}
 
 	return contacts, nil
