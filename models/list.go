@@ -102,10 +102,17 @@ func (ml *MediaList) save(c appengine.Context) (*MediaList, error) {
 // Gets every single media list
 func GetMediaLists(c appengine.Context) ([]MediaList, error) {
 	mediaLists := []MediaList{}
-	ks, err := datastore.NewQuery("MediaList").GetAll(c, &mediaLists)
+
+	user, err := GetCurrentUser(c)
 	if err != nil {
 		return []MediaList{}, err
 	}
+
+	ks, err := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id).GetAll(c, &mediaLists)
+	if err != nil {
+		return []MediaList{}, err
+	}
+
 	for i := 0; i < len(mediaLists); i++ {
 		mediaLists[i].Id = ks[i].IntID()
 	}
