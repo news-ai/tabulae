@@ -140,29 +140,10 @@ func GetPublication(c appengine.Context, id string) (Publication, error) {
 	return publication, nil
 }
 
-func GetPublicationByUrl(c appengine.Context, url string) (Publication, error) {
-	// Get the id of the current publication
-	publication, err := filterPublication(c, "Url", url)
-	if err != nil {
-		return Publication{}, err
-	}
-	return publication, nil
-}
-
-func GetPublicationByName(c appengine.Context, name string) (Publication, error) {
-	// Get the id of the current publication
-	publication, err := filterPublication(c, "Name", name)
-	if err != nil {
-		return Publication{}, err
-	}
-	return publication, nil
-}
-
 /*
 * Create methods
  */
 
-// Method not completed
 func CreatePublication(c appengine.Context, w http.ResponseWriter, r *http.Request) (Publication, error) {
 	// Parse JSON
 	decoder := json.NewDecoder(r.Body)
@@ -183,7 +164,7 @@ func CreatePublication(c appengine.Context, w http.ResponseWriter, r *http.Reque
 		return Publication{}, err
 	}
 
-	presentPublication, err := GetPublicationByUrl(c, publication.Url)
+	presentPublication, err := FilterPublicationByUrl(c, publication.Url)
 	if err != nil {
 		// Create publication
 		_, err = publication.create(c)
@@ -200,6 +181,28 @@ func CreatePublicationFromName(c appengine.Context, name string) (Publication, e
 	publication := Publication{}
 	publication.Name = name
 	_, err := publication.create(c)
+	if err != nil {
+		return Publication{}, err
+	}
+	return publication, nil
+}
+
+/*
+* Filter methods
+ */
+
+func FilterPublicationByUrl(c appengine.Context, url string) (Publication, error) {
+	// Get the id of the current publication
+	publication, err := filterPublication(c, "Url", url)
+	if err != nil {
+		return Publication{}, err
+	}
+	return publication, nil
+}
+
+func FilterPublicationByName(c appengine.Context, name string) (Publication, error) {
+	// Get the id of the current publication
+	publication, err := filterPublication(c, "Name", name)
 	if err != nil {
 		return Publication{}, err
 	}

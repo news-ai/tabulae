@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"net/http"
 	"time"
 
 	"appengine"
@@ -13,6 +14,8 @@ type Agency struct {
 
 	Name  string `json:"name"`
 	Email string `json:"email"`
+
+	Administrators []int64 `json:"administrators"`
 
 	CreatedBy int64 `json:"createdby"`
 
@@ -129,15 +132,6 @@ func GetAgency(c appengine.Context, id string) (Agency, error) {
 	return agency, nil
 }
 
-func GetAgencyByEmail(c appengine.Context, email string) (Agency, error) {
-	// Get the id of the current agency
-	agency, err := filterAgency(c, "Email", email)
-	if err != nil {
-		return Agency{}, err
-	}
-	return agency, nil
-}
-
 /*
 * Create methods
  */
@@ -147,12 +141,13 @@ func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
 	if err != nil {
 		return Agency{}, err
 	} else {
-		agency, err := GetAgencyByEmail(c, agencyEmail)
+		agency, err := FilterAgencyByEmail(c, agencyEmail)
 		if err != nil {
 			agency = Agency{}
 			agency.Name, err = GetAgencyName(agencyEmail)
 			agency.Email = agencyEmail
 			agency.Created = time.Now()
+			agency.Administrators = append(agency.Administrators, u.Id)
 			agency.create(c)
 		}
 		u.Employers = append(u.Employers, agency.Id)
@@ -163,12 +158,33 @@ func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
 }
 
 /*
+* Update methods
+ */
+
+func UpdateAgency(c appengine.Context, r *http.Request, id string) (Agency, error) {
+
+}
+
+/*
+* Filter methods
+ */
+
+func FilterAgencyByEmail(c appengine.Context, email string) (Agency, error) {
+	// Get the id of the current agency
+	agency, err := filterAgency(c, "Email", email)
+	if err != nil {
+		return Agency{}, err
+	}
+	return agency, nil
+}
+
+/*
 * Format methods
  */
 
 func FormatAgencyId(c appengine.Context, agency *Agency) (int64, error) {
 	// Get the id of the current agency
-	agencyWithId, err := GetAgencyByEmail(c, agency.Email)
+	agencyWithId, err := FilterAgencyByEmail(c, agency.Email)
 	agency.Id = agencyWithId.Id
 
 	if err != nil {
