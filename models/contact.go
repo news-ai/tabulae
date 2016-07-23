@@ -13,8 +13,9 @@ import (
 type Contact struct {
 	Id int64 `json:"id" datastore:"-"`
 
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+	Email     string `json:"email"`
 
 	LinkedIn  string `json:"linkedin"`
 	Twitter   string `json:"twitter"`
@@ -24,6 +25,8 @@ type Contact struct {
 	Blog      string `json:"blog"`
 
 	Employers []int64 `json:"employers"` // Type Publication
+
+	ParentContact int64 `json:"parent"`
 
 	CreatedBy int64 `json:"createdby"`
 
@@ -135,17 +138,6 @@ func CreateContact(c appengine.Context, w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		return Contact{}, err
 	}
-
-	// WorksAt
-	contactEmployers := []int64{}
-	for i := 0; i < len(contact.Employers); i++ {
-		publication, err := getPublication(c, contact.Employers[i])
-		if err != nil {
-			return Contact{}, err
-		}
-		contactEmployers = append(contactEmployers, publication.Id)
-	}
-	contact.Employers = contactEmployers
 
 	// Create contact
 	_, err = contact.create(c)
