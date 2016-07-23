@@ -19,6 +19,9 @@ type Contact struct {
 	LinkedIn  string `json:"linkedin"`
 	Twitter   string `json:"twitter"`
 	Instagram string `json:"instagram"`
+	MuckRack  string `json:"-"`
+	Website   string `json:"website"`
+	Blog      string `json:"blog"`
 
 	Employers []int64 `json:"employers"` // Type Publication
 

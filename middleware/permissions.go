@@ -24,6 +24,6 @@ func ReturnError(w http.ResponseWriter, errorCode int, messageOne string, messag
 	err := e.New(errorCode, messageOne, messageTwo)
 	r := render.New(render.Options{})
 	errors["errors"] = append(errors["errors"], err.Render())
-	r.JSON(w, http.StatusUnauthorized, errors)
+	r.JSON(w, errorCode, errors)
 	return
 }
