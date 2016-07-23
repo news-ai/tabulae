@@ -177,7 +177,7 @@ func UpdateMediaList(c appengine.Context, r *http.Request, id string) (MediaList
 	}
 
 	UpdateIfNotBlank(&mediaList.Name, updatedMediaList.Name)
-	if len(updatedMediaList.Contacts) {
+	if len(updatedMediaList.Contacts) > 0 {
 		mediaList.Contacts = updatedMediaList.Contacts
 	}
 

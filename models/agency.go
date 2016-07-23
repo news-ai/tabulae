@@ -145,14 +145,14 @@ func GetAgency(c appengine.Context, id string) (Agency, error) {
  */
 
 func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
-	agencyEmail, err := GetAgencyEmail(u.Email)
+	agencyEmail, err := ExtractAgencyEmail(u.Email)
 	if err != nil {
 		return Agency{}, err
 	} else {
 		agency, err := FilterAgencyByEmail(c, agencyEmail)
 		if err != nil {
 			agency = Agency{}
-			agency.Name, err = GetAgencyName(agencyEmail)
+			agency.Name, err = ExtractAgencyName(agencyEmail)
 			agency.Email = agencyEmail
 			agency.Created = time.Now()
 

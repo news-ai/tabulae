@@ -20,7 +20,7 @@ func IntIdToString(id int64) string {
 	return currentId
 }
 
-func GetAgencyEmail(email string) (string, error) {
+func ExtractAgencyEmail(email string) (string, error) {
 	splitEmail := strings.Split(email, "@")
 	if len(splitEmail) > 1 {
 		return splitEmail[1], nil
@@ -28,7 +28,7 @@ func GetAgencyEmail(email string) (string, error) {
 	return "", errors.New("Email is invalid")
 }
 
-func GetAgencyName(email string) (string, error) {
+func ExtractAgencyName(email string) (string, error) {
 	splitEmail := strings.Split(email, ".")
 	if len(splitEmail) > 1 {
 		return strings.Title(splitEmail[0]), nil
