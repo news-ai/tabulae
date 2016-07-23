@@ -176,8 +176,10 @@ func UpdateMediaList(c appengine.Context, r *http.Request, id string) (MediaList
 		return MediaList{}, err
 	}
 
-	mediaList.Name = updatedMediaList.Name
-	mediaList.Contacts = updatedMediaList.Contacts
+	UpdateIfNotBlank(&mediaList.Name, updatedMediaList.Name)
+	if len(updatedMediaList.Contacts) {
+		mediaList.Contacts = updatedMediaList.Contacts
+	}
 
 	mediaList.save(c)
 	return mediaList, nil

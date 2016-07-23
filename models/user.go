@@ -220,8 +220,8 @@ func UpdateUser(c appengine.Context, r *http.Request, id string) (User, error) {
 		return User{}, err
 	}
 
-	user.FirstName = updatedUser.FirstName
-	user.LastName = updatedUser.LastName
+	UpdateIfNotBlank(&user.FirstName, updatedUser.FirstName)
+	UpdateIfNotBlank(&user.LastName, updatedUser.LastName)
 
 	user.save(c)
 	return user, nil
