@@ -59,8 +59,14 @@ func getAgency(c appengine.Context, id int64) (Agency, error) {
  */
 
 func (a *Agency) create(c appengine.Context) (*Agency, error) {
+	currentUser, err := GetCurrentUser(c)
+	if err != nil {
+		return a, err
+	}
+
+	a.CreatedBy = currentUser.Id
 	a.Created = time.Now()
-	_, err := a.save(c)
+	_, err = a.save(c)
 	return a, err
 }
 
@@ -149,6 +155,9 @@ func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
 			agency.Name, err = GetAgencyName(agencyEmail)
 			agency.Email = agencyEmail
 			agency.Created = time.Now()
+
+			// The person who signs up for the agency at the beginning
+			// becomes the defacto administrator until we change.
 			agency.Administrators = append(agency.Administrators, u.Id)
 			agency.create(c)
 		}

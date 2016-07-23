@@ -17,6 +17,8 @@ func handleContact(c appengine.Context, r *http.Request, id string) (interface{}
 	switch r.Method {
 	case "GET":
 		return models.GetContact(c, id)
+	case "PATCH":
+		return models.UpdateContact(c, r, id)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }

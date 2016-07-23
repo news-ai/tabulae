@@ -96,6 +96,7 @@ func (u *User) create(c appengine.Context) (*User, error) {
 // Function to save a new user into App Engine
 func (u *User) save(c appengine.Context) (*User, error) {
 	u.Updated = time.Now()
+
 	k, err := datastore.Put(c, u.key(c), u)
 	if err != nil {
 		return nil, err

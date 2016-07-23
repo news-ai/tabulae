@@ -44,3 +44,9 @@ func NormalizeUrl(initialUrl string) (string, error) {
 	urlHost := strings.Replace(u.Host, "www.", "", 1)
 	return u.Scheme + "://" + urlHost, nil
 }
+
+func UpdateIfNotBlank(initial *string, replace string) {
+	if replace != "" {
+		*initial = replace
+	}
+}

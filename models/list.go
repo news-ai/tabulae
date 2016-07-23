@@ -83,6 +83,9 @@ func (ml *MediaList) create(c appengine.Context) (*MediaList, error) {
 
 // Function to save a new contact into App Engine
 func (ml *MediaList) save(c appengine.Context) (*MediaList, error) {
+	// Update the Updated time
+	ml.Updated = time.Now()
+
 	k, err := datastore.Put(c, ml.key(c), ml)
 	if err != nil {
 		return nil, err

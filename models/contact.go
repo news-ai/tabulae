@@ -71,9 +71,15 @@ func getContact(c appengine.Context, id int64) (Contact, error) {
  */
 
 func (ct *Contact) create(c appengine.Context) (*Contact, error) {
+	currentUser, err := GetCurrentUser(c)
+	if err != nil {
+		return ct, err
+	}
+
+	ct.CreatedBy = currentUser.Id
 	ct.Created = time.Now()
 
-	_, err := ct.save(c)
+	_, err = ct.save(c)
 	return ct, err
 }
 
@@ -83,6 +89,9 @@ func (ct *Contact) create(c appengine.Context) (*Contact, error) {
 
 // Function to save a new contact into App Engine
 func (ct *Contact) save(c appengine.Context) (*Contact, error) {
+	// Update the Updated time
+	ct.Updated = time.Now()
+
 	k, err := datastore.Put(c, ct.key(c), ct)
 	if err != nil {
 		return nil, err
@@ -145,5 +154,36 @@ func CreateContact(c appengine.Context, w http.ResponseWriter, r *http.Request) 
 		return Contact{}, err
 	}
 
+	return contact, nil
+}
+
+/*
+* Update methods
+ */
+
+func UpdateContact(c appengine.Context, r *http.Request, id string) (Contact, error) {
+	// Get the details of the current contact
+	contact, err := GetContact(c, id)
+	if err != nil {
+		return Contact{}, err
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var updatedContact Contact
+	err = decoder.Decode(&updatedContact)
+	if err != nil {
+		return Contact{}, err
+	}
+
+	UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
+	UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
+	UpdateIfNotBlank(&contact.Email, updatedContact.Email)
+	UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
+	UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
+	UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
+	UpdateIfNotBlank(&contact.Website, updatedContact.Website)
+	UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
+
+	contact.save(c)
 	return contact, nil
 }
