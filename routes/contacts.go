@@ -18,7 +18,7 @@ func handleContact(c appengine.Context, r *http.Request, id string) (interface{}
 	case "GET":
 		return models.GetContact(c, id)
 	case "PATCH":
-		return models.UpdateContact(c, r, id)
+		return models.UpdateSingleContact(c, r, id)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }
@@ -28,9 +28,10 @@ func handleContacts(c appengine.Context, w http.ResponseWriter, r *http.Request)
 	case "GET":
 		return models.GetContacts(c)
 	case "POST":
-		return models.CreateContact(c, w, r)
+		return models.CreateContact(c, r)
+	case "PATCH":
+		return models.UpdateBatchContact(c, r)
 	}
-
 	return nil, fmt.Errorf("method not implemented")
 }
 

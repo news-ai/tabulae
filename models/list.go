@@ -140,7 +140,6 @@ func GetMediaList(c appengine.Context, id string) (MediaList, error) {
 * Create methods
  */
 
-// Method not completed
 func CreateMediaList(c appengine.Context, w http.ResponseWriter, r *http.Request) (MediaList, error) {
 	decoder := json.NewDecoder(r.Body)
 	var medialist MediaList
@@ -149,7 +148,7 @@ func CreateMediaList(c appengine.Context, w http.ResponseWriter, r *http.Request
 		return MediaList{}, err
 	}
 
-	// Create contact
+	// Create media list
 	_, err = medialist.create(c)
 	if err != nil {
 		return MediaList{}, err

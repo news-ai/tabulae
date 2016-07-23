@@ -1,8 +1,10 @@
 package models
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -13,10 +15,12 @@ import (
 type Contact struct {
 	Id int64 `json:"id" datastore:"-"`
 
+	// Contact information
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 	Email     string `json:"email"`
 
+	// Social information
 	LinkedIn  string `json:"linkedin"`
 	Twitter   string `json:"twitter"`
 	Instagram string `json:"instagram"`
@@ -24,8 +28,10 @@ type Contact struct {
 	Website   string `json:"website"`
 	Blog      string `json:"blog"`
 
-	Employers []int64 `json:"employers"` // Type Publication
+	// Publications this contact works for
+	Employers []int64 `json:"employers"`
 
+	// Parent contact
 	ParentContact int64 `json:"parent"`
 
 	CreatedBy int64 `json:"createdby"`
@@ -140,28 +146,66 @@ func GetContact(c appengine.Context, id string) (Contact, error) {
 * Create methods
  */
 
-func CreateContact(c appengine.Context, w http.ResponseWriter, r *http.Request) (Contact, error) {
-	decoder := json.NewDecoder(r.Body)
+func CreateContact(c appengine.Context, r *http.Request) ([]Contact, error) {
+	buf, _ := ioutil.ReadAll(r.Body)
+	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
+
+	decoder := json.NewDecoder(rdr1)
 	var contact Contact
 	err := decoder.Decode(&contact)
+
+	// If it is an array and you need to do BATCH processing
 	if err != nil {
-		return Contact{}, err
+		var contacts []Contact
+
+		rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+		arrayDecoder := json.NewDecoder(rdr2)
+		err = arrayDecoder.Decode(&contacts)
+
+		if err != nil {
+			return []Contact{}, err
+		}
+
+		newContacts := []Contact{}
+		for i := 0; i < len(contacts); i++ {
+			_, err = contacts[i].create(c)
+			if err != nil {
+				return []Contact{}, err
+			}
+			newContacts = append(newContacts, contacts[i])
+		}
+
+		return newContacts, nil
 	}
 
 	// Create contact
 	_, err = contact.create(c)
 	if err != nil {
-		return Contact{}, err
+		return []Contact{}, err
 	}
 
-	return contact, nil
+	return []Contact{contact}, nil
 }
 
 /*
 * Update methods
  */
 
-func UpdateContact(c appengine.Context, r *http.Request, id string) (Contact, error) {
+func UpdateContact(c appengine.Context, contact *Contact, updatedContact Contact) Contact {
+	UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
+	UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
+	UpdateIfNotBlank(&contact.Email, updatedContact.Email)
+	UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
+	UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
+	UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
+	UpdateIfNotBlank(&contact.Website, updatedContact.Website)
+	UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
+	contact.save(c)
+
+	return *contact
+}
+
+func UpdateSingleContact(c appengine.Context, r *http.Request, id string) (Contact, error) {
 	// Get the details of the current contact
 	contact, err := GetContact(c, id)
 	if err != nil {
@@ -175,15 +219,26 @@ func UpdateContact(c appengine.Context, r *http.Request, id string) (Contact, er
 		return Contact{}, err
 	}
 
-	UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
-	UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
-	UpdateIfNotBlank(&contact.Email, updatedContact.Email)
-	UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
-	UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
-	UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
-	UpdateIfNotBlank(&contact.Website, updatedContact.Website)
-	UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
+	return UpdateContact(c, &contact, updatedContact), nil
+}
 
-	contact.save(c)
-	return contact, nil
+func UpdateBatchContact(c appengine.Context, r *http.Request) ([]Contact, error) {
+	decoder := json.NewDecoder(r.Body)
+	var updatedContacts []Contact
+	err := decoder.Decode(&updatedContacts)
+	if err != nil {
+		return []Contact{}, err
+	}
+
+	newContacts := []Contact{}
+	for i := 0; i < len(updatedContacts); i++ {
+		contact, err := getContact(c, updatedContacts[i].Id)
+		if err != nil {
+			return []Contact{}, err
+		}
+		updatedContact := UpdateContact(c, &contact, updatedContacts[i])
+		newContacts = append(newContacts, updatedContact)
+	}
+
+	return newContacts, nil
 }
