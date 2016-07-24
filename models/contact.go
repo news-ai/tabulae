@@ -117,7 +117,13 @@ func (ct *Contact) save(c appengine.Context) (*Contact, error) {
 // Gets every single contact
 func GetContacts(c appengine.Context) ([]Contact, error) {
 	contacts := []Contact{}
-	ks, err := datastore.NewQuery("Contact").GetAll(c, &contacts)
+
+	user, err := GetCurrentUser(c)
+	if err != nil {
+		return []Contact{}, err
+	}
+
+	ks, err := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).GetAll(c, &contacts)
 	if err != nil {
 		return []Contact{}, err
 	}

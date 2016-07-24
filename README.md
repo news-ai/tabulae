@@ -10,10 +10,10 @@ In the `/api/` folder:
 Progress:
 
 - User (~~[GET](http://tabulae.newsai.org/api/users)~~, ~~PATCH~~)
-- Publication (~~[GET](http://tabulae.newsai.org/api/publications)~~, ~~POST~~, PATCH, DELETE)
+- Publication (~~[GET](http://tabulae.newsai.org/api/publications)~~, ~~POST~~, PATCH, DELETE, BATCH POST)
 - Lists (~~[GET](http://tabulae.newsai.org/api/lists)~~, ~~POST~~, ~~PATCH~~, DELETE)
 - Agency (~~[GET](http://tabulae.newsai.org/api/agencies)~~, PATCH, DELETE)
-- Contact (~~[GET](http://localhost:8080/api/contacts)~~, ~~POST~~, PATCH, DELETE)
+- Contact (~~[GET](http://localhost:8080/api/contacts)~~, ~~POST~~, ~~PATCH~~, DELETE, ~~BATCH PATCH~~, ~~BATCH POST~~)
 
 Later:
 
