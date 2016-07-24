@@ -12,6 +12,10 @@ import (
 	"github.com/news-ai/tabulae/router"
 )
 
+func allowOrigin(origin string) bool {
+	return true
+}
+
 func init() {
 	// Setting up Negroni Router
 	app := negroni.New()
@@ -23,6 +27,9 @@ func init() {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"https://newsai.org", "http://localhost:3000"},
 		AllowCredentials: true,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		Debug:            true,
+		AllowOriginFunc:  allowOrigin,
 	})
 	app.Use(c)
 

@@ -16,11 +16,6 @@ type Action struct {
 func GetRoutes() []Action {
 	router := []Action{
 		Action{
-			"/", map[string]Handler{
-				"/": routes.BaseHandler,
-			},
-		},
-		Action{
 			"/users", map[string]Handler{
 				"/":     routes.UsersHandler,
 				"/{id}": routes.UserHandler,
