@@ -15,11 +15,12 @@ type MediaList struct {
 
 	Name string `json:"name"`
 
-	Contacts []int64 `json:"contacts"`
+	Contacts     []int64  `json:"contacts"`
+	CustomFields []string `json:"customfields"`
+
+	Archived bool `json:"archived"`
 
 	CreatedBy int64 `json:"createdby"`
-
-	CustomFields []string `json:"customfields"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -183,6 +184,16 @@ func UpdateMediaList(c appengine.Context, r *http.Request, id string) (MediaList
 	}
 	if len(updatedMediaList.CustomFields) > 0 {
 		mediaList.CustomFields = updatedMediaList.CustomFields
+	}
+
+	// If new media list wants to be archived then archive it
+	if updatedMediaList.Archived == true {
+		mediaList.Archived = true
+	}
+
+	// If they are already archived and you want to unarchive the media list
+	if mediaList.Archived == true && updatedMediaList.Archived == false {
+		mediaList.Archived = false
 	}
 
 	mediaList.save(c)

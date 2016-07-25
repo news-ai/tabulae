@@ -58,8 +58,10 @@ PATCH
 
 Name (name)
 Contacts (contacts)
+Archived (archived)
 
 Contacts are array of contact Ids
+Archived is a boolean
 
 same as WorksAt.
 
