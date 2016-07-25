@@ -94,7 +94,7 @@ func (a *Agency) save(c appengine.Context) (*Agency, error) {
 func filterAgency(c appengine.Context, queryType, query string) (Agency, error) {
 	// Get an agency by their email extension
 	agencies := []Agency{}
-	ks, err := datastore.NewQuery("Publication").Filter(queryType+" =", query).GetAll(c, &agencies)
+	ks, err := datastore.NewQuery("Agency").Filter(queryType+" =", query).GetAll(c, &agencies)
 	if err != nil {
 		return Agency{}, err
 	}

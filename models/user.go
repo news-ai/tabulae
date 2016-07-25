@@ -234,6 +234,10 @@ func UpdateUser(c appengine.Context, r *http.Request, id string) (User, error) {
 	UpdateIfNotBlank(&user.FirstName, updatedUser.FirstName)
 	UpdateIfNotBlank(&user.LastName, updatedUser.LastName)
 
+	if len(updatedUser.Employers) > 0 {
+		user.Employers = updatedUser.Employers
+	}
+
 	user.save(c)
 	return user, nil
 }
