@@ -26,7 +26,7 @@ func handleContact(c appengine.Context, r *http.Request, id string) (interface{}
 func handleContacts(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetContacts(c)
+		return models.GetContacts(c, r)
 	case "POST":
 		return models.CreateContact(c, r)
 	case "PATCH":

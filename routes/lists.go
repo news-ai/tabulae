@@ -16,7 +16,7 @@ import (
 func handleMediaList(c appengine.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetMediaList(c, id)
+		return models.GetMediaList(c, r, id)
 	case "PATCH":
 		return models.UpdateMediaList(c, r, id)
 	}
@@ -26,7 +26,7 @@ func handleMediaList(c appengine.Context, r *http.Request, id string) (interface
 func handleMediaLists(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetMediaLists(c)
+		return models.GetMediaLists(c, r)
 	case "POST":
 		return models.CreateMediaList(c, w, r)
 	}

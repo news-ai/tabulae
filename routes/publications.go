@@ -29,8 +29,7 @@ func handlePublications(c appengine.Context, w http.ResponseWriter, r *http.Requ
 				return models.FilterPublicationByName(c, val[0])
 			}
 		} else {
-			u := GetUser(c, w)
-			err := IsAdmin(w, r, u)
+			err := IsAdmin(w, r)
 			if err != nil {
 				return nil, err
 			}

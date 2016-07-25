@@ -59,8 +59,8 @@ func getPublication(c appengine.Context, id int64) (Publication, error) {
  */
 
 // Function to create a new publication into App Engine
-func (p *Publication) create(c appengine.Context) (*Publication, error) {
-	currentUser, err := GetCurrentUser(c)
+func (p *Publication) create(c appengine.Context, r *http.Request) (*Publication, error) {
+	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		return p, err
 	}
@@ -172,7 +172,7 @@ func CreatePublication(c appengine.Context, w http.ResponseWriter, r *http.Reque
 	presentPublication, err := FilterPublicationByName(c, publication.Name)
 	if err != nil {
 		// Create publication
-		_, err = publication.create(c)
+		_, err = publication.create(c, r)
 		if err != nil {
 			return Publication{}, err
 		}

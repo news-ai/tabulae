@@ -76,8 +76,8 @@ func getContact(c appengine.Context, id int64) (Contact, error) {
 * Create methods
  */
 
-func (ct *Contact) create(c appengine.Context) (*Contact, error) {
-	currentUser, err := GetCurrentUser(c)
+func (ct *Contact) create(c appengine.Context, r *http.Request) (*Contact, error) {
+	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		return ct, err
 	}
@@ -115,10 +115,10 @@ func (ct *Contact) save(c appengine.Context) (*Contact, error) {
  */
 
 // Gets every single contact
-func GetContacts(c appengine.Context) ([]Contact, error) {
+func GetContacts(c appengine.Context, r *http.Request) ([]Contact, error) {
 	contacts := []Contact{}
 
-	user, err := GetCurrentUser(c)
+	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		return []Contact{}, err
 	}
@@ -174,7 +174,7 @@ func CreateContact(c appengine.Context, r *http.Request) ([]Contact, error) {
 
 		newContacts := []Contact{}
 		for i := 0; i < len(contacts); i++ {
-			_, err = contacts[i].create(c)
+			_, err = contacts[i].create(c, r)
 			if err != nil {
 				return []Contact{}, err
 			}
@@ -185,7 +185,7 @@ func CreateContact(c appengine.Context, r *http.Request) ([]Contact, error) {
 	}
 
 	// Create contact
-	_, err = contact.create(c)
+	_, err = contact.create(c, r)
 	if err != nil {
 		return []Contact{}, err
 	}

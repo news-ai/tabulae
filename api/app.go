@@ -8,13 +8,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
+	"github.com/news-ai/tabulae/auth"
 	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/router"
 )
-
-func allowOrigin(origin string) bool {
-	return true
-}
 
 func init() {
 	// Setting up Negroni Router
@@ -29,7 +26,6 @@ func init() {
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		Debug:            true,
-		AllowOriginFunc:  allowOrigin,
 	})
 	app.Use(c)
 
@@ -45,6 +41,9 @@ func init() {
 			api.HandleFunc(apiRoutes[i].HandlerName+routeName, apiRoutes[i].Routes[routeName])
 		}
 	}
+
+	api.HandleFunc("/auth/google", auth.GoogleLoginHandler)
+	api.HandleFunc("/auth/callback", auth.GoogleCallbackHandler)
 
 	// Main router
 	main := mux.NewRouter().StrictSlash(true)

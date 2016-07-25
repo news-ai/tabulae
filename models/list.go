@@ -36,7 +36,7 @@ func (ml *MediaList) key(c appengine.Context) *datastore.Key {
 * Get methods
  */
 
-func getMediaList(c appengine.Context, id int64) (MediaList, error) {
+func getMediaList(c appengine.Context, r *http.Request, id int64) (MediaList, error) {
 	// Get the MediaList by id
 	mediaLists := []MediaList{}
 	mediaListId := datastore.NewKey(c, "MediaList", "", id, nil)
@@ -47,7 +47,7 @@ func getMediaList(c appengine.Context, id int64) (MediaList, error) {
 	if len(mediaLists) > 0 {
 		mediaLists[0].Id = ks[0].IntID()
 
-		user, err := GetCurrentUser(c)
+		user, err := GetCurrentUser(c, r)
 		if err != nil {
 			return MediaList{}, errors.New("Could not get user")
 		}
@@ -64,8 +64,8 @@ func getMediaList(c appengine.Context, id int64) (MediaList, error) {
 * Create methods
  */
 
-func (ml *MediaList) create(c appengine.Context) (*MediaList, error) {
-	currentUser, err := GetCurrentUser(c)
+func (ml *MediaList) create(c appengine.Context, r *http.Request) (*MediaList, error) {
+	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		return ml, err
 	}
@@ -103,10 +103,10 @@ func (ml *MediaList) save(c appengine.Context) (*MediaList, error) {
  */
 
 // Gets every single media list
-func GetMediaLists(c appengine.Context) ([]MediaList, error) {
+func GetMediaLists(c appengine.Context, r *http.Request) ([]MediaList, error) {
 	mediaLists := []MediaList{}
 
-	user, err := GetCurrentUser(c)
+	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		return []MediaList{}, err
 	}
@@ -122,14 +122,14 @@ func GetMediaLists(c appengine.Context) ([]MediaList, error) {
 	return mediaLists, nil
 }
 
-func GetMediaList(c appengine.Context, id string) (MediaList, error) {
+func GetMediaList(c appengine.Context, r *http.Request, id string) (MediaList, error) {
 	// Get the details of the current user
 	currentId, err := StringIdToInt(id)
 	if err != nil {
 		return MediaList{}, err
 	}
 
-	mediaList, err := getMediaList(c, currentId)
+	mediaList, err := getMediaList(c, r, currentId)
 	if err != nil {
 		return MediaList{}, err
 	}
@@ -149,7 +149,7 @@ func CreateMediaList(c appengine.Context, w http.ResponseWriter, r *http.Request
 	}
 
 	// Create media list
-	_, err = medialist.create(c)
+	_, err = medialist.create(c, r)
 	if err != nil {
 		return MediaList{}, err
 	}
@@ -163,7 +163,7 @@ func CreateMediaList(c appengine.Context, w http.ResponseWriter, r *http.Request
 
 func UpdateMediaList(c appengine.Context, r *http.Request, id string) (MediaList, error) {
 	// Get the details of the current media list
-	mediaList, err := GetMediaList(c, id)
+	mediaList, err := GetMediaList(c, r, id)
 	if err != nil {
 		return MediaList{}, err
 	}

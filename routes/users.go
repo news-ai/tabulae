@@ -16,7 +16,7 @@ import (
 func handleUser(c appengine.Context, r *http.Request, id string) (models.User, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetUser(c, id)
+		return models.GetUser(c, r, id)
 	case "PATCH":
 		return models.UpdateUser(c, r, id)
 	}
@@ -35,10 +35,10 @@ func handleUsers(c appengine.Context, r *http.Request) ([]models.User, error) {
 func UsersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-	u := GetUser(c, w)
 
-	err := IsAdmin(w, r, u)
+	err := IsAdmin(w, r)
 	if err != nil {
+		middleware.ReturnError(w, http.StatusForbidden, "Forbidden", err.Error())
 		return
 	}
 
@@ -59,7 +59,6 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 func UserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-	u := GetUser(c, w)
 
 	// If there is an ID
 	vars := mux.Vars(r)
@@ -68,8 +67,9 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 		// If the user is trying to get something that is not just their
 		// own profile then require them to be an administrator.
 		if id != "me" {
-			err := IsAdmin(w, r, u)
+			err := IsAdmin(w, r)
 			if err != nil {
+				middleware.ReturnError(w, http.StatusForbidden, "Forbidden", err.Error())
 				return
 			}
 		}

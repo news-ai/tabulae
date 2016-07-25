@@ -2,7 +2,7 @@ package models
 
 import (
 	"errors"
-	// "net/http"
+	"net/http"
 	"time"
 
 	"appengine"
@@ -58,8 +58,8 @@ func getAgency(c appengine.Context, id int64) (Agency, error) {
 * Create methods
  */
 
-func (a *Agency) create(c appengine.Context) (*Agency, error) {
-	currentUser, err := GetCurrentUser(c)
+func (a *Agency) create(c appengine.Context, r *http.Request) (*Agency, error) {
+	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		return a, err
 	}
@@ -144,11 +144,12 @@ func GetAgency(c appengine.Context, id string) (Agency, error) {
 * Create methods
  */
 
-func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
+func CreateAgencyFromUser(c appengine.Context, r *http.Request, u *User) (Agency, error) {
 	agencyEmail, err := ExtractAgencyEmail(u.Email)
 	if err != nil {
 		return Agency{}, err
 	} else {
+		c.Infof("%v", agencyEmail)
 		agency, err := FilterAgencyByEmail(c, agencyEmail)
 		if err != nil {
 			agency = Agency{}
@@ -159,7 +160,7 @@ func CreateAgencyFromUser(c appengine.Context, u *User) (Agency, error) {
 			// The person who signs up for the agency at the beginning
 			// becomes the defacto administrator until we change.
 			agency.Administrators = append(agency.Administrators, u.Id)
-			agency.create(c)
+			agency.create(c, r)
 		}
 		u.Employers = append(u.Employers, agency.Id)
 		u.save(c)

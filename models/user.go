@@ -8,7 +8,6 @@ import (
 
 	"appengine"
 	"appengine/datastore"
-	"appengine/user"
 
 	"github.com/gorilla/context"
 )
@@ -78,14 +77,10 @@ func getUsers(c appengine.Context) ([]User, error) {
 * Create methods
  */
 
-func (u *User) create(c appengine.Context) (*User, error) {
+func (u *User) create(c appengine.Context, r *http.Request) (*User, error) {
 	// Create user
-	currentUser := user.Current(c)
-	u.Email = currentUser.Email
-	u.GoogleId = currentUser.ID
 	u.Created = time.Now()
 	_, err := u.save(c)
-	CreateAgencyFromUser(c, u)
 	return u, err
 }
 
@@ -105,9 +100,9 @@ func (u *User) save(c appengine.Context) (*User, error) {
 	return u, nil
 }
 
-func (u *User) update(c appengine.Context) (*User, error) {
+func (u *User) update(c appengine.Context, r *http.Request) (*User, error) {
 	if len(u.Employers) == 0 {
-		CreateAgencyFromUser(c, u)
+		CreateAgencyFromUser(c, r, u)
 	}
 	return u, nil
 }
@@ -148,11 +143,11 @@ func GetUsers(c appengine.Context) ([]User, error) {
 	return users, nil
 }
 
-func GetUser(c appengine.Context, id string) (User, error) {
+func GetUser(c appengine.Context, r *http.Request, id string) (User, error) {
 	// Get the details of the current user
 	switch id {
 	case "me":
-		user, err := GetCurrentUser(c)
+		user, err := GetCurrentUser(c, r)
 		if err != nil {
 			return User{}, err
 		}
@@ -170,13 +165,22 @@ func GetUser(c appengine.Context, id string) (User, error) {
 	}
 }
 
-func GetCurrentUser(c appengine.Context) (User, error) {
+func GetUserByEmail(c appengine.Context, email string) (User, error) {
 	// Get the current user
-	currentUser := user.Current(c)
-	user, err := filterUser(c, "Email", currentUser.Email)
+	user, err := filterUser(c, "Email", email)
 	if err != nil {
 		return User{}, err
 	}
+	return user, nil
+}
+
+func GetCurrentUser(c appengine.Context, r *http.Request) (User, error) {
+	// Get the current user
+	_, ok := context.GetOk(r, "user")
+	if !ok {
+		return User{}, errors.New("No user logged in")
+	}
+	user := context.Get(r, "user").(User)
 	return user, nil
 }
 
@@ -184,21 +188,25 @@ func GetCurrentUser(c appengine.Context) (User, error) {
 * Create methods
  */
 
-func NewOrUpdateUser(c appengine.Context, r *http.Request) {
+func NewOrUpdateUser(c appengine.Context, r *http.Request, email string, userDetails map[string]string) {
 	_, ok := context.GetOk(r, "user")
 	if !ok {
-		user, err := GetCurrentUser(c)
+		user, err := GetUserByEmail(c, email)
 		if err != nil {
 			// Add the user if there is no user
 			user := User{}
-			_, err = user.create(c)
+			user.GoogleId = userDetails["id"]
+			user.Email = userDetails["email"]
+			user.FirstName = userDetails["given_name"]
+			user.LastName = userDetails["family_name"]
+			_, err = user.create(c, r)
 		} else {
-			user.update(c)
+			context.Set(r, "user", user)
+			user.update(c, r)
 		}
-		context.Set(r, "user", user)
 	} else {
 		user := context.Get(r, "user").(User)
-		user.update(c)
+		user.update(c, r)
 	}
 }
 
@@ -208,7 +216,7 @@ func NewOrUpdateUser(c appengine.Context, r *http.Request) {
 
 func UpdateUser(c appengine.Context, r *http.Request, id string) (User, error) {
 	// Get the details of the current user
-	user, err := GetUser(c, id)
+	user, err := GetUser(c, r, id)
 	if err != nil {
 		return User{}, err
 	}
