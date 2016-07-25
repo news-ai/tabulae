@@ -22,7 +22,12 @@ func IsAdmin(w http.ResponseWriter, r *http.Request) error {
 	return errors.New("Admin login only")
 }
 
-func getStorageBucket(c appengine.Context, bucket string) (string, error) {
+func getStorageBucket(r *http.Request, bucket string) (string, error) {
+	c := appengine.NewContext(r)
+	// In development mode this returns the non-production URL
+	if appengine.IsDevAppServer() {
+		return "staging.newsai-1166.appspot.com", nil
+	}
 	if bucket == "" {
 		var err error
 		if bucket, err = file.DefaultBucketName(c); err != nil {

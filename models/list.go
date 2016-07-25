@@ -18,6 +18,8 @@ type MediaList struct {
 	Contacts     []int64  `json:"contacts"`
 	CustomFields []string `json:"customfields"`
 
+	FileUpload int64 `json:"fileupload"`
+
 	Archived bool `json:"archived"`
 
 	CreatedBy int64 `json:"createdby"`
@@ -169,6 +171,15 @@ func UpdateMediaList(c appengine.Context, r *http.Request, id string) (MediaList
 	mediaList, err := GetMediaList(c, r, id)
 	if err != nil {
 		return MediaList{}, err
+	}
+
+	// Checking if the current user logged in can edit this particular id
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return MediaList{}, err
+	}
+	if mediaList.CreatedBy != user.Id {
+		return MediaList{}, errors.New("Forbidden")
 	}
 
 	decoder := json.NewDecoder(r.Body)
