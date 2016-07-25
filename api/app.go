@@ -18,7 +18,6 @@ func init() {
 	app := negroni.New()
 	app.Use(negroni.NewRecovery())
 	app.Use(negroni.NewLogger())
-	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 
 	// CORs
 	c := cors.New(cors.Options{
@@ -26,6 +25,7 @@ func init() {
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		Debug:            true,
+		AllowedHeaders:   []string{"*"},
 	})
 	app.Use(c)
 
@@ -50,6 +50,7 @@ func init() {
 	main.PathPrefix("/api").Handler(negroni.New(negroni.Wrap(api)))
 
 	// HTTP router
+	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 	app.UseHandler(main)
 	http.Handle("/", context.ClearHandler(app))
 }

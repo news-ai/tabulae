@@ -22,6 +22,8 @@ type User struct {
 
 	Employers []int64 `json:"employers"`
 
+	IsAdmin bool `json:"-"`
+
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
 }
@@ -79,6 +81,7 @@ func getUsers(c appengine.Context) ([]User, error) {
 
 func (u *User) create(c appengine.Context, r *http.Request) (*User, error) {
 	// Create user
+	u.IsAdmin = false
 	u.Created = time.Now()
 	_, err := u.save(c)
 	return u, err

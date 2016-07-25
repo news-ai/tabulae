@@ -12,7 +12,6 @@ import (
 func UpdateOrCreateUser(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	c := appengine.NewContext(r)
 	email, err := auth.GetCurrentUserEmail(r)
-	c.Infof("%v", r.URL.Path)
 	if err != nil && (r.URL.Path != "/api/auth/google" && r.URL.Path != "/api/auth/callback") {
 		c.Infof("%v", r)
 		w.Header().Set("Content-Type", "application/json")
