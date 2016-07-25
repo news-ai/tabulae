@@ -21,7 +21,7 @@ import (
 
 var (
 	googleOauthConfig = &oauth2.Config{
-		RedirectURL:  "/auth/callback",
+		RedirectURL:  "http://tabulae.newsai.org/api/auth/callback",
 		ClientID:     os.Getenv("GOOGLEAUTHKEY"),
 		ClientSecret: os.Getenv("GOOGLEAUTHSECRET"),
 		Scopes: []string{
@@ -52,7 +52,7 @@ type User struct {
 }
 
 func SetRedirectURL() {
-	googleOauthConfig.RedirectURL = utils.APIURL + googleOauthConfig.RedirectURL
+	googleOauthConfig.RedirectURL = utils.APIURL + "/auth/callback"
 }
 
 // State can be some kind of random generated hash string.
@@ -108,6 +108,11 @@ func GoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Save the session for each of the users
 	session, _ := store.Get(r, "sess")
 	session.Values["state"] = state
+
+	if r.URL.Query().Get("next") != "" {
+		session.Values["next"] = r.URL.Query().Get("next")
+	}
+
 	session.Save(r, w)
 
 	// Redirect the user to the login page
@@ -168,6 +173,10 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["hd"] = googleUser.Hd
 	session.Values["accessToken"] = tkn.AccessToken
 	session.Save(r, w)
+
+	if session.Values["next"] != nil {
+		http.Redirect(w, r, session.Values["next"].(string), 302)
+	}
 
 	http.Redirect(w, r, "/", 302)
 }
