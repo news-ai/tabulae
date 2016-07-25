@@ -11,6 +11,7 @@ import (
 	"github.com/news-ai/tabulae/auth"
 	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/router"
+	"github.com/news-ai/tabulae/utils"
 )
 
 func init() {
@@ -42,8 +43,12 @@ func init() {
 		}
 	}
 
+	// Register authentication route
 	api.HandleFunc("/auth/google", auth.GoogleLoginHandler)
 	api.HandleFunc("/auth/callback", auth.GoogleCallbackHandler)
+
+	utils.InitURL()
+	auth.SetRedirectURL()
 
 	// Main router
 	main := mux.NewRouter().StrictSlash(true)

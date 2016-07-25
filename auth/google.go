@@ -10,8 +10,9 @@ import (
 	"os"
 
 	"google.golang.org/appengine"
-	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
+
+	"github.com/news-ai/tabulae/utils"
 
 	"github.com/hnakamur/gaesessions"
 	"golang.org/x/oauth2"
@@ -20,12 +21,15 @@ import (
 
 var (
 	googleOauthConfig = &oauth2.Config{
-		RedirectURL:  "http://tabulae.newsai.org/api/auth/callback",
+		RedirectURL:  "/auth/callback",
 		ClientID:     os.Getenv("GOOGLEAUTHKEY"),
 		ClientSecret: os.Getenv("GOOGLEAUTHSECRET"),
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.profile",
 			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/gmail.readonly",
+			"https://www.googleapis.com/auth/gmail.compose",
+			"https://www.googleapis.com/auth/gmail.send",
 		},
 		Endpoint: google.Endpoint,
 	}
@@ -47,6 +51,10 @@ type User struct {
 	Hd            string `json:"hd"`
 }
 
+func SetRedirectURL() {
+	googleOauthConfig.RedirectURL = utils.APIURL + googleOauthConfig.RedirectURL
+}
+
 // State can be some kind of random generated hash string.
 // See relevant RFC: http://tools.ietf.org/html/rfc6749#section-10.12
 func randToken() string {
@@ -55,6 +63,7 @@ func randToken() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
+// Gets the email of the current user that is logged in
 func GetCurrentUserEmail(r *http.Request) (string, error) {
 	session, err := store.Get(r, "sess")
 	if err != nil {
@@ -66,15 +75,21 @@ func GetCurrentUserEmail(r *http.Request) (string, error) {
 	return session.Values["email"].(string), nil
 }
 
+// Gets the full details of the current user
 func GetUserDetails(r *http.Request) (map[string]string, error) {
-	c := appengine.NewContext(r)
 	session, err := store.Get(r, "sess")
+
+	// If there is no session
 	if err != nil {
 		return nil, errors.New("No user logged in")
 	}
+
+	// If there exists no email then user not logged in
 	if session.Values["email"].(string) == "" {
 		return nil, errors.New("No user logged in")
 	}
+
+	// Takes interface{} values and converts them into string
 	userDetails := map[string]string{}
 	for k, v := range session.Values {
 		key := fmt.Sprint(k)
@@ -82,22 +97,25 @@ func GetUserDetails(r *http.Request) (map[string]string, error) {
 		userDetails[key] = value
 	}
 
-	log.Debugf(c, "%v", userDetails)
-
 	return userDetails, nil
 }
 
+// Handler to redirect user to the Google OAuth2 page
 func GoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
+	// Generate a random state that we identify the user with
 	state := randToken()
 
+	// Save the session for each of the users
 	session, _ := store.Get(r, "sess")
 	session.Values["state"] = state
 	session.Save(r, w)
 
+	// Redirect the user to the login page
 	url := googleOauthConfig.AuthCodeURL(state)
 	http.Redirect(w, r, url, 302)
 }
 
+// Handler to get information when callback comes back from Google
 func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	session, err := store.Get(r, "sess")
@@ -138,8 +156,6 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, err.Error())
 		return
 	}
-
-	log.Debugf(c, "%v", googleUser.ID)
 
 	session.Values["email"] = googleUser.Email
 	session.Values["id"] = googleUser.ID

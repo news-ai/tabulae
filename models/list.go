@@ -19,6 +19,8 @@ type MediaList struct {
 
 	CreatedBy int64 `json:"createdby"`
 
+	CustomFields []string `json:"customfields"`
+
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
 }
@@ -178,6 +180,9 @@ func UpdateMediaList(c appengine.Context, r *http.Request, id string) (MediaList
 	UpdateIfNotBlank(&mediaList.Name, updatedMediaList.Name)
 	if len(updatedMediaList.Contacts) > 0 {
 		mediaList.Contacts = updatedMediaList.Contacts
+	}
+	if len(updatedMediaList.CustomFields) > 0 {
+		mediaList.CustomFields = updatedMediaList.CustomFields
 	}
 
 	mediaList.save(c)

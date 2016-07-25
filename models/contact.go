@@ -28,6 +28,8 @@ type Contact struct {
 	Website   string `json:"website"`
 	Blog      string `json:"blog"`
 
+	Notes string `json:"notes"`
+
 	// Publications this contact works for
 	Employers []int64 `json:"employers"`
 
@@ -206,6 +208,7 @@ func UpdateContact(c appengine.Context, contact *Contact, updatedContact Contact
 	UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
 	UpdateIfNotBlank(&contact.Website, updatedContact.Website)
 	UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
+	UpdateIfNotBlank(&contact.Notes, updatedContact.Notes)
 	contact.save(c)
 
 	return *contact
