@@ -11,8 +11,8 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 
+	"github.com/news-ai/tabulae/files"
 	"github.com/news-ai/tabulae/middleware"
-	"github.com/news-ai/tabulae/upload"
 
 	"github.com/gorilla/mux"
 )
@@ -53,7 +53,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		noSpaceFileName := strings.Replace(handler.Filename, " ", "", -1)
 		fileName := strings.Join([]string{userId, listId, randToken(), noSpaceFileName}, "-")
 
-		val, err := upload.UploadFile(r, fileName, file, userId, listId, handler.Header.Get("Content-Type"))
+		val, err := files.UploadFile(r, fileName, file, userId, listId, handler.Header.Get("Content-Type"))
 		if err != nil {
 			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
 			return

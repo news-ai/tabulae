@@ -1,10 +1,12 @@
-package upload
+package files
 
 import (
 	"net/http"
 
 	"appengine"
 	"appengine/file"
+
+	"github.com/news-ai/tabulae/models"
 )
 
 func getStorageBucket(r *http.Request, bucket string) (string, error) {
@@ -21,4 +23,13 @@ func getStorageBucket(r *http.Request, bucket string) (string, error) {
 		return bucket, nil
 	}
 	return bucket, nil
+}
+
+func getFile(r *http.Request, fileId string) (models.File, error) {
+	c := appengine.NewContext(r)
+	file, err := models.GetFile(c, r, fileId)
+	if err != nil {
+		return models.File{}, err
+	}
+	return file, nil
 }

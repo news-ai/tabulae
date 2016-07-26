@@ -1,4 +1,4 @@
-package upload
+package files
 
 import (
 	"io"
@@ -6,13 +6,12 @@ import (
 	"net/http"
 
 	"google.golang.org/appengine"
+	"google.golang.org/cloud/storage"
 
 	"github.com/news-ai/tabulae/models"
-
-	"google.golang.org/cloud/storage"
 )
 
-func UploadFile(r *http.Request, fileName string, file io.Reader, userId string, listId string, contentType string) (models.File, error) {
+func UploadFile(r *http.Request, fileName string, file io.Reader, userId, listId, contentType string) (models.File, error) {
 	c := appengine.NewContext(r)
 
 	bucket, err := getStorageBucket(r, "")
