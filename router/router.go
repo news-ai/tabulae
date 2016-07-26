@@ -41,9 +41,9 @@ func GetRoutes() []Action {
 		},
 		Action{
 			"/lists", map[string]Handler{
-				"/":            routes.MediaListsHandler,
-				"/{id}":        routes.MediaListHandler,
-				"/{id}/upload": routes.UploadHandler,
+				"/":              routes.MediaListsHandler,
+				"/{id}":          routes.MediaListHandler,
+				"/{id}/{action}": routes.UploadHandler,
 			},
 		},
 		Action{

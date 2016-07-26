@@ -51,6 +51,14 @@ POST
 
 Name (name)
 Contacts (contacts)
+CustomFields (customfields)
+
+```json
+{
+    "name": "Pepsi",
+    "customfields": ["Sex", "Cheese"]
+}
+```
 
 PATCH
 
@@ -80,10 +88,26 @@ Linkedin (linkedin)
 Instagram (instagram)
 Twitter (twitter)
 WorksAt (worksat)
+CustomFields (customfields)
 
 WorksAt is an array of publication Ids
 
 [0292309230923092, 0239209320932]
+
+CustomFields is an array of key, value
+
+```json
+{
+    "firstname": "Abhi",
+    "customfields": [{
+      "name": "Sex",
+      "value": "Female"
+    },{
+        "name": "Cheese",
+        "value": "YES!"
+    }]
+}
+```
 
 BATCH
 

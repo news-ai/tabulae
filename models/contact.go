@@ -12,6 +12,11 @@ import (
 	"appengine/datastore"
 )
 
+type CustomContactField struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
 type Contact struct {
 	Id int64 `json:"id" datastore:"-"`
 
@@ -19,6 +24,12 @@ type Contact struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 	Email     string `json:"email"`
+
+	// Notes on a particular contact
+	Notes string `json:"notes"`
+
+	// Publications this contact works for
+	Employers []int64 `json:"employers"`
 
 	// Social information
 	LinkedIn  string `json:"linkedin"`
@@ -28,10 +39,8 @@ type Contact struct {
 	Website   string `json:"website"`
 	Blog      string `json:"blog"`
 
-	Notes string `json:"notes"`
-
-	// Publications this contact works for
-	Employers []int64 `json:"employers"`
+	// Custom fields
+	CustomFields []CustomContactField `json:"customfields"`
 
 	// Parent contact
 	ParentContact int64 `json:"parent"`

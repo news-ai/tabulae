@@ -51,6 +51,7 @@ func init() {
 	api.HandleFunc("/auth/google", auth.GoogleLoginHandler)
 	api.HandleFunc("/auth/callback", auth.GoogleCallbackHandler)
 
+	// Init the environment for a particular URL
 	utils.InitURL()
 	auth.SetRedirectURL()
 
