@@ -41,7 +41,7 @@ func init() {
 			routeName := "/{id}"
 			api.HandleFunc(apiRoutes[i].HandlerName+routeName, apiRoutes[i].Routes[routeName])
 			if len(apiRoutes[i].Routes) == 3 {
-				routeName = "/{id}/upload"
+				routeName = "/{id}/{action}"
 				api.HandleFunc(apiRoutes[i].HandlerName+routeName, apiRoutes[i].Routes[routeName])
 			}
 		}

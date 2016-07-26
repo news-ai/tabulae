@@ -46,6 +46,12 @@ func GetRoutes() []Action {
 				"/{id}/upload": routes.UploadHandler,
 			},
 		},
+		Action{
+			"/files", map[string]Handler{
+				"/":     routes.FilesHandler,
+				"/{id}": routes.FileHandler,
+			},
+		},
 	}
 	return router
 }
