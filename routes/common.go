@@ -22,6 +22,15 @@ func IsAdmin(w http.ResponseWriter, r *http.Request) error {
 	return errors.New("Admin login only")
 }
 
+func GetUser(r *http.Request) (models.User, error) {
+	c := appengine.NewContext(r)
+	user, err := models.GetCurrentUser(c, r)
+	if err != nil {
+		return models.User{}, errors.New("Admin login only")
+	}
+	return user, nil
+}
+
 func getStorageBucket(r *http.Request, bucket string) (string, error) {
 	c := appengine.NewContext(r)
 	// In development mode this returns the non-production URL

@@ -1,14 +1,29 @@
 package routes
 
 import (
+	"encoding/base64"
+	"io/ioutil"
+	"math/rand"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/middleware"
 
+	"github.com/gorilla/mux"
 	"google.golang.org/cloud/storage"
 )
+
+// State can be some kind of random generated hash string.
+// See relevant RFC: http://tools.ietf.org/html/rfc6749#section-10.12
+func randToken() string {
+	b := make([]byte, 5)
+	rand.Read(b)
+	return base64.StdEncoding.EncodeToString(b)
+}
 
 // Handler for when the user wants all the users.
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -17,9 +32,26 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		c := appengine.NewContext(r)
 
-		cleanUp := []string{}
+		user, err := GetUser(r)
+		if err != nil {
+			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
+			return
+		}
 
-		fileName := "hello.xlsx"
+		vars := mux.Vars(r)
+		listId, ok := vars["id"]
+		if !ok {
+			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", "List ID missing")
+			return
+		}
+
+		log.Debugf(c, "%v", user.Id)
+
+		userId := strconv.FormatInt(user.Id, 10)
+
+		file, handler, err := r.FormFile("file")
+		noSpaceFileName := strings.Replace(handler.Filename, " ", "", -1)
+		fileName := strings.Join([]string{userId, listId, randToken(), noSpaceFileName}, "-")
 
 		bucket, err := getStorageBucket(r, "")
 		if err != nil {
@@ -34,17 +66,19 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		defer client.Close()
 
+		// Setup the bucket to upload the file
 		clientBucket := client.Bucket(bucket)
-
 		wc := clientBucket.Object(fileName).NewWriter(c)
-		wc.ContentType = "text/plain"
+		wc.ContentType = handler.Header.Get("Content-Type")
 		wc.Metadata = map[string]string{
-			"x-goog-meta-foo": "foo",
-			"x-goog-meta-bar": "bar",
+			"x-goog-meta-userid": userId,
+			"x-goog-meta-listid": listId,
 		}
-		cleanUp = append(cleanUp, fileName)
+		wc.ACL = []storage.ACLRule{{Entity: storage.ACLEntity("project-owners-newsai-1166"), Role: storage.RoleOwner}}
 
-		if _, err := wc.Write([]byte("abcde\n")); err != nil {
+		// Upload the file
+		data, err := ioutil.ReadAll(file)
+		if _, err := wc.Write(data); err != nil {
 			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
 			return
 		}
