@@ -3,7 +3,6 @@ package routes
 import (
 	"encoding/base64"
 	"encoding/json"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -13,10 +12,9 @@ import (
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/middleware"
-	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/upload"
 
 	"github.com/gorilla/mux"
-	"google.golang.org/cloud/storage"
 )
 
 // State can be some kind of random generated hash string.
@@ -55,41 +53,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		noSpaceFileName := strings.Replace(handler.Filename, " ", "", -1)
 		fileName := strings.Join([]string{userId, listId, randToken(), noSpaceFileName}, "-")
 
-		bucket, err := getStorageBucket(r, "")
-		if err != nil {
-			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
-			return
-		}
-
-		client, err := storage.NewClient(c)
-		if err != nil {
-			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
-			return
-		}
-		defer client.Close()
-
-		// Setup the bucket to upload the file
-		clientBucket := client.Bucket(bucket)
-		wc := clientBucket.Object(fileName).NewWriter(c)
-		wc.ContentType = handler.Header.Get("Content-Type")
-		wc.Metadata = map[string]string{
-			"x-goog-meta-userid": userId,
-			"x-goog-meta-listid": listId,
-		}
-		wc.ACL = []storage.ACLRule{{Entity: storage.ACLEntity("project-owners-newsai-1166"), Role: storage.RoleOwner}}
-
-		// Upload the file
-		data, err := ioutil.ReadAll(file)
-		if _, err := wc.Write(data); err != nil {
-			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
-			return
-		}
-		if err := wc.Close(); err != nil {
-			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
-			return
-		}
-
-		val, err := models.CreateFile(r, fileName, listId, userId)
+		val, err := upload.UploadFile(r, fileName, file, userId, listId, handler.Header.Get("Content-Type"))
 		if err != nil {
 			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
 			return
