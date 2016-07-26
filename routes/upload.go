@@ -2,6 +2,7 @@ package routes
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -88,7 +89,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		file, err := models.CreateFile(r, fileName, listId, userId)
+		val, err := models.CreateFile(r, fileName, listId, userId)
 		if err != nil {
 			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
 			return
@@ -99,10 +100,9 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
-			c.Errorf("contact error: %#v", err)
 			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
-			return
 		}
+		return
 	}
 	middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", "Method not implemented")
 }
