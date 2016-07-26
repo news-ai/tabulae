@@ -12,6 +12,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/middleware"
+	"github.com/news-ai/tabulae/models"
 
 	"github.com/gorilla/mux"
 	"google.golang.org/cloud/storage"
@@ -87,8 +88,21 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", "")
-		return
+		file, err := models.CreateFile(r, fileName, listId, userId)
+		if err != nil {
+			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
+			return
+		}
+
+		if err == nil {
+			err = json.NewEncoder(w).Encode(val)
+		}
+
+		if err != nil {
+			c.Errorf("contact error: %#v", err)
+			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
+			return
+		}
 	}
 	middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", "Method not implemented")
 }
