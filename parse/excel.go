@@ -11,7 +11,7 @@ type Column struct {
 	Rows []string `json:"rows"`
 }
 
-func FileToExcel(r *http.Request, file []byte) ([]Column, error) {
+func FileToExcelHeader(r *http.Request, file []byte) ([]Column, error) {
 	xlFile, err := xlsx.OpenBinary(file)
 	if err != nil {
 		return []Column{}, err
