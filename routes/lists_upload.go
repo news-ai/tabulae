@@ -25,8 +25,8 @@ func randToken() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-// Handler for when the user wants all the users.
-func UploadHandler(w http.ResponseWriter, r *http.Request) {
+// Handler for when the user wants to perform an action on the lists
+func MediaListActionHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
 		w.Header().Set("Content-Type", "application/json")
