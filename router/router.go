@@ -48,8 +48,9 @@ func GetRoutes() []Action {
 		},
 		Action{
 			"/files", map[string]Handler{
-				"/":     routes.FilesHandler,
-				"/{id}": routes.FileHandler,
+				"/":              routes.FilesHandler,
+				"/{id}":          routes.FileHandler,
+				"/{id}/{action}": routes.FileActionHandler,
 			},
 		},
 	}

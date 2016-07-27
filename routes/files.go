@@ -9,8 +9,10 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/news-ai/tabulae/files"
 	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/parse"
 )
 
 func handleFile(c appengine.Context, r *http.Request, id string) (interface{}, error) {
@@ -60,6 +62,37 @@ func FileHandler(w http.ResponseWriter, r *http.Request) {
 
 		if err == nil {
 			err = json.NewEncoder(w).Encode(val)
+		}
+
+		if err != nil {
+			c.Errorf("file error: %#v", err)
+			middleware.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+			return
+		}
+	}
+}
+
+func FileActionHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	c := appengine.NewContext(r)
+
+	// If there is an ID
+	vars := mux.Vars(r)
+	id, idOk := vars["id"]
+	action, actionOk := vars["action"]
+	if idOk && actionOk {
+		file, err := files.ReadFile(r, id)
+		if err != nil {
+			c.Errorf("file error: %#v", err)
+			middleware.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+			return
+		}
+
+		if action == "header" {
+			val, err := parse.FileToExcelHeader(r, file)
+			if err == nil {
+				err = json.NewEncoder(w).Encode(val)
+			}
 		}
 
 		if err != nil {
