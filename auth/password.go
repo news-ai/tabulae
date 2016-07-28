@@ -30,17 +30,48 @@ func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["state"] = state
 	session.Save(r, w)
 
+	//
+
+	// Now that the user is created/retrieved save the email in the session
 	session.Values["email"] = email
+	session.Save(r, w)
 }
 
-func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
+// Don't start their session here, but when they login to the platform.
+// This is just to give them the ability to register an account.
+func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	t := template.New("Login template")
 
+	// Setup to authenticate the user into the API
+	firstName := r.FormValue("firstname")
+	lastName := r.FormValue("lastname")
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+
+	a := models.User{}
+	c.Infof("%v", a, email, password)
+
+	// Hash the password and save it into the datastore
+
+	// Send an email confirmation
+}
+
+// Takes ?next as well. Create a session for the person.
+// Will post data to the password login handler.
+// Redirect to the ?next parameter.
+// Put CSRF token into the login handler.
+func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
 	cwd, _ := os.Getwd()
 
-	c.Infof("%v", filepath.Join(cwd, "../auth/login.html"))
+	t := template.New("Login template")
+	t, _ = t.ParseFiles(filepath.Join(cwd, "../auth/static/login.html"))
+	t.Execute(w, "")
+}
 
-	t, _ = t.ParseFiles(filepath.Join(cwd, "../auth/login.html"))
+func PasswordRegisterPageHandler(w http.ResponseWriter, r *http.Request) {
+	cwd, _ := os.Getwd()
+
+	t := template.New("Register template")
+	t, _ = t.ParseFiles(filepath.Join(cwd, "../auth/static/register.html"))
 	t.Execute(w, "")
 }

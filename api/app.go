@@ -2,6 +2,7 @@ package tabulae
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
@@ -47,12 +48,21 @@ func init() {
 		}
 	}
 
+	// Setup CSRF for auth
+	CSRF := csrf.Protect([]byte(os.Getenv("CSRFKEY")))
+
 	// Register authentication route
+	// Login with Google-based authentication
 	api.HandleFunc("/auth/google", auth.GoogleLoginHandler)
 	api.HandleFunc("/auth/callback", auth.GoogleCallbackHandler)
-	api.HandleFunc("/auth", auth.PasswordLoginPageHandler)
 
-	// Init the environment for a particular URL
+	// User registration based authentication
+	api.HandleFunc("/auth/userlogin", CSRF(auth.PasswordLoginHandler))
+	api.HandleFunc("/auth/userregister", CSRF(auth.PasswordRegisterHandler))
+	api.HandleFunc("/auth/login", CSRF(auth.PasswordLoginPageHandler))
+	api.HandleFunc("/auth/register", CSRF(auth.PasswordRegisterPageHandler))
+
+	// Initialize the environment for a particular URL
 	utils.InitURL()
 	auth.SetRedirectURL()
 
