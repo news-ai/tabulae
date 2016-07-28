@@ -10,6 +10,7 @@ import (
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
+	// "github.com/gorilla/csrf"
 )
 
 func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +50,7 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	a := models.User{}
-	c.Infof("%v", a, email, password)
+	c.Infof("%v", a, firstName, lastName, email, password)
 
 	// Hash the password and save it into the datastore
 
@@ -62,16 +63,32 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 // Put CSRF token into the login handler.
 func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
 	cwd, _ := os.Getwd()
+	c := appengine.NewContext(r)
 
-	t := template.New("Login template")
-	t, _ = t.ParseFiles(filepath.Join(cwd, "../auth/static/login.html"))
+	if r.URL.Query().Get("next") != "" {
+		session, _ := Store.Get(r, "sess")
+		session.Values["next"] = r.URL.Query().Get("next")
+		session.Save(r, w)
+	}
+
+	file := filepath.Join(cwd, "../auth/static/login.html")
+	t := template.New("login.html")
+	t, _ := t.ParseFiles(file)
 	t.Execute(w, "")
 }
 
 func PasswordRegisterPageHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	cwd, _ := os.Getwd()
 
-	t := template.New("Register template")
-	t, _ = t.ParseFiles(filepath.Join(cwd, "../auth/static/register.html"))
+	if r.URL.Query().Get("next") != "" {
+		session, _ := Store.Get(r, "sess")
+		session.Values["next"] = r.URL.Query().Get("next")
+		session.Save(r, w)
+	}
+
+	file := filepath.Join(cwd, "../auth/static/register.html")
+	t := template.New("register.html")
+	t, _ = t.ParseFiles(file)
 	t.Execute(w, "")
 }
