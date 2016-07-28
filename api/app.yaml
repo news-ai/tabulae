@@ -11,6 +11,7 @@ handlers:
 env_variables:
   GOOGLEAUTHKEY: '66057093659-gdof2fgsc2j1e9v3ugkt5uvkek669ael.apps.googleusercontent.com'
   GOOGLEAUTHSECRET: 'JLJLL4sV8nse8AyW8qE5zxnu'
+  SECRETKEY: 'Cab7MNoPdBdX%fxN?yg3yWVM4^7KecETjfem6HwXizQqZTsG4#'
 
 inbound_services:
 - mail

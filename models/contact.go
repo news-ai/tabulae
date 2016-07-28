@@ -218,6 +218,11 @@ func UpdateContact(c appengine.Context, contact *Contact, updatedContact Contact
 	UpdateIfNotBlank(&contact.Website, updatedContact.Website)
 	UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
 	UpdateIfNotBlank(&contact.Notes, updatedContact.Notes)
+
+	if len(updatedContact.CustomFields) > 0 {
+		contact.CustomFields = updatedContact.CustomFields
+	}
+
 	contact.save(c)
 
 	return *contact
