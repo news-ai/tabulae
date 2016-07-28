@@ -9,6 +9,7 @@ import (
 )
 
 var APIURL = ""
+var salt = os.Getenv("SECRETSALT")
 
 func InitURL() string {
 	if os.Getenv("RUN_WITH_DEVAPPSERVER") == "1" {
@@ -30,4 +31,8 @@ func RandToken() string {
 
 func HashPassword(password string) ([]byte, error) {
 	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+}
+
+func ValidatePassword(hashedPassword []byte, password string) error {
+	return bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
 }

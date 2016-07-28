@@ -9,6 +9,8 @@ import (
 	"appengine"
 	"appengine/datastore"
 
+	"github.com/news-ai/tabulae/utils"
+
 	"github.com/gorilla/context"
 )
 
@@ -193,6 +195,30 @@ func GetCurrentUser(c appengine.Context, r *http.Request) (User, error) {
 /*
 * Create methods
  */
+
+func RegisterUser(r *http.Request, user User) (bool, error) {
+	c := appengine.NewContext(r)
+	_, err := GetUserByEmail(c, user.Email)
+	if err != nil {
+		_, err = user.create(c, r)
+		return true, nil
+	}
+	return false, errors.New("User with the email already exists")
+}
+
+func ValidateUserPassword(r *http.Request, email string, password string) (bool, error) {
+	c := appengine.NewContext(r)
+	user, err := GetUserByEmail(c, email)
+	c.Infof("%v", user)
+	if err == nil {
+		err = utils.ValidatePassword(user.Password, password)
+		if err != nil {
+			return false, nil
+		}
+		return true, nil
+	}
+	return false, errors.New("User does not exist")
+}
 
 func NewOrUpdateUser(c appengine.Context, r *http.Request, email string, userDetails map[string]string) {
 	_, ok := context.GetOk(r, "user")

@@ -15,6 +15,14 @@ $(function () {
                 }
             };
 
+        // Checking password
+        $('form').on('submit',function(){
+           if($('#password').val()!=$('#password_confirmation').val()){
+               return false;
+           }
+           return true;
+        });
+
         // Event Handlers
         $button.on('click', function () {
             $checkbox.prop('checked', !$checkbox.is(':checked'));
