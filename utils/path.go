@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"math/rand"
 	"os"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 var APIURL = ""
@@ -24,4 +26,8 @@ func RandToken() string {
 	b := make([]byte, 32)
 	rand.Read(b)
 	return base64.StdEncoding.EncodeToString(b)
+}
+
+func HashPassword(password string) ([]byte, error) {
+	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 }

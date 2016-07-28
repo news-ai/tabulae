@@ -20,6 +20,8 @@ type User struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 
+	Password []byte `json:"-"`
+
 	Employers []int64 `json:"employers"`
 
 	IsAdmin bool `json:"-"`

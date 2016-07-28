@@ -50,6 +50,7 @@ func init() {
 	// Register authentication route
 	api.HandleFunc("/auth/google", auth.GoogleLoginHandler)
 	api.HandleFunc("/auth/callback", auth.GoogleCallbackHandler)
+	api.HandleFunc("/auth", auth.PasswordLoginPageHandler)
 
 	// Init the environment for a particular URL
 	utils.InitURL()
