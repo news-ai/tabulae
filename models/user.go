@@ -24,7 +24,8 @@ type User struct {
 
 	Employers []int64 `json:"employers"`
 
-	IsAdmin bool `json:"-"`
+	EmailConfirmed bool `json:"emailconfirmed"`
+	IsAdmin        bool `json:"-"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -199,11 +200,13 @@ func NewOrUpdateUser(c appengine.Context, r *http.Request, email string, userDet
 		user, err := GetUserByEmail(c, email)
 		if err != nil {
 			// Add the user if there is no user
+			// If the registration comes from Google
 			user := User{}
 			user.GoogleId = userDetails["id"]
 			user.Email = userDetails["email"]
 			user.FirstName = userDetails["given_name"]
 			user.LastName = userDetails["family_name"]
+			user.EmailConfirmed = true
 			_, err = user.create(c, r)
 		} else {
 			context.Set(r, "user", user)

@@ -9,7 +9,7 @@ import (
 	"appengine"
 
 	"github.com/news-ai/tabulae/models"
-	"github.com/news-ai/tabulae/utils"
+	// "github.com/news-ai/tabulae/utils"
 	// "github.com/gorilla/csrf"
 )
 
@@ -23,19 +23,19 @@ func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
 	a := models.User{}
 	c.Infof("%v", a, email, password)
 
-	// Generate a random state that we identify the user with
-	state := utils.RandToken()
+	// // Generate a random state that we identify the user with
+	// state := utils.RandToken()
 
-	// Save the session for each of the users
-	session, _ := Store.Get(r, "sess")
-	session.Values["state"] = state
-	session.Save(r, w)
+	// // Save the session for each of the users
+	// session, _ := Store.Get(r, "sess")
+	// session.Values["state"] = state
+	// session.Save(r, w)
 
-	//
+	// //
 
-	// Now that the user is created/retrieved save the email in the session
-	session.Values["email"] = email
-	session.Save(r, w)
+	// // Now that the user is created/retrieved save the email in the session
+	// session.Values["email"] = email
+	// session.Save(r, w)
 }
 
 // Don't start their session here, but when they login to the platform.
@@ -63,7 +63,6 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 // Put CSRF token into the login handler.
 func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
 	cwd, _ := os.Getwd()
-	c := appengine.NewContext(r)
 
 	if r.URL.Query().Get("next") != "" {
 		session, _ := Store.Get(r, "sess")
@@ -73,12 +72,11 @@ func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	file := filepath.Join(cwd, "../auth/static/login.html")
 	t := template.New("login.html")
-	t, _ := t.ParseFiles(file)
+	t, _ = t.ParseFiles(file)
 	t.Execute(w, "")
 }
 
 func PasswordRegisterPageHandler(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
 	cwd, _ := os.Getwd()
 
 	if r.URL.Query().Get("next") != "" {
