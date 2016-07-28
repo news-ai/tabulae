@@ -2,11 +2,10 @@ package auth
 
 import (
 	"net/http"
-	"os"
-	"path/filepath"
 	"text/template"
 
-	"appengine"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
@@ -14,8 +13,6 @@ import (
 )
 
 func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
-
 	// Setup to authenticate the user into the API
 	email := r.FormValue("email")
 	password := r.FormValue("password")
@@ -29,7 +26,6 @@ func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
 	session.Save(r, w)
 
 	isOk, _ := models.ValidateUserPassword(r, email, password)
-	c.Infof("%v", isOk)
 	if isOk {
 		// // Now that the user is created/retrieved save the email in the session
 		session.Values["email"] = email
@@ -75,31 +71,37 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 // Redirect to the ?next parameter.
 // Put CSRF token into the login handler.
 func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
-	cwd, _ := os.Getwd()
-
+	c := appengine.NewContext(r)
 	if r.URL.Query().Get("next") != "" {
 		session, _ := Store.Get(r, "sess")
 		session.Values["next"] = r.URL.Query().Get("next")
 		session.Save(r, w)
 	}
 
-	file := filepath.Join(cwd, "../auth/static/login.html")
 	t := template.New("login.html")
-	t, _ = t.ParseFiles(file)
-	t.Execute(w, "")
+	t, err := t.ParseFiles("auth/login.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = t.Execute(w, "")
+	if err != nil {
+		log.Errorf(c, "could not put into datastore: %v", err)
+	}
 }
 
 func PasswordRegisterPageHandler(w http.ResponseWriter, r *http.Request) {
-	cwd, _ := os.Getwd()
-
+	c := appengine.NewContext(r)
 	if r.URL.Query().Get("next") != "" {
 		session, _ := Store.Get(r, "sess")
 		session.Values["next"] = r.URL.Query().Get("next")
 		session.Save(r, w)
 	}
 
-	file := filepath.Join(cwd, "../auth/static/register.html")
 	t := template.New("register.html")
-	t, _ = t.ParseFiles(file)
-	t.Execute(w, "")
+	t, _ = t.ParseFiles("auth/register.html")
+	err := t.Execute(w, "")
+	if err != nil {
+		log.Errorf(c, "could not put into datastore: %v", err)
+	}
 }
