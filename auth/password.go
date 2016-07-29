@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 	"net/url"
+	"strings"
 	"text/template"
 
 	"appengine"
@@ -10,8 +11,6 @@ import (
 	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
-
-	"github.com/gorilla/mux"
 	// "github.com/gorilla/csrf"
 )
 
@@ -117,14 +116,13 @@ func PasswordRegisterPageHandler(w http.ResponseWriter, r *http.Request) {
 func EmailConfirmationHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
-	vars := mux.Vars(r)
-	code, ok := vars["code"]
-
 	// Invalid confirmation message
 	invalidConfirmation := url.QueryEscape("Your confirmation code is invalid!")
 
-	if ok {
-		user, err := models.GetUserByConfirmationCode(c, code)
+	if val, ok := r.URL.Query()["code"]; ok {
+		code := val[0]
+		user, err := models.GetUserByConfirmationCode(c, strings.Trim(code, " "))
+
 		if err != nil {
 			http.Redirect(w, r, "/api/auth?success=false&message="+invalidConfirmation, 302)
 		}

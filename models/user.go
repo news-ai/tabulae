@@ -116,15 +116,6 @@ func (u *User) update(c appengine.Context, r *http.Request) (*User, error) {
 	return u, nil
 }
 
-func (u *User) ConfirmEmail(c appengine.Context) (*User, error) {
-	u.EmailConfirmed = true
-	_, err := u.save(c)
-	if err != nil {
-		return u, err
-	}
-	return u, nil
-}
-
 /*
 * Filter methods
  */
@@ -228,7 +219,6 @@ func RegisterUser(r *http.Request, user User) (bool, error) {
 func ValidateUserPassword(r *http.Request, email string, password string) (bool, error) {
 	c := appengine.NewContext(r)
 	user, err := GetUserByEmail(c, email)
-	c.Infof("%v", user)
 	if err == nil {
 		err = utils.ValidatePassword(user.Password, password)
 		if err != nil {
@@ -266,6 +256,16 @@ func NewOrUpdateUser(c appengine.Context, r *http.Request, email string, userDet
 /*
 * Update methods
  */
+
+func (u *User) ConfirmEmail(c appengine.Context) (*User, error) {
+	u.EmailConfirmed = true
+	u.ConfirmationCode = ""
+	_, err := u.save(c)
+	if err != nil {
+		return u, err
+	}
+	return u, nil
+}
 
 func UpdateUser(c appengine.Context, r *http.Request, id string) (User, error) {
 	// Get the details of the current user
