@@ -35,7 +35,11 @@ func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 		if session.Values["next"] != nil {
 			http.Redirect(w, r, session.Values["next"].(string), 302)
+			return
 		}
+
+		http.Redirect(w, r, "/", 302)
+		return
 	}
 	wrongPasswordMessage := url.QueryEscape("You entered the wrong password!")
 	http.Redirect(w, r, "/api/auth?success=false&message="+wrongPasswordMessage, 302)
@@ -68,6 +72,7 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		// Redirect user back to login page
 		emailRegistered := url.QueryEscape("Email has already been registered")
 		http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
+		return
 	}
 
 	// Send an email confirmation
