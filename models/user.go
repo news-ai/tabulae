@@ -26,8 +26,9 @@ type User struct {
 
 	Employers []int64 `json:"employers"`
 
-	EmailConfirmed bool `json:"emailconfirmed"`
-	IsAdmin        bool `json:"-"`
+	ConfirmationCode string `json:"-"`
+	EmailConfirmed   bool   `json:"emailconfirmed"`
+	IsAdmin          bool   `json:"-"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -115,6 +116,15 @@ func (u *User) update(c appengine.Context, r *http.Request) (*User, error) {
 	return u, nil
 }
 
+func (u *User) ConfirmEmail(c appengine.Context) (*User, error) {
+	u.EmailConfirmed = true
+	_, err := u.save(c)
+	if err != nil {
+		return u, err
+	}
+	return u, nil
+}
+
 /*
 * Filter methods
  */
@@ -176,6 +186,15 @@ func GetUser(c appengine.Context, r *http.Request, id string) (User, error) {
 func GetUserByEmail(c appengine.Context, email string) (User, error) {
 	// Get the current user
 	user, err := filterUser(c, "Email", email)
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
+
+func GetUserByConfirmationCode(c appengine.Context, confirmationCode string) (User, error) {
+	// Get the current user
+	user, err := filterUser(c, "ConfirmationCode", confirmationCode)
 	if err != nil {
 		return User{}, err
 	}

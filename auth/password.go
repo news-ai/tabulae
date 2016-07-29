@@ -5,12 +5,13 @@ import (
 	"net/url"
 	"text/template"
 
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/log"
+	"appengine"
 
 	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
+
+	"github.com/gorilla/mux"
 	// "github.com/gorilla/csrf"
 )
 
@@ -37,8 +38,8 @@ func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, session.Values["next"].(string), 302)
 		}
 	}
-	wrongPasswordMessage := "You entered the wrong password!"
-	http.Redirect(w, r, url.QueryEscape("/api/auth?success=false&message="+wrongPasswordMessage), 302)
+	wrongPasswordMessage := url.QueryEscape("You entered the wrong password!")
+	http.Redirect(w, r, "/api/auth?success=false&message="+wrongPasswordMessage, 302)
 }
 
 // Don't start their session here, but when they login to the platform.
@@ -59,24 +60,26 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	user.Email = email
 	user.Password = hashedPassword
 	user.EmailConfirmed = false
+	user.ConfirmationCode = utils.RandToken()
 
 	// Register user
 	isOk, err := models.RegisterUser(r, user)
 
 	if !isOk && err != nil {
 		// Redirect user back to login page
-		http.Redirect(w, r, url.QueryEscape("/api/auth?success=false&message="+err.Error()), 302)
+		emailRegistered := url.QueryEscape("Email has already been registered")
+		http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
 	}
 
 	// Send an email confirmation
 	emailConfirmation := emails.Email{}
 	emailConfirmation.To = []string{email}
 	emailConfirmation.FirstName = firstName
-	emails.SendConfirmationEmail(r, emailConfirmation)
+	emails.SendConfirmationEmail(r, emailConfirmation, user.ConfirmationCode)
 
 	// Redirect user back to login page
-	confirmationMessage := "We sent you a confirmation email!"
-	http.Redirect(w, r, url.QueryEscape("/api/auth?success=true&message="+confirmationMessage), 302)
+	confirmationMessage := url.QueryEscape("We sent you a confirmation email!")
+	http.Redirect(w, r, "/api/auth?success=true&message="+confirmationMessage, 302)
 }
 
 // Takes ?next as well. Create a session for the person.
@@ -84,7 +87,6 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 // Redirect to the ?next parameter.
 // Put CSRF token into the login handler.
 func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
 	if r.URL.Query().Get("next") != "" {
 		session, _ := Store.Get(r, "sess")
 		session.Values["next"] = r.URL.Query().Get("next")
@@ -97,14 +99,10 @@ func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = t.Execute(w, "")
-	if err != nil {
-		log.Errorf(c, "could not put into datastore: %v", err)
-	}
+	t.Execute(w, "")
 }
 
 func PasswordRegisterPageHandler(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
 	if r.URL.Query().Get("next") != "" {
 		session, _ := Store.Get(r, "sess")
 		session.Values["next"] = r.URL.Query().Get("next")
@@ -113,8 +111,32 @@ func PasswordRegisterPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	t := template.New("register.html")
 	t, _ = t.ParseFiles("auth/register.html")
-	err := t.Execute(w, "")
-	if err != nil {
-		log.Errorf(c, "could not put into datastore: %v", err)
+	t.Execute(w, "")
+}
+
+func EmailConfirmationHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+
+	vars := mux.Vars(r)
+	code, ok := vars["code"]
+
+	// Invalid confirmation message
+	invalidConfirmation := url.QueryEscape("Your confirmation code is invalid!")
+
+	if ok {
+		user, err := models.GetUserByConfirmationCode(c, code)
+		if err != nil {
+			http.Redirect(w, r, "/api/auth?success=false&message="+invalidConfirmation, 302)
+		}
+
+		_, err = user.ConfirmEmail(c)
+		if err != nil {
+			http.Redirect(w, r, "/api/auth?success=false&message="+invalidConfirmation, 302)
+		}
+
+		validConfirmation := "Your email has been confirmed. Please proceed to logging in!"
+		http.Redirect(w, r, "/api/auth?success=true&message="+validConfirmation, 302)
 	}
+
+	http.Redirect(w, r, "/api/auth?success=false&message="+invalidConfirmation, 302)
 }

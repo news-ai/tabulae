@@ -62,6 +62,7 @@ func init() {
 	api.HandleFunc("/auth/userregister", auth.PasswordRegisterHandler)
 	api.HandleFunc("/auth", auth.PasswordLoginPageHandler)
 	api.HandleFunc("/auth/registration", auth.PasswordRegisterPageHandler)
+	api.HandleFunc("/auth/confirmation", auth.EmailConfirmationHandler)
 
 	// Initialize the environment for a particular URL
 	utils.InitURL()

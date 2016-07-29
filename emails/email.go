@@ -13,4 +13,8 @@ type Email struct {
 
 const confirmMessage = `
 Thank you for signing up on NewsAI Tabulae! 
+
+To confirm your email please go to https://tabulae.newsai.org/api/auth/confirmation?code=%s.
+
+Looking forward to working with you!
 `
