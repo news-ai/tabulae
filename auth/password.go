@@ -2,11 +2,13 @@ package auth
 
 import (
 	"net/http"
+	"net/url"
 	"text/template"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 
+	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
 	// "github.com/gorilla/csrf"
@@ -35,7 +37,8 @@ func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, session.Values["next"].(string), 302)
 		}
 	}
-	http.Redirect(w, r, "/", 302)
+	wrongPasswordMessage := "You entered the wrong password!"
+	http.Redirect(w, r, url.QueryEscape("/api/auth?success=false&message="+wrongPasswordMessage), 302)
 }
 
 // Don't start their session here, but when they login to the platform.
@@ -58,12 +61,22 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	user.EmailConfirmed = false
 
 	// Register user
-	models.RegisterUser(r, user)
+	isOk, err := models.RegisterUser(r, user)
+
+	if !isOk && err != nil {
+		// Redirect user back to login page
+		http.Redirect(w, r, url.QueryEscape("/api/auth?success=false&message="+err.Error()), 302)
+	}
 
 	// Send an email confirmation
+	emailConfirmation := emails.Email{}
+	emailConfirmation.To = []string{email}
+	emailConfirmation.FirstName = firstName
+	emails.SendConfirmationEmail(r, emailConfirmation)
 
 	// Redirect user back to login page
-	http.Redirect(w, r, "/api/auth?success=true", 302)
+	confirmationMessage := "We sent you a confirmation email!"
+	http.Redirect(w, r, url.QueryEscape("/api/auth?success=true&message="+confirmationMessage), 302)
 }
 
 // Takes ?next as well. Create a session for the person.

@@ -1,7 +1,6 @@
-package email
+package emails
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 
@@ -11,7 +10,7 @@ import (
 )
 
 // Basically means we'll send an email through our platform
-func SendInternalEmail(r *http.Request, email Email) {
+func SendConfirmationEmail(r *http.Request, email Email) {
 	c := appengine.NewContext(r)
 	msg := &mail.Message{
 		Sender:  "Abhi Agarwal <abhi@newsai.org>",
@@ -19,7 +18,7 @@ func SendInternalEmail(r *http.Request, email Email) {
 		Subject: "Thanks for signing up!",
 		Body:    fmt.Sprintf(confirmMessage),
 	}
-	if err := mail.Send(ctx, msg); err != nil {
-		log.Errorf(ctx, "Couldn't send email: %v", err)
+	if err := mail.Send(c, msg); err != nil {
+		log.Errorf(c, "Couldn't send email: %v", err)
 	}
 }
