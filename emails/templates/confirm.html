@@ -1,6 +1,3 @@
-package emails
-
-const confirmMessage = `
 <!doctype html>
 <html>
 <head>
@@ -173,7 +170,7 @@ ol li {
             <table class="btn-primary" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td>
-                  <center><a href="https://tabulae.newsai.org/api/auth/confirmation?code={CONFIRMATION_CODE}">Activate your account!</a>
+                  <center><a href="https://tabulae.newsai.org/api/auth/confirmation?code=%s">Activate your account!</a>
                 </td>
               </tr>
             </table>
@@ -219,4 +216,3 @@ ol li {
 
 </body>
 </html>
-`

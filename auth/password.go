@@ -76,8 +76,12 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send an email confirmation
-	emailConfirmation := emails.Email{}
-	emailConfirmation.To = []string{email}
+	emailConfirmation := models.Email{}
+
+	singleUser := models.EmailUser{}
+	singleUser.To = email
+
+	emailConfirmation.To = []models.EmailUser{singleUser}
 	emailConfirmation.FirstName = firstName
 	emails.SendConfirmationEmail(r, emailConfirmation, user.ConfirmationCode)
 
