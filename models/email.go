@@ -20,6 +20,7 @@ type Email struct {
 
 	// User details
 	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
 
 	IsSent bool `json:"issent"`
 
@@ -158,11 +159,13 @@ func CreateEmail(c appengine.Context, w http.ResponseWriter, r *http.Request) (E
 	return email, nil
 }
 
-func CreateEmailInternal(r *http.Request, to string) (Email, error) {
+func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (Email, error) {
 	c := appengine.NewContext(r)
 
 	email := Email{}
 	email.To = to
+	email.FirstName = firstName
+	email.LastName = lastName
 
 	_, err := email.save(c)
 	return email, err

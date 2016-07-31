@@ -19,6 +19,7 @@ env_variables:
   SECRETKEY: 'Cab7MNoPdBdX%fxN?yg3yWVM4^7KecETjfem6HwXizQqZTsG4#'
   CSRFKEY: '4LaCHxT6qwvDovNCb8^TXmymn^Vcxx'
   SECRETSALT: 'wsgAN6KkGKthcABExraWbBgr3^3yj,M3ppEd8}MpdypV[LavR8MjWJracUNjaxWQRvH6guWXrssP4vfU*qqiwjkwsE*3t'
+  SENDGRID_USER: 'newsaiorg'
   SENDGRID_KEY: 'EswwpT3vxR9i6,]yzpQP'
 
 inbound_services:
