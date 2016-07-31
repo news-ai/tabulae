@@ -2,44 +2,34 @@ package emails
 
 import (
 	"net/http"
-	"strconv"
-	"strings"
+	"os"
 
 	"github.com/news-ai/tabulae/models"
 
 	"appengine"
-	// "appengine/mail"
+	"appengine/urlfetch"
 
 	"gopkg.in/sendgrid/sendgrid-go.v2"
 )
 
+var sg = sendgrid.NewSendGridClient("newsaiorg", os.Getenv("SENDGRID_KEY"))
+
 // Basically means we'll send an email through our platform
 func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode string) {
 	c := appengine.NewContext(r)
-
-	userEmail, err := models.GetEmailUser(c, strconv.FormatInt(email.To[0], 10))
-	if err != nil {
-		c.Infof("Couldn't send email: %v", err)
-		return
-	}
-
-	// msg := &mail.Message{
-	// 	Sender:   "Abhi from NewsAI <abhi@newsai.org>",
-	// 	To:       []string{userEmail.To},
-	// 	Subject:  "Thanks for signing up!",
-	// 	HTMLBody: strings.Replace(confirmMessage, "{CONFIRMATION_CODE}", confirmationCode, -1),
-	// }
-	// if err := mail.Send(c, msg); err != nil {
-	// 	c.Infof("Couldn't send email: %v", err)
-	// }
+	sg.Client = urlfetch.Client(c)
 
 	m := sendgrid.NewMail()
-	m.AddTo(userEmail.To)
+	m.AddTo(email.To)
 	m.SetSubject("Thanks for signing up!")
-	m.SetHTML(strings.Replace(confirmMessage, "{CONFIRMATION_CODE}", confirmationCode, -1))
+	m.SetHTML(" ")
+	m.SetText(" ")
 	m.SetFrom("Abhi from NewsAI <abhi@newsai.org>")
+	m.AddFilter("templates", "enable", "1")
+	m.AddFilter("templates", "template_id", "a64e454c-19d5-4bba-9cef-bd185e7c9b0b")
+	m.AddSubstitution("{CONFIRMATION_CODE}", confirmationCode)
 
-	if err := sendgridClient.Send(m); err != nil {
+	if err := sg.Send(m); err != nil {
 		c.Infof("Couldn't send email: %v", err)
 	}
 }
