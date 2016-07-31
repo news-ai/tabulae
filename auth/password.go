@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"net/mail"
 	"net/url"
 	"strings"
 	"text/template"
@@ -19,6 +20,13 @@ func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
+	// Validate email
+	validEmail, err := mail.ParseAddress(email)
+	if err != nil {
+		invalidEmailAlert := url.QueryEscape("The email you entered is not valid!")
+		http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
+	}
+
 	// // Generate a random state that we identify the user with
 	state := utils.RandToken()
 
@@ -27,10 +35,10 @@ func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["state"] = state
 	session.Save(r, w)
 
-	isOk, _ := models.ValidateUserPassword(r, email, password)
+	isOk, _ := models.ValidateUserPassword(r, validEmail.Address, password)
 	if isOk {
 		// // Now that the user is created/retrieved save the email in the session
-		session.Values["email"] = email
+		session.Values["email"] = validEmail.Address
 		session.Save(r, w)
 
 		if session.Values["next"] != nil {
@@ -89,14 +97,30 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 // Redirect to the ?next parameter.
 // Put CSRF token into the login handler.
 func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	currentUser, err := models.GetCurrentUser(c, r)
+
 	if r.URL.Query().Get("next") != "" {
 		session, _ := Store.Get(r, "sess")
 		session.Values["next"] = r.URL.Query().Get("next")
 		session.Save(r, w)
+
+		// If there is a next and the user has been logged in
+		if err == nil {
+			http.Redirect(w, r, r.URL.Query().Get("next"), 302)
+			return
+		}
 	}
 
+	// If there is no next and the user is logged in
+	if err == nil {
+		http.Redirect(w, r, "/", 302)
+		return
+	}
+
+	// If there is no user then we redirect them to the login page
 	t := template.New("login.html")
-	t, err := t.ParseFiles("auth/login.html")
+	t, err = t.ParseFiles("auth/login.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -104,11 +128,27 @@ func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, "")
 }
 
+// You have to be logged out in order to register a new user
 func PasswordRegisterPageHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	currentUser, err := models.GetCurrentUser(c, r)
+
 	if r.URL.Query().Get("next") != "" {
 		session, _ := Store.Get(r, "sess")
 		session.Values["next"] = r.URL.Query().Get("next")
 		session.Save(r, w)
+
+		// If there is a next and the user has been logged in
+		if err == nil {
+			http.Redirect(w, r, r.URL.Query().Get("next"), 302)
+			return
+		}
+	}
+
+	// If there is no next and the user is logged in
+	if err == nil {
+		http.Redirect(w, r, "/", 302)
+		return
 	}
 
 	t := template.New("register.html")
