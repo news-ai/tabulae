@@ -148,6 +148,7 @@ func (eu *EmailUser) save(c appengine.Context) (*EmailUser, error) {
 func (e *Email) save(c appengine.Context) (*Email, error) {
 	// Update the Updated time
 	e.Updated = time.Now()
+	e.IsSent = false
 
 	k, err := datastore.Put(c, e.key(c), e)
 	if err != nil {
