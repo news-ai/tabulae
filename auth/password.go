@@ -75,14 +75,10 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send an email confirmation
-	emailConfirmation := models.Email{}
+	// Email could fail to send if there is no singleUser. Create check later.
+	singleUser, _ := models.CreateEmailUserInternal(r, email)
 
-	singleUser := models.EmailUser{}
-	singleUser.To = email
-
-	emailConfirmation.To = []models.EmailUser{singleUser}
-	emailConfirmation.FirstName = firstName
+	emailConfirmation, _ := models.CreateEmailInternal(r, []int64{singleUser.Id})
 	emails.SendConfirmationEmail(r, emailConfirmation, user.ConfirmationCode)
 
 	// Redirect user back to login page
