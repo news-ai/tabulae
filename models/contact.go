@@ -236,7 +236,7 @@ func GetContacts(c appengine.Context, r *http.Request) ([]Contact, error) {
 		return []Contact{}, err
 	}
 
-	ks, err := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).GetAll(c, &contacts)
+	ks, err := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", true).GetAll(c, &contacts)
 	if err != nil {
 		return []Contact{}, err
 	}
