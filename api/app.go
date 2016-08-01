@@ -64,6 +64,9 @@ func init() {
 	api.HandleFunc("/auth/registration", auth.PasswordRegisterPageHandler)
 	api.HandleFunc("/auth/confirmation", auth.EmailConfirmationHandler)
 
+	// Common
+	api.HandleFunc("/auth/logout", auth.LogoutHandler)
+
 	// Initialize the environment for a particular URL
 	utils.InitURL()
 	auth.SetRedirectURL()

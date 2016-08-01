@@ -14,7 +14,6 @@ import (
 func UpdateOrCreateUser(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	c := appengine.NewContext(r)
 	email, err := auth.GetCurrentUserEmail(r)
-	c.Infof("%v", email)
 	if err != nil && !strings.Contains(r.URL.Path, "/api/auth") && !strings.Contains(r.URL.Path, "/static") {
 		w.Header().Set("Content-Type", "application/json")
 		ReturnError(w, http.StatusUnauthorized, "Not logged in", "Please login "+utils.APIURL+"/auth/google")

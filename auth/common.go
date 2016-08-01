@@ -61,3 +61,12 @@ func GetUserDetails(r *http.Request) (map[string]string, error) {
 
 	return userDetails, nil
 }
+
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := Store.Get(r, "sess")
+	delete(session.Values, "state")
+	delete(session.Values, "email")
+	session.Save(r, w)
+
+	http.Redirect(w, r, "/api/auth", 302)
+}
