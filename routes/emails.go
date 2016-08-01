@@ -102,6 +102,12 @@ func EmailActionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if action == "send" {
+			if email.IsSent {
+				c.Errorf("email error: %#v", err)
+				middleware.ReturnError(w, http.StatusInternalServerError, "Email handling error", "Email already sent")
+				return
+			}
+
 			// Validate if HTML is valid
 			validHTML := utils.ValidateHTML(email.Body)
 			if !validHTML {

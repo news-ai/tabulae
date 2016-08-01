@@ -74,6 +74,7 @@ func (e *Email) create(c appengine.Context, r *http.Request) (*Email, error) {
 		return e, err
 	}
 
+	e.IsSent = false
 	e.CreatedBy = currentUser.Id
 	e.Created = time.Now()
 
@@ -89,7 +90,6 @@ func (e *Email) create(c appengine.Context, r *http.Request) (*Email, error) {
 func (e *Email) save(c appengine.Context) (*Email, error) {
 	// Update the Updated time
 	e.Updated = time.Now()
-	e.IsSent = false
 
 	k, err := datastore.Put(c, e.key(c), e)
 	if err != nil {

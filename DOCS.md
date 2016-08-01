@@ -156,6 +156,36 @@ the ids have to be int not string.
 
 ---
 
+Email
+
+POST
+
+`http://localhost:8080/api/emails`
+
+The `body` has to be on one line. No new lines. JSON doesn't allow that.
+
+```json
+{
+"to": "abhia@nyu.edu",
+"subject": "Beach?",
+"body": "<!DOCTYPE html><html><head><title></title></head><body><p>Hi</p></body></html>"
+}
+```
+
+BATCH POST (same as others)
+
+PATCH (same as others)
+
+BATCH PATCH (same as others)
+
+Send email
+
+GET request to
+
+`http://localhost:8080/api/emails/<id>/send`
+
+
+
 Login forward
 
 http://tabulae.newsai.org/api/auth/google?next=http://newsai.org
