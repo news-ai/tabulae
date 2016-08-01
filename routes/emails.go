@@ -101,6 +101,12 @@ func EmailActionHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if email.CreatedBy != user.Id {
+			c.Errorf("email error: %#v", err)
+			middleware.ReturnError(w, http.StatusForbidden, "Email handling error", "Not your email to send")
+			return
+		}
+
 		if action == "send" {
 			if email.IsSent {
 				c.Errorf("email error: %#v", err)
