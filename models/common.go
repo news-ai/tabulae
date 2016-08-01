@@ -45,6 +45,15 @@ func NormalizeUrl(initialUrl string) (string, error) {
 	return u.Scheme + "://" + urlHost, nil
 }
 
+func StripQueryString(inputUrl string) string {
+	u, err := url.Parse(inputUrl)
+	if err != nil {
+		panic(err)
+	}
+	u.RawQuery = ""
+	return u.String()
+}
+
 func UpdateIfNotBlank(initial *string, replace string) {
 	if replace != "" {
 		*initial = replace

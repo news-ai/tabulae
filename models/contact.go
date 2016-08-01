@@ -43,7 +43,8 @@ type Contact struct {
 	CustomFields []CustomContactField `json:"customfields"`
 
 	// Parent contact
-	ParentContact int64 `json:"parent"`
+	IsMasterContact bool  `json:"-"`
+	ParentContact   int64 `json:"parent"`
 
 	CreatedBy int64 `json:"createdby"`
 
@@ -95,6 +96,7 @@ func (ct *Contact) create(c appengine.Context, r *http.Request) (*Contact, error
 
 	ct.CreatedBy = currentUser.Id
 	ct.Created = time.Now()
+	ct.noramlize()
 
 	_, err = ct.save(c)
 	return ct, err
@@ -108,12 +110,46 @@ func (ct *Contact) create(c appengine.Context, r *http.Request) (*Contact, error
 func (ct *Contact) save(c appengine.Context) (*Contact, error) {
 	// Update the Updated time
 	ct.Updated = time.Now()
+	ct.noramlize()
 
 	k, err := datastore.Put(c, ct.key(c), ct)
 	if err != nil {
 		return nil, err
 	}
 	ct.Id = k.IntID()
+	return ct, nil
+}
+
+/*
+* Filter methods
+ */
+
+func filterContact(c appengine.Context, queryType, query string) (Contact, error) {
+	// Get an contact by a query type
+	contacts := []Contact{}
+	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).GetAll(c, &contacts)
+	if err != nil {
+		return Contact{}, err
+	}
+	if len(contacts) > 0 {
+		contacts[0].Id = ks[0].IntID()
+		return contacts[0], nil
+	}
+	return Contact{}, errors.New("No contact by this " + queryType)
+}
+
+/*
+* Normalization methods
+ */
+
+func (ct *Contact) noramlize() (*Contact, error) {
+	ct.LinkedIn = StripQueryString(ct.LinkedIn)
+	ct.Twitter = StripQueryString(ct.Twitter)
+	ct.Instagram = StripQueryString(ct.Instagram)
+	ct.MuckRack = StripQueryString(ct.MuckRack)
+	ct.Website = StripQueryString(ct.Website)
+	ct.Blog = StripQueryString(ct.Blog)
+
 	return ct, nil
 }
 
