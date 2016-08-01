@@ -14,7 +14,7 @@ import (
 )
 
 // Send an email confirmation to a new user
-func SendEmail(r *http.Request, email models.Email, user models.User) {
+func SendEmail(r *http.Request, email models.Email, user models.User) bool {
 	c := appengine.NewContext(r)
 	sg.Client = urlfetch.Client(c)
 
@@ -34,5 +34,7 @@ func SendEmail(r *http.Request, email models.Email, user models.User) {
 
 	if err := sg.Send(m); err != nil {
 		c.Infof("Couldn't send email: %v", err)
+		return false
 	}
+	return true
 }

@@ -99,6 +99,15 @@ func (e *Email) save(c appengine.Context) (*Email, error) {
 	return e, nil
 }
 
+func (e *Email) MarkSent(c appengine.Context) (*Email, error) {
+	e.IsSent = true
+	_, err := e.save(c)
+	if err != nil {
+		return e, err
+	}
+	return e, nil
+}
+
 /*
 * Public methods
  */
@@ -144,7 +153,7 @@ func GetEmail(c appengine.Context, id string) (Email, error) {
 * Create methods
  */
 
-func CreateEmail(c appengine.Context, w http.ResponseWriter, r *http.Request) ([]Email, error) {
+func CreateEmail(c appengine.Context, r *http.Request) ([]Email, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
 

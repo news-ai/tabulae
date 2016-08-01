@@ -53,6 +53,13 @@ func GetRoutes() []Action {
 				"/{id}/{action}": routes.FileActionHandler,
 			},
 		},
+		Action{
+			"/emails", map[string]Handler{
+				"/":              routes.EmailsHandler,
+				"/{id}":          routes.EmailHandler,
+				"/{id}/{action}": routes.EmailActionHandler,
+			},
+		},
 	}
 	return router
 }
