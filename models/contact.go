@@ -98,7 +98,11 @@ func (ct *Contact) create(c appengine.Context, r *http.Request) (*Contact, error
 	ct.Created = time.Now()
 	ct.noramlize()
 
-	_, err = ct.save(c)
+	if ct.ParentContact == 0 {
+		findOrCreateMasterContact(c, ct, r)
+	}
+
+	_, err = ct.save(c, r)
 	return ct, err
 }
 
@@ -107,10 +111,14 @@ func (ct *Contact) create(c appengine.Context, r *http.Request) (*Contact, error
  */
 
 // Function to save a new contact into App Engine
-func (ct *Contact) save(c appengine.Context) (*Contact, error) {
+func (ct *Contact) save(c appengine.Context, r *http.Request) (*Contact, error) {
 	// Update the Updated time
 	ct.Updated = time.Now()
 	ct.noramlize()
+
+	if ct.ParentContact == 0 {
+		findOrCreateMasterContact(c, ct, r)
+	}
 
 	k, err := datastore.Put(c, ct.key(c), ct)
 	if err != nil {
@@ -136,6 +144,61 @@ func filterContact(c appengine.Context, queryType, query string) (Contact, error
 		return contacts[0], nil
 	}
 	return Contact{}, errors.New("No contact by this " + queryType)
+}
+
+func filterMasterContact(c appengine.Context, queryType, query string) (Contact, error) {
+	// Get an contact by a query type
+	contacts := []Contact{}
+	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).Filter("IsMasterContact = ", true).GetAll(c, &contacts)
+	if err != nil {
+		return Contact{}, err
+	}
+	if len(contacts) > 0 {
+		contacts[0].Id = ks[0].IntID()
+		return contacts[0], nil
+	}
+	return Contact{}, errors.New("No contact by this " + queryType)
+}
+
+func findOrCreateMasterContact(c appengine.Context, ct *Contact, r *http.Request) (*Contact, error) {
+	// Find master contact
+	// If there is no parent contact Id or if the Linkedin field is not empty
+	if ct.ParentContact == 0 && ct.LinkedIn != "" {
+		masterContact, err := filterMasterContact(c, "LinkedIn", ct.LinkedIn)
+		// Master contact does not exist
+		if err != nil {
+			// Create master contact
+			newMasterContact := Contact{}
+
+			// Initialize with the same values
+			newMasterContact.FirstName = ct.FirstName
+			newMasterContact.LastName = ct.LastName
+			newMasterContact.Email = ct.Email
+			newMasterContact.Employers = ct.Employers
+			newMasterContact.LinkedIn = ct.LinkedIn
+			newMasterContact.Twitter = ct.Twitter
+			newMasterContact.Instagram = ct.Instagram
+			newMasterContact.MuckRack = ct.MuckRack
+			newMasterContact.Website = ct.Website
+			newMasterContact.Blog = ct.Blog
+
+			// Set this to be the new master contact
+			newMasterContact.IsMasterContact = true
+
+			// Create the new master contact
+			newMasterContact.create(c, r)
+
+			// Assign the Id of the parent contact to be the new master contact.
+			ct.ParentContact = newMasterContact.Id
+			return ct, nil
+		}
+
+		// Don't create master contact
+		ct.ParentContact = masterContact.Id
+		return ct, nil
+	}
+
+	return ct, nil
 }
 
 /*
@@ -244,7 +307,7 @@ func CreateContact(c appengine.Context, r *http.Request) ([]Contact, error) {
 * Update methods
  */
 
-func UpdateContact(c appengine.Context, contact *Contact, updatedContact Contact) Contact {
+func UpdateContact(c appengine.Context, r *http.Request, contact *Contact, updatedContact Contact) Contact {
 	UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
 	UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
 	UpdateIfNotBlank(&contact.Email, updatedContact.Email)
@@ -259,7 +322,7 @@ func UpdateContact(c appengine.Context, contact *Contact, updatedContact Contact
 		contact.CustomFields = updatedContact.CustomFields
 	}
 
-	contact.save(c)
+	contact.save(c, r)
 
 	return *contact
 }
@@ -278,7 +341,7 @@ func UpdateSingleContact(c appengine.Context, r *http.Request, id string) (Conta
 		return Contact{}, err
 	}
 
-	return UpdateContact(c, &contact, updatedContact), nil
+	return UpdateContact(c, r, &contact, updatedContact), nil
 }
 
 func UpdateBatchContact(c appengine.Context, r *http.Request) ([]Contact, error) {
@@ -295,7 +358,7 @@ func UpdateBatchContact(c appengine.Context, r *http.Request) ([]Contact, error)
 		if err != nil {
 			return []Contact{}, err
 		}
-		updatedContact := UpdateContact(c, &contact, updatedContacts[i])
+		updatedContact := UpdateContact(c, r, &contact, updatedContacts[i])
 		newContacts = append(newContacts, updatedContact)
 	}
 
