@@ -43,7 +43,7 @@ type Contact struct {
 	CustomFields []CustomContactField `json:"customfields"`
 
 	// Parent contact
-	IsMasterContact bool  `json:"-"`
+	IsMasterContact bool  `json:"ismastercontact"`
 	ParentContact   int64 `json:"parent"`
 
 	CreatedBy int64 `json:"createdby"`
@@ -94,11 +94,13 @@ func (ct *Contact) create(c appengine.Context, r *http.Request) (*Contact, error
 		return ct, err
 	}
 
+	c.Infof("%v", ct)
+
 	ct.CreatedBy = currentUser.Id
 	ct.Created = time.Now()
 	ct.noramlize()
 
-	if ct.ParentContact == 0 {
+	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, ct, r)
 	}
 
@@ -116,7 +118,7 @@ func (ct *Contact) save(c appengine.Context, r *http.Request) (*Contact, error) 
 	ct.Updated = time.Now()
 	ct.noramlize()
 
-	if ct.ParentContact == 0 {
+	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, ct, r)
 	}
 
@@ -190,6 +192,7 @@ func findOrCreateMasterContact(c appengine.Context, ct *Contact, r *http.Request
 
 			// Assign the Id of the parent contact to be the new master contact.
 			ct.ParentContact = newMasterContact.Id
+			ct.IsMasterContact = false
 			return ct, nil
 		}
 
