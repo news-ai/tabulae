@@ -4,13 +4,15 @@
 - `/api/users` (POST, GET)
 - `/api/users/<id>` (PATCH, GET)
 - `/api/agencies` (GET)
-- `/api/agencies/<id>` (PATCH, GET)
+- `/api/agencies/<id>` (GET, PATCH)
 - `/api/publications` (GET, POST)
 - `/api/publications/<id>` (GET)
 - `/api/contacts` (GET, POST, PATCH)
-- `/api/contacts/<id>` (GET)
+- `/api/contacts/<id>` (GET, PATCH)
 - `/api/lists` (GET, POST)
 - `/api/lists/<id>` (GET, PATCH)
+- `/api/email/` (GET, POST, PATCH)
+- `/api/emails/<id>` (GET, PATCH)
 
 ----
 

@@ -2,8 +2,6 @@ package emails
 
 import (
 	"net/http"
-	"net/mail"
-	"os"
 
 	"github.com/news-ai/tabulae/models"
 
@@ -12,9 +10,6 @@ import (
 
 	"gopkg.in/sendgrid/sendgrid-go.v2"
 )
-
-var sg = sendgrid.NewSendGridClient(os.Getenv("SENDGRID_USER"), os.Getenv("SENDGRID_KEY"))
-var fromNewsAIEmail = mail.Address{Name: "Abhi Agarwal", Address: "abhi@newsai.org"}
 
 // Send an email confirmation to a new user
 func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode string) {

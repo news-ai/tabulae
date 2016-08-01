@@ -98,7 +98,7 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 // Put CSRF token into the login handler.
 func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	currentUser, err := models.GetCurrentUser(c, r)
+	_, err := models.GetCurrentUser(c, r)
 
 	if r.URL.Query().Get("next") != "" {
 		session, _ := Store.Get(r, "sess")
@@ -131,7 +131,7 @@ func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
 // You have to be logged out in order to register a new user
 func PasswordRegisterPageHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	currentUser, err := models.GetCurrentUser(c, r)
+	_, err := models.GetCurrentUser(c, r)
 
 	if r.URL.Query().Get("next") != "" {
 		session, _ := Store.Get(r, "sess")

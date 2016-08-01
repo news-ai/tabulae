@@ -1,8 +1,10 @@
 package models
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -48,7 +50,7 @@ func (e *Email) key(c appengine.Context) *datastore.Key {
  */
 
 func getEmail(c appengine.Context, id int64) (Email, error) {
-	// Get the Contact by id
+	// Get the email by id
 	emails := []Email{}
 	emailId := datastore.NewKey(c, "Email", "", id, nil)
 	ks, err := datastore.NewQuery("Email").Filter("__key__ =", emailId).GetAll(c, &emails)
@@ -142,21 +144,45 @@ func GetEmail(c appengine.Context, id string) (Email, error) {
 * Create methods
  */
 
-func CreateEmail(c appengine.Context, w http.ResponseWriter, r *http.Request) (Email, error) {
-	decoder := json.NewDecoder(r.Body)
+func CreateEmail(c appengine.Context, w http.ResponseWriter, r *http.Request) ([]Email, error) {
+	buf, _ := ioutil.ReadAll(r.Body)
+	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
+
+	decoder := json.NewDecoder(rdr1)
 	var email Email
 	err := decoder.Decode(&email)
+
+	// If it is an array and you need to do BATCH processing
 	if err != nil {
-		return Email{}, err
+		var emails []Email
+
+		rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+		arrayDecoder := json.NewDecoder(rdr2)
+		err = arrayDecoder.Decode(&email)
+
+		if err != nil {
+			return []Email{}, err
+		}
+
+		newEmails := []Email{}
+		for i := 0; i < len(emails); i++ {
+			_, err = emails[i].create(c, r)
+			if err != nil {
+				return []Email{}, err
+			}
+			newEmails = append(newEmails, emails[i])
+		}
+
+		return newEmails, err
 	}
 
 	// Create email
 	_, err = email.create(c, r)
 	if err != nil {
-		return Email{}, err
+		return []Email{}, err
 	}
 
-	return email, nil
+	return []Email{email}, nil
 }
 
 func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (Email, error) {
@@ -174,3 +200,50 @@ func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (Email
 /*
 * Update methods
  */
+
+func UpdateEmail(c appengine.Context, email *Email, updatedEmail Email) Email {
+	UpdateIfNotBlank(&email.Subject, updatedEmail.Subject)
+	UpdateIfNotBlank(&email.Body, updatedEmail.Body)
+	UpdateIfNotBlank(&email.To, updatedEmail.To)
+
+	email.save(c)
+	return *email
+}
+
+func UpdateSingleEmail(c appengine.Context, r *http.Request, id string) (Email, error) {
+	// Get the details of the current email
+	email, err := GetEmail(c, id)
+	if err != nil {
+		return Email{}, err
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var updatedEmail Email
+	err = decoder.Decode(&updatedEmail)
+	if err != nil {
+		return Email{}, err
+	}
+
+	return UpdateEmail(c, &email, updatedEmail), nil
+}
+
+func UpdateBatchEmail(c appengine.Context, r *http.Request) ([]Email, error) {
+	decoder := json.NewDecoder(r.Body)
+	var updatedEmails []Email
+	err := decoder.Decode(&updatedEmails)
+	if err != nil {
+		return []Email{}, err
+	}
+
+	newEmails := []Email{}
+	for i := 0; i < len(updatedEmails); i++ {
+		email, err := getEmail(c, updatedEmails[i].Id)
+		if err != nil {
+			return []Email{}, err
+		}
+		updatedEmail := UpdateEmail(c, &email, updatedEmails[i])
+		newEmails = append(newEmails, updatedEmail)
+	}
+
+	return newEmails, nil
+}
