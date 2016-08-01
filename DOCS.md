@@ -17,10 +17,12 @@ API
 
 Login
 
+The next parameter is optional.
+
 - `/api/auth/google?next=http://newsai.org`
-- `/api/auth`
-- `/api/auth/registration`
-- `/api/auth/logout`
+- `/api/auth?next=http://newsai.org`
+- `/api/auth/registration?next=http://newsai.org`
+- `/api/auth/logout?next=http://newsai.org`
 
 ----
 

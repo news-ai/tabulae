@@ -68,5 +68,10 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	delete(session.Values, "email")
 	session.Save(r, w)
 
+	if r.URL.Query().Get("next") != "" {
+		http.Redirect(w, r, r.URL.Query().Get("next"), 302)
+		return
+	}
+
 	http.Redirect(w, r, "/api/auth", 302)
 }
