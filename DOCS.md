@@ -1,6 +1,7 @@
 ## NewsAI Docs
 
-- `/api`
+API
+
 - `/api/users` (POST, GET)
 - `/api/users/<id>` (PATCH, GET)
 - `/api/agencies` (GET)
@@ -13,6 +14,13 @@
 - `/api/lists/<id>` (GET, PATCH)
 - `/api/email/` (GET, POST, PATCH)
 - `/api/emails/<id>` (GET, PATCH)
+
+Login
+
+- `/api/auth/google?next=http://newsai.org`
+- `/api/auth`
+- `/api/auth/registration`
+- `/api/auth/logout`
 
 ----
 
@@ -184,8 +192,10 @@ GET request to
 
 `http://localhost:8080/api/emails/<id>/send`
 
-
-
 Login forward
 
-http://tabulae.newsai.org/api/auth/google?next=http://newsai.org
+`https://tabulae.newsai.org/api/auth/google?next=http://newsai.org`
+
+Logout
+
+`https://tabulae.newsai.org/api/auth/logout`
