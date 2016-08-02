@@ -291,6 +291,24 @@ func (ct *Contact) linkedInSync(c appengine.Context, r *http.Request) (*Contact,
 	return ct, nil
 }
 
+func (ct *Contact) UpdateContactToParent(c appengine.Context, r *http.Request) (*Contact, error) {
+	parentContact, err := getContact(c, r, ct.ParentContact)
+
+	if err != nil {
+		return ct, err
+	}
+
+	ct.Employers = parentContact.Employers
+	ct.IsOutdated = false
+	_, err = ct.save(c, r)
+
+	if err != nil {
+		return ct, err
+	}
+
+	return ct, nil
+}
+
 /*
 * Public methods
  */

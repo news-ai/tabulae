@@ -122,7 +122,23 @@ func ContactActionHandler(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(data)
 			return
 		} else if action == "update" {
+			if !contact.IsOutdated {
+				err = json.NewEncoder(w).Encode(contact)
+				return
+			}
 
+			val, err := contact.UpdateContactToParent(c, r)
+
+			if err == nil {
+				err = json.NewEncoder(w).Encode(val)
+				return
+			}
+
+			if err != nil {
+				c.Errorf("contact error: %#v", err)
+				middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+				return
+			}
 		}
 
 		middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", "Only actions are diff and update")
