@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"appengine"
 
@@ -77,5 +78,54 @@ func ContactHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ContactActionHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	c := appengine.NewContext(r)
 
+	// If there is an ID
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	action, actionOk := vars["action"]
+	if ok && actionOk {
+		// Get current contact
+		contact, err := models.GetContact(c, r, id)
+		if err != nil {
+			middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+			return
+		}
+
+		// Get parent contact
+		parentContact, err := models.GetContact(c, r, strconv.FormatInt(contact.ParentContact, 10))
+		if err != nil {
+			middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+			return
+		}
+
+		c.Infof("%v", parentContact)
+		// Two actions: diff, update
+		if action == "diff" {
+			newEmployers := []string{}
+			for i := 0; i < len(parentContact.Employers); i++ {
+				// Get each publication
+				currentPublication, err := models.GetPublication(c, strconv.FormatInt(parentContact.Employers[i], 10))
+				if err != nil {
+					middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", "Only actions are diff and update")
+					return
+				}
+				newEmployers = append(newEmployers, currentPublication.Name)
+			}
+			data := struct {
+				Changes []string `json:"changes"`
+			}{
+				newEmployers,
+			}
+
+			json.NewEncoder(w).Encode(data)
+			return
+		} else if action == "update" {
+
+		}
+
+		middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", "Only actions are diff and update")
+		return
+	}
 }
