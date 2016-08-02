@@ -260,11 +260,15 @@ func (ct *Contact) checkAgainstParent(c appengine.Context, r *http.Request) (*Co
 }
 
 func (ct *Contact) linkedInSync(c appengine.Context, r *http.Request) (*Contact, error) {
+	parentContact, err := getContact(c, r, ct.ParentContact)
+	if err != nil {
+		return ct, err
+	}
 	// Update LinkedIn contact
-	hourFromUpdate := ct.LinkedInUpdated.Add(time.Minute * 1)
+	hourFromUpdate := parentContact.LinkedInUpdated.Add(time.Minute * 1)
 
-	if !ct.IsMasterContact && ct.LinkedIn != "" && (!ct.LinkedInUpdated.Before(hourFromUpdate) || ct.LinkedInUpdated.IsZero()) {
-		linkedInData := sync.LinkedInSync(r, ct.ParentContact, ct.LinkedIn)
+	if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (!parentContact.LinkedInUpdated.Before(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {
+		linkedInData := sync.LinkedInSync(r, parentContact.LinkedIn)
 		newEmployers := []int64{}
 		// Update data through linkedin data
 		for i := 0; i < len(linkedInData.Current); i++ {
@@ -273,11 +277,6 @@ func (ct *Contact) linkedInSync(c appengine.Context, r *http.Request) (*Contact,
 			if err == nil {
 				newEmployers = append(newEmployers, employer.Id)
 			}
-		}
-
-		parentContact, err := getContact(c, r, ct.ParentContact)
-		if err != nil {
-			return ct, err
 		}
 
 		parentContact.Employers = newEmployers

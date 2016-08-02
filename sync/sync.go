@@ -22,7 +22,7 @@ type LinkedInData struct {
 	} `json:"past"`
 }
 
-func LinkedInSync(r *http.Request, contactId int64, contactLinkedIn string) LinkedInData {
+func LinkedInSync(r *http.Request, contactLinkedIn string) LinkedInData {
 	c := appengine.NewContext(r)
 	url := "http://influencer.newsai.org/"
 
