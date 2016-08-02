@@ -91,17 +91,8 @@ func getContact(c appengine.Context, r *http.Request, id int64) (Contact, error)
 		// If there is a parent
 		if contacts[0].ParentContact != 0 {
 			// Update information
+			contacts[0].linkedInSync(c, r)
 			contacts[0].checkAgainstParent(c, r)
-
-			// Update LinkedIn contact
-			hourFromUpdate := contacts[0].LinkedInUpdated.Add(time.Minute * 1)
-
-			if contacts[0].LinkedIn != "" && !contacts[0].LinkedInUpdated.Before(hourFromUpdate) {
-				c.Infof("%v", "Linkedin")
-				sync.LinkedInSync(r, contacts[0].ParentContact, contacts[0].LinkedIn)
-				contacts[0].LinkedInUpdated = time.Now()
-				contacts[0].save(c, r)
-			}
 		}
 
 		return contacts[0], nil
@@ -121,11 +112,11 @@ func (ct *Contact) create(c appengine.Context, r *http.Request) (*Contact, error
 
 	ct.CreatedBy = currentUser.Id
 	ct.Created = time.Now()
-	ct.LinkedInUpdated = time.Now()
 	ct.noramlize()
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, ct, r)
+		ct.linkedInSync(c, r)
 		ct.checkAgainstParent(c, r)
 	}
 
@@ -145,6 +136,7 @@ func (ct *Contact) save(c appengine.Context, r *http.Request) (*Contact, error) 
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, ct, r)
+		ct.linkedInSync(c, r)
 		ct.checkAgainstParent(c, r)
 	}
 
@@ -264,6 +256,38 @@ func (ct *Contact) checkAgainstParent(c appengine.Context, r *http.Request) (*Co
 
 		return ct, nil
 	}
+	return ct, nil
+}
+
+func (ct *Contact) linkedInSync(c appengine.Context, r *http.Request) (*Contact, error) {
+	// Update LinkedIn contact
+	hourFromUpdate := ct.LinkedInUpdated.Add(time.Minute * 1)
+
+	if !ct.IsMasterContact && ct.LinkedIn != "" && (!ct.LinkedInUpdated.Before(hourFromUpdate) || ct.LinkedInUpdated.IsZero()) {
+		linkedInData := sync.LinkedInSync(r, ct.ParentContact, ct.LinkedIn)
+		newEmployers := []int64{}
+		// Update data through linkedin data
+		for i := 0; i < len(linkedInData.Current); i++ {
+			employerName := linkedInData.Current[i].Employer
+			employer, err := FindOrCreatePublication(c, r, employerName)
+			if err == nil {
+				newEmployers = append(newEmployers, employer.Id)
+			}
+		}
+
+		parentContact, err := getContact(c, r, ct.ParentContact)
+		if err != nil {
+			return ct, err
+		}
+
+		parentContact.Employers = newEmployers
+		parentContact.LinkedInUpdated = time.Now()
+		parentContact.save(c, r)
+
+		ct.LinkedInUpdated = time.Now()
+		ct.save(c, r)
+	}
+
 	return ct, nil
 }
 

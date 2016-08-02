@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"appengine"
@@ -180,6 +181,22 @@ func CreatePublication(c appengine.Context, w http.ResponseWriter, r *http.Reque
 	}
 
 	return presentPublication, nil
+}
+
+func FindOrCreatePublication(c appengine.Context, r *http.Request, name string) (Publication, error) {
+	name = strings.Trim(name, " ")
+	publication, err := FilterPublicationByName(c, name)
+	if err != nil {
+		var newPublication Publication
+		newPublication.Name = name
+		_, err = newPublication.create(c, r)
+		if err != nil {
+			return Publication{}, err
+		}
+		return newPublication, nil
+	}
+
+	return publication, nil
 }
 
 /*
