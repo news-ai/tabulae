@@ -16,7 +16,7 @@ import (
 func handleContact(c appengine.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetContact(c, id)
+		return models.GetContact(c, r, id)
 	case "PATCH":
 		return models.UpdateSingleContact(c, r, id)
 	}
@@ -74,4 +74,8 @@ func ContactHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+func ContactActionHandler(w http.ResponseWriter, r *http.Request) {
+
 }

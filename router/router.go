@@ -35,8 +35,9 @@ func GetRoutes() []Action {
 		},
 		Action{
 			"/contacts", map[string]Handler{
-				"/":     routes.ContactsHandler,
-				"/{id}": routes.ContactHandler,
+				"/":              routes.ContactsHandler,
+				"/{id}":          routes.ContactHandler,
+				"/{id}/{action}": routes.ContactActionHandler,
 			},
 		},
 		Action{

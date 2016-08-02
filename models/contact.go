@@ -6,10 +6,13 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"time"
 
 	"appengine"
 	"appengine/datastore"
+
+	"github.com/news-ai/tabulae/sync"
 )
 
 type CustomContactField struct {
@@ -28,8 +31,9 @@ type Contact struct {
 	// Notes on a particular contact
 	Notes string `json:"notes"`
 
-	// Publications this contact works for
-	Employers []int64 `json:"employers"`
+	// Publications this contact works for now and before
+	Employers     []int64 `json:"employers"`
+	PastEmployers []int64 `json:"pastemployers"`
 
 	// Social information
 	LinkedIn  string `json:"linkedin"`
@@ -46,10 +50,14 @@ type Contact struct {
 	IsMasterContact bool  `json:"ismastercontact"`
 	ParentContact   int64 `json:"parent"`
 
+	// Is information outdated
+	IsOutdated bool `json:"isoutdated"`
+
 	CreatedBy int64 `json:"createdby"`
 
-	Created time.Time `json:"created"`
-	Updated time.Time `json:"updated"`
+	Created         time.Time `json:"created"`
+	Updated         time.Time `json:"updated"`
+	LinkedInUpdated time.Time `json:"linkedinupdated"`
 }
 
 /*
@@ -69,7 +77,7 @@ func (ct *Contact) key(c appengine.Context) *datastore.Key {
 * Get methods
  */
 
-func getContact(c appengine.Context, id int64) (Contact, error) {
+func getContact(c appengine.Context, r *http.Request, id int64) (Contact, error) {
 	// Get the Contact by id
 	contacts := []Contact{}
 	contactId := datastore.NewKey(c, "Contact", "", id, nil)
@@ -79,6 +87,23 @@ func getContact(c appengine.Context, id int64) (Contact, error) {
 	}
 	if len(contacts) > 0 {
 		contacts[0].Id = ks[0].IntID()
+
+		// If there is a parent
+		if contacts[0].ParentContact != 0 {
+			// Update information
+			contacts[0].checkAgainstParent(c, r)
+
+			// Update LinkedIn contact
+			hourFromUpdate := contacts[0].LinkedInUpdated.Add(time.Minute * 1)
+
+			if contacts[0].LinkedIn != "" && !contacts[0].LinkedInUpdated.Before(hourFromUpdate) {
+				c.Infof("%v", "Linkedin")
+				sync.LinkedInSync(r, contacts[0].ParentContact, contacts[0].LinkedIn)
+				contacts[0].LinkedInUpdated = time.Now()
+				contacts[0].save(c, r)
+			}
+		}
+
 		return contacts[0], nil
 	}
 	return Contact{}, errors.New("No contact by this id")
@@ -96,10 +121,12 @@ func (ct *Contact) create(c appengine.Context, r *http.Request) (*Contact, error
 
 	ct.CreatedBy = currentUser.Id
 	ct.Created = time.Now()
+	ct.LinkedInUpdated = time.Now()
 	ct.noramlize()
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, ct, r)
+		ct.checkAgainstParent(c, r)
 	}
 
 	_, err = ct.save(c, r)
@@ -118,6 +145,7 @@ func (ct *Contact) save(c appengine.Context, r *http.Request) (*Contact, error) 
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, ct, r)
+		ct.checkAgainstParent(c, r)
 	}
 
 	k, err := datastore.Put(c, ct.key(c), ct)
@@ -188,6 +216,8 @@ func findOrCreateMasterContact(c appengine.Context, ct *Contact, r *http.Request
 			// Create the new master contact
 			newMasterContact.create(c, r)
 
+			// Do a social sync task when new master contact is added
+
 			// Assign the Id of the parent contact to be the new master contact.
 			ct.ParentContact = newMasterContact.Id
 			ct.IsMasterContact = false
@@ -214,6 +244,26 @@ func (ct *Contact) noramlize() (*Contact, error) {
 	ct.Website = StripQueryString(ct.Website)
 	ct.Blog = StripQueryString(ct.Blog)
 
+	return ct, nil
+}
+
+func (ct *Contact) checkAgainstParent(c appengine.Context, r *http.Request) (*Contact, error) {
+	// If there is a parent contact
+	if ct.ParentContact != 0 {
+		// Get parent contact
+		parentContact, err := getContact(c, r, ct.ParentContact)
+		if err != nil {
+			return ct, err
+		}
+
+		// See differences in parent and child contact
+		if !reflect.DeepEqual(ct.Employers, parentContact.Employers) {
+			ct.IsOutdated = true
+			ct.save(c, r)
+		}
+
+		return ct, nil
+	}
 	return ct, nil
 }
 
@@ -245,17 +295,18 @@ func GetContacts(c appengine.Context, r *http.Request) ([]Contact, error) {
 	return contacts, nil
 }
 
-func GetContact(c appengine.Context, id string) (Contact, error) {
+func GetContact(c appengine.Context, r *http.Request, id string) (Contact, error) {
 	// Get the details of the current user
 	currentId, err := StringIdToInt(id)
 	if err != nil {
 		return Contact{}, err
 	}
 
-	contact, err := getContact(c, currentId)
+	contact, err := getContact(c, r, currentId)
 	if err != nil {
 		return Contact{}, err
 	}
+
 	return contact, nil
 }
 
@@ -323,6 +374,14 @@ func UpdateContact(c appengine.Context, r *http.Request, contact *Contact, updat
 		contact.CustomFields = updatedContact.CustomFields
 	}
 
+	if len(updatedContact.Employers) > 0 {
+		contact.Employers = updatedContact.Employers
+	}
+
+	if len(updatedContact.PastEmployers) > 0 {
+		contact.PastEmployers = updatedContact.PastEmployers
+	}
+
 	contact.save(c, r)
 
 	return *contact
@@ -330,7 +389,7 @@ func UpdateContact(c appengine.Context, r *http.Request, contact *Contact, updat
 
 func UpdateSingleContact(c appengine.Context, r *http.Request, id string) (Contact, error) {
 	// Get the details of the current contact
-	contact, err := GetContact(c, id)
+	contact, err := GetContact(c, r, id)
 	if err != nil {
 		return Contact{}, err
 	}
@@ -355,7 +414,7 @@ func UpdateBatchContact(c appengine.Context, r *http.Request) ([]Contact, error)
 
 	newContacts := []Contact{}
 	for i := 0; i < len(updatedContacts); i++ {
-		contact, err := getContact(c, updatedContacts[i].Id)
+		contact, err := getContact(c, r, updatedContacts[i].Id)
 		if err != nil {
 			return []Contact{}, err
 		}

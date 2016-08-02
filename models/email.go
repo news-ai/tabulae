@@ -15,6 +15,9 @@ import (
 type Email struct {
 	Id int64 `json:"id" datastore:"-"`
 
+	// Which list it belongs to
+	ListId int64 `json:"listid"`
+
 	Sender  string `json:"sender"`
 	To      string `json:"to"`
 	Subject string `json:"subject"`
@@ -214,6 +217,10 @@ func UpdateEmail(c appengine.Context, email *Email, updatedEmail Email) Email {
 	UpdateIfNotBlank(&email.Subject, updatedEmail.Subject)
 	UpdateIfNotBlank(&email.Body, updatedEmail.Body)
 	UpdateIfNotBlank(&email.To, updatedEmail.To)
+
+	if updatedEmail.ListId != 0 {
+		email.ListId = updatedEmail.ListId
+	}
 
 	email.save(c)
 	return *email
