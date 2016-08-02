@@ -94,8 +94,6 @@ func (ct *Contact) create(c appengine.Context, r *http.Request) (*Contact, error
 		return ct, err
 	}
 
-	c.Infof("%v", ct)
-
 	ct.CreatedBy = currentUser.Id
 	ct.Created = time.Now()
 	ct.noramlize()

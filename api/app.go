@@ -2,7 +2,6 @@ package tabulae
 
 import (
 	"net/http"
-	// "os"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"

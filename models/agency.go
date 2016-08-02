@@ -149,7 +149,6 @@ func CreateAgencyFromUser(c appengine.Context, r *http.Request, u *User) (Agency
 	if err != nil {
 		return Agency{}, err
 	} else {
-		c.Infof("%v", agencyEmail)
 		agency, err := FilterAgencyByEmail(c, agencyEmail)
 		if err != nil {
 			agency = Agency{}

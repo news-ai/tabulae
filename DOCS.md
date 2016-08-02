@@ -2,7 +2,7 @@
 
 API
 
-- `/api/users` (POST, GET)
+- `/api/users` (GET)
 - `/api/users/<id>` (PATCH, GET)
 - `/api/agencies` (GET)
 - `/api/agencies/<id>` (GET, PATCH)

@@ -167,7 +167,7 @@ func CreateEmail(c appengine.Context, r *http.Request) ([]Email, error) {
 
 		rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
 		arrayDecoder := json.NewDecoder(rdr2)
-		err = arrayDecoder.Decode(&email)
+		err = arrayDecoder.Decode(&emails)
 
 		if err != nil {
 			return []Email{}, err

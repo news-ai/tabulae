@@ -210,3 +210,7 @@ func UpdateMediaList(c appengine.Context, r *http.Request, id string) (MediaList
 	mediaList.save(c)
 	return mediaList, nil
 }
+
+/*
+* Permission methods
+ */
