@@ -91,7 +91,7 @@ func getContact(c appengine.Context, r *http.Request, id int64) (Contact, error)
 		// If there is a parent
 		if contacts[0].ParentContact != 0 {
 			// Update information
-			contacts[0].linkedInSync(c, r)
+			// contacts[0].linkedInSync(c, r)
 			contacts[0].checkAgainstParent(c, r)
 		}
 
@@ -116,7 +116,7 @@ func (ct *Contact) create(c appengine.Context, r *http.Request) (*Contact, error
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, ct, r)
-		ct.linkedInSync(c, r)
+		// ct.linkedInSync(c, r)
 		ct.checkAgainstParent(c, r)
 	}
 
@@ -136,7 +136,7 @@ func (ct *Contact) save(c appengine.Context, r *http.Request) (*Contact, error) 
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, ct, r)
-		ct.linkedInSync(c, r)
+		// ct.linkedInSync(c, r)
 		ct.checkAgainstParent(c, r)
 	}
 
