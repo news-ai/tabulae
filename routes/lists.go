@@ -9,16 +9,16 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/middleware"
-	"github.com/news-ai/tabulae/models"
 )
 
 func handleMediaList(c appengine.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetMediaList(c, r, id)
+		return controllers.GetMediaList(c, r, id)
 	case "PATCH":
-		return models.UpdateMediaList(c, r, id)
+		return controllers.UpdateMediaList(c, r, id)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }
@@ -26,9 +26,9 @@ func handleMediaList(c appengine.Context, r *http.Request, id string) (interface
 func handleMediaLists(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetMediaLists(c, r)
+		return controllers.GetMediaLists(c, r)
 	case "POST":
-		return models.CreateMediaList(c, w, r)
+		return controllers.CreateMediaList(c, w, r)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }

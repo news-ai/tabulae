@@ -2,60 +2,29 @@ package models
 
 import (
 	"errors"
+	"net/http"
 	"net/url"
-	"strconv"
-	"strings"
+
+	"appengine"
+
+	"github.com/gorilla/context"
 )
 
-func StringIdToInt(id string) (int64, error) {
-	currentId, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		return 0, err
+func getCurrentUser(c appengine.Context, r *http.Request) (User, error) {
+	// Get the current user
+	_, ok := context.GetOk(r, "user")
+	if !ok {
+		return User{}, errors.New("No user logged in")
 	}
-	return currentId, nil
+	user := context.Get(r, "user").(User)
+	return user, nil
 }
 
-func IntIdToString(id int64) string {
-	currentId := strconv.FormatInt(id, 10)
-	return currentId
-}
-
-func ExtractAgencyEmail(email string) (string, error) {
-	splitEmail := strings.Split(email, "@")
-	if len(splitEmail) > 1 {
-		return splitEmail[1], nil
-	}
-	return "", errors.New("Email is invalid")
-}
-
-func ExtractAgencyName(email string) (string, error) {
-	splitEmail := strings.Split(email, ".")
-	if len(splitEmail) > 1 {
-		return strings.Title(splitEmail[0]), nil
-	}
-	return "", errors.New("Name is invalid")
-}
-
-func NormalizeUrl(initialUrl string) (string, error) {
-	u, err := url.Parse(initialUrl)
-	if err != nil {
-		return "", err
-	}
-	urlHost := strings.Replace(u.Host, "www.", "", 1)
-	return u.Scheme + "://" + urlHost, nil
-}
-
-func StripQueryString(inputUrl string) string {
+func stripQueryString(inputUrl string) string {
 	u, err := url.Parse(inputUrl)
 	if err != nil {
-		panic(err)
+		return inputUrl
 	}
 	u.RawQuery = ""
 	return u.String()
-}
-
-func UpdateIfNotBlank(initial *string, replace string) {
-	if replace != "" {
-		*initial = replace
-	}
 }

@@ -9,18 +9,18 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/middleware"
-	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
 )
 
 func handleEmail(c appengine.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetEmail(c, id)
+		return controllers.GetEmail(c, id)
 	case "PATCH":
-		return models.UpdateSingleEmail(c, r, id)
+		return controllers.UpdateSingleEmail(c, r, id)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }
@@ -28,11 +28,11 @@ func handleEmail(c appengine.Context, r *http.Request, id string) (interface{}, 
 func handleEmails(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetEmails(c, r)
+		return controllers.GetEmails(c, r)
 	case "POST":
-		return models.CreateEmail(c, r)
+		return controllers.CreateEmail(c, r)
 	case "PATCH":
-		return models.UpdateBatchEmail(c, r)
+		return controllers.UpdateBatchEmail(c, r)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }
@@ -87,14 +87,14 @@ func EmailActionHandler(w http.ResponseWriter, r *http.Request) {
 	id, idOk := vars["id"]
 	action, actionOk := vars["action"]
 	if idOk && actionOk {
-		email, err := models.GetEmail(c, id)
+		email, err := controllers.GetEmail(c, id)
 		if err != nil {
 			c.Errorf("email error: %#v", err)
 			middleware.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
 			return
 		}
 
-		user, err := models.GetCurrentUser(c, r)
+		user, err := controllers.GetCurrentUser(c, r)
 		if err != nil {
 			c.Errorf("email error: %#v", err)
 			middleware.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())

@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/models"
 )
@@ -16,9 +17,9 @@ import (
 func handleUser(c appengine.Context, r *http.Request, id string) (models.User, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetUser(c, r, id)
+		return controllers.GetUser(c, r, id)
 	case "PATCH":
-		return models.UpdateUser(c, r, id)
+		return controllers.UpdateUser(c, r, id)
 	}
 	return models.User{}, fmt.Errorf("method not implemented")
 }
@@ -26,7 +27,7 @@ func handleUser(c appengine.Context, r *http.Request, id string) (models.User, e
 func handleUsers(c appengine.Context, r *http.Request) ([]models.User, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetUsers(c)
+		return controllers.GetUsers(c)
 	}
 	return []models.User{}, fmt.Errorf("method not implemented")
 }

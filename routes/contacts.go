@@ -10,16 +10,16 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/middleware"
-	"github.com/news-ai/tabulae/models"
 )
 
 func handleContact(c appengine.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetContact(c, r, id)
+		return controllers.GetContact(c, r, id)
 	case "PATCH":
-		return models.UpdateSingleContact(c, r, id)
+		return controllers.UpdateSingleContact(c, r, id)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }
@@ -27,11 +27,11 @@ func handleContact(c appengine.Context, r *http.Request, id string) (interface{}
 func handleContacts(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetContacts(c, r)
+		return controllers.GetContacts(c, r)
 	case "POST":
-		return models.CreateContact(c, r)
+		return controllers.CreateContact(c, r)
 	case "PATCH":
-		return models.UpdateBatchContact(c, r)
+		return controllers.UpdateBatchContact(c, r)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }
@@ -87,14 +87,14 @@ func ContactActionHandler(w http.ResponseWriter, r *http.Request) {
 	action, actionOk := vars["action"]
 	if ok && actionOk {
 		// Get current contact
-		contact, err := models.GetContact(c, r, id)
+		contact, err := controllers.GetContact(c, r, id)
 		if err != nil {
 			middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
 			return
 		}
 
 		// Get parent contact
-		parentContact, err := models.GetContact(c, r, strconv.FormatInt(contact.ParentContact, 10))
+		parentContact, err := controllers.GetContact(c, r, strconv.FormatInt(contact.ParentContact, 10))
 		if err != nil {
 			middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
 			return
@@ -106,7 +106,7 @@ func ContactActionHandler(w http.ResponseWriter, r *http.Request) {
 			newEmployers := []string{}
 			for i := 0; i < len(parentContact.Employers); i++ {
 				// Get each publication
-				currentPublication, err := models.GetPublication(c, strconv.FormatInt(parentContact.Employers[i], 10))
+				currentPublication, err := controllers.GetPublication(c, strconv.FormatInt(parentContact.Employers[i], 10))
 				if err != nil {
 					middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", "Only actions are diff and update")
 					return

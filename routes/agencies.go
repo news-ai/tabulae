@@ -9,14 +9,14 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/middleware"
-	"github.com/news-ai/tabulae/models"
 )
 
 func handleAgency(c appengine.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetAgency(c, id)
+		return controllers.GetAgency(c, id)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }
@@ -24,7 +24,7 @@ func handleAgency(c appengine.Context, r *http.Request, id string) (interface{},
 func handleAgencies(c appengine.Context, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetAgencies(c)
+		return controllers.GetAgencies(c)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }

@@ -9,16 +9,16 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/files"
 	"github.com/news-ai/tabulae/middleware"
-	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/parse"
 )
 
 func handleFile(c appengine.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetFile(c, r, id)
+		return controllers.GetFile(c, r, id)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }
@@ -26,7 +26,7 @@ func handleFile(c appengine.Context, r *http.Request, id string) (interface{}, e
 func handleFiles(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetFiles(c, r)
+		return controllers.GetFiles(c, r)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }

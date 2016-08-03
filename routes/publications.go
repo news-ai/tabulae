@@ -9,14 +9,14 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/middleware"
-	"github.com/news-ai/tabulae/models"
 )
 
 func handlePublication(c appengine.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return models.GetPublication(c, id)
+		return controllers.GetPublication(c, id)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }
@@ -26,17 +26,13 @@ func handlePublications(c appengine.Context, w http.ResponseWriter, r *http.Requ
 	case "GET":
 		if len(r.URL.Query()) > 0 {
 			if val, ok := r.URL.Query()["name"]; ok && len(val) > 0 {
-				return models.FilterPublicationByName(c, val[0])
+				return controllers.FilterPublicationByName(c, val[0])
 			}
 		} else {
-			err := IsAdmin(w, r)
-			if err != nil {
-				return nil, err
-			}
-			return models.GetPublications(c)
+			return controllers.GetPublications(c)
 		}
 	case "POST":
-		return models.CreatePublication(c, w, r)
+		return controllers.CreatePublication(c, w, r)
 	}
 	return nil, fmt.Errorf("method not implemented")
 }
