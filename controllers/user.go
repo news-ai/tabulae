@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"time"
 
 	"appengine"
 	"appengine/datastore"
@@ -18,14 +17,6 @@ import (
 /*
 * Private methods
  */
-
-// Generates a new key for the data to be stored on App Engine
-func (u *models.User) key(c appengine.Context) *datastore.Key {
-	if u.Id == 0 {
-		return datastore.NewIncompleteKey(c, "User", nil)
-	}
-	return datastore.NewKey(c, "User", "", u.Id, nil)
-}
 
 /*
 * Get methods
@@ -60,41 +51,6 @@ func getUsers(c appengine.Context) ([]models.User, error) {
 		users[i].Id = ks[i].IntID()
 	}
 	return users, nil
-}
-
-/*
-* Create methods
- */
-
-func (u *models.User) create(c appengine.Context, r *http.Request) (*models.User, error) {
-	// Create user
-	u.IsAdmin = false
-	u.Created = time.Now()
-	_, err := u.save(c)
-	return u, err
-}
-
-/*
-* Update methods
- */
-
-// Function to save a new user into App Engine
-func (u *models.User) save(c appengine.Context) (*models.User, error) {
-	u.Updated = time.Now()
-
-	k, err := datastore.Put(c, u.key(c), u)
-	if err != nil {
-		return nil, err
-	}
-	u.Id = k.IntID()
-	return u, nil
-}
-
-func (u *models.User) update(c appengine.Context, r *http.Request) (*models.User, error) {
-	if len(u.Employers) == 0 {
-		CreateAgencyFromUser(c, r, u)
-	}
-	return u, nil
 }
 
 /*
@@ -190,8 +146,9 @@ func GetCurrentUser(c appengine.Context, r *http.Request) (models.User, error) {
 func RegisterUser(r *http.Request, user models.User) (bool, error) {
 	c := appengine.NewContext(r)
 	_, err := GetUserByEmail(c, user.Email)
+
 	if err != nil {
-		_, err = user.create(c, r)
+		_, err = user.Create(c, r)
 		return true, nil
 	}
 	return false, errors.New("User with the email already exists")
@@ -223,14 +180,14 @@ func NewOrUpdateUser(c appengine.Context, r *http.Request, email string, userDet
 			user.FirstName = userDetails["given_name"]
 			user.LastName = userDetails["family_name"]
 			user.EmailConfirmed = true
-			_, err = user.create(c, r)
+			_, err = user.Create(c, r)
 		} else {
 			context.Set(r, "user", user)
-			user.update(c, r)
+			Update(c, r, &user)
 		}
 	} else {
 		user := context.Get(r, "user").(models.User)
-		user.update(c, r)
+		Update(c, r, &user)
 	}
 }
 
@@ -238,12 +195,9 @@ func NewOrUpdateUser(c appengine.Context, r *http.Request, email string, userDet
 * Update methods
  */
 
-func (u *models.User) ConfirmEmail(c appengine.Context) (*models.User, error) {
-	u.EmailConfirmed = true
-	u.ConfirmationCode = ""
-	_, err := u.save(c)
-	if err != nil {
-		return u, err
+func Update(c appengine.Context, r *http.Request, u *models.User) (*models.User, error) {
+	if len(u.Employers) == 0 {
+		CreateAgencyFromUser(c, r, u)
 	}
 	return u, nil
 }
@@ -269,6 +223,6 @@ func UpdateUser(c appengine.Context, r *http.Request, id string) (models.User, e
 		user.Employers = updatedUser.Employers
 	}
 
-	user.save(c)
+	user.Save(c)
 	return user, nil
 }

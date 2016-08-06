@@ -8,6 +8,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/cloud/storage"
 
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
 )
 
@@ -44,7 +45,7 @@ func UploadFile(r *http.Request, fileName string, file io.Reader, userId, listId
 		return models.File{}, err
 	}
 
-	val, err := models.CreateFile(r, fileName, listId, userId)
+	val, err := controllers.CreateFile(r, fileName, listId, userId)
 	if err != nil {
 		return models.File{}, err
 	}

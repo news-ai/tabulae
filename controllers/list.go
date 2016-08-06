@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"time"
 
 	"appengine"
 	"appengine/datastore"
@@ -12,14 +11,9 @@ import (
 	"github.com/news-ai/tabulae/models"
 )
 
-// Generates a new key for the data to be stored on App Engine
-func (ml *models.MediaList) key(c appengine.Context) *datastore.Key {
-	if ml.Id == 0 {
-		ml.Created = time.Now()
-		return datastore.NewIncompleteKey(c, "MediaList", nil)
-	}
-	return datastore.NewKey(c, "MediaList", "", ml.Id, nil)
-}
+/*
+* Private methods
+ */
 
 /*
 * Get methods
@@ -47,40 +41,6 @@ func getMediaList(c appengine.Context, r *http.Request, id int64) (models.MediaL
 		return mediaLists[0], nil
 	}
 	return models.MediaList{}, errors.New("No media list by this id")
-}
-
-/*
-* Create methods
- */
-
-func (ml *models.MediaList) create(c appengine.Context, r *http.Request) (*models.MediaList, error) {
-	currentUser, err := GetCurrentUser(c, r)
-	if err != nil {
-		return ml, err
-	}
-
-	ml.CreatedBy = currentUser.Id
-	ml.Created = time.Now()
-
-	_, err = ml.save(c)
-	return ml, err
-}
-
-/*
-* Update methods
- */
-
-// Function to save a new contact into App Engine
-func (ml *models.MediaList) save(c appengine.Context) (*models.MediaList, error) {
-	// Update the Updated time
-	ml.Updated = time.Now()
-
-	k, err := datastore.Put(c, ml.key(c), ml)
-	if err != nil {
-		return nil, err
-	}
-	ml.Id = k.IntID()
-	return ml, nil
 }
 
 /*
@@ -137,8 +97,13 @@ func CreateMediaList(c appengine.Context, w http.ResponseWriter, r *http.Request
 		return models.MediaList{}, err
 	}
 
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		return medialist, err
+	}
+
 	// Create media list
-	_, err = medialist.create(c, r)
+	_, err = medialist.Create(c, r, currentUser)
 	if err != nil {
 		return models.MediaList{}, err
 	}
@@ -191,7 +156,7 @@ func UpdateMediaList(c appengine.Context, r *http.Request, id string) (models.Me
 		mediaList.Archived = false
 	}
 
-	mediaList.save(c)
+	mediaList.Save(c)
 	return mediaList, nil
 }
 

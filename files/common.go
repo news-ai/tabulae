@@ -6,6 +6,7 @@ import (
 	"appengine"
 	"appengine/file"
 
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
 )
 
@@ -27,7 +28,7 @@ func getStorageBucket(r *http.Request, bucket string) (string, error) {
 
 func getFile(r *http.Request, fileId string) (models.File, error) {
 	c := appengine.NewContext(r)
-	file, err := models.GetFile(c, r, fileId)
+	file, err := controllers.GetFile(c, r, fileId)
 	if err != nil {
 		return models.File{}, err
 	}

@@ -127,7 +127,7 @@ func ContactActionHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			val, err := contact.UpdateContactToParent(c, r)
+			val, err := controllers.UpdateContactToParent(c, r, &contact)
 
 			if err == nil {
 				err = json.NewEncoder(w).Encode(val)

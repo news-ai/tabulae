@@ -15,14 +15,6 @@ import (
 * Private methods
  */
 
-// Generates a new key for the data to be stored on App Engine
-func (a *Agency) Key(c appengine.Context) *datastore.Key {
-	if a.Id == 0 {
-		return datastore.NewIncompleteKey(c, "Agency", nil)
-	}
-	return datastore.NewKey(c, "Agency", "", a.Id, nil)
-}
-
 /*
 * Get methods
  */
@@ -40,39 +32,6 @@ func getAgency(c appengine.Context, id int64) (models.Agency, error) {
 		return agencies[0], nil
 	}
 	return models.Agency{}, errors.New("No agency by this id")
-}
-
-/*
-* Create methods
- */
-
-func (a *Agency) Create(c appengine.Context, r *http.Request) (*Agency, error) {
-	currentUser, err := getCurrentUser(c, r)
-	if err != nil {
-		return a, err
-	}
-
-	a.CreatedBy = currentUser.Id
-	a.Created = time.Now()
-	_, err = a.Save(c)
-	return a, err
-}
-
-/*
-* Update methods
- */
-
-// Function to save a new agency into App Engine
-func (a *Agency) Save(c appengine.Context) (*Agency, error) {
-	// Update the Updated time
-	a.Updated = time.Now()
-
-	k, err := datastore.Put(c, a.Key(c), a)
-	if err != nil {
-		return nil, err
-	}
-	a.Id = k.IntID()
-	return a, nil
 }
 
 /*
@@ -132,7 +91,7 @@ func GetAgency(c appengine.Context, id string) (models.Agency, error) {
 * Create methods
  */
 
-func CreateAgencyFromUser(c appengine.Context, r *http.Request, u *User) (models.Agency, error) {
+func CreateAgencyFromUser(c appengine.Context, r *http.Request, u *models.User) (models.Agency, error) {
 	agencyEmail, err := ExtractAgencyEmail(u.Email)
 	if err != nil {
 		return models.Agency{}, err
@@ -147,7 +106,11 @@ func CreateAgencyFromUser(c appengine.Context, r *http.Request, u *User) (models
 			// The person who signs up for the agency at the beginning
 			// becomes the defacto administrator until we change.
 			agency.Administrators = append(agency.Administrators, u.Id)
-			agency.Create(c, r)
+			currentUser, err := GetCurrentUser(c, r)
+			if err != nil {
+				return agency, err
+			}
+			agency.Create(c, r, currentUser)
 		}
 		u.Employers = append(u.Employers, agency.Id)
 		u.Save(c)

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	"appengine"
 	"appengine/datastore"
@@ -17,15 +16,6 @@ import (
 /*
 * Private methods
  */
-
-// Generates a new key for the data to be stored on App Engine
-func (e *models.Email) key(c appengine.Context) *datastore.Key {
-	if e.Id == 0 {
-		e.Created = time.Now()
-		return datastore.NewIncompleteKey(c, "Email", nil)
-	}
-	return datastore.NewKey(c, "Email", "", e.Id, nil)
-}
 
 /*
 * Get methods
@@ -44,50 +34,6 @@ func getEmail(c appengine.Context, id int64) (models.Email, error) {
 		return emails[0], nil
 	}
 	return models.Email{}, errors.New("No email by this id")
-}
-
-/*
-* Create methods
- */
-
-func (e *models.Email) create(c appengine.Context, r *http.Request) (*models.Email, error) {
-	currentUser, err := GetCurrentUser(c, r)
-	if err != nil {
-		return e, err
-	}
-
-	e.IsSent = false
-	e.CreatedBy = currentUser.Id
-	e.Created = time.Now()
-
-	_, err = e.save(c)
-	return e, err
-}
-
-/*
-* Update methods
- */
-
-// Function to save a new email into App Engine
-func (e *models.Email) save(c appengine.Context) (*models.Email, error) {
-	// Update the Updated time
-	e.Updated = time.Now()
-
-	k, err := datastore.Put(c, e.key(c), e)
-	if err != nil {
-		return nil, err
-	}
-	e.Id = k.IntID()
-	return e, nil
-}
-
-func (e *models.Email) MarkSent(c appengine.Context) (*models.Email, error) {
-	e.IsSent = true
-	_, err := e.save(c)
-	if err != nil {
-		return e, err
-	}
-	return e, nil
 }
 
 /*
@@ -143,6 +89,11 @@ func CreateEmail(c appengine.Context, r *http.Request) ([]models.Email, error) {
 	var email models.Email
 	err := decoder.Decode(&email)
 
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		return []models.Email{}, err
+	}
+
 	// If it is an array and you need to do BATCH processing
 	if err != nil {
 		var emails []models.Email
@@ -157,7 +108,7 @@ func CreateEmail(c appengine.Context, r *http.Request) ([]models.Email, error) {
 
 		newEmails := []models.Email{}
 		for i := 0; i < len(emails); i++ {
-			_, err = emails[i].create(c, r)
+			_, err = emails[i].Create(c, r, currentUser)
 			if err != nil {
 				return []models.Email{}, err
 			}
@@ -168,7 +119,7 @@ func CreateEmail(c appengine.Context, r *http.Request) ([]models.Email, error) {
 	}
 
 	// Create email
-	_, err = email.create(c, r)
+	_, err = email.Create(c, r, currentUser)
 	if err != nil {
 		return []models.Email{}, err
 	}
@@ -184,7 +135,7 @@ func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (model
 	email.FirstName = firstName
 	email.LastName = lastName
 
-	_, err := email.save(c)
+	_, err := email.Save(c)
 	return email, err
 }
 
@@ -201,7 +152,7 @@ func UpdateEmail(c appengine.Context, email *models.Email, updatedEmail models.E
 		email.ListId = updatedEmail.ListId
 	}
 
-	email.save(c)
+	email.Save(c)
 	return *email
 }
 

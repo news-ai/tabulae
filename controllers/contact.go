@@ -20,15 +20,6 @@ import (
 * Private methods
  */
 
-// Generates a new key for the data to be stored on App Engine
-func (ct *Contact) Key(c appengine.Context) *datastore.Key {
-	if ct.Id == 0 {
-		ct.Created = time.Now()
-		return datastore.NewIncompleteKey(c, "Contact", nil)
-	}
-	return datastore.NewKey(c, "Contact", "", ct.Id, nil)
-}
-
 /*
 * Get methods
  */
@@ -48,7 +39,7 @@ func getContact(c appengine.Context, r *http.Request, id int64) (models.Contact,
 		if contacts[0].ParentContact != 0 {
 			// Update information
 			// contacts[0].linkedInSync(c, r)
-			contacts[0].checkAgainstParent(c, r)
+			checkAgainstParent(c, r, &contacts[0])
 		}
 
 		return contacts[0], nil
@@ -60,23 +51,21 @@ func getContact(c appengine.Context, r *http.Request, id int64) (models.Contact,
 * Create methods
  */
 
-func (ct *Contact) Create(c appengine.Context, r *http.Request) (*Contact, error) {
-	currentUser, err := getCurrentUser(c, r)
+func Create(c appengine.Context, r *http.Request, ct models.Contact) (models.Contact, error) {
+	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		return ct, err
 	}
 
-	ct.CreatedBy = currentUser.Id
-	ct.Created = time.Now()
-	ct.noramlize()
+	ct.Create(c, r, currentUser)
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
-		ct.findOrCreateMasterContact(c, r)
+		findOrCreateMasterContact(c, &ct, r)
 		// ct.linkedInSync(c, r)
-		ct.checkAgainstParent(c, r)
+		checkAgainstParent(c, r, &ct)
 	}
 
-	_, err = ct.Save(c, r)
+	_, err = Save(c, r, &ct)
 	return ct, err
 }
 
@@ -85,22 +74,18 @@ func (ct *Contact) Create(c appengine.Context, r *http.Request) (*Contact, error
  */
 
 // Function to save a new contact into App Engine
-func (ct *Contact) Save(c appengine.Context, r *http.Request) (*Contact, error) {
+func Save(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	// Update the Updated time
-	ct.Updated = time.Now()
-	ct.noramlize()
+	ct.Normalize()
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
-		ct.findOrCreateMasterContact(c, r)
+		findOrCreateMasterContact(c, ct, r)
 		// ct.linkedInSync(c, r)
-		ct.checkAgainstParent(c, r)
+		checkAgainstParent(c, r, ct)
 	}
 
-	k, err := datastore.Put(c, ct.Key(c), ct)
-	if err != nil {
-		return nil, err
-	}
-	ct.Id = k.IntID()
+	ct.Save(c, r)
+
 	return ct, nil
 }
 
@@ -177,6 +162,11 @@ func CreateContact(c appengine.Context, r *http.Request) ([]models.Contact, erro
 	var contact models.Contact
 	err := decoder.Decode(&contact)
 
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		return []models.Contact{}, err
+	}
+
 	// If it is an array and you need to do BATCH processing
 	if err != nil {
 		var contacts []models.Contact
@@ -191,7 +181,7 @@ func CreateContact(c appengine.Context, r *http.Request) ([]models.Contact, erro
 
 		newContacts := []models.Contact{}
 		for i := 0; i < len(contacts); i++ {
-			_, err = contacts[i].Create(c, r)
+			_, err = contacts[i].Create(c, r, currentUser)
 			if err != nil {
 				return []models.Contact{}, err
 			}
@@ -202,7 +192,7 @@ func CreateContact(c appengine.Context, r *http.Request) ([]models.Contact, erro
 	}
 
 	// Create contact
-	_, err = contact.Create(c, r)
+	_, err = contact.Create(c, r, currentUser)
 	if err != nil {
 		return []models.Contact{}, err
 	}
@@ -237,7 +227,7 @@ func UpdateContact(c appengine.Context, r *http.Request, contact *models.Contact
 		contact.PastEmployers = updatedContact.PastEmployers
 	}
 
-	contact.Save(c, r)
+	Save(c, r, contact)
 
 	return *contact
 }
@@ -284,18 +274,7 @@ func UpdateBatchContact(c appengine.Context, r *http.Request) ([]models.Contact,
 * Normalization methods
  */
 
-func (ct *Contact) noramlize() (*Contact, error) {
-	ct.LinkedIn = stripQueryString(ct.LinkedIn)
-	ct.Twitter = stripQueryString(ct.Twitter)
-	ct.Instagram = stripQueryString(ct.Instagram)
-	ct.MuckRack = stripQueryString(ct.MuckRack)
-	ct.Website = stripQueryString(ct.Website)
-	ct.Blog = stripQueryString(ct.Blog)
-
-	return ct, nil
-}
-
-func (ct *Contact) checkAgainstParent(c appengine.Context, r *http.Request) (*Contact, error) {
+func checkAgainstParent(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	// If there is a parent contact
 	if ct.ParentContact != 0 {
 		// Get parent contact
@@ -307,7 +286,7 @@ func (ct *Contact) checkAgainstParent(c appengine.Context, r *http.Request) (*Co
 		// See differences in parent and child contact
 		if !reflect.DeepEqual(ct.Employers, parentContact.Employers) {
 			ct.IsOutdated = true
-			ct.Save(c, r)
+			Save(c, r, ct)
 		}
 
 		return ct, nil
@@ -315,7 +294,7 @@ func (ct *Contact) checkAgainstParent(c appengine.Context, r *http.Request) (*Co
 	return ct, nil
 }
 
-func (ct *Contact) linkedInSync(c appengine.Context, r *http.Request) (*Contact, error) {
+func linkedInSync(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	parentContact, err := getContact(c, r, ct.ParentContact)
 	if err != nil {
 		return ct, err
@@ -340,13 +319,13 @@ func (ct *Contact) linkedInSync(c appengine.Context, r *http.Request) (*Contact,
 		parentContact.Save(c, r)
 
 		ct.LinkedInUpdated = time.Now()
-		ct.Save(c, r)
+		Save(c, r, ct)
 	}
 
 	return ct, nil
 }
 
-func (ct *Contact) UpdateContactToParent(c appengine.Context, r *http.Request) (*Contact, error) {
+func UpdateContactToParent(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	parentContact, err := getContact(c, r, ct.ParentContact)
 
 	if err != nil {
@@ -355,7 +334,7 @@ func (ct *Contact) UpdateContactToParent(c appengine.Context, r *http.Request) (
 
 	ct.Employers = parentContact.Employers
 	ct.IsOutdated = false
-	_, err = ct.Save(c, r)
+	_, err = Save(c, r, ct)
 
 	if err != nil {
 		return ct, err
@@ -364,29 +343,29 @@ func (ct *Contact) UpdateContactToParent(c appengine.Context, r *http.Request) (
 	return ct, nil
 }
 
-func (ct *Contact) filterMasterContact(c appengine.Context, queryType, query string) (Contact, error) {
+func filterMasterContact(c appengine.Context, ct *models.Contact, queryType, query string) (models.Contact, error) {
 	// Get an contact by a query type
-	contacts := []Contact{}
+	contacts := []models.Contact{}
 	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).Filter("IsMasterContact = ", true).GetAll(c, &contacts)
 	if err != nil {
-		return Contact{}, err
+		return models.Contact{}, err
 	}
 	if len(contacts) > 0 {
 		contacts[0].Id = ks[0].IntID()
 		return contacts[0], nil
 	}
-	return Contact{}, errors.New("No contact by this " + queryType)
+	return models.Contact{}, errors.New("No contact by this " + queryType)
 }
 
-func (ct *Contact) findOrCreateMasterContact(c appengine.Context, r *http.Request) (*Contact, error) {
+func findOrCreateMasterContact(c appengine.Context, ct *models.Contact, r *http.Request) (*models.Contact, error) {
 	// Find master contact
 	// If there is no parent contact Id or if the Linkedin field is not empty
 	if ct.ParentContact == 0 && ct.LinkedIn != "" {
-		masterContact, err := ct.filterMasterContact(c, "LinkedIn", ct.LinkedIn)
+		masterContact, err := filterMasterContact(c, ct, "LinkedIn", ct.LinkedIn)
 		// Master contact does not exist
 		if err != nil {
 			// Create master contact
-			newMasterContact := Contact{}
+			newMasterContact := models.Contact{}
 
 			// Initialize with the same values
 			newMasterContact.FirstName = ct.FirstName
@@ -404,7 +383,7 @@ func (ct *Contact) findOrCreateMasterContact(c appengine.Context, r *http.Reques
 			newMasterContact.IsMasterContact = true
 
 			// Create the new master contact
-			newMasterContact.Create(c, r)
+			Create(c, r, newMasterContact)
 
 			// Do a social sync task when new master contact is added
 

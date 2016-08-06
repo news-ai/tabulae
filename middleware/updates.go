@@ -7,7 +7,7 @@ import (
 	"appengine"
 
 	"github.com/news-ai/tabulae/auth"
-	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/utils"
 )
 
@@ -21,7 +21,7 @@ func UpdateOrCreateUser(w http.ResponseWriter, r *http.Request, next http.Handle
 	} else {
 		if email != "" {
 			userDetails, _ := auth.GetUserDetails(r)
-			models.NewOrUpdateUser(c, r, email, userDetails)
+			controllers.NewOrUpdateUser(c, r, email, userDetails)
 		}
 	}
 	next(w, r)

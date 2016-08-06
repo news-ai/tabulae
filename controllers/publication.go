@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"time"
 
 	"appengine"
 	"appengine/datastore"
@@ -16,14 +15,6 @@ import (
 /*
 * Private methods
  */
-
-// Generates a new key for the data to be stored on App Engine
-func (p *models.Publication) key(c appengine.Context) *datastore.Key {
-	if p.Id == 0 {
-		return datastore.NewIncompleteKey(c, "Publication", nil)
-	}
-	return datastore.NewKey(c, "Publication", "", p.Id, nil)
-}
 
 /*
 * Get methods
@@ -43,42 +34,6 @@ func getPublication(c appengine.Context, id int64) (models.Publication, error) {
 		return publications[0], nil
 	}
 	return models.Publication{}, errors.New("No publication by this id")
-}
-
-/*
-* Create methods
- */
-
-// Function to create a new publication into App Engine
-func (p *models.Publication) create(c appengine.Context, r *http.Request) (*models.Publication, error) {
-	currentUser, err := GetCurrentUser(c, r)
-	if err != nil {
-		return p, err
-	}
-
-	p.CreatedBy = currentUser.Id
-	p.Created = time.Now()
-
-	_, err = p.save(c)
-	return p, err
-}
-
-/*
-* Update methods
- */
-
-// Function to save a new publication into App Engine
-func (p *models.Publication) save(c appengine.Context) (*models.Publication, error) {
-	// Update the Updated time
-	p.Updated = time.Now()
-
-	// Save the object
-	k, err := datastore.Put(c, p.key(c), p)
-	if err != nil {
-		return nil, err
-	}
-	p.Id = k.IntID()
-	return p, nil
 }
 
 /*
@@ -162,8 +117,13 @@ func CreatePublication(c appengine.Context, w http.ResponseWriter, r *http.Reque
 
 	presentPublication, err := FilterPublicationByName(c, publication.Name)
 	if err != nil {
+		currentUser, err := GetCurrentUser(c, r)
+		if err != nil {
+			return models.Publication{}, err
+		}
+
 		// Create publication
-		_, err = publication.create(c, r)
+		_, err = publication.Create(c, r, currentUser)
 		if err != nil {
 			return models.Publication{}, err
 		}
@@ -177,9 +137,14 @@ func FindOrCreatePublication(c appengine.Context, r *http.Request, name string) 
 	name = strings.Trim(name, " ")
 	publication, err := FilterPublicationByName(c, name)
 	if err != nil {
+		currentUser, err := GetCurrentUser(c, r)
+		if err != nil {
+			return models.Publication{}, err
+		}
+
 		var newPublication models.Publication
 		newPublication.Name = name
-		_, err = newPublication.create(c, r)
+		_, err = newPublication.Create(c, r, currentUser)
 		if err != nil {
 			return models.Publication{}, err
 		}

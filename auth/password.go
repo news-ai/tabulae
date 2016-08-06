@@ -9,6 +9,7 @@ import (
 
 	"appengine"
 
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
@@ -35,7 +36,7 @@ func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["state"] = state
 	session.Save(r, w)
 
-	isOk, _ := models.ValidateUserPassword(r, validEmail.Address, password)
+	isOk, _ := controllers.ValidateUserPassword(r, validEmail.Address, password)
 	if isOk {
 		// // Now that the user is created/retrieved save the email in the session
 		session.Values["email"] = validEmail.Address
@@ -74,7 +75,7 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	user.ConfirmationCode = utils.RandToken()
 
 	// Register user
-	isOk, err := models.RegisterUser(r, user)
+	isOk, err := controllers.RegisterUser(r, user)
 
 	if !isOk && err != nil {
 		// Redirect user back to login page
@@ -84,7 +85,7 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Email could fail to send if there is no singleUser. Create check later.
-	emailConfirmation, _ := models.CreateEmailInternal(r, email, firstName, lastName)
+	emailConfirmation, _ := controllers.CreateEmailInternal(r, email, firstName, lastName)
 	emails.SendConfirmationEmail(r, emailConfirmation, user.ConfirmationCode)
 
 	// Redirect user back to login page
@@ -98,7 +99,7 @@ func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
 // Put CSRF token into the login handler.
 func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	_, err := models.GetCurrentUser(c, r)
+	_, err := controllers.GetCurrentUser(c, r)
 
 	if r.URL.Query().Get("next") != "" {
 		session, _ := Store.Get(r, "sess")
@@ -131,7 +132,7 @@ func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
 // You have to be logged out in order to register a new user
 func PasswordRegisterPageHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	_, err := models.GetCurrentUser(c, r)
+	_, err := controllers.GetCurrentUser(c, r)
 
 	if r.URL.Query().Get("next") != "" {
 		session, _ := Store.Get(r, "sess")
@@ -164,7 +165,7 @@ func EmailConfirmationHandler(w http.ResponseWriter, r *http.Request) {
 
 	if val, ok := r.URL.Query()["code"]; ok {
 		code := val[0]
-		user, err := models.GetUserByConfirmationCode(c, strings.Trim(code, " "))
+		user, err := controllers.GetUserByConfirmationCode(c, strings.Trim(code, " "))
 
 		if err != nil {
 			http.Redirect(w, r, "/api/auth?success=false&message="+invalidConfirmation, 302)
