@@ -13,6 +13,7 @@ import (
 	"appengine/datastore"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/permissions"
 	"github.com/news-ai/tabulae/sync"
 	"github.com/news-ai/tabulae/utils"
 )
@@ -35,6 +36,15 @@ func getContact(c appengine.Context, r *http.Request, id int64) (models.Contact,
 	}
 	if len(contacts) > 0 {
 		contacts[0].Id = ks[0].IntID()
+
+		user, err := GetCurrentUser(c, r)
+		if err != nil {
+			return models.Contact{}, errors.New("Could not get user")
+		}
+
+		if !permissions.AccessToObject(contacts[0].CreatedBy, user.Id) {
+			return models.Contact{}, errors.New("Forbidden")
+		}
 
 		// If there is a parent
 		if contacts[0].ParentContact != 0 {
@@ -345,6 +355,15 @@ func UpdateSingleContact(c appengine.Context, r *http.Request, id string) (model
 		return models.Contact{}, err
 	}
 
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return models.Contact{}, errors.New("Could not get user")
+	}
+
+	if !permissions.AccessToObject(contact.CreatedBy, user.Id) {
+		return models.Contact{}, errors.New("Forbidden")
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	var updatedContact models.Contact
 	err = decoder.Decode(&updatedContact)
@@ -363,13 +382,31 @@ func UpdateBatchContact(c appengine.Context, r *http.Request) ([]models.Contact,
 		return []models.Contact{}, err
 	}
 
-	newContacts := []models.Contact{}
+	// Get logged in user
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return models.Contact{}, errors.New("Could not get user")
+	}
+
+	// Check if each of the contacts have permissions before updating anything
+	currentContacts := []models.Contact{}
 	for i := 0; i < len(updatedContacts); i++ {
 		contact, err := getContact(c, r, updatedContacts[i].Id)
 		if err != nil {
 			return []models.Contact{}, err
 		}
-		updatedContact := UpdateContact(c, r, &contact, updatedContacts[i])
+
+		if !permissions.AccessToObject(contact.CreatedBy, user.Id) {
+			return []models.Contact{}, errors.New("Forbidden")
+		}
+
+		currentContacts = append(currentContacts, contact)
+	}
+
+	// Update each of the contacts
+	newContacts := []models.Contact{}
+	for i := 0; i < len(updatedContacts); i++ {
+		updatedContact := UpdateContact(c, r, &currentContacts[i], updatedContacts[i])
 		newContacts = append(newContacts, updatedContact)
 	}
 

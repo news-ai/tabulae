@@ -33,12 +33,12 @@ Endpoints
 
     - GET -> returns back information about contacts of yours
     - POST -> Creates a contact under you
-    - PATCH -> Anyone logged in can update anyone's contact (FIX)
+    - PATCH -> Anyone logged in can update anyone's contact
 
 - `/api/contacts/<id>` (GET, PATCH)
 
-    - GET -> Anyone logged in can get any contact (FIX)
-    - PATCH -> Anyone logged in can update anyone's contact (FIX)
+    - GET -> Anyone logged in can get any contact
+    - PATCH -> Anyone logged in can update anyone's contact
 
 - `/api/lists` (GET, POST)
 
