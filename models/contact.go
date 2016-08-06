@@ -16,7 +16,7 @@ type CustomContactField struct {
 }
 
 type Contact struct {
-	Id int64 `json:"id" datastore:"-"`
+	Base
 
 	// Contact information
 	FirstName string `json:"firstname"`
@@ -48,10 +48,6 @@ type Contact struct {
 	// Is information outdated
 	IsOutdated bool `json:"isoutdated"`
 
-	CreatedBy int64 `json:"createdby"`
-
-	Created         time.Time `json:"created"`
-	Updated         time.Time `json:"updated"`
 	LinkedInUpdated time.Time `json:"linkedinupdated"`
 }
 

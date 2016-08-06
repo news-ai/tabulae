@@ -9,7 +9,8 @@ import (
 )
 
 type User struct {
-	Id       int64  `json:"id" datastore:"-"`
+	Base
+
 	GoogleId string `json:"googleid"`
 
 	Email     string `json:"email"`
@@ -23,9 +24,6 @@ type User struct {
 	ConfirmationCode string `json:"-"`
 	EmailConfirmed   bool   `json:"emailconfirmed"`
 	IsAdmin          bool   `json:"-"`
-
-	Created time.Time `json:"created"`
-	Updated time.Time `json:"updated"`
 }
 
 /*

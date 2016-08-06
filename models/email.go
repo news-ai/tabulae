@@ -9,7 +9,7 @@ import (
 )
 
 type Email struct {
-	Id int64 `json:"id" datastore:"-"`
+	Base
 
 	// Which list it belongs to
 	ListId int64 `json:"listid"`
@@ -24,11 +24,6 @@ type Email struct {
 	LastName  string `json:"lastname"`
 
 	IsSent bool `json:"issent"`
-
-	CreatedBy int64 `json:"createdby"`
-
-	Created time.Time `json:"created"`
-	Updated time.Time `json:"updated"`
 }
 
 /*
