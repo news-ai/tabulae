@@ -14,6 +14,7 @@ import (
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/sync"
+	"github.com/news-ai/tabulae/utils"
 )
 
 /*
@@ -137,7 +138,7 @@ func GetContacts(c appengine.Context, r *http.Request) ([]models.Contact, error)
 
 func GetContact(c appengine.Context, r *http.Request, id string) (models.Contact, error) {
 	// Get the details of the current user
-	currentId, err := StringIdToInt(id)
+	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
 		return models.Contact{}, err
 	}
@@ -205,15 +206,15 @@ func CreateContact(c appengine.Context, r *http.Request) ([]models.Contact, erro
  */
 
 func UpdateContact(c appengine.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) models.Contact {
-	UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
-	UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
-	UpdateIfNotBlank(&contact.Email, updatedContact.Email)
-	UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
-	UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
-	UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
-	UpdateIfNotBlank(&contact.Website, updatedContact.Website)
-	UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
-	UpdateIfNotBlank(&contact.Notes, updatedContact.Notes)
+	utils.UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
+	utils.UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
+	utils.UpdateIfNotBlank(&contact.Email, updatedContact.Email)
+	utils.UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
+	utils.UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
+	utils.UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
+	utils.UpdateIfNotBlank(&contact.Website, updatedContact.Website)
+	utils.UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
+	utils.UpdateIfNotBlank(&contact.Notes, updatedContact.Notes)
 
 	if len(updatedContact.CustomFields) > 0 {
 		contact.CustomFields = updatedContact.CustomFields

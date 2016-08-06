@@ -9,6 +9,7 @@ import (
 	"appengine/datastore"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/utils"
 )
 
 /*
@@ -75,7 +76,7 @@ func GetAgencies(c appengine.Context) ([]models.Agency, error) {
 
 func GetAgency(c appengine.Context, id string) (models.Agency, error) {
 	// Get the details of the current agency
-	currentId, err := StringIdToInt(id)
+	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
 		return models.Agency{}, err
 	}
@@ -92,14 +93,14 @@ func GetAgency(c appengine.Context, id string) (models.Agency, error) {
  */
 
 func CreateAgencyFromUser(c appengine.Context, r *http.Request, u *models.User) (models.Agency, error) {
-	agencyEmail, err := ExtractAgencyEmail(u.Email)
+	agencyEmail, err := utils.ExtractAgencyEmail(u.Email)
 	if err != nil {
 		return models.Agency{}, err
 	} else {
 		agency, err := FilterAgencyByEmail(c, agencyEmail)
 		if err != nil {
 			agency = models.Agency{}
-			agency.Name, err = ExtractAgencyName(agencyEmail)
+			agency.Name, err = utils.ExtractAgencyName(agencyEmail)
 			agency.Email = agencyEmail
 			agency.Created = time.Now()
 
