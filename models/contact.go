@@ -6,6 +6,8 @@ import (
 
 	"appengine"
 	"appengine/datastore"
+
+	"github.com/news-ai/tabulae/utils"
 )
 
 type CustomContactField struct {
@@ -101,12 +103,12 @@ func (ct *Contact) Save(c appengine.Context, r *http.Request) (*Contact, error) 
  */
 
 func (ct *Contact) Normalize() (*Contact, error) {
-	ct.LinkedIn = stripQueryString(ct.LinkedIn)
-	ct.Twitter = stripQueryString(ct.Twitter)
-	ct.Instagram = stripQueryString(ct.Instagram)
-	ct.MuckRack = stripQueryString(ct.MuckRack)
-	ct.Website = stripQueryString(ct.Website)
-	ct.Blog = stripQueryString(ct.Blog)
+	ct.LinkedIn = utils.StripQueryString(ct.LinkedIn)
+	ct.Twitter = utils.StripQueryString(ct.Twitter)
+	ct.Instagram = utils.StripQueryString(ct.Instagram)
+	ct.MuckRack = utils.StripQueryString(ct.MuckRack)
+	ct.Website = utils.StripQueryString(ct.Website)
+	ct.Blog = utils.StripQueryString(ct.Blog)
 
 	return ct, nil
 }

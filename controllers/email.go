@@ -144,7 +144,11 @@ func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (model
 * Update methods
  */
 
-func UpdateEmail(c appengine.Context, email *models.Email, updatedEmail models.Email) models.Email {
+func UpdateEmail(c appengine.Context, email *models.Email, updatedEmail models.Email) (models.Email, error) {
+	if email.CreatedBy != updatedEmail.CreatedBy {
+		return *email, errors.New("You don't have permissions to edit this object")
+	}
+
 	utils.UpdateIfNotBlank(&email.Subject, updatedEmail.Subject)
 	utils.UpdateIfNotBlank(&email.Body, updatedEmail.Body)
 	utils.UpdateIfNotBlank(&email.To, updatedEmail.To)
@@ -154,7 +158,7 @@ func UpdateEmail(c appengine.Context, email *models.Email, updatedEmail models.E
 	}
 
 	email.Save(c)
-	return *email
+	return *email, nil
 }
 
 func UpdateSingleEmail(c appengine.Context, r *http.Request, id string) (models.Email, error) {
@@ -171,7 +175,7 @@ func UpdateSingleEmail(c appengine.Context, r *http.Request, id string) (models.
 		return models.Email{}, err
 	}
 
-	return UpdateEmail(c, &email, updatedEmail), nil
+	return UpdateEmail(c, &email, updatedEmail)
 }
 
 func UpdateBatchEmail(c appengine.Context, r *http.Request) ([]models.Email, error) {
@@ -188,7 +192,10 @@ func UpdateBatchEmail(c appengine.Context, r *http.Request) ([]models.Email, err
 		if err != nil {
 			return []models.Email{}, err
 		}
-		updatedEmail := UpdateEmail(c, &email, updatedEmails[i])
+		updatedEmail, err := UpdateEmail(c, &email, updatedEmails[i])
+		if err != nil {
+			return []models.Email{}, err
+		}
 		newEmails = append(newEmails, updatedEmail)
 	}
 
