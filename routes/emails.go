@@ -18,7 +18,7 @@ import (
 func handleEmail(c appengine.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetEmail(c, id)
+		return controllers.GetEmail(c, r, id)
 	case "PATCH":
 		return controllers.UpdateSingleEmail(c, r, id)
 	}
@@ -85,7 +85,7 @@ func EmailActionHandler(w http.ResponseWriter, r *http.Request) {
 	id, idOk := vars["id"]
 	action, actionOk := vars["action"]
 	if idOk && actionOk {
-		email, err := controllers.GetEmail(c, id)
+		email, err := controllers.GetEmail(c, r, id)
 		if err != nil {
 			permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
 			return

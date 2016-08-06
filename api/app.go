@@ -12,6 +12,7 @@ import (
 	"github.com/news-ai/tabulae/auth"
 	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/router"
+	"github.com/news-ai/tabulae/routes"
 	"github.com/news-ai/tabulae/utils"
 )
 
@@ -73,6 +74,8 @@ func init() {
 	// Main router
 	main := mux.NewRouter().StrictSlash(true)
 	main.PathPrefix("/api").Handler(negroni.New(negroni.Wrap(api)))
+
+	main.HandleFunc("/", routes.NotFoundHandler)
 
 	// HTTP router
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))

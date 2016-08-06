@@ -11,6 +11,7 @@ import (
 	"appengine/datastore"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/permissions"
 	"github.com/news-ai/tabulae/utils"
 )
 
@@ -22,7 +23,7 @@ import (
 * Get methods
  */
 
-func getEmail(c appengine.Context, id int64) (models.Email, error) {
+func getEmail(c appengine.Context, r *http.Request, id int64) (models.Email, error) {
 	// Get the email by id
 	emails := []models.Email{}
 	emailId := datastore.NewKey(c, "Email", "", id, nil)
@@ -32,6 +33,16 @@ func getEmail(c appengine.Context, id int64) (models.Email, error) {
 	}
 	if len(emails) > 0 {
 		emails[0].Id = ks[0].IntID()
+
+		user, err := GetCurrentUser(c, r)
+		if err != nil {
+			return models.Email{}, errors.New("Could not get user")
+		}
+
+		if !permissions.AccessToObject(emails[0].CreatedBy, user.Id) {
+			return models.Email{}, errors.New("Forbidden")
+		}
+
 		return emails[0], nil
 	}
 	return models.Email{}, errors.New("No email by this id")
@@ -64,14 +75,14 @@ func GetEmails(c appengine.Context, r *http.Request) ([]models.Email, error) {
 	return emails, nil
 }
 
-func GetEmail(c appengine.Context, id string) (models.Email, error) {
+func GetEmail(c appengine.Context, r *http.Request, id string) (models.Email, error) {
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
 		return models.Email{}, err
 	}
 
-	email, err := getEmail(c, currentId)
+	email, err := getEmail(c, r, currentId)
 	if err != nil {
 		return models.Email{}, err
 	}
@@ -163,9 +174,18 @@ func UpdateEmail(c appengine.Context, email *models.Email, updatedEmail models.E
 
 func UpdateSingleEmail(c appengine.Context, r *http.Request, id string) (models.Email, error) {
 	// Get the details of the current email
-	email, err := GetEmail(c, id)
+	email, err := GetEmail(c, r, id)
 	if err != nil {
 		return models.Email{}, err
+	}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return models.Email{}, errors.New("Could not get user")
+	}
+
+	if !permissions.AccessToObject(email.CreatedBy, user.Id) {
+		return models.Email{}, errors.New("Forbidden")
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -188,7 +208,7 @@ func UpdateBatchEmail(c appengine.Context, r *http.Request) ([]models.Email, err
 
 	newEmails := []models.Email{}
 	for i := 0; i < len(updatedEmails); i++ {
-		email, err := getEmail(c, updatedEmails[i].Id)
+		email, err := getEmail(c, r, updatedEmails[i].Id)
 		if err != nil {
 			return []models.Email{}, err
 		}

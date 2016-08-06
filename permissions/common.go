@@ -6,12 +6,6 @@ import (
 	"net/http"
 )
 
-type Error struct {
-	ErrorMessage error `json:"error"`
-	Message      error `json:"message"`
-	StatusCode   int   `json:"code"`
-}
-
 func errorBase() map[string][]map[string]string {
 	errors := []map[string]string{}
 	errorBase := map[string][]map[string]string{}
