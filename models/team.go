@@ -27,6 +27,10 @@ func (t *Team) key(c appengine.Context) *datastore.Key {
 }
 
 /*
+* Private methods
+ */
+
+/*
 * Create methods
  */
 

@@ -30,6 +30,10 @@ func (a *Agency) key(c appengine.Context) *datastore.Key {
 }
 
 /*
+* Public methods
+ */
+
+/*
 * Create methods
  */
 

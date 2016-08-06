@@ -29,6 +29,10 @@ func (f *File) key(c appengine.Context) *datastore.Key {
 }
 
 /*
+* Private methods
+ */
+
+/*
 * Create methods
  */
 

@@ -49,48 +49,6 @@ func getContact(c appengine.Context, r *http.Request, id int64) (models.Contact,
 }
 
 /*
-* Create methods
- */
-
-func Create(c appengine.Context, r *http.Request, ct models.Contact) (models.Contact, error) {
-	currentUser, err := GetCurrentUser(c, r)
-	if err != nil {
-		return ct, err
-	}
-
-	ct.Create(c, r, currentUser)
-
-	if ct.ParentContact == 0 && !ct.IsMasterContact {
-		findOrCreateMasterContact(c, &ct, r)
-		// ct.linkedInSync(c, r)
-		checkAgainstParent(c, r, &ct)
-	}
-
-	_, err = Save(c, r, &ct)
-	return ct, err
-}
-
-/*
-* Update methods
- */
-
-// Function to save a new contact into App Engine
-func Save(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
-	// Update the Updated time
-	ct.Normalize()
-
-	if ct.ParentContact == 0 && !ct.IsMasterContact {
-		findOrCreateMasterContact(c, ct, r)
-		// ct.linkedInSync(c, r)
-		checkAgainstParent(c, r, ct)
-	}
-
-	ct.Save(c, r)
-
-	return ct, nil
-}
-
-/*
 * Filter methods
  */
 
@@ -106,6 +64,119 @@ func filterContact(c appengine.Context, queryType, query string) (models.Contact
 		return contacts[0], nil
 	}
 	return models.Contact{}, errors.New("No contact by this " + queryType)
+}
+
+/*
+* Normalization methods
+ */
+
+func checkAgainstParent(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
+	// If there is a parent contact
+	if ct.ParentContact != 0 {
+		// Get parent contact
+		parentContact, err := getContact(c, r, ct.ParentContact)
+		if err != nil {
+			return ct, err
+		}
+
+		// See differences in parent and child contact
+		if !reflect.DeepEqual(ct.Employers, parentContact.Employers) {
+			ct.IsOutdated = true
+			Save(c, r, ct)
+		}
+
+		return ct, nil
+	}
+	return ct, nil
+}
+
+func linkedInSync(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
+	parentContact, err := getContact(c, r, ct.ParentContact)
+	if err != nil {
+		return ct, err
+	}
+	// Update LinkedIn contact
+	hourFromUpdate := parentContact.LinkedInUpdated.Add(time.Minute * 1)
+
+	if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (!parentContact.LinkedInUpdated.Before(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {
+		linkedInData := sync.LinkedInSync(r, parentContact.LinkedIn)
+		newEmployers := []int64{}
+		// Update data through linkedin data
+		for i := 0; i < len(linkedInData.Current); i++ {
+			employerName := linkedInData.Current[i].Employer
+			employer, err := FindOrCreatePublication(c, r, employerName)
+			if err == nil {
+				newEmployers = append(newEmployers, employer.Id)
+			}
+		}
+
+		parentContact.Employers = newEmployers
+		parentContact.LinkedInUpdated = time.Now()
+		parentContact.Save(c, r)
+
+		ct.LinkedInUpdated = time.Now()
+		Save(c, r, ct)
+	}
+
+	return ct, nil
+}
+
+func filterMasterContact(c appengine.Context, ct *models.Contact, queryType, query string) (models.Contact, error) {
+	// Get an contact by a query type
+	contacts := []models.Contact{}
+	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).Filter("IsMasterContact = ", true).GetAll(c, &contacts)
+	if err != nil {
+		return models.Contact{}, err
+	}
+	if len(contacts) > 0 {
+		contacts[0].Id = ks[0].IntID()
+		return contacts[0], nil
+	}
+	return models.Contact{}, errors.New("No contact by this " + queryType)
+}
+
+func findOrCreateMasterContact(c appengine.Context, ct *models.Contact, r *http.Request) (*models.Contact, error) {
+	// Find master contact
+	// If there is no parent contact Id or if the Linkedin field is not empty
+	if ct.ParentContact == 0 && ct.LinkedIn != "" {
+		masterContact, err := filterMasterContact(c, ct, "LinkedIn", ct.LinkedIn)
+		// Master contact does not exist
+		if err != nil {
+			// Create master contact
+			newMasterContact := models.Contact{}
+
+			// Initialize with the same values
+			newMasterContact.FirstName = ct.FirstName
+			newMasterContact.LastName = ct.LastName
+			newMasterContact.Email = ct.Email
+			newMasterContact.Employers = ct.Employers
+			newMasterContact.LinkedIn = ct.LinkedIn
+			newMasterContact.Twitter = ct.Twitter
+			newMasterContact.Instagram = ct.Instagram
+			newMasterContact.MuckRack = ct.MuckRack
+			newMasterContact.Website = ct.Website
+			newMasterContact.Blog = ct.Blog
+
+			// Set this to be the new master contact
+			newMasterContact.IsMasterContact = true
+
+			// Create the new master contact
+			Create(c, r, newMasterContact)
+
+			// Do a social sync task when new master contact is added
+
+			// Assign the Id of the parent contact to be the new master contact.
+			ct.ParentContact = newMasterContact.Id
+			ct.IsMasterContact = false
+			return ct, nil
+		}
+
+		// Don't create master contact
+		ct.ParentContact = masterContact.Id
+		return ct, nil
+	}
+
+	return ct, nil
 }
 
 /*
@@ -154,6 +225,24 @@ func GetContact(c appengine.Context, r *http.Request, id string) (models.Contact
 /*
 * Create methods
  */
+
+func Create(c appengine.Context, r *http.Request, ct models.Contact) (models.Contact, error) {
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		return ct, err
+	}
+
+	ct.Create(c, r, currentUser)
+
+	if ct.ParentContact == 0 && !ct.IsMasterContact {
+		findOrCreateMasterContact(c, &ct, r)
+		// ct.linkedInSync(c, r)
+		checkAgainstParent(c, r, &ct)
+	}
+
+	_, err = Save(c, r, &ct)
+	return ct, err
+}
 
 func CreateContact(c appengine.Context, r *http.Request) ([]models.Contact, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
@@ -204,6 +293,22 @@ func CreateContact(c appengine.Context, r *http.Request) ([]models.Contact, erro
 /*
 * Update methods
  */
+
+// Function to save a new contact into App Engine
+func Save(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
+	// Update the Updated time
+	ct.Normalize()
+
+	if ct.ParentContact == 0 && !ct.IsMasterContact {
+		findOrCreateMasterContact(c, ct, r)
+		// ct.linkedInSync(c, r)
+		checkAgainstParent(c, r, ct)
+	}
+
+	ct.Save(c, r)
+
+	return ct, nil
+}
 
 func UpdateContact(c appengine.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) models.Contact {
 	utils.UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
@@ -275,57 +380,6 @@ func UpdateBatchContact(c appengine.Context, r *http.Request) ([]models.Contact,
 * Normalization methods
  */
 
-func checkAgainstParent(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
-	// If there is a parent contact
-	if ct.ParentContact != 0 {
-		// Get parent contact
-		parentContact, err := getContact(c, r, ct.ParentContact)
-		if err != nil {
-			return ct, err
-		}
-
-		// See differences in parent and child contact
-		if !reflect.DeepEqual(ct.Employers, parentContact.Employers) {
-			ct.IsOutdated = true
-			Save(c, r, ct)
-		}
-
-		return ct, nil
-	}
-	return ct, nil
-}
-
-func linkedInSync(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
-	parentContact, err := getContact(c, r, ct.ParentContact)
-	if err != nil {
-		return ct, err
-	}
-	// Update LinkedIn contact
-	hourFromUpdate := parentContact.LinkedInUpdated.Add(time.Minute * 1)
-
-	if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (!parentContact.LinkedInUpdated.Before(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {
-		linkedInData := sync.LinkedInSync(r, parentContact.LinkedIn)
-		newEmployers := []int64{}
-		// Update data through linkedin data
-		for i := 0; i < len(linkedInData.Current); i++ {
-			employerName := linkedInData.Current[i].Employer
-			employer, err := FindOrCreatePublication(c, r, employerName)
-			if err == nil {
-				newEmployers = append(newEmployers, employer.Id)
-			}
-		}
-
-		parentContact.Employers = newEmployers
-		parentContact.LinkedInUpdated = time.Now()
-		parentContact.Save(c, r)
-
-		ct.LinkedInUpdated = time.Now()
-		Save(c, r, ct)
-	}
-
-	return ct, nil
-}
-
 func UpdateContactToParent(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	parentContact, err := getContact(c, r, ct.ParentContact)
 
@@ -339,64 +393,6 @@ func UpdateContactToParent(c appengine.Context, r *http.Request, ct *models.Cont
 
 	if err != nil {
 		return ct, err
-	}
-
-	return ct, nil
-}
-
-func filterMasterContact(c appengine.Context, ct *models.Contact, queryType, query string) (models.Contact, error) {
-	// Get an contact by a query type
-	contacts := []models.Contact{}
-	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).Filter("IsMasterContact = ", true).GetAll(c, &contacts)
-	if err != nil {
-		return models.Contact{}, err
-	}
-	if len(contacts) > 0 {
-		contacts[0].Id = ks[0].IntID()
-		return contacts[0], nil
-	}
-	return models.Contact{}, errors.New("No contact by this " + queryType)
-}
-
-func findOrCreateMasterContact(c appengine.Context, ct *models.Contact, r *http.Request) (*models.Contact, error) {
-	// Find master contact
-	// If there is no parent contact Id or if the Linkedin field is not empty
-	if ct.ParentContact == 0 && ct.LinkedIn != "" {
-		masterContact, err := filterMasterContact(c, ct, "LinkedIn", ct.LinkedIn)
-		// Master contact does not exist
-		if err != nil {
-			// Create master contact
-			newMasterContact := models.Contact{}
-
-			// Initialize with the same values
-			newMasterContact.FirstName = ct.FirstName
-			newMasterContact.LastName = ct.LastName
-			newMasterContact.Email = ct.Email
-			newMasterContact.Employers = ct.Employers
-			newMasterContact.LinkedIn = ct.LinkedIn
-			newMasterContact.Twitter = ct.Twitter
-			newMasterContact.Instagram = ct.Instagram
-			newMasterContact.MuckRack = ct.MuckRack
-			newMasterContact.Website = ct.Website
-			newMasterContact.Blog = ct.Blog
-
-			// Set this to be the new master contact
-			newMasterContact.IsMasterContact = true
-
-			// Create the new master contact
-			Create(c, r, newMasterContact)
-
-			// Do a social sync task when new master contact is added
-
-			// Assign the Id of the parent contact to be the new master contact.
-			ct.ParentContact = newMasterContact.Id
-			ct.IsMasterContact = false
-			return ct, nil
-		}
-
-		// Don't create master contact
-		ct.ParentContact = masterContact.Id
-		return ct, nil
 	}
 
 	return ct, nil

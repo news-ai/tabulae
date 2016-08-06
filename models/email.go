@@ -40,6 +40,10 @@ func (e *Email) key(c appengine.Context) *datastore.Key {
 }
 
 /*
+* Private methods
+ */
+
+/*
 * Create methods
  */
 
