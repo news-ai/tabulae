@@ -99,7 +99,7 @@ func GetUser(c appengine.Context, r *http.Request, id string) (models.User, erro
 		}
 		return user, err
 	default:
-		userId, err := StringIdToInt(id)
+		userId, err := utils.StringIdToInt(id)
 		if err != nil {
 			return models.User{}, err
 		}
@@ -216,8 +216,8 @@ func UpdateUser(c appengine.Context, r *http.Request, id string) (models.User, e
 		return models.User{}, err
 	}
 
-	UpdateIfNotBlank(&user.FirstName, updatedUser.FirstName)
-	UpdateIfNotBlank(&user.LastName, updatedUser.LastName)
+	utils.UpdateIfNotBlank(&user.FirstName, updatedUser.FirstName)
+	utils.UpdateIfNotBlank(&user.LastName, updatedUser.LastName)
 
 	if len(updatedUser.Employers) > 0 {
 		user.Employers = updatedUser.Employers

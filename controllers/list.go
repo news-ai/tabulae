@@ -9,6 +9,7 @@ import (
 	"appengine/datastore"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/utils"
 )
 
 /*
@@ -73,7 +74,7 @@ func GetMediaLists(c appengine.Context, r *http.Request) ([]models.MediaList, er
 
 func GetMediaList(c appengine.Context, r *http.Request, id string) (models.MediaList, error) {
 	// Get the details of the current user
-	currentId, err := StringIdToInt(id)
+	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
 		return models.MediaList{}, err
 	}
@@ -138,7 +139,8 @@ func UpdateMediaList(c appengine.Context, r *http.Request, id string) (models.Me
 		return models.MediaList{}, err
 	}
 
-	UpdateIfNotBlank(&mediaList.Name, updatedMediaList.Name)
+	utils.UpdateIfNotBlank(&mediaList.Name, updatedMediaList.Name)
+
 	if len(updatedMediaList.Contacts) > 0 {
 		mediaList.Contacts = updatedMediaList.Contacts
 	}

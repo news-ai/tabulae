@@ -11,6 +11,7 @@ import (
 	"appengine/datastore"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/utils"
 )
 
 /*
@@ -65,7 +66,7 @@ func GetEmails(c appengine.Context, r *http.Request) ([]models.Email, error) {
 
 func GetEmail(c appengine.Context, id string) (models.Email, error) {
 	// Get the details of the current user
-	currentId, err := StringIdToInt(id)
+	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
 		return models.Email{}, err
 	}
@@ -144,9 +145,9 @@ func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (model
  */
 
 func UpdateEmail(c appengine.Context, email *models.Email, updatedEmail models.Email) models.Email {
-	UpdateIfNotBlank(&email.Subject, updatedEmail.Subject)
-	UpdateIfNotBlank(&email.Body, updatedEmail.Body)
-	UpdateIfNotBlank(&email.To, updatedEmail.To)
+	utils.UpdateIfNotBlank(&email.Subject, updatedEmail.Subject)
+	utils.UpdateIfNotBlank(&email.Body, updatedEmail.Body)
+	utils.UpdateIfNotBlank(&email.To, updatedEmail.To)
 
 	if updatedEmail.ListId != 0 {
 		email.ListId = updatedEmail.ListId

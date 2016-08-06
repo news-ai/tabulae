@@ -10,6 +10,7 @@ import (
 	"appengine/datastore"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/utils"
 )
 
 /*
@@ -77,7 +78,7 @@ func GetPublications(c appengine.Context) ([]models.Publication, error) {
 
 func GetPublication(c appengine.Context, id string) (models.Publication, error) {
 	// Get a publication by id
-	currentId, err := StringIdToInt(id)
+	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
 		return models.Publication{}, err
 	}
@@ -109,7 +110,7 @@ func CreatePublication(c appengine.Context, w http.ResponseWriter, r *http.Reque
 
 	// Format URL properly
 	if publication.Url != "" {
-		publication.Url, err = NormalizeUrl(publication.Url)
+		publication.Url, err = utils.NormalizeUrl(publication.Url)
 		if err != nil {
 			return models.Publication{}, err
 		}

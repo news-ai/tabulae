@@ -8,6 +8,7 @@ import (
 	"appengine/datastore"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/utils"
 )
 
 /*
@@ -72,7 +73,7 @@ func GetFiles(c appengine.Context, r *http.Request) ([]models.File, error) {
 
 func GetFile(c appengine.Context, r *http.Request, id string) (models.File, error) {
 	// Get the details of the current user
-	currentId, err := StringIdToInt(id)
+	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
 		return models.File{}, err
 	}
@@ -93,11 +94,11 @@ func CreateFile(r *http.Request, fileName string, listid string, createdby strin
 	c := appengine.NewContext(r)
 
 	// Convert listId and createdById from string to int64
-	listId, err := StringIdToInt(listid)
+	listId, err := utils.StringIdToInt(listid)
 	if err != nil {
 		return models.File{}, err
 	}
-	createdBy, err := StringIdToInt(createdby)
+	createdBy, err := utils.StringIdToInt(createdby)
 	if err != nil {
 		return models.File{}, err
 	}
