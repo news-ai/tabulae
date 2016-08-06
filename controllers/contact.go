@@ -62,7 +62,7 @@ func getContact(c appengine.Context, r *http.Request, id int64) (models.Contact,
 * Filter methods
  */
 
-func filterContact(c appengine.Context, queryType, query string) (models.Contact, error) {
+func filterContact(c appengine.Context, r *http.Request, queryType, query string) (models.Contact, error) {
 	// Get an contact by a query type
 	contacts := []models.Contact{}
 	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).GetAll(c, &contacts)
@@ -70,6 +70,15 @@ func filterContact(c appengine.Context, queryType, query string) (models.Contact
 		return models.Contact{}, err
 	}
 	if len(contacts) > 0 {
+		user, err := GetCurrentUser(c, r)
+		if err != nil {
+			return models.Contact{}, errors.New("Could not get user")
+		}
+
+		if !permissions.AccessToObject(contacts[0].CreatedBy, user.Id) {
+			return models.Contact{}, errors.New("Forbidden")
+		}
+
 		contacts[0].Id = ks[0].IntID()
 		return contacts[0], nil
 	}
@@ -131,7 +140,7 @@ func linkedInSync(c appengine.Context, r *http.Request, ct *models.Contact) (*mo
 	return ct, nil
 }
 
-func filterMasterContact(c appengine.Context, ct *models.Contact, queryType, query string) (models.Contact, error) {
+func filterMasterContact(c appengine.Context, r *http.Request, ct *models.Contact, queryType, query string) (models.Contact, error) {
 	// Get an contact by a query type
 	contacts := []models.Contact{}
 	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).Filter("IsMasterContact = ", true).GetAll(c, &contacts)
@@ -139,6 +148,15 @@ func filterMasterContact(c appengine.Context, ct *models.Contact, queryType, que
 		return models.Contact{}, err
 	}
 	if len(contacts) > 0 {
+		user, err := GetCurrentUser(c, r)
+		if err != nil {
+			return models.Contact{}, errors.New("Could not get user")
+		}
+
+		if !permissions.AccessToObject(contacts[0].CreatedBy, user.Id) {
+			return models.Contact{}, errors.New("Forbidden")
+		}
+
 		contacts[0].Id = ks[0].IntID()
 		return contacts[0], nil
 	}
@@ -149,7 +167,7 @@ func findOrCreateMasterContact(c appengine.Context, ct *models.Contact, r *http.
 	// Find master contact
 	// If there is no parent contact Id or if the Linkedin field is not empty
 	if ct.ParentContact == 0 && ct.LinkedIn != "" {
-		masterContact, err := filterMasterContact(c, ct, "LinkedIn", ct.LinkedIn)
+		masterContact, err := filterMasterContact(c, r, ct, "LinkedIn", ct.LinkedIn)
 		// Master contact does not exist
 		if err != nil {
 			// Create master contact
@@ -385,7 +403,7 @@ func UpdateBatchContact(c appengine.Context, r *http.Request) ([]models.Contact,
 	// Get logged in user
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
-		return models.Contact{}, errors.New("Could not get user")
+		return []models.Contact{}, errors.New("Could not get user")
 	}
 
 	// Check if each of the contacts have permissions before updating anything
