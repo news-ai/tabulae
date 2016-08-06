@@ -16,20 +16,7 @@ type File struct {
 }
 
 /*
-* Private methods
- */
-
-// Generates a new key for the data to be stored on App Engine
-func (f *File) key(c appengine.Context) *datastore.Key {
-	if f.Id == 0 {
-		f.Created = time.Now()
-		return datastore.NewIncompleteKey(c, "File", nil)
-	}
-	return datastore.NewKey(c, "File", "", f.Id, nil)
-}
-
-/*
-* Private methods
+* Public methods
  */
 
 /*
@@ -53,7 +40,7 @@ func (f *File) Save(c appengine.Context) (*File, error) {
 	// Update the Updated time
 	f.Updated = time.Now()
 
-	k, err := datastore.Put(c, f.key(c), f)
+	k, err := datastore.Put(c, f.key(c, "File"), f)
 	if err != nil {
 		return nil, err
 	}

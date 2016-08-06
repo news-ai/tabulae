@@ -16,19 +16,7 @@ type Publication struct {
 }
 
 /*
-* Private methods
- */
-
-// Generates a new key for the data to be stored on App Engine
-func (p *Publication) key(c appengine.Context) *datastore.Key {
-	if p.Id == 0 {
-		return datastore.NewIncompleteKey(c, "Publication", nil)
-	}
-	return datastore.NewKey(c, "Publication", "", p.Id, nil)
-}
-
-/*
-* Private methods
+* Public methods
  */
 
 /*
@@ -54,7 +42,7 @@ func (p *Publication) Save(c appengine.Context) (*Publication, error) {
 	p.Updated = time.Now()
 
 	// Save the object
-	k, err := datastore.Put(c, p.key(c), p)
+	k, err := datastore.Put(c, p.key(c, "Publication"), p)
 	if err != nil {
 		return nil, err
 	}

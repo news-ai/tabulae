@@ -22,20 +22,7 @@ type MediaList struct {
 }
 
 /*
-* Private methods
- */
-
-// Generates a new key for the data to be stored on App Engine
-func (ml *MediaList) key(c appengine.Context) *datastore.Key {
-	if ml.Id == 0 {
-		ml.Created = time.Now()
-		return datastore.NewIncompleteKey(c, "MediaList", nil)
-	}
-	return datastore.NewKey(c, "MediaList", "", ml.Id, nil)
-}
-
-/*
-* Private methods
+* Public methods
  */
 
 /*
@@ -59,7 +46,7 @@ func (ml *MediaList) Save(c appengine.Context) (*MediaList, error) {
 	// Update the Updated time
 	ml.Updated = time.Now()
 
-	k, err := datastore.Put(c, ml.key(c), ml)
+	k, err := datastore.Put(c, ml.key(c, "MediaList"), ml)
 	if err != nil {
 		return nil, err
 	}

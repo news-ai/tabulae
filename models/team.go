@@ -15,19 +15,7 @@ type Team struct {
 }
 
 /*
-* Private methods
- */
-
-// Generates a new key for the data to be stored on App Engine
-func (t *Team) key(c appengine.Context) *datastore.Key {
-	if t.Id == 0 {
-		return datastore.NewIncompleteKey(c, "Team", nil)
-	}
-	return datastore.NewKey(c, "Team", "", t.Id, nil)
-}
-
-/*
-* Private methods
+* Public methods
  */
 
 /*
@@ -54,7 +42,7 @@ func (t *Team) Save(c appengine.Context) (*Team, error) {
 	t.Updated = time.Now()
 
 	// Save the object
-	k, err := datastore.Put(c, t.key(c), t)
+	k, err := datastore.Put(c, t.key(c, "Team"), t)
 	if err != nil {
 		return nil, err
 	}

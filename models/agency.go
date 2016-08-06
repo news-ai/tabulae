@@ -18,18 +18,6 @@ type Agency struct {
 }
 
 /*
-* Private methods
- */
-
-// Generates a new key for the data to be stored on App Engine
-func (a *Agency) key(c appengine.Context) *datastore.Key {
-	if a.Id == 0 {
-		return datastore.NewIncompleteKey(c, "Agency", nil)
-	}
-	return datastore.NewKey(c, "Agency", "", a.Id, nil)
-}
-
-/*
 * Public methods
  */
 
@@ -53,7 +41,7 @@ func (a *Agency) Save(c appengine.Context) (*Agency, error) {
 	// Update the Updated time
 	a.Updated = time.Now()
 
-	k, err := datastore.Put(c, a.key(c), a)
+	k, err := datastore.Put(c, a.key(c, "Agency"), a)
 	if err != nil {
 		return nil, err
 	}

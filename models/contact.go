@@ -52,20 +52,7 @@ type Contact struct {
 }
 
 /*
-* Private methods
- */
-
-// Generates a new key for the data to be stored on App Engine
-func (ct *Contact) key(c appengine.Context) *datastore.Key {
-	if ct.Id == 0 {
-		ct.Created = time.Now()
-		return datastore.NewIncompleteKey(c, "Contact", nil)
-	}
-	return datastore.NewKey(c, "Contact", "", ct.Id, nil)
-}
-
-/*
-* Private methods
+* Public methods
  */
 
 /*
@@ -90,7 +77,7 @@ func (ct *Contact) Save(c appengine.Context, r *http.Request) (*Contact, error) 
 	// Update the Updated time
 	ct.Updated = time.Now()
 
-	k, err := datastore.Put(c, ct.key(c), ct)
+	k, err := datastore.Put(c, ct.key(c, "Contact"), ct)
 	if err != nil {
 		return nil, err
 	}

@@ -30,19 +30,6 @@ type Email struct {
 * Private methods
  */
 
-// Generates a new key for the data to be stored on App Engine
-func (e *Email) key(c appengine.Context) *datastore.Key {
-	if e.Id == 0 {
-		e.Created = time.Now()
-		return datastore.NewIncompleteKey(c, "Email", nil)
-	}
-	return datastore.NewKey(c, "Email", "", e.Id, nil)
-}
-
-/*
-* Private methods
- */
-
 /*
 * Create methods
  */
@@ -65,7 +52,7 @@ func (e *Email) Save(c appengine.Context) (*Email, error) {
 	// Update the Updated time
 	e.Updated = time.Now()
 
-	k, err := datastore.Put(c, e.key(c), e)
+	k, err := datastore.Put(c, e.key(c, "Email"), e)
 	if err != nil {
 		return nil, err
 	}

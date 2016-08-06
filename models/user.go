@@ -27,19 +27,7 @@ type User struct {
 }
 
 /*
-* Private methods
- */
-
-// Generates a new key for the data to be stored on App Engine
-func (u *User) key(c appengine.Context) *datastore.Key {
-	if u.Id == 0 {
-		return datastore.NewIncompleteKey(c, "User", nil)
-	}
-	return datastore.NewKey(c, "User", "", u.Id, nil)
-}
-
-/*
-* Private methods
+* Public methods
  */
 
 /*
@@ -62,7 +50,7 @@ func (u *User) Create(c appengine.Context, r *http.Request) (*User, error) {
 func (u *User) Save(c appengine.Context) (*User, error) {
 	u.Updated = time.Now()
 
-	k, err := datastore.Put(c, u.key(c), u)
+	k, err := datastore.Put(c, u.key(c, "User"), u)
 	if err != nil {
 		return nil, err
 	}
