@@ -11,7 +11,7 @@ import (
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/emails"
-	"github.com/news-ai/tabulae/middleware"
+	"github.com/news-ai/tabulae/permissions"
 	"github.com/news-ai/tabulae/utils"
 )
 
@@ -49,8 +49,7 @@ func EmailsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		c.Errorf("email error: %#v", err)
-		middleware.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
+		permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
 		return
 	}
 }
@@ -71,8 +70,7 @@ func EmailHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
-			c.Errorf("email error: %#v", err)
-			middleware.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
 			return
 		}
 	}
@@ -89,36 +87,31 @@ func EmailActionHandler(w http.ResponseWriter, r *http.Request) {
 	if idOk && actionOk {
 		email, err := controllers.GetEmail(c, id)
 		if err != nil {
-			c.Errorf("email error: %#v", err)
-			middleware.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
 			return
 		}
 
 		user, err := controllers.GetCurrentUser(c, r)
 		if err != nil {
-			c.Errorf("email error: %#v", err)
-			middleware.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
 			return
 		}
 
 		if email.CreatedBy != user.Id {
-			c.Errorf("email error: %#v", err)
-			middleware.ReturnError(w, http.StatusForbidden, "Email handling error", "Not your email to send")
+			permissions.ReturnError(w, http.StatusForbidden, "Email handling error", "Not your email to send")
 			return
 		}
 
 		if action == "send" {
 			if email.IsSent {
-				c.Errorf("email error: %#v", err)
-				middleware.ReturnError(w, http.StatusInternalServerError, "Email handling error", "Email already sent")
+				permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", "Email already sent")
 				return
 			}
 
 			// Validate if HTML is valid
 			validHTML := utils.ValidateHTML(email.Body)
 			if !validHTML {
-				c.Errorf("email error: %#v", err)
-				middleware.ReturnError(w, http.StatusInternalServerError, "Email handling error", "Invalid HTML")
+				permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", "Invalid HTML")
 				return
 			}
 
@@ -132,8 +125,7 @@ func EmailActionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
-			c.Errorf("email error: %#v", err)
-			middleware.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
 			return
 		}
 

@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/middleware"
+	"github.com/news-ai/tabulae/permissions"
 )
 
 func handleAgency(c appengine.Context, r *http.Request, id string) (interface{}, error) {
@@ -36,7 +36,7 @@ func AgenciesHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := IsAdmin(w, r)
 	if err != nil {
-		middleware.ReturnError(w, http.StatusForbidden, "Forbidden", err.Error())
+		permissions.ReturnError(w, http.StatusForbidden, "Forbidden", err.Error())
 		return
 	}
 
@@ -47,8 +47,7 @@ func AgenciesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		c.Errorf("agency error: %#v", err)
-		middleware.ReturnError(w, http.StatusInternalServerError, "Agency handling error", err.Error())
+		permissions.ReturnError(w, http.StatusInternalServerError, "Agency handling error", err.Error())
 		return
 	}
 }
@@ -69,8 +68,7 @@ func AgencyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
-			c.Errorf("agency error: %#v", err)
-			middleware.ReturnError(w, http.StatusInternalServerError, "Agency handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "Agency handling error", err.Error())
 			return
 		}
 	}

@@ -10,8 +10,8 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/permissions"
 )
 
 func handleUser(c appengine.Context, r *http.Request, id string) (models.User, error) {
@@ -39,7 +39,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := IsAdmin(w, r)
 	if err != nil {
-		middleware.ReturnError(w, http.StatusForbidden, "Forbidden", err.Error())
+		permissions.ReturnError(w, http.StatusForbidden, "Forbidden", err.Error())
 		return
 	}
 
@@ -50,8 +50,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		c.Errorf("user error: %#v", err)
-		middleware.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
+		permissions.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
 		return
 	}
 }
@@ -70,7 +69,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 		if id != "me" {
 			err := IsAdmin(w, r)
 			if err != nil {
-				middleware.ReturnError(w, http.StatusForbidden, "Forbidden", err.Error())
+				permissions.ReturnError(w, http.StatusForbidden, "Forbidden", err.Error())
 				return
 			}
 		}
@@ -81,8 +80,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
-			c.Errorf("user error: %#v", err)
-			middleware.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
 			return
 		}
 	}

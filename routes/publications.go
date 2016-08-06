@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/middleware"
+	"github.com/news-ai/tabulae/permissions"
 )
 
 func handlePublication(c appengine.Context, r *http.Request, id string) (interface{}, error) {
@@ -50,7 +50,7 @@ func PublicationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		c.Errorf("publication error: %#v", err)
-		middleware.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())
+		permissions.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())
 		return
 	}
 }
@@ -73,7 +73,7 @@ func PublicationHandler(w http.ResponseWriter, r *http.Request) {
 		// If any error from handlePublication function
 		if err != nil {
 			c.Errorf("publication error: %#v", err)
-			middleware.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())
 			return
 		}
 	}

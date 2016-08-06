@@ -8,6 +8,7 @@ import (
 
 	"github.com/news-ai/tabulae/auth"
 	"github.com/news-ai/tabulae/controllers"
+	"github.com/news-ai/tabulae/permissions"
 	"github.com/news-ai/tabulae/utils"
 )
 
@@ -16,7 +17,7 @@ func UpdateOrCreateUser(w http.ResponseWriter, r *http.Request, next http.Handle
 	email, err := auth.GetCurrentUserEmail(r)
 	if err != nil && !strings.Contains(r.URL.Path, "/api/auth") && !strings.Contains(r.URL.Path, "/static") {
 		w.Header().Set("Content-Type", "application/json")
-		ReturnError(w, http.StatusUnauthorized, "Not logged in", "Please login "+utils.APIURL+"/auth/google")
+		permissions.ReturnError(w, http.StatusUnauthorized, "Authentication Required", "Please login "+utils.APIURL+"/auth/google")
 		return
 	} else {
 		if email != "" {

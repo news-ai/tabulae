@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/middleware"
+	"github.com/news-ai/tabulae/permissions"
 )
 
 func handleContact(c appengine.Context, r *http.Request, id string) (interface{}, error) {
@@ -48,8 +48,7 @@ func ContactsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		c.Errorf("contact error: %#v", err)
-		middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+		permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
 		return
 	}
 }
@@ -70,8 +69,7 @@ func ContactHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
-			c.Errorf("contact error: %#v", err)
-			middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
 			return
 		}
 	}
@@ -89,18 +87,17 @@ func ContactActionHandler(w http.ResponseWriter, r *http.Request) {
 		// Get current contact
 		contact, err := controllers.GetContact(c, r, id)
 		if err != nil {
-			middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
 			return
 		}
 
 		// Get parent contact
 		parentContact, err := controllers.GetContact(c, r, strconv.FormatInt(contact.ParentContact, 10))
 		if err != nil {
-			middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
 			return
 		}
 
-		c.Infof("%v", parentContact)
 		// Two actions: diff, update
 		if action == "diff" {
 			newEmployers := []string{}
@@ -108,7 +105,7 @@ func ContactActionHandler(w http.ResponseWriter, r *http.Request) {
 				// Get each publication
 				currentPublication, err := controllers.GetPublication(c, strconv.FormatInt(parentContact.Employers[i], 10))
 				if err != nil {
-					middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", "Only actions are diff and update")
+					permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", "Only actions are diff and update")
 					return
 				}
 				newEmployers = append(newEmployers, currentPublication.Name)
@@ -135,13 +132,12 @@ func ContactActionHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if err != nil {
-				c.Errorf("contact error: %#v", err)
-				middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+				permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
 				return
 			}
 		}
 
-		middleware.ReturnError(w, http.StatusInternalServerError, "Contact handling error", "Only actions are diff and update")
+		permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", "Only actions are diff and update")
 		return
 	}
 }

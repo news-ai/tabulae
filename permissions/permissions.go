@@ -1,4 +1,4 @@
-package middleware
+package permissions
 
 import (
 	e "github.com/news-ai/jsonerror"

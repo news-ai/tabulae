@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/middleware"
+	"github.com/news-ai/tabulae/permissions"
 )
 
 func handleMediaList(c appengine.Context, r *http.Request, id string) (interface{}, error) {
@@ -45,8 +45,7 @@ func MediaListsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		c.Errorf("media lists error: %#v", err)
-		middleware.ReturnError(w, http.StatusInternalServerError, "Media Lists handling error", err.Error())
+		permissions.ReturnError(w, http.StatusInternalServerError, "Media Lists handling error", err.Error())
 		return
 	}
 }
@@ -67,8 +66,7 @@ func MediaListHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
-			c.Errorf("media list error: %#v", err)
-			middleware.ReturnError(w, http.StatusInternalServerError, "Media List handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "Media List handling error", err.Error())
 			return
 		}
 	}

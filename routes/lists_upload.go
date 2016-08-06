@@ -12,7 +12,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/files"
-	"github.com/news-ai/tabulae/middleware"
+	"github.com/news-ai/tabulae/permissions"
 
 	"github.com/gorilla/mux"
 )
@@ -34,14 +34,14 @@ func MediaListActionHandler(w http.ResponseWriter, r *http.Request) {
 
 		user, err := GetUser(r)
 		if err != nil {
-			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
 			return
 		}
 
 		vars := mux.Vars(r)
 		listId, ok := vars["id"]
 		if !ok {
-			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", "List ID missing")
+			permissions.ReturnError(w, http.StatusInternalServerError, "Upload handling error", "List ID missing")
 			return
 		}
 
@@ -55,7 +55,7 @@ func MediaListActionHandler(w http.ResponseWriter, r *http.Request) {
 
 		val, err := files.UploadFile(r, fileName, file, userId, listId, handler.Header.Get("Content-Type"))
 		if err != nil {
-			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
 			return
 		}
 
@@ -64,9 +64,9 @@ func MediaListActionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
-			middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
 		}
 		return
 	}
-	middleware.ReturnError(w, http.StatusInternalServerError, "Upload handling error", "Method not implemented")
+	permissions.ReturnError(w, http.StatusInternalServerError, "Upload handling error", "Method not implemented")
 }

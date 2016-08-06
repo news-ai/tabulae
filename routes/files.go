@@ -11,8 +11,8 @@ import (
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/files"
-	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/parse"
+	"github.com/news-ai/tabulae/permissions"
 )
 
 func handleFile(c appengine.Context, r *http.Request, id string) (interface{}, error) {
@@ -43,8 +43,7 @@ func FilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		c.Errorf("files error: %#v", err)
-		middleware.ReturnError(w, http.StatusInternalServerError, "Files handling error", err.Error())
+		permissions.ReturnError(w, http.StatusInternalServerError, "Files handling error", err.Error())
 		return
 	}
 }
@@ -65,8 +64,7 @@ func FileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
-			c.Errorf("file error: %#v", err)
-			middleware.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
 			return
 		}
 	}
@@ -74,7 +72,6 @@ func FileHandler(w http.ResponseWriter, r *http.Request) {
 
 func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	c := appengine.NewContext(r)
 
 	// If there is an ID
 	vars := mux.Vars(r)
@@ -83,8 +80,7 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 	if idOk && actionOk {
 		file, err := files.ReadFile(r, id)
 		if err != nil {
-			c.Errorf("file error: %#v", err)
-			middleware.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
 			return
 		}
 
@@ -96,8 +92,7 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
-			c.Errorf("file error: %#v", err)
-			middleware.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+			permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
 			return
 		}
 	}
