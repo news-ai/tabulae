@@ -17,6 +17,17 @@ import (
 	"github.com/news-ai/tabulae/utils"
 )
 
+func handleEmailAction(c context.Context, w http.ResponseWriter, r *http.Request, id string, action string) (interface{}, error) {
+	switch r.Method {
+	case "GET":
+		switch action {
+		case "send":
+			return controllers.SendEmail(c, w, r, id)
+		}
+	}
+	return nil, fmt.Errorf("method not implemented")
+}
+
 func handleEmail(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":

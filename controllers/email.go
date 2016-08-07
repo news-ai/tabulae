@@ -12,6 +12,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 
+	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/permissions"
 	"github.com/news-ai/tabulae/utils"
@@ -222,4 +223,41 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, error
 	}
 
 	return newEmails, nil
+}
+
+/*
+* Action methods
+ */
+
+func SendEmail(c context.Context, r *http.Request, id string) (models.Email, error) {
+	email, err := GetEmail(c, r, id)
+	if err != nil {
+		return models.Email{}, err
+	}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return email, err
+	}
+
+	// Check if email is already sent
+	if email.IsSent {
+		return email, errors.New("Email has already been sent.")
+	}
+
+	// Validate if HTML is valid
+	validHTML := utils.ValidateHTML(email.Body)
+	if !validHTML {
+		return email, errors.New("Invalid HTML")
+	}
+
+	emailSent := emails.SendEmail(r, email, user)
+	if emailSent {
+		val, err := email.MarkSent(c)
+		if err != nil {
+			return *val, err
+		}
+		return *val, nil
+	}
+	return email, errors.New("Email could not be sent")
 }
