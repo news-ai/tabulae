@@ -47,11 +47,18 @@ func getAgency(c context.Context, id int64) (models.Agency, error) {
 
 func filterAgency(c context.Context, queryType, query string) (models.Agency, error) {
 	// Get an agency by their email extension
-	agencies := []models.Agency{}
-	ks, err := datastore.NewQuery("Agency").Filter(queryType+" =", query).GetAll(c, &agencies)
+	var agencies []models.Agency
+
+	ks, err := datastore.NewQuery("Agency").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		return models.Agency{}, err
 	}
+
+	err = nds.GetMulti(c, ks, &agencies)
+	if err != nil {
+		return models.Agency{}, err
+	}
+
 	if len(agencies) > 0 {
 		agencies[0].Id = ks[0].IntID()
 		return agencies[0], nil
@@ -69,11 +76,18 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
 
 // Gets every single agency
 func GetAgencies(c context.Context) ([]models.Agency, error) {
-	agencies := []models.Agency{}
-	ks, err := datastore.NewQuery("Agency").GetAll(c, &agencies)
+	var agencies []models.Agency
+
+	ks, err := datastore.NewQuery("Agency").KeysOnly().GetAll(c, nil)
 	if err != nil {
 		return []models.Agency{}, err
 	}
+
+	err = nds.GetMulti(c, ks, &agencies)
+	if err != nil {
+		return []models.Agency{}, err
+	}
+
 	for i := 0; i < len(agencies); i++ {
 		agencies[i].Id = ks[i].IntID()
 	}

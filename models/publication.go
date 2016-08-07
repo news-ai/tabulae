@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	"google.golang.org/appengine/datastore"
+	"github.com/qedus/nds"
 )
 
 type Publication struct {
@@ -43,7 +43,7 @@ func (p *Publication) Save(c context.Context) (*Publication, error) {
 	p.Updated = time.Now()
 
 	// Save the object
-	k, err := datastore.Put(c, p.key(c, "Publication"), p)
+	k, err := nds.Put(c, p.key(c, "Publication"), p)
 	if err != nil {
 		return nil, err
 	}

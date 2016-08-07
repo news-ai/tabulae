@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	"google.golang.org/appengine/datastore"
+	"github.com/qedus/nds"
 )
 
 type Email struct {
@@ -53,7 +53,7 @@ func (e *Email) Save(c context.Context) (*Email, error) {
 	// Update the Updated time
 	e.Updated = time.Now()
 
-	k, err := datastore.Put(c, e.key(c, "Email"), e)
+	k, err := nds.Put(c, e.key(c, "Email"), e)
 	if err != nil {
 		return nil, err
 	}

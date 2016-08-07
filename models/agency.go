@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	"google.golang.org/appengine/datastore"
+	"github.com/qedus/nds"
 )
 
 type Agency struct {
@@ -42,7 +42,7 @@ func (a *Agency) Save(c context.Context) (*Agency, error) {
 	// Update the Updated time
 	a.Updated = time.Now()
 
-	k, err := datastore.Put(c, a.key(c, "Agency"), a)
+	k, err := nds.Put(c, a.key(c, "Agency"), a)
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	"google.golang.org/appengine/datastore"
+	"github.com/qedus/nds"
 )
 
 type User struct {
@@ -51,7 +51,7 @@ func (u *User) Create(c context.Context, r *http.Request) (*User, error) {
 func (u *User) Save(c context.Context) (*User, error) {
 	u.Updated = time.Now()
 
-	k, err := datastore.Put(c, u.key(c, "User"), u)
+	k, err := nds.Put(c, u.key(c, "User"), u)
 	if err != nil {
 		return nil, err
 	}

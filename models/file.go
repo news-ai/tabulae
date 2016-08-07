@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	"google.golang.org/appengine/datastore"
+	"github.com/qedus/nds"
 )
 
 type File struct {
@@ -41,7 +41,7 @@ func (f *File) Save(c context.Context) (*File, error) {
 	// Update the Updated time
 	f.Updated = time.Now()
 
-	k, err := datastore.Put(c, f.key(c, "File"), f)
+	k, err := nds.Put(c, f.key(c, "File"), f)
 	if err != nil {
 		return nil, err
 	}

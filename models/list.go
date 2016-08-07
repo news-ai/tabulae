@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	"google.golang.org/appengine/datastore"
+	"github.com/qedus/nds"
 )
 
 type MediaList struct {
@@ -47,7 +47,7 @@ func (ml *MediaList) Save(c context.Context) (*MediaList, error) {
 	// Update the Updated time
 	ml.Updated = time.Now()
 
-	k, err := datastore.Put(c, ml.key(c, "MediaList"), ml)
+	k, err := nds.Put(c, ml.key(c, "MediaList"), ml)
 	if err != nil {
 		return nil, err
 	}

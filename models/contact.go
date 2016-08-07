@@ -6,9 +6,9 @@ import (
 
 	"golang.org/x/net/context"
 
-	"google.golang.org/appengine/datastore"
-
 	"github.com/news-ai/tabulae/utils"
+
+	"github.com/qedus/nds"
 )
 
 type CustomContactField struct {
@@ -78,7 +78,7 @@ func (ct *Contact) Save(c context.Context, r *http.Request) (*Contact, error) {
 	// Update the Updated time
 	ct.Updated = time.Now()
 
-	k, err := datastore.Put(c, ct.key(c, "Contact"), ct)
+	k, err := nds.Put(c, ct.key(c, "Contact"), ct)
 	if err != nil {
 		return nil, err
 	}
