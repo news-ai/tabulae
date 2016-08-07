@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine/datastore"
 )
 
 type Publication struct {
@@ -24,7 +25,7 @@ type Publication struct {
  */
 
 // Function to create a new publication into App Engine
-func (p *Publication) Create(c appengine.Context, r *http.Request, currentUser User) (*Publication, error) {
+func (p *Publication) Create(c context.Context, r *http.Request, currentUser User) (*Publication, error) {
 	p.CreatedBy = currentUser.Id
 	p.Created = time.Now()
 
@@ -37,7 +38,7 @@ func (p *Publication) Create(c appengine.Context, r *http.Request, currentUser U
  */
 
 // Function to save a new publication into App Engine
-func (p *Publication) Save(c appengine.Context) (*Publication, error) {
+func (p *Publication) Save(c context.Context) (*Publication, error) {
 	// Update the Updated time
 	p.Updated = time.Now()
 

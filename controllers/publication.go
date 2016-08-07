@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine/datastore"
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
@@ -21,7 +22,7 @@ import (
 * Get methods
  */
 
-func getPublication(c appengine.Context, id int64) (models.Publication, error) {
+func getPublication(c context.Context, id int64) (models.Publication, error) {
 	// Get the publication details by id
 	publications := []models.Publication{}
 	publicationId := datastore.NewKey(c, "Publication", "", id, nil)
@@ -41,7 +42,7 @@ func getPublication(c appengine.Context, id int64) (models.Publication, error) {
 * Filter methods
  */
 
-func filterPublication(c appengine.Context, queryType, query string) (models.Publication, error) {
+func filterPublication(c context.Context, queryType, query string) (models.Publication, error) {
 	// Get a publication by the URL
 	publications := []models.Publication{}
 	ks, err := datastore.NewQuery("Publication").Filter(queryType+" =", query).GetAll(c, &publications)
@@ -63,7 +64,7 @@ func filterPublication(c appengine.Context, queryType, query string) (models.Pub
 * Get methods
  */
 
-func GetPublications(c appengine.Context) ([]models.Publication, error) {
+func GetPublications(c context.Context) ([]models.Publication, error) {
 	publications := []models.Publication{}
 	ks, err := datastore.NewQuery("Publication").GetAll(c, &publications)
 	if err != nil {
@@ -76,7 +77,7 @@ func GetPublications(c appengine.Context) ([]models.Publication, error) {
 	return publications, nil
 }
 
-func GetPublication(c appengine.Context, id string) (models.Publication, error) {
+func GetPublication(c context.Context, id string) (models.Publication, error) {
 	// Get a publication by id
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
@@ -94,7 +95,7 @@ func GetPublication(c appengine.Context, id string) (models.Publication, error) 
 * Create methods
  */
 
-func CreatePublication(c appengine.Context, w http.ResponseWriter, r *http.Request) (models.Publication, error) {
+func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request) (models.Publication, error) {
 	// Parse JSON
 	decoder := json.NewDecoder(r.Body)
 	var publication models.Publication
@@ -134,7 +135,7 @@ func CreatePublication(c appengine.Context, w http.ResponseWriter, r *http.Reque
 	return presentPublication, nil
 }
 
-func FindOrCreatePublication(c appengine.Context, r *http.Request, name string) (models.Publication, error) {
+func FindOrCreatePublication(c context.Context, r *http.Request, name string) (models.Publication, error) {
 	name = strings.Trim(name, " ")
 	publication, err := FilterPublicationByName(c, name)
 	if err != nil {
@@ -159,7 +160,7 @@ func FindOrCreatePublication(c appengine.Context, r *http.Request, name string) 
 * Filter methods
  */
 
-func FilterPublicationByUrl(c appengine.Context, url string) (models.Publication, error) {
+func FilterPublicationByUrl(c context.Context, url string) (models.Publication, error) {
 	// Get the id of the current publication
 	publication, err := filterPublication(c, "Url", url)
 	if err != nil {
@@ -168,7 +169,7 @@ func FilterPublicationByUrl(c appengine.Context, url string) (models.Publication
 	return publication, nil
 }
 
-func FilterPublicationByName(c appengine.Context, name string) (models.Publication, error) {
+func FilterPublicationByName(c context.Context, name string) (models.Publication, error) {
 	// Get the id of the current publication
 	publication, err := filterPublication(c, "Name", name)
 	if err != nil {

@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"appengine"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine"
 
 	"github.com/gorilla/mux"
 
@@ -14,7 +16,7 @@ import (
 	"github.com/news-ai/tabulae/permissions"
 )
 
-func handleContact(c appengine.Context, r *http.Request, id string) (interface{}, error) {
+func handleContact(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetContact(c, r, id)
@@ -24,7 +26,7 @@ func handleContact(c appengine.Context, r *http.Request, id string) (interface{}
 	return nil, fmt.Errorf("method not implemented")
 }
 
-func handleContacts(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func handleContacts(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetContacts(c, r)

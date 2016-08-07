@@ -5,8 +5,9 @@ import (
 	"errors"
 	"net/http"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine/datastore"
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
@@ -20,7 +21,7 @@ import (
 * Get methods
  */
 
-func getMediaList(c appengine.Context, r *http.Request, id int64) (models.MediaList, error) {
+func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaList, error) {
 	// Get the MediaList by id
 	mediaLists := []models.MediaList{}
 	mediaListId := datastore.NewKey(c, "MediaList", "", id, nil)
@@ -53,7 +54,7 @@ func getMediaList(c appengine.Context, r *http.Request, id int64) (models.MediaL
  */
 
 // Gets every single media list
-func GetMediaLists(c appengine.Context, r *http.Request) ([]models.MediaList, error) {
+func GetMediaLists(c context.Context, r *http.Request) ([]models.MediaList, error) {
 	mediaLists := []models.MediaList{}
 
 	user, err := GetCurrentUser(c, r)
@@ -72,7 +73,7 @@ func GetMediaLists(c appengine.Context, r *http.Request) ([]models.MediaList, er
 	return mediaLists, nil
 }
 
-func GetMediaList(c appengine.Context, r *http.Request, id string) (models.MediaList, error) {
+func GetMediaList(c context.Context, r *http.Request, id string) (models.MediaList, error) {
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
@@ -90,7 +91,7 @@ func GetMediaList(c appengine.Context, r *http.Request, id string) (models.Media
 * Create methods
  */
 
-func CreateMediaList(c appengine.Context, w http.ResponseWriter, r *http.Request) (models.MediaList, error) {
+func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) (models.MediaList, error) {
 	decoder := json.NewDecoder(r.Body)
 	var medialist models.MediaList
 	err := decoder.Decode(&medialist)
@@ -116,7 +117,7 @@ func CreateMediaList(c appengine.Context, w http.ResponseWriter, r *http.Request
 * Update methods
  */
 
-func UpdateMediaList(c appengine.Context, r *http.Request, id string) (models.MediaList, error) {
+func UpdateMediaList(c context.Context, r *http.Request, id string) (models.MediaList, error) {
 	// Get the details of the current media list
 	mediaList, err := GetMediaList(c, r, id)
 	if err != nil {

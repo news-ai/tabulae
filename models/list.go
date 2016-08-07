@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine/datastore"
 )
 
 type MediaList struct {
@@ -29,7 +30,7 @@ type MediaList struct {
 * Create methods
  */
 
-func (ml *MediaList) Create(c appengine.Context, r *http.Request, currentUser User) (*MediaList, error) {
+func (ml *MediaList) Create(c context.Context, r *http.Request, currentUser User) (*MediaList, error) {
 	ml.CreatedBy = currentUser.Id
 	ml.Created = time.Now()
 
@@ -42,7 +43,7 @@ func (ml *MediaList) Create(c appengine.Context, r *http.Request, currentUser Us
  */
 
 // Function to save a new contact into App Engine
-func (ml *MediaList) Save(c appengine.Context) (*MediaList, error) {
+func (ml *MediaList) Save(c context.Context) (*MediaList, error) {
 	// Update the Updated time
 	ml.Updated = time.Now()
 

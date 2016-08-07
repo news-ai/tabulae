@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine/datastore"
 )
 
 type File struct {
@@ -23,7 +24,7 @@ type File struct {
 * Create methods
  */
 
-func (f *File) Create(c appengine.Context, r *http.Request, currentUser User) (*File, error) {
+func (f *File) Create(c context.Context, r *http.Request, currentUser User) (*File, error) {
 	f.CreatedBy = currentUser.Id
 	f.Created = time.Now()
 
@@ -36,7 +37,7 @@ func (f *File) Create(c appengine.Context, r *http.Request, currentUser User) (*
  */
 
 // Function to save a new file into App Engine
-func (f *File) Save(c appengine.Context) (*File, error) {
+func (f *File) Save(c context.Context) (*File, error) {
 	// Update the Updated time
 	f.Updated = time.Now()
 

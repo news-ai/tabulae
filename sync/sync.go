@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"appengine"
-	"appengine/urlfetch"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/urlfetch"
 )
 
 type LinkedInData struct {

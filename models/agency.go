@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine/datastore"
 )
 
 type Agency struct {
@@ -25,7 +26,7 @@ type Agency struct {
 * Create methods
  */
 
-func (a *Agency) Create(c appengine.Context, r *http.Request, currentUser User) (*Agency, error) {
+func (a *Agency) Create(c context.Context, r *http.Request, currentUser User) (*Agency, error) {
 	a.CreatedBy = currentUser.Id
 	a.Created = time.Now()
 	_, err := a.Save(c)
@@ -37,7 +38,7 @@ func (a *Agency) Create(c appengine.Context, r *http.Request, currentUser User) 
  */
 
 // Function to save a new agency into App Engine
-func (a *Agency) Save(c appengine.Context) (*Agency, error) {
+func (a *Agency) Save(c context.Context) (*Agency, error) {
 	// Update the Updated time
 	a.Updated = time.Now()
 

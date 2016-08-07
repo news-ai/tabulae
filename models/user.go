@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine/datastore"
 )
 
 type User struct {
@@ -34,7 +35,7 @@ type User struct {
 * Create methods
  */
 
-func (u *User) Create(c appengine.Context, r *http.Request) (*User, error) {
+func (u *User) Create(c context.Context, r *http.Request) (*User, error) {
 	// Create user
 	u.IsAdmin = false
 	u.Created = time.Now()
@@ -47,7 +48,7 @@ func (u *User) Create(c appengine.Context, r *http.Request) (*User, error) {
  */
 
 // Function to save a new user into App Engine
-func (u *User) Save(c appengine.Context) (*User, error) {
+func (u *User) Save(c context.Context) (*User, error) {
 	u.Updated = time.Now()
 
 	k, err := datastore.Put(c, u.key(c, "User"), u)
@@ -58,7 +59,7 @@ func (u *User) Save(c appengine.Context) (*User, error) {
 	return u, nil
 }
 
-func (u *User) ConfirmEmail(c appengine.Context) (*User, error) {
+func (u *User) ConfirmEmail(c context.Context) (*User, error) {
 	u.EmailConfirmed = true
 	u.ConfirmationCode = ""
 	_, err := u.Save(c)

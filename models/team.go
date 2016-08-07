@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine/datastore"
 )
 
 type Team struct {
@@ -23,7 +24,7 @@ type Team struct {
  */
 
 // Function to create a new team into App Engine
-func (t *Team) Create(c appengine.Context, r *http.Request, currentUser User) (*Team, error) {
+func (t *Team) Create(c context.Context, r *http.Request, currentUser User) (*Team, error) {
 	t.Members = append(t.Members, currentUser.Id)
 	t.CreatedBy = currentUser.Id
 	t.Created = time.Now()
@@ -37,7 +38,7 @@ func (t *Team) Create(c appengine.Context, r *http.Request, currentUser User) (*
  */
 
 // Function to save a new team into App Engine
-func (t *Team) Save(c appengine.Context) (*Team, error) {
+func (t *Team) Save(c context.Context) (*Team, error) {
 	// Update the Updated time
 	t.Updated = time.Now()
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"appengine"
+	"google.golang.org/appengine"
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"

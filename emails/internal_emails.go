@@ -5,8 +5,8 @@ import (
 
 	"github.com/news-ai/tabulae/models"
 
-	"appengine"
-	"appengine/urlfetch"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/urlfetch"
 
 	"gopkg.in/sendgrid/sendgrid-go.v2"
 )
@@ -28,8 +28,5 @@ func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode
 	m.AddFilter("templates", "enable", "1")
 	m.AddFilter("templates", "template_id", "a64e454c-19d5-4bba-9cef-bd185e7c9b0b")
 	m.AddSubstitution("{CONFIRMATION_CODE}", confirmationCode)
-
-	if err := sg.Send(m); err != nil {
-		c.Infof("Couldn't send email: %v", err)
-	}
+	sg.Send(m)
 }

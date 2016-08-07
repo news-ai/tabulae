@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"appengine"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine"
 
 	"github.com/gorilla/mux"
 
@@ -13,7 +15,7 @@ import (
 	"github.com/news-ai/tabulae/permissions"
 )
 
-func handleAgency(c appengine.Context, r *http.Request, id string) (interface{}, error) {
+func handleAgency(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetAgency(c, id)
@@ -21,7 +23,7 @@ func handleAgency(c appengine.Context, r *http.Request, id string) (interface{},
 	return nil, fmt.Errorf("method not implemented")
 }
 
-func handleAgencies(c appengine.Context, r *http.Request) (interface{}, error) {
+func handleAgencies(c context.Context, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetAgencies(c)

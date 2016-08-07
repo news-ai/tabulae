@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"appengine"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine"
 
 	"github.com/gorilla/mux"
 
@@ -13,7 +15,7 @@ import (
 	"github.com/news-ai/tabulae/permissions"
 )
 
-func handlePublication(c appengine.Context, r *http.Request, id string) (interface{}, error) {
+func handlePublication(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetPublication(c, id)
@@ -21,7 +23,7 @@ func handlePublication(c appengine.Context, r *http.Request, id string) (interfa
 	return nil, fmt.Errorf("method not implemented")
 }
 
-func handlePublications(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func handlePublications(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		if len(r.URL.Query()) > 0 {
@@ -49,7 +51,6 @@ func PublicationsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		c.Errorf("publication error: %#v", err)
 		permissions.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())
 		return
 	}
@@ -72,7 +73,6 @@ func PublicationHandler(w http.ResponseWriter, r *http.Request) {
 
 		// If any error from handlePublication function
 		if err != nil {
-			c.Errorf("publication error: %#v", err)
 			permissions.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())
 			return
 		}

@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine/datastore"
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
@@ -20,7 +21,7 @@ import (
 * Get methods
  */
 
-func getAgency(c appengine.Context, id int64) (models.Agency, error) {
+func getAgency(c context.Context, id int64) (models.Agency, error) {
 	// Get the agency by id
 	agencies := []models.Agency{}
 	agencyId := datastore.NewKey(c, "Agency", "", id, nil)
@@ -39,7 +40,7 @@ func getAgency(c appengine.Context, id int64) (models.Agency, error) {
 * Filter methods
  */
 
-func filterAgency(c appengine.Context, queryType, query string) (models.Agency, error) {
+func filterAgency(c context.Context, queryType, query string) (models.Agency, error) {
 	// Get an agency by their email extension
 	agencies := []models.Agency{}
 	ks, err := datastore.NewQuery("Agency").Filter(queryType+" =", query).GetAll(c, &agencies)
@@ -62,7 +63,7 @@ func filterAgency(c appengine.Context, queryType, query string) (models.Agency, 
  */
 
 // Gets every single agency
-func GetAgencies(c appengine.Context) ([]models.Agency, error) {
+func GetAgencies(c context.Context) ([]models.Agency, error) {
 	agencies := []models.Agency{}
 	ks, err := datastore.NewQuery("Agency").GetAll(c, &agencies)
 	if err != nil {
@@ -74,7 +75,7 @@ func GetAgencies(c appengine.Context) ([]models.Agency, error) {
 	return agencies, nil
 }
 
-func GetAgency(c appengine.Context, id string) (models.Agency, error) {
+func GetAgency(c context.Context, id string) (models.Agency, error) {
 	// Get the details of the current agency
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
@@ -92,7 +93,7 @@ func GetAgency(c appengine.Context, id string) (models.Agency, error) {
 * Create methods
  */
 
-func CreateAgencyFromUser(c appengine.Context, r *http.Request, u *models.User) (models.Agency, error) {
+func CreateAgencyFromUser(c context.Context, r *http.Request, u *models.User) (models.Agency, error) {
 	agencyEmail, err := utils.ExtractAgencyEmail(u.Email)
 	if err != nil {
 		return models.Agency{}, err
@@ -124,7 +125,7 @@ func CreateAgencyFromUser(c appengine.Context, r *http.Request, u *models.User) 
 * Filter methods
  */
 
-func FilterAgencyByEmail(c appengine.Context, email string) (models.Agency, error) {
+func FilterAgencyByEmail(c context.Context, email string) (models.Agency, error) {
 	// Get the id of the current agency
 	agency, err := filterAgency(c, "Email", email)
 	if err != nil {

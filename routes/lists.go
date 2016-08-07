@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"appengine"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine"
 
 	"github.com/gorilla/mux"
 
@@ -13,7 +15,7 @@ import (
 	"github.com/news-ai/tabulae/permissions"
 )
 
-func handleMediaList(c appengine.Context, r *http.Request, id string) (interface{}, error) {
+func handleMediaList(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetMediaList(c, r, id)
@@ -23,7 +25,7 @@ func handleMediaList(c appengine.Context, r *http.Request, id string) (interface
 	return nil, fmt.Errorf("method not implemented")
 }
 
-func handleMediaLists(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func handleMediaLists(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetMediaLists(c, r)

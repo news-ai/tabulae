@@ -7,8 +7,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/datastore"
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/permissions"
@@ -23,7 +25,7 @@ import (
 * Get methods
  */
 
-func getEmail(c appengine.Context, r *http.Request, id int64) (models.Email, error) {
+func getEmail(c context.Context, r *http.Request, id int64) (models.Email, error) {
 	// Get the email by id
 	emails := []models.Email{}
 	emailId := datastore.NewKey(c, "Email", "", id, nil)
@@ -56,7 +58,7 @@ func getEmail(c appengine.Context, r *http.Request, id int64) (models.Email, err
 * Get methods
  */
 
-func GetEmails(c appengine.Context, r *http.Request) ([]models.Email, error) {
+func GetEmails(c context.Context, r *http.Request) ([]models.Email, error) {
 	emails := []models.Email{}
 
 	user, err := GetCurrentUser(c, r)
@@ -75,7 +77,7 @@ func GetEmails(c appengine.Context, r *http.Request) ([]models.Email, error) {
 	return emails, nil
 }
 
-func GetEmail(c appengine.Context, r *http.Request, id string) (models.Email, error) {
+func GetEmail(c context.Context, r *http.Request, id string) (models.Email, error) {
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
@@ -93,7 +95,7 @@ func GetEmail(c appengine.Context, r *http.Request, id string) (models.Email, er
 * Create methods
  */
 
-func CreateEmail(c appengine.Context, r *http.Request) ([]models.Email, error) {
+func CreateEmail(c context.Context, r *http.Request) ([]models.Email, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
 
@@ -155,7 +157,7 @@ func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (model
 * Update methods
  */
 
-func UpdateEmail(c appengine.Context, email *models.Email, updatedEmail models.Email) (models.Email, error) {
+func UpdateEmail(c context.Context, email *models.Email, updatedEmail models.Email) (models.Email, error) {
 	if email.CreatedBy != updatedEmail.CreatedBy {
 		return *email, errors.New("You don't have permissions to edit this object")
 	}
@@ -172,7 +174,7 @@ func UpdateEmail(c appengine.Context, email *models.Email, updatedEmail models.E
 	return *email, nil
 }
 
-func UpdateSingleEmail(c appengine.Context, r *http.Request, id string) (models.Email, error) {
+func UpdateSingleEmail(c context.Context, r *http.Request, id string) (models.Email, error) {
 	// Get the details of the current email
 	email, err := GetEmail(c, r, id)
 	if err != nil {
@@ -198,7 +200,7 @@ func UpdateSingleEmail(c appengine.Context, r *http.Request, id string) (models.
 	return UpdateEmail(c, &email, updatedEmail)
 }
 
-func UpdateBatchEmail(c appengine.Context, r *http.Request) ([]models.Email, error) {
+func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, error) {
 	decoder := json.NewDecoder(r.Body)
 	var updatedEmails []models.Email
 	err := decoder.Decode(&updatedEmails)

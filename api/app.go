@@ -74,7 +74,6 @@ func init() {
 	// Main router
 	main := mux.NewRouter().StrictSlash(true)
 	main.PathPrefix("/api").Handler(negroni.New(negroni.Wrap(api)))
-
 	main.HandleFunc("/", routes.NotFoundHandler)
 
 	// HTTP router

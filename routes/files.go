@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"appengine"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine"
 
 	"github.com/gorilla/mux"
 
@@ -15,7 +17,7 @@ import (
 	"github.com/news-ai/tabulae/permissions"
 )
 
-func handleFile(c appengine.Context, r *http.Request, id string) (interface{}, error) {
+func handleFile(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetFile(c, r, id)
@@ -23,7 +25,7 @@ func handleFile(c appengine.Context, r *http.Request, id string) (interface{}, e
 	return nil, fmt.Errorf("method not implemented")
 }
 
-func handleFiles(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func handleFiles(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetFiles(c, r)

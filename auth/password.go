@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/template"
 
-	"appengine"
+	"google.golang.org/appengine"
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/emails"

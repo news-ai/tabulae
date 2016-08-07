@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine/datastore"
 
 	"github.com/news-ai/tabulae/utils"
 )
@@ -59,7 +60,7 @@ type Contact struct {
 * Create methods
  */
 
-func (ct *Contact) Create(c appengine.Context, r *http.Request, currentUser User) (*Contact, error) {
+func (ct *Contact) Create(c context.Context, r *http.Request, currentUser User) (*Contact, error) {
 	ct.CreatedBy = currentUser.Id
 	ct.Created = time.Now()
 	ct.Normalize()
@@ -73,7 +74,7 @@ func (ct *Contact) Create(c appengine.Context, r *http.Request, currentUser User
  */
 
 // Function to save a new contact into App Engine
-func (ct *Contact) Save(c appengine.Context, r *http.Request) (*Contact, error) {
+func (ct *Contact) Save(c context.Context, r *http.Request) (*Contact, error) {
 	// Update the Updated time
 	ct.Updated = time.Now()
 

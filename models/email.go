@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine/datastore"
 )
 
 type Email struct {
@@ -34,7 +35,7 @@ type Email struct {
 * Create methods
  */
 
-func (e *Email) Create(c appengine.Context, r *http.Request, currentUser User) (*Email, error) {
+func (e *Email) Create(c context.Context, r *http.Request, currentUser User) (*Email, error) {
 	e.IsSent = false
 	e.CreatedBy = currentUser.Id
 	e.Created = time.Now()
@@ -48,7 +49,7 @@ func (e *Email) Create(c appengine.Context, r *http.Request, currentUser User) (
  */
 
 // Function to save a new email into App Engine
-func (e *Email) Save(c appengine.Context) (*Email, error) {
+func (e *Email) Save(c context.Context) (*Email, error) {
 	// Update the Updated time
 	e.Updated = time.Now()
 
@@ -60,7 +61,7 @@ func (e *Email) Save(c appengine.Context) (*Email, error) {
 	return e, nil
 }
 
-func (e *Email) MarkSent(c appengine.Context) (*Email, error) {
+func (e *Email) MarkSent(c context.Context) (*Email, error) {
 	e.IsSent = true
 	_, err := e.Save(c)
 	if err != nil {

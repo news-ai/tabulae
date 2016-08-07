@@ -9,8 +9,11 @@ import (
 	"reflect"
 	"time"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine/datastore"
+
+	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/permissions"
@@ -26,16 +29,18 @@ import (
 * Get methods
  */
 
-func getContact(c appengine.Context, r *http.Request, id int64) (models.Contact, error) {
+func getContact(c context.Context, r *http.Request, id int64) (models.Contact, error) {
 	// Get the Contact by id
 	contacts := []models.Contact{}
 	contactId := datastore.NewKey(c, "Contact", "", id, nil)
-	ks, err := datastore.NewQuery("Contact").Filter("__key__ =", contactId).GetAll(c, &contacts)
+
+	err := nds.Get(c, contactId, contacts)
+
 	if err != nil {
 		return models.Contact{}, err
 	}
 	if len(contacts) > 0 {
-		contacts[0].Id = ks[0].IntID()
+		contacts[0].Id = contactId.IntID()
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
@@ -62,7 +67,7 @@ func getContact(c appengine.Context, r *http.Request, id int64) (models.Contact,
 * Filter methods
  */
 
-func filterContact(c appengine.Context, r *http.Request, queryType, query string) (models.Contact, error) {
+func filterContact(c context.Context, r *http.Request, queryType, query string) (models.Contact, error) {
 	// Get an contact by a query type
 	contacts := []models.Contact{}
 	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).GetAll(c, &contacts)
@@ -89,7 +94,7 @@ func filterContact(c appengine.Context, r *http.Request, queryType, query string
 * Normalization methods
  */
 
-func checkAgainstParent(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
+func checkAgainstParent(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	// If there is a parent contact
 	if ct.ParentContact != 0 {
 		// Get parent contact
@@ -109,7 +114,7 @@ func checkAgainstParent(c appengine.Context, r *http.Request, ct *models.Contact
 	return ct, nil
 }
 
-func linkedInSync(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
+func linkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	parentContact, err := getContact(c, r, ct.ParentContact)
 	if err != nil {
 		return ct, err
@@ -140,7 +145,7 @@ func linkedInSync(c appengine.Context, r *http.Request, ct *models.Contact) (*mo
 	return ct, nil
 }
 
-func filterMasterContact(c appengine.Context, r *http.Request, ct *models.Contact, queryType, query string) (models.Contact, error) {
+func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact, queryType, query string) (models.Contact, error) {
 	// Get an contact by a query type
 	contacts := []models.Contact{}
 	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).Filter("IsMasterContact = ", true).GetAll(c, &contacts)
@@ -163,7 +168,7 @@ func filterMasterContact(c appengine.Context, r *http.Request, ct *models.Contac
 	return models.Contact{}, errors.New("No contact by this " + queryType)
 }
 
-func findOrCreateMasterContact(c appengine.Context, ct *models.Contact, r *http.Request) (*models.Contact, error) {
+func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Request) (*models.Contact, error) {
 	// Find master contact
 	// If there is no parent contact Id or if the Linkedin field is not empty
 	if ct.ParentContact == 0 && ct.LinkedIn != "" {
@@ -216,7 +221,7 @@ func findOrCreateMasterContact(c appengine.Context, ct *models.Contact, r *http.
  */
 
 // Gets every single contact
-func GetContacts(c appengine.Context, r *http.Request) ([]models.Contact, error) {
+func GetContacts(c context.Context, r *http.Request) ([]models.Contact, error) {
 	contacts := []models.Contact{}
 
 	user, err := GetCurrentUser(c, r)
@@ -235,7 +240,7 @@ func GetContacts(c appengine.Context, r *http.Request) ([]models.Contact, error)
 	return contacts, nil
 }
 
-func GetContact(c appengine.Context, r *http.Request, id string) (models.Contact, error) {
+func GetContact(c context.Context, r *http.Request, id string) (models.Contact, error) {
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
@@ -254,7 +259,7 @@ func GetContact(c appengine.Context, r *http.Request, id string) (models.Contact
 * Create methods
  */
 
-func Create(c appengine.Context, r *http.Request, ct models.Contact) (models.Contact, error) {
+func Create(c context.Context, r *http.Request, ct models.Contact) (models.Contact, error) {
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		return ct, err
@@ -272,7 +277,7 @@ func Create(c appengine.Context, r *http.Request, ct models.Contact) (models.Con
 	return ct, err
 }
 
-func CreateContact(c appengine.Context, r *http.Request) ([]models.Contact, error) {
+func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
 
@@ -323,7 +328,7 @@ func CreateContact(c appengine.Context, r *http.Request) ([]models.Contact, erro
  */
 
 // Function to save a new contact into App Engine
-func Save(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
+func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	// Update the Updated time
 	ct.Normalize()
 
@@ -338,7 +343,7 @@ func Save(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Con
 	return ct, nil
 }
 
-func UpdateContact(c appengine.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) models.Contact {
+func UpdateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) models.Contact {
 	utils.UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
 	utils.UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
 	utils.UpdateIfNotBlank(&contact.Email, updatedContact.Email)
@@ -366,7 +371,7 @@ func UpdateContact(c appengine.Context, r *http.Request, contact *models.Contact
 	return *contact
 }
 
-func UpdateSingleContact(c appengine.Context, r *http.Request, id string) (models.Contact, error) {
+func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.Contact, error) {
 	// Get the details of the current contact
 	contact, err := GetContact(c, r, id)
 	if err != nil {
@@ -392,7 +397,7 @@ func UpdateSingleContact(c appengine.Context, r *http.Request, id string) (model
 	return UpdateContact(c, r, &contact, updatedContact), nil
 }
 
-func UpdateBatchContact(c appengine.Context, r *http.Request) ([]models.Contact, error) {
+func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, error) {
 	decoder := json.NewDecoder(r.Body)
 	var updatedContacts []models.Contact
 	err := decoder.Decode(&updatedContacts)
@@ -435,7 +440,7 @@ func UpdateBatchContact(c appengine.Context, r *http.Request) ([]models.Contact,
 * Normalization methods
  */
 
-func UpdateContactToParent(c appengine.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
+func UpdateContactToParent(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	parentContact, err := getContact(c, r, ct.ParentContact)
 
 	if err != nil {

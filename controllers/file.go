@@ -4,8 +4,10 @@ import (
 	"errors"
 	"net/http"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/datastore"
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
@@ -19,7 +21,7 @@ import (
 * Get methods
  */
 
-func getFile(c appengine.Context, r *http.Request, id int64) (models.File, error) {
+func getFile(c context.Context, r *http.Request, id int64) (models.File, error) {
 	// Get the File by id
 	files := []models.File{}
 	fileId := datastore.NewKey(c, "File", "", id, nil)
@@ -52,7 +54,7 @@ func getFile(c appengine.Context, r *http.Request, id int64) (models.File, error
  */
 
 // Gets every single file by the user
-func GetFiles(c appengine.Context, r *http.Request) ([]models.File, error) {
+func GetFiles(c context.Context, r *http.Request) ([]models.File, error) {
 	files := []models.File{}
 
 	user, err := GetCurrentUser(c, r)
@@ -71,7 +73,7 @@ func GetFiles(c appengine.Context, r *http.Request) ([]models.File, error) {
 	return files, nil
 }
 
-func GetFile(c appengine.Context, r *http.Request, id string) (models.File, error) {
+func GetFile(c context.Context, r *http.Request, id string) (models.File, error) {
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {

@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"appengine"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine"
 
 	"github.com/gorilla/mux"
 
@@ -15,7 +17,7 @@ import (
 	"github.com/news-ai/tabulae/utils"
 )
 
-func handleEmail(c appengine.Context, r *http.Request, id string) (interface{}, error) {
+func handleEmail(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetEmail(c, r, id)
@@ -25,7 +27,7 @@ func handleEmail(c appengine.Context, r *http.Request, id string) (interface{}, 
 	return nil, fmt.Errorf("method not implemented")
 }
 
-func handleEmails(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func handleEmails(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetEmails(c, r)

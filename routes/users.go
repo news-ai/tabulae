@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"appengine"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine"
 
 	"github.com/gorilla/mux"
 
@@ -14,7 +16,7 @@ import (
 	"github.com/news-ai/tabulae/permissions"
 )
 
-func handleUser(c appengine.Context, r *http.Request, id string) (models.User, error) {
+func handleUser(c context.Context, r *http.Request, id string) (models.User, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetUser(c, r, id)
@@ -24,7 +26,7 @@ func handleUser(c appengine.Context, r *http.Request, id string) (models.User, e
 	return models.User{}, fmt.Errorf("method not implemented")
 }
 
-func handleUsers(c appengine.Context, r *http.Request) ([]models.User, error) {
+func handleUsers(c context.Context, r *http.Request) ([]models.User, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetUsers(c)

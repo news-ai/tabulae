@@ -5,13 +5,16 @@ import (
 	"errors"
 	"net/http"
 
-	"appengine"
-	"appengine/datastore"
+	"golang.org/x/net/context"
+
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/datastore"
+
+	gcontext "github.com/gorilla/context"
+	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
-
-	"github.com/gorilla/context"
 )
 
 /*
@@ -22,24 +25,26 @@ import (
 * Get methods
  */
 
-func getUser(c appengine.Context, id int64) (models.User, error) {
+func getUser(c context.Context, id int64) (models.User, error) {
 	// Get the current signed in user details by Id
-	users := []models.User{}
+	var user models.User
 	userId := datastore.NewKey(c, "User", "", id, nil)
-	ks, err := datastore.NewQuery("User").Filter("__key__ =", userId).GetAll(c, &users)
+	err := nds.Get(c, userId, &user)
+
 	if err != nil {
 		return models.User{}, err
 	}
 
-	if len(users) > 0 {
-		users[0].Id = ks[0].IntID()
-		return users[0], nil
+	if user.FirstName != "" {
+		user.Id = userId.IntID()
+		return user, nil
 	}
+
 	return models.User{}, errors.New("No user by this id")
 }
 
 // Gets every single user
-func getUsers(c appengine.Context) ([]models.User, error) {
+func getUsers(c context.Context) ([]models.User, error) {
 	// Get the current signed in user details by Email
 	users := []models.User{}
 	ks, err := datastore.NewQuery("User").GetAll(c, &users)
@@ -57,7 +62,7 @@ func getUsers(c appengine.Context) ([]models.User, error) {
 * Filter methods
  */
 
-func filterUser(c appengine.Context, queryType, query string) (models.User, error) {
+func filterUser(c context.Context, queryType, query string) (models.User, error) {
 	// Get the current signed in user details by Id
 	users := []models.User{}
 	ks, err := datastore.NewQuery("User").Filter(queryType+" =", query).GetAll(c, &users)
@@ -80,7 +85,7 @@ func filterUser(c appengine.Context, queryType, query string) (models.User, erro
 * Get methods
  */
 
-func GetUsers(c appengine.Context) ([]models.User, error) {
+func GetUsers(c context.Context) ([]models.User, error) {
 	// Get the current user
 	users, err := getUsers(c)
 	if err != nil {
@@ -89,7 +94,7 @@ func GetUsers(c appengine.Context) ([]models.User, error) {
 	return users, nil
 }
 
-func GetUser(c appengine.Context, r *http.Request, id string) (models.User, error) {
+func GetUser(c context.Context, r *http.Request, id string) (models.User, error) {
 	// Get the details of the current user
 	switch id {
 	case "me":
@@ -111,7 +116,7 @@ func GetUser(c appengine.Context, r *http.Request, id string) (models.User, erro
 	}
 }
 
-func GetUserByEmail(c appengine.Context, email string) (models.User, error) {
+func GetUserByEmail(c context.Context, email string) (models.User, error) {
 	// Get the current user
 	user, err := filterUser(c, "Email", email)
 	if err != nil {
@@ -120,7 +125,7 @@ func GetUserByEmail(c appengine.Context, email string) (models.User, error) {
 	return user, nil
 }
 
-func GetUserByConfirmationCode(c appengine.Context, confirmationCode string) (models.User, error) {
+func GetUserByConfirmationCode(c context.Context, confirmationCode string) (models.User, error) {
 	// Get the current user
 	user, err := filterUser(c, "ConfirmationCode", confirmationCode)
 	if err != nil {
@@ -129,13 +134,13 @@ func GetUserByConfirmationCode(c appengine.Context, confirmationCode string) (mo
 	return user, nil
 }
 
-func GetCurrentUser(c appengine.Context, r *http.Request) (models.User, error) {
+func GetCurrentUser(c context.Context, r *http.Request) (models.User, error) {
 	// Get the current user
-	_, ok := context.GetOk(r, "user")
+	_, ok := gcontext.GetOk(r, "user")
 	if !ok {
 		return models.User{}, errors.New("No user logged in")
 	}
-	user := context.Get(r, "user").(models.User)
+	user := gcontext.Get(r, "user").(models.User)
 	return user, nil
 }
 
@@ -167,8 +172,8 @@ func ValidateUserPassword(r *http.Request, email string, password string) (bool,
 	return false, errors.New("User does not exist")
 }
 
-func NewOrUpdateUser(c appengine.Context, r *http.Request, email string, userDetails map[string]string) {
-	_, ok := context.GetOk(r, "user")
+func NewOrUpdateUser(c context.Context, r *http.Request, email string, userDetails map[string]string) {
+	_, ok := gcontext.GetOk(r, "user")
 	if !ok {
 		user, err := GetUserByEmail(c, email)
 		if err != nil {
@@ -182,11 +187,11 @@ func NewOrUpdateUser(c appengine.Context, r *http.Request, email string, userDet
 			user.EmailConfirmed = true
 			_, err = user.Create(c, r)
 		} else {
-			context.Set(r, "user", user)
+			gcontext.Set(r, "user", user)
 			Update(c, r, &user)
 		}
 	} else {
-		user := context.Get(r, "user").(models.User)
+		user := gcontext.Get(r, "user").(models.User)
 		Update(c, r, &user)
 	}
 }
@@ -195,14 +200,14 @@ func NewOrUpdateUser(c appengine.Context, r *http.Request, email string, userDet
 * Update methods
  */
 
-func Update(c appengine.Context, r *http.Request, u *models.User) (*models.User, error) {
+func Update(c context.Context, r *http.Request, u *models.User) (*models.User, error) {
 	if len(u.Employers) == 0 {
 		CreateAgencyFromUser(c, r, u)
 	}
 	return u, nil
 }
 
-func UpdateUser(c appengine.Context, r *http.Request, id string) (models.User, error) {
+func UpdateUser(c context.Context, r *http.Request, id string) (models.User, error) {
 	// Get the details of the current user
 	user, err := GetUser(c, r, id)
 	if err != nil {

@@ -3,8 +3,8 @@ package files
 import (
 	"net/http"
 
-	"appengine"
-	"appengine/file"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/file"
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
