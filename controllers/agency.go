@@ -8,6 +8,7 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
 	"github.com/qedus/nds"
 
@@ -46,15 +47,19 @@ func getAgency(c context.Context, id int64) (models.Agency, error) {
  */
 
 func filterAgency(c context.Context, queryType, query string) (models.Agency, error) {
-	// Get an agency by their email extension
-	var agencies []models.Agency
-
 	ks, err := datastore.NewQuery("Agency").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		return models.Agency{}, err
 	}
 
-	err = nds.GetMulti(c, ks, &agencies)
+	if len(ks) == 0 {
+		return models.Agency{}, errors.New("No agency by the field " + queryType)
+	}
+
+	var agencies []models.Agency
+	agencies = make([]models.Agency, len(ks))
+
+	err = nds.GetMulti(c, ks, agencies)
 	if err != nil {
 		return models.Agency{}, err
 	}
@@ -63,7 +68,7 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
 		agencies[0].Id = ks[0].IntID()
 		return agencies[0], nil
 	}
-	return models.Agency{}, errors.New("No agency by this " + queryType)
+	return models.Agency{}, errors.New("No agency by the field " + queryType)
 }
 
 /*
@@ -76,21 +81,24 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
 
 // Gets every single agency
 func GetAgencies(c context.Context) ([]models.Agency, error) {
-	var agencies []models.Agency
-
 	ks, err := datastore.NewQuery("Agency").KeysOnly().GetAll(c, nil)
 	if err != nil {
 		return []models.Agency{}, err
 	}
 
-	err = nds.GetMulti(c, ks, &agencies)
+	var agencies []models.Agency
+	agencies = make([]models.Agency, len(ks))
+
+	err = nds.GetMulti(c, ks, agencies)
 	if err != nil {
+		log.Infof(c, "%v", err)
 		return []models.Agency{}, err
 	}
 
 	for i := 0; i < len(agencies); i++ {
 		agencies[i].Id = ks[i].IntID()
 	}
+
 	return agencies, nil
 }
 
