@@ -17,12 +17,12 @@ import (
 	"github.com/news-ai/tabulae/utils"
 )
 
-func handleEmailAction(c context.Context, w http.ResponseWriter, r *http.Request, id string, action string) (interface{}, error) {
+func handleEmailAction(c context.Context, r *http.Request, action string, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		switch action {
 		case "send":
-			return controllers.SendEmail(c, w, r, id)
+			return controllers.SendEmail(c, r, id)
 		}
 	}
 	return nil, fmt.Errorf("method not implemented")
@@ -98,49 +98,15 @@ func EmailActionHandler(w http.ResponseWriter, r *http.Request) {
 	id, idOk := vars["id"]
 	action, actionOk := vars["action"]
 	if idOk && actionOk {
-		email, err := controllers.GetEmail(c, r, id)
-		if err != nil {
-			permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
-			return
-		}
+		val, err := handleEmailAction(c, r, action, id)
 
-		user, err := controllers.GetCurrentUser(c, r)
-		if err != nil {
-			permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
-			return
-		}
-
-		if email.CreatedBy != user.Id {
-			permissions.ReturnError(w, http.StatusForbidden, "Email handling error", "Not your email to send")
-			return
-		}
-
-		if action == "send" {
-			if email.IsSent {
-				permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", "Email already sent")
-				return
-			}
-
-			// Validate if HTML is valid
-			validHTML := utils.ValidateHTML(email.Body)
-			if !validHTML {
-				permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", "Invalid HTML")
-				return
-			}
-
-			emailSent := emails.SendEmail(r, email, user)
-			if emailSent {
-				val, err := email.MarkSent(c)
-				if err == nil {
-					err = json.NewEncoder(w).Encode(val)
-				}
-			}
+		if err == nil {
+			err = json.NewEncoder(w).Encode(val)
 		}
 
 		if err != nil {
 			permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
 			return
 		}
-
 	}
 }
