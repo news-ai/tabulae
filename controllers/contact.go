@@ -31,34 +31,35 @@ import (
 
 func getContact(c context.Context, r *http.Request, id int64) (models.Contact, error) {
 	// Get the Contact by id
-	contacts := []models.Contact{}
+	var contact models.Contact
 	contactId := datastore.NewKey(c, "Contact", "", id, nil)
 
-	err := nds.Get(c, contactId, contacts)
+	err := nds.Get(c, contactId, &contact)
 
 	if err != nil {
 		return models.Contact{}, err
 	}
-	if len(contacts) > 0 {
-		contacts[0].Id = contactId.IntID()
+
+	if contact.FirstName != "" {
+		contact.Id = contactId.IntID()
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
 			return models.Contact{}, errors.New("Could not get user")
 		}
 
-		if !permissions.AccessToObject(contacts[0].CreatedBy, user.Id) {
+		if !permissions.AccessToObject(contact.CreatedBy, user.Id) {
 			return models.Contact{}, errors.New("Forbidden")
 		}
 
 		// If there is a parent
-		if contacts[0].ParentContact != 0 {
+		if contact.ParentContact != 0 {
 			// Update information
 			// contacts[0].linkedInSync(c, r)
-			checkAgainstParent(c, r, &contacts[0])
+			checkAgainstParent(c, r, &contact)
 		}
 
-		return contacts[0], nil
+		return contact, nil
 	}
 	return models.Contact{}, errors.New("No contact by this id")
 }

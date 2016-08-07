@@ -9,6 +9,8 @@ import (
 
 	"google.golang.org/appengine/datastore"
 
+	"github.com/qedus/nds"
+
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
 )
@@ -23,15 +25,18 @@ import (
 
 func getAgency(c context.Context, id int64) (models.Agency, error) {
 	// Get the agency by id
-	agencies := []models.Agency{}
+	var agency models.Agency
 	agencyId := datastore.NewKey(c, "Agency", "", id, nil)
-	ks, err := datastore.NewQuery("Agency").Filter("__key__ =", agencyId).GetAll(c, &agencies)
+
+	err := nds.Get(c, agencyId, &agency)
+
 	if err != nil {
 		return models.Agency{}, err
 	}
-	if len(agencies) > 0 {
-		agencies[0].Id = ks[0].IntID()
-		return agencies[0], nil
+
+	if agency.Name != "" {
+		agency.Id = agencyId.IntID()
+		return agency, nil
 	}
 	return models.Agency{}, errors.New("No agency by this id")
 }
