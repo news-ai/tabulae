@@ -56,7 +56,8 @@ func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ForgetPasswordHandler(w http.ResponseWriter, r *http.Request) {
-
+	// Forget password
+	// email := r.FormValue("email")
 }
 
 // Don't start their session here, but when they login to the platform.
