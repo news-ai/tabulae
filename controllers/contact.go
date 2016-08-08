@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
-	// "time"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -113,29 +113,21 @@ func linkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*mode
 	if err != nil {
 		return ct, err
 	}
+
+	hourFromUpdate := parentContact.LinkedInUpdated.Add(time.Minute * 1)
+
 	// Update LinkedIn contact
-	// hourFromUpdate := parentContact.LinkedInUpdated.Add(time.Minute * 1)
+	if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (!parentContact.LinkedInUpdated.Before(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {
+		// Send a pub to Influencer
+		err = sync.LinkedInSync(r, parentContact.LinkedIn, parentContact.Id)
 
-	// if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (!parentContact.LinkedInUpdated.Before(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {
-	// linkedInData := sync.LinkedInSync(r, parentContact.LinkedIn)
-	sync.LinkedInSync(r, parentContact.LinkedIn)
-	// newEmployers := []int64{}
-	// // Update data through linkedin data
-	// for i := 0; i < len(linkedInData.Current); i++ {
-	// 	employerName := linkedInData.Current[i].Employer
-	// 	employer, err := FindOrCreatePublication(c, r, employerName)
-	// 	if err == nil {
-	// 		newEmployers = append(newEmployers, employer.Id)
-	// 	}
-	// }
+		if err != nil {
+			return ct, err
+		}
 
-	// parentContact.Employers = newEmployers
-	// parentContact.LinkedInUpdated = time.Now()
-	// parentContact.Save(c, r)
-
-	// ct.LinkedInUpdated = time.Now()
-	// Save(c, r, ct)
-	// }
+		// Now that we have told the Influencer program that we are syncing Linkedin data
+		parentContact.LinkedInUpdated = time.Now()
+	}
 
 	return ct, nil
 }

@@ -20,7 +20,7 @@ type LinkedInData struct {
 	} `json:"past"`
 }
 
-func LinkedInSync(r *http.Request, contactLinkedIn string) error {
+func LinkedInSync(r *http.Request, contactLinkedIn string, contactId int64) error {
 	c := appengine.NewContext(r)
 	PubsubClient, err := configurePubsub(r)
 	if err != nil {
