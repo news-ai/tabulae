@@ -13,7 +13,8 @@ import (
 	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
-	// "github.com/gorilla/csrf"
+
+	"github.com/gorilla/csrf"
 )
 
 func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -126,7 +127,12 @@ func PasswordLoginPageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	t.Execute(w, "")
+
+	data := map[string]interface{}{
+		csrf.TemplateTag: csrf.TemplateField(r),
+	}
+
+	t.Execute(w, data)
 }
 
 // You have to be logged out in order to register a new user
@@ -152,9 +158,13 @@ func PasswordRegisterPageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	data := map[string]interface{}{
+		csrf.TemplateTag: csrf.TemplateField(r),
+	}
+
 	t := template.New("register.html")
 	t, _ = t.ParseFiles("auth/register.html")
-	t.Execute(w, "")
+	t.Execute(w, data)
 }
 
 func EmailConfirmationHandler(w http.ResponseWriter, r *http.Request) {

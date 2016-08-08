@@ -2,10 +2,11 @@ package tabulae
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
-	// "github.com/gorilla/csrf"
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
@@ -51,7 +52,7 @@ func init() {
 	}
 
 	// Setup CSRF for auth
-	// CSRF := csrf.Protect([]byte(os.Getenv("CSRFKEY")))
+	CSRF := csrf.Protect([]byte(os.Getenv("CSRFKEY")), csrf.Secure(false))
 
 	// Register authentication route
 	// Login with Google-based authentication
@@ -79,14 +80,14 @@ func init() {
 
 	// Security fixes
 	secureMiddleware := secure.New(secure.Options{
-		FrameDeny:             true,
-		ContentSecurityPolicy: "default-src 'self'",
-		BrowserXssFilter:      true,
+		FrameDeny: true,
+		// ContentSecurityPolicy: "default-src 'self'",
+		BrowserXssFilter: true,
 	})
 
 	// HTTP router
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 	app.Use(negroni.HandlerFunc(secureMiddleware.HandlerFuncWithNext))
 	app.UseHandler(main)
-	http.Handle("/", context.ClearHandler(app))
+	http.Handle("/", CSRF(context.ClearHandler(app)))
 }
