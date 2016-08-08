@@ -10,7 +10,7 @@
 <div class="container">
     <div class="row">
         <div class="col-xs-12 col-sm-8 col-md-6 col-sm-offset-2 col-md-offset-3">
-            <form role="form" method="post" action="auth/userlogin">
+            <form role="form" method="post" action="auth/userforget">
                 {{ .csrfField }}
                 <h2>NewsAI <small>Tabulae</small></h2>
                 <hr class="colorgraph">
@@ -24,12 +24,9 @@
                 </div>
                 <hr class="colorgraph">
                 <div class="row">
-                    <div class="col-xs-12 col-md-6"><input type="submit" value="Login" class="btn btn-primary btn-block btn-lg" tabindex="6"></div>
-                    <div class="col-xs-12 col-md-6"><a href="/api/auth/registration" class="btn btn-success btn-block btn-lg">Register</a></div>
+                    <div class="col-xs-12 col-md-6"><input type="submit" value="Reset Password" class="btn btn-primary btn-block btn-lg" tabindex="6"></div>
                 </div>
             </form>
-            <br>
-            <p style="text-align:center;"><a href="/api/auth/forget">Forgot password<a></p>
         </div>
     </div>
 </div>

@@ -62,8 +62,10 @@ func init() {
 	// User registration based authentication
 	api.HandleFunc("/auth/userlogin", auth.PasswordLoginHandler)
 	api.HandleFunc("/auth/userregister", auth.PasswordRegisterHandler)
+	api.HandleFunc("/auth/userforget", auth.ForgetPasswordHandler)
 	api.HandleFunc("/auth", auth.PasswordLoginPageHandler)
 	api.HandleFunc("/auth/registration", auth.PasswordRegisterPageHandler)
+	api.HandleFunc("/auth/forget", auth.ForgetPasswordPageHandler)
 	api.HandleFunc("/auth/confirmation", auth.EmailConfirmationHandler)
 
 	// Common

@@ -55,6 +55,10 @@ func PasswordLoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/api/auth?success=false&message="+wrongPasswordMessage, 302)
 }
 
+func ForgetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+
 // Don't start their session here, but when they login to the platform.
 // This is just to give them the ability to register an account.
 func PasswordRegisterHandler(w http.ResponseWriter, r *http.Request) {
@@ -164,6 +168,37 @@ func PasswordRegisterPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	t := template.New("register.html")
 	t, _ = t.ParseFiles("auth/register.html")
+	t.Execute(w, data)
+}
+
+func ForgetPasswordPageHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	_, err := controllers.GetCurrentUser(c, r)
+
+	if r.URL.Query().Get("next") != "" {
+		session, _ := Store.Get(r, "sess")
+		session.Values["next"] = r.URL.Query().Get("next")
+		session.Save(r, w)
+
+		// If there is a next and the user has been logged in
+		if err == nil {
+			http.Redirect(w, r, r.URL.Query().Get("next"), 302)
+			return
+		}
+	}
+
+	// If there is no next and the user is logged in
+	if err == nil {
+		http.Redirect(w, r, "/", 302)
+		return
+	}
+
+	data := map[string]interface{}{
+		csrf.TemplateTag: csrf.TemplateField(r),
+	}
+
+	t := template.New("forget.html")
+	t, _ = t.ParseFiles("auth/forget.html")
 	t.Execute(w, data)
 }
 
