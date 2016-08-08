@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
-	"time"
+	// "time"
 
 	"golang.org/x/net/context"
 
@@ -50,13 +50,6 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 
 		if !permissions.AccessToObject(contact.CreatedBy, user.Id) {
 			return models.Contact{}, errors.New("Forbidden")
-		}
-
-		// If there is a parent
-		if contact.ParentContact != 0 {
-			// Update information
-			contact.linkedInSync(c, r)
-			checkAgainstParent(c, r, &contact)
 		}
 
 		return contact, nil
@@ -254,6 +247,10 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 		return models.Contact{}, err
 	}
 
+	if contact.LinkedIn != "" {
+		linkedInSync(c, r, &contact)
+	}
+
 	return contact, nil
 }
 
@@ -271,7 +268,7 @@ func Create(c context.Context, r *http.Request, ct models.Contact) (models.Conta
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, &ct, r)
-		// ct.linkedInSync(c, r)
+		linkedInSync(c, r, &ct)
 		checkAgainstParent(c, r, &ct)
 	}
 
@@ -287,11 +284,6 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error)
 	var contact models.Contact
 	err := decoder.Decode(&contact)
 
-	currentUser, err := GetCurrentUser(c, r)
-	if err != nil {
-		return []models.Contact{}, err
-	}
-
 	// If it is an array and you need to do BATCH processing
 	if err != nil {
 		var contacts []models.Contact
@@ -306,7 +298,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error)
 
 		newContacts := []models.Contact{}
 		for i := 0; i < len(contacts); i++ {
-			_, err = contacts[i].Create(c, r, currentUser)
+			_, err = Create(c, r, contacts[i])
 			if err != nil {
 				return []models.Contact{}, err
 			}
@@ -317,7 +309,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error)
 	}
 
 	// Create contact
-	_, err = contact.Create(c, r, currentUser)
+	_, err = Create(c, r, contact)
 	if err != nil {
 		return []models.Contact{}, err
 	}
@@ -336,7 +328,7 @@ func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Conta
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, ct, r)
-		// ct.linkedInSync(c, r)
+		linkedInSync(c, r, ct)
 		checkAgainstParent(c, r, ct)
 	}
 

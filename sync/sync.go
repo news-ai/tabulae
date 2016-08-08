@@ -22,12 +22,9 @@ type LinkedInData struct {
 
 func LinkedInSync(r *http.Request, contactLinkedIn string) error {
 	c := appengine.NewContext(r)
-
-	if PubsubClient == nil {
-		err := configurePubsub()
-		if err != nil {
-			return err
-		}
+	PubsubClient, err := configurePubsub(r)
+	if err != nil {
+		return err
 	}
 
 	topic := PubsubClient.Topic(PubsubTopicID)
@@ -35,6 +32,7 @@ func LinkedInSync(r *http.Request, contactLinkedIn string) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 
 	// url := "http://influencer.newsai.org/"
