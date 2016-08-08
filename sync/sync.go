@@ -28,33 +28,10 @@ func LinkedInSync(r *http.Request, contactLinkedIn string) error {
 	}
 
 	topic := PubsubClient.Topic(PubsubTopicID)
-	_, err := topic.Publish(c, &pubsub.Message{Data: []byte(contactLinkedIn)})
+	_, err = topic.Publish(c, &pubsub.Message{Data: []byte(contactLinkedIn)})
 	if err != nil {
 		return err
 	}
 
 	return nil
-
-	// url := "http://influencer.newsai.org/"
-
-	// var jsonStr = []byte(`{"url": "` + contactLinkedIn + `"}`)
-	// req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-
-	// client := urlfetch.Client(c)
-	// resp, err := client.Do(req)
-
-	// if err != nil {
-	// 	return LinkedInData{}, err
-	// }
-
-	// defer resp.Body.Close()
-
-	// decoder := json.NewDecoder(resp.Body)
-	// var linkedInData LinkedInData
-	// err = decoder.Decode(&linkedInData)
-	// if err != nil {
-	// 	return LinkedInData{}, err
-	// }
-
-	// return linkedInData, nil
 }
