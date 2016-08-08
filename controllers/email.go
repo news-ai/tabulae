@@ -209,13 +209,29 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, error
 		return []models.Email{}, err
 	}
 
-	newEmails := []models.Email{}
+	// Get logged in user
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return []models.Email{}, errors.New("Could not get user")
+	}
+
+	currentEmails := []models.Email{}
 	for i := 0; i < len(updatedEmails); i++ {
 		email, err := getEmail(c, r, updatedEmails[i].Id)
 		if err != nil {
 			return []models.Email{}, err
 		}
-		updatedEmail, err := UpdateEmail(c, &email, updatedEmails[i])
+
+		if !permissions.AccessToObject(email.CreatedBy, user.Id) {
+			return []models.Email{}, errors.New("Forbidden")
+		}
+
+		currentEmails = append(currentEmails, email)
+	}
+
+	newEmails := []models.Email{}
+	for i := 0; i < len(updatedEmails); i++ {
+		updatedEmail, err := UpdateEmail(c, &currentEmails[i], updatedEmails[i])
 		if err != nil {
 			return []models.Email{}, err
 		}

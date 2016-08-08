@@ -344,7 +344,11 @@ func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Conta
 	return ct, nil
 }
 
-func UpdateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) models.Contact {
+func UpdateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, error) {
+	if contact.CreatedBy != updatedContact.CreatedBy {
+		return *contact, errors.New("You don't have permissions to edit this object")
+	}
+
 	utils.UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
 	utils.UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
 	utils.UpdateIfNotBlank(&contact.Email, updatedContact.Email)
@@ -369,7 +373,7 @@ func UpdateContact(c context.Context, r *http.Request, contact *models.Contact, 
 
 	Save(c, r, contact)
 
-	return *contact
+	return *contact, nil
 }
 
 func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.Contact, error) {
@@ -385,7 +389,7 @@ func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.
 	}
 
 	if !permissions.AccessToObject(contact.CreatedBy, user.Id) {
-		return models.Contact{}, errors.New("Forbidden")
+		return models.Contact{}, errors.New("You don't have permissions to edit these objects")
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -395,7 +399,7 @@ func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.
 		return models.Contact{}, err
 	}
 
-	return UpdateContact(c, r, &contact, updatedContact), nil
+	return UpdateContact(c, r, &contact, updatedContact)
 }
 
 func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, error) {
@@ -430,7 +434,11 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, e
 	// Update each of the contacts
 	newContacts := []models.Contact{}
 	for i := 0; i < len(updatedContacts); i++ {
-		updatedContact := UpdateContact(c, r, &currentContacts[i], updatedContacts[i])
+		updatedContact, err := UpdateContact(c, r, &currentContacts[i], updatedContacts[i])
+		if err != nil {
+			return []models.Contact{}, err
+		}
+
 		newContacts = append(newContacts, updatedContact)
 	}
 
