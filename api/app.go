@@ -8,6 +8,7 @@ import (
 	// "github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	"github.com/unrolled/secure"
 
 	"github.com/news-ai/tabulae/auth"
 	"github.com/news-ai/tabulae/middleware"
@@ -76,8 +77,16 @@ func init() {
 	main.PathPrefix("/api").Handler(negroni.New(negroni.Wrap(api)))
 	main.HandleFunc("/", routes.NotFoundHandler)
 
+	// Security fixes
+	secureMiddleware := secure.New(secure.Options{
+		FrameDeny:             true,
+		ContentSecurityPolicy: "default-src 'self'",
+		BrowserXssFilter:      true,
+	})
+
 	// HTTP router
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
+	app.Use(negroni.HandlerFunc(secureMiddleware.HandlerFuncWithNext))
 	app.UseHandler(main)
 	http.Handle("/", context.ClearHandler(app))
 }
