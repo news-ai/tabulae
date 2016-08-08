@@ -12,6 +12,7 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
 	"github.com/qedus/nds"
 
@@ -122,11 +123,13 @@ func linkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*mode
 		err = sync.LinkedInSync(r, parentContact.LinkedIn, parentContact.Id)
 
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return ct, err
 		}
 
 		// Now that we have told the Influencer program that we are syncing Linkedin data
 		parentContact.LinkedInUpdated = time.Now()
+		parentContact.Save(c, r)
 	}
 
 	return ct, nil
@@ -240,7 +243,10 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 	}
 
 	if contact.LinkedIn != "" {
-		linkedInSync(c, r, &contact)
+		_, err = linkedInSync(c, r, &contact)
+		if err != nil {
+			log.Errorf(c, "%v", err.Error())
+		}
 	}
 
 	return contact, nil
