@@ -12,9 +12,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/permissions"
-	"github.com/news-ai/tabulae/utils"
 )
 
 func handleEmailAction(c context.Context, r *http.Request, action string, id string) (interface{}, error) {
