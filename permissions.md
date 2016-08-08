@@ -54,9 +54,9 @@ Endpoints
 
     - GET -> returns back all information about your own emails
     - POST -> Create a new email
-    - PATCH -> Anyone logged in can update anyone's email (FIX)
+    - PATCH -> Anyone logged in can update anyone's email
 
 - `/api/emails/<id>` (GET, PATCH)
 
-    - GET -> Anyone can get anyone's email (FIX)
-    - PATCH -> Anyone logged in can update anyone's email (FIX)
+    - GET -> Anyone can get anyone's email
+    - PATCH -> Anyone logged in can update anyone's email
