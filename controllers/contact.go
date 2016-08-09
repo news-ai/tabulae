@@ -35,6 +35,8 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 	var contact models.Contact
 	contactId := datastore.NewKey(c, "Contact", "", id, nil)
 
+	log.Infof(c, "%v", id)
+
 	err := nds.Get(c, contactId, &contact)
 
 	if err != nil {
@@ -110,12 +112,16 @@ func checkAgainstParent(c context.Context, r *http.Request, ct *models.Contact) 
 }
 
 func linkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
+	if ct.ParentContact == 0 {
+		return ct, nil
+	}
+
 	parentContact, err := getContact(c, r, ct.ParentContact)
 	if err != nil {
 		return ct, err
 	}
 
-	hourFromUpdate := parentContact.LinkedInUpdated.Add(time.Minute * 1)
+	hourFromUpdate := parentContact.LinkedInUpdated.Add(time.Hour * 1)
 
 	// Update LinkedIn contact
 	if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (!parentContact.LinkedInUpdated.Before(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {

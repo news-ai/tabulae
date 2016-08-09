@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 	"google.golang.org/cloud/pubsub"
 )
 
@@ -34,6 +35,9 @@ func LinkedInSync(r *http.Request, contactLinkedIn string, contactId int64) erro
 		"Id":          strconv.FormatInt(contactId, 10),
 		"linkedinUrl": contactLinkedIn,
 	}
+
+	log.Infof(c, "%v", data)
+
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return err
