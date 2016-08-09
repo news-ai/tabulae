@@ -35,8 +35,6 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 	var contact models.Contact
 	contactId := datastore.NewKey(c, "Contact", "", id, nil)
 
-	log.Infof(c, "%v", id)
-
 	err := nds.Get(c, contactId, &contact)
 
 	if err != nil {
