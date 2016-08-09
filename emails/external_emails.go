@@ -32,5 +32,7 @@ func SendEmail(r *http.Request, email models.Email, user models.User) bool {
 	request.Method = "POST"
 	request.Body = mail.GetRequestBody(m)
 
+	// Send the actual mail here
+
 	return true
 }
