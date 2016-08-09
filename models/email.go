@@ -24,6 +24,8 @@ type Email struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 
+	SendGridId string `json:"-"`
+
 	IsSent bool `json:"issent"`
 }
 
@@ -61,8 +63,9 @@ func (e *Email) Save(c context.Context) (*Email, error) {
 	return e, nil
 }
 
-func (e *Email) MarkSent(c context.Context) (*Email, error) {
+func (e *Email) MarkSent(c context.Context, emailId string) (*Email, error) {
 	e.IsSent = true
+	e.SendGridId = emailId
 	_, err := e.Save(c)
 	if err != nil {
 		return e, err

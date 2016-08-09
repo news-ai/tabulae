@@ -267,9 +267,9 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, err
 		return email, errors.New("Invalid HTML")
 	}
 
-	emailSent := emails.SendEmail(r, email, user)
+	emailSent, emailId := emails.SendEmail(r, email, user)
 	if emailSent {
-		val, err := email.MarkSent(c)
+		val, err := email.MarkSent(c, emailId)
 		if err != nil {
 			return *val, err
 		}

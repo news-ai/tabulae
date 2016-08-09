@@ -16,7 +16,7 @@ import (
 )
 
 // Send an email confirmation to a new user
-func SendEmail(r *http.Request, email models.Email, user models.User) bool {
+func SendEmail(r *http.Request, email models.Email, user models.User) (bool, string) {
 	c := appengine.NewContext(r)
 
 	sendgrid.DefaultClient.HTTPClient = urlfetch.Client(c)
@@ -36,12 +36,12 @@ func SendEmail(r *http.Request, email models.Email, user models.User) bool {
 	// Send the actual mail here
 	response, err := sendgrid.API(request)
 	if err != nil {
+		log.Errorf(c, "error: %v", err)
 		log.Errorf(c, "%v", response)
-		return false
-	} else {
-		log.Infof(c, "%v", response)
-		return true
+		return false, ""
 	}
 
-	return true
+	log.Infof(c, "%v", response)
+	emailId := request.Headers["X-Message-Id"]
+	return true, emailId
 }
