@@ -8,6 +8,7 @@ import (
 	"github.com/news-ai/tabulae/models"
 
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 
 	"github.com/sendgrid/sendgrid-go"
@@ -33,6 +34,14 @@ func SendEmail(r *http.Request, email models.Email, user models.User) bool {
 	request.Body = mail.GetRequestBody(m)
 
 	// Send the actual mail here
+	response, err := sendgrid.API(request)
+	if err != nil {
+		log.Errorf(c, "%v", response)
+		return false
+	} else {
+		log.Infof(c, "%v", response)
+		return true
+	}
 
 	return true
 }
