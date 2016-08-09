@@ -21,6 +21,7 @@ env_variables:
   SECRETSALT: 'wsgAN6KkGKthcABExraWbBgr3^3yj,M3ppEd8}MpdypV[LavR8MjWJracUNjaxWQRvH6guWXrssP4vfU*qqiwjkwsE*3t'
   SENDGRID_USER: 'newsaiorg'
   SENDGRID_KEY: 'EswwpT3vxR9i6,]yzpQP'
+  SENDGRID_API_KEY: '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'
 
 inbound_services:
 - mail

@@ -22,9 +22,11 @@ type User struct {
 
 	Employers []int64 `json:"employers"`
 
-	ConfirmationCode string `json:"-"`
-	EmailConfirmed   bool   `json:"emailconfirmed"`
-	IsAdmin          bool   `json:"-"`
+	ResetPasswordCode string `json:"-"`
+	ConfirmationCode  string `json:"-"`
+
+	EmailConfirmed bool `json:"emailconfirmed"`
+	IsAdmin        bool `json:"-"`
 }
 
 /*

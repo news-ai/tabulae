@@ -2,7 +2,7 @@ package emails
 
 import (
 	"net/http"
-	"net/mail"
+	"os"
 	"strings"
 
 	"github.com/news-ai/tabulae/models"
@@ -10,30 +10,27 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
 
-	"gopkg.in/sendgrid/sendgrid-go.v2"
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
 // Send an email confirmation to a new user
 func SendEmail(r *http.Request, email models.Email, user models.User) bool {
 	c := appengine.NewContext(r)
-	sg.Client = urlfetch.Client(c)
+
+	sendgrid.DefaultClient.HTTPClient = urlfetch.Client(c)
 
 	userFullName := strings.Join([]string{user.FirstName, user.LastName}, " ")
-	var fromEmail = mail.Address{Name: userFullName, Address: user.Email}
-
 	emailFullName := strings.Join([]string{email.FirstName, email.LastName}, " ")
 
-	m := sendgrid.NewMail()
-	m.AddTo(email.To)
-	m.AddToName(emailFullName)
-	m.SetSubject(email.Subject)
-	m.SetHTML(email.Body)
-	m.SetFrom(fromEmail.String())
-	m.SetReplyTo(fromEmail.Name)
-	m.SetReplyToEmail(&fromEmail)
+	from := mail.NewEmail(userFullName, user.Email)
+	to := mail.NewEmail(emailFullName, email.To)
+	content := mail.NewContent("text/html", email.Body)
+	m := mail.NewV3MailInit(from, email.Subject, to, content)
 
-	if err := sg.Send(m); err != nil {
-		return false
-	}
+	request := sendgrid.GetRequest(os.Getenv("SENDGRID_API_KEY"), "/v3/mail/send", "https://api.sendgrid.com")
+	request.Method = "POST"
+	request.Body = mail.GetRequestBody(m)
+
 	return true
 }
