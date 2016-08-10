@@ -462,3 +462,27 @@ func UpdateContactToParent(c context.Context, r *http.Request, ct *models.Contac
 
 	return ct, nil
 }
+
+func LinkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
+	if ct.ParentContact == 0 {
+		return ct, nil
+	}
+
+	parentContact, err := getContact(c, r, ct.ParentContact)
+	if err != nil {
+		return ct, err
+	}
+
+	// Send a pub to Influencer
+	err = sync.LinkedInSync(r, parentContact.LinkedIn, parentContact.Id)
+
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return ct, err
+	}
+
+	// Now that we have told the Influencer program that we are syncing Linkedin data
+	parentContact.LinkedInUpdated = time.Now()
+	parentContact.Save(c, r)
+	return ct, nil
+}

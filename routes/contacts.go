@@ -137,6 +137,18 @@ func ContactActionHandler(w http.ResponseWriter, r *http.Request) {
 				permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
 				return
 			}
+		} else if action == "sync" {
+			val, err := controllers.LinkedInSync(c, r, &contact)
+
+			if err == nil {
+				err = json.NewEncoder(w).Encode(val)
+				return
+			}
+
+			if err != nil {
+				permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+				return
+			}
 		}
 
 		permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", "Only actions are diff and update")
