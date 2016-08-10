@@ -102,7 +102,7 @@ func checkAgainstParent(c context.Context, r *http.Request, ct *models.Contact) 
 		}
 
 		// See differences in parent and child contact
-		if !reflect.DeepEqual(ct.Employers, parentContact.Employers) {
+		if !reflect.DeepEqual(ct.Employers, parentContact.Employers) || !reflect.DeepEqual(ct.PastEmployers, parentContact.PastEmployers) {
 			ct.IsOutdated = true
 			Save(c, r, ct)
 		}
@@ -125,7 +125,7 @@ func linkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*mode
 	hourFromUpdate := parentContact.LinkedInUpdated.Add(time.Hour * 1)
 
 	// Update LinkedIn contact
-	if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (!parentContact.LinkedInUpdated.Before(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {
+	if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (time.Now().After(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {
 		// Send a pub to Influencer
 		err = sync.LinkedInSync(r, parentContact.LinkedIn, parentContact.Id)
 
@@ -254,6 +254,8 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 		if err != nil {
 			log.Errorf(c, "%v", err.Error())
 		}
+
+		checkAgainstParent(c, r, &contact)
 	}
 
 	return contact, nil
