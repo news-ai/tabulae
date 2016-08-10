@@ -31,6 +31,9 @@ import (
  */
 
 func getContact(c context.Context, r *http.Request, id int64) (models.Contact, error) {
+	if id == 0 {
+		return models.Contact{}, errors.New("datastore: no such entity")
+	}
 	// Get the Contact by id
 	var contact models.Contact
 	contactId := datastore.NewKey(c, "Contact", "", id, nil)
@@ -41,7 +44,7 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 		return models.Contact{}, err
 	}
 
-	if contact.FirstName != "" {
+	if !contact.Created.IsZero() {
 		contact.Id = contactId.IntID()
 
 		user, err := GetCurrentUser(c, r)
