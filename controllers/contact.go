@@ -191,7 +191,7 @@ func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Re
 			newMasterContact.IsMasterContact = true
 
 			// Create the new master contact
-			Create(c, r, newMasterContact)
+			Create(c, r, &newMasterContact)
 
 			// Do a social sync task when new master contact is added
 
@@ -263,7 +263,7 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 * Create methods
  */
 
-func Create(c context.Context, r *http.Request, ct models.Contact) (models.Contact, error) {
+func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		return ct, err
@@ -272,12 +272,12 @@ func Create(c context.Context, r *http.Request, ct models.Contact) (models.Conta
 	ct.Create(c, r, currentUser)
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
-		findOrCreateMasterContact(c, &ct, r)
-		linkedInSync(c, r, &ct)
-		checkAgainstParent(c, r, &ct)
+		findOrCreateMasterContact(c, ct, r)
+		linkedInSync(c, r, ct)
+		checkAgainstParent(c, r, ct)
 	}
 
-	_, err = Save(c, r, &ct)
+	_, err = Save(c, r, ct)
 	return ct, err
 }
 
@@ -303,7 +303,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error)
 
 		newContacts := []models.Contact{}
 		for i := 0; i < len(contacts); i++ {
-			_, err = Create(c, r, contacts[i])
+			_, err = Create(c, r, &contacts[i])
 			if err != nil {
 				return []models.Contact{}, err
 			}
@@ -314,7 +314,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error)
 	}
 
 	// Create contact
-	_, err = Create(c, r, contact)
+	_, err = Create(c, r, &contact)
 	if err != nil {
 		return []models.Contact{}, err
 	}
