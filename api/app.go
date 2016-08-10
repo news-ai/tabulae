@@ -2,11 +2,11 @@ package tabulae
 
 import (
 	"net/http"
-	// "os"
+	"os"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
-	// "github.com/gorilla/csrf"
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
@@ -34,8 +34,13 @@ func init() {
 	})
 	app.Use(c)
 
+	// Initialize CSRF
+	CSRF := csrf.Protect([]byte(os.Getenv("CSRFKEY")), csrf.Secure(false))
+
+	r := mux.NewRouter().StrictSlash(true)
+
 	// API router
-	api := mux.NewRouter().PathPrefix("/api").Subrouter().StrictSlash(true)
+	api := r.PathPrefix("/api").Subrouter().StrictSlash(true)
 
 	// Register routes
 	apiRoutes := router.GetRoutes()
@@ -51,25 +56,24 @@ func init() {
 		}
 	}
 
-	// Setup CSRF for auth
-	// CSRF := csrf.Protect([]byte(os.Getenv("CSRFKEY")), csrf.Secure(false))
+	// Authentication
+	apiAuth := r.PathPrefix("/api/auth").Subrouter().StrictSlash(true)
 
-	// Register authentication route
+	// Password based authentication
+	apiAuth.Handle("/", CSRF(auth.PasswordLoginPageHandler()))
+	apiAuth.Handle("/userlogin", CSRF(auth.PasswordLoginHandler()))
+	apiAuth.Handle("/userregister", CSRF(auth.PasswordRegisterHandler()))
+	apiAuth.Handle("/userforget", CSRF(auth.ForgetPasswordHandler()))
+	apiAuth.Handle("/registration", CSRF(auth.PasswordRegisterPageHandler()))
+	apiAuth.Handle("/forget", CSRF(auth.ForgetPasswordPageHandler()))
+	apiAuth.Handle("/confirmation", CSRF(auth.EmailConfirmationHandler()))
+
 	// Login with Google-based authentication
-	api.HandleFunc("/auth/google", auth.GoogleLoginHandler)
-	api.HandleFunc("/auth/callback", auth.GoogleCallbackHandler)
-
-	// User registration based authentication
-	api.HandleFunc("/auth/userlogin", auth.PasswordLoginHandler)
-	api.HandleFunc("/auth/userregister", auth.PasswordRegisterHandler)
-	api.HandleFunc("/auth/userforget", auth.ForgetPasswordHandler)
-	api.HandleFunc("/auth", auth.PasswordLoginPageHandler)
-	api.HandleFunc("/auth/registration", auth.PasswordRegisterPageHandler)
-	api.HandleFunc("/auth/forget", auth.ForgetPasswordPageHandler)
-	api.HandleFunc("/auth/confirmation", auth.EmailConfirmationHandler)
+	apiAuth.HandleFunc("/google", auth.GoogleLoginHandler)
+	apiAuth.HandleFunc("/callback", auth.GoogleCallbackHandler)
 
 	// Common
-	api.HandleFunc("/auth/logout", auth.LogoutHandler)
+	apiAuth.HandleFunc("/logout", auth.LogoutHandler)
 
 	// Initialize the environment for a particular URL
 	utils.InitURL()
@@ -77,7 +81,7 @@ func init() {
 
 	// Main router
 	main := mux.NewRouter().StrictSlash(true)
-	main.PathPrefix("/api").Handler(negroni.New(negroni.Wrap(api)))
+	main.PathPrefix("/api").Handler(negroni.New(negroni.Wrap(r)))
 	main.HandleFunc("/", routes.NotFoundHandler)
 
 	// Security fixes
