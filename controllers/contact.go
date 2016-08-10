@@ -343,10 +343,6 @@ func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Conta
 }
 
 func UpdateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, error) {
-	if contact.CreatedBy != updatedContact.CreatedBy {
-		return *contact, errors.New("You don't have permissions to edit this object")
-	}
-
 	utils.UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
 	utils.UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
 	utils.UpdateIfNotBlank(&contact.Email, updatedContact.Email)
