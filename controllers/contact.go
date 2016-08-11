@@ -52,7 +52,7 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 			return models.Contact{}, errors.New("Could not get user")
 		}
 
-		if !permissions.AccessToObject(contact.CreatedBy, user.Id) {
+		if !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
 			return models.Contact{}, errors.New("Forbidden")
 		}
 
@@ -112,7 +112,7 @@ func checkAgainstParent(c context.Context, r *http.Request, ct *models.Contact) 
 	return ct, nil
 }
 
-func linkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
+func linkedInSync(c context.Context, r *http.Request, ct *models.Contact, justCreated bool) (*models.Contact, error) {
 	if ct.ParentContact == 0 {
 		return ct, nil
 	}
@@ -127,7 +127,7 @@ func linkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*mode
 	// Update LinkedIn contact
 	if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (time.Now().After(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {
 		// Send a pub to Influencer
-		err = sync.LinkedInSync(r, parentContact.LinkedIn, parentContact.Id)
+		err = sync.LinkedInSync(r, parentContact.LinkedIn, parentContact.Id, justCreated)
 
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -250,7 +250,7 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 	}
 
 	if contact.LinkedIn != "" {
-		_, err = linkedInSync(c, r, &contact)
+		_, err = linkedInSync(c, r, &contact, false)
 		if err != nil {
 			log.Errorf(c, "%v", err.Error())
 		}
@@ -275,7 +275,7 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, ct, r)
-		linkedInSync(c, r, ct)
+		linkedInSync(c, r, ct, true)
 		checkAgainstParent(c, r, ct)
 	}
 
@@ -335,7 +335,7 @@ func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Conta
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, ct, r)
-		linkedInSync(c, r, ct)
+		linkedInSync(c, r, ct, false)
 		checkAgainstParent(c, r, ct)
 	}
 
@@ -474,7 +474,7 @@ func LinkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*mode
 	}
 
 	// Send a pub to Influencer
-	err = sync.LinkedInSync(r, parentContact.LinkedIn, parentContact.Id)
+	err = sync.LinkedInSync(r, parentContact.LinkedIn, parentContact.Id, false)
 
 	if err != nil {
 		log.Errorf(c, "%v", err)

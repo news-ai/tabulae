@@ -23,7 +23,7 @@ type LinkedInData struct {
 	} `json:"past"`
 }
 
-func LinkedInSync(r *http.Request, contactLinkedIn string, contactId int64) error {
+func LinkedInSync(r *http.Request, contactLinkedIn string, contactId int64, justCreated bool) error {
 	c := appengine.NewContext(r)
 	PubsubClient, err := configurePubsub(r)
 	if err != nil {
@@ -34,6 +34,7 @@ func LinkedInSync(r *http.Request, contactLinkedIn string, contactId int64) erro
 	data := map[string]string{
 		"Id":          strconv.FormatInt(contactId, 10),
 		"linkedinUrl": contactLinkedIn,
+		"justCreated": strconv.FormatBool(justCreated),
 	}
 
 	log.Infof(c, "%v", data)
