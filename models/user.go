@@ -19,6 +19,7 @@ type User struct {
 	LastName  string `json:"lastname"`
 
 	Password []byte `json:"-"`
+	ApiKey   string `json:"-"`
 
 	Employers []int64 `json:"employers"`
 

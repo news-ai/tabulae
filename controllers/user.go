@@ -125,6 +125,15 @@ func GetUserByEmail(c context.Context, email string) (models.User, error) {
 	return user, nil
 }
 
+func GetUserByApiKey(c context.Context, apiKey string) (models.User, error) {
+	// Get the current user
+	user, err := filterUser(c, "ApiKey", apiKey)
+	if err != nil {
+		return models.User{}, err
+	}
+	return user, nil
+}
+
 func GetUserByConfirmationCode(c context.Context, confirmationCode string) (models.User, error) {
 	// Get the current user
 	user, err := filterUser(c, "ConfirmationCode", confirmationCode)
@@ -194,6 +203,17 @@ func NewOrUpdateUser(c context.Context, r *http.Request, email string, userDetai
 		user := gcontext.Get(r, "user").(models.User)
 		Update(c, r, &user)
 	}
+}
+
+func GetUserFromApiKey(r *http.Request, ApiKey string) (models.User, error) {
+	c := appengine.NewContext(r)
+	user, err := GetUserByApiKey(c, ApiKey)
+
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
 }
 
 /*
