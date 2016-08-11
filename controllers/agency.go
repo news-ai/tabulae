@@ -25,6 +25,9 @@ import (
  */
 
 func getAgency(c context.Context, id int64) (models.Agency, error) {
+	if id == 0 {
+		return models.Agency{}, errors.New("datastore: no such entity")
+	}
 	// Get the agency by id
 	var agency models.Agency
 	agencyId := datastore.NewKey(c, "Agency", "", id, nil)
@@ -35,7 +38,7 @@ func getAgency(c context.Context, id int64) (models.Agency, error) {
 		return models.Agency{}, err
 	}
 
-	if agency.Name != "" {
+	if !agency.Created.IsZero() {
 		agency.Id = agencyId.IntID()
 		return agency, nil
 	}

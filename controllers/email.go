@@ -12,6 +12,8 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 
+	"github.com/qedus/nds"
+
 	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/permissions"
@@ -27,26 +29,32 @@ import (
  */
 
 func getEmail(c context.Context, r *http.Request, id int64) (models.Email, error) {
+	if id == 0 {
+		return models.Email{}, errors.New("datastore: no such entity")
+	}
 	// Get the email by id
-	emails := []models.Email{}
+	var email models.Email
 	emailId := datastore.NewKey(c, "Email", "", id, nil)
-	ks, err := datastore.NewQuery("Email").Filter("__key__ =", emailId).GetAll(c, &emails)
+
+	err := nds.Get(c, emailId, &email)
+
 	if err != nil {
 		return models.Email{}, err
 	}
-	if len(emails) > 0 {
-		emails[0].Id = ks[0].IntID()
+
+	if !email.Created.IsZero() {
+		email.Id = emailId.IntID()
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
 			return models.Email{}, errors.New("Could not get user")
 		}
 
-		if !permissions.AccessToObject(emails[0].CreatedBy, user.Id) {
+		if !permissions.AccessToObject(email.CreatedBy, user.Id) {
 			return models.Email{}, errors.New("Forbidden")
 		}
 
-		return emails[0], nil
+		return email, nil
 	}
 	return models.Email{}, errors.New("No email by this id")
 }
