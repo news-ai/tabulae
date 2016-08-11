@@ -165,7 +165,7 @@ func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact,
 	return models.Contact{}, errors.New("No contact by this " + queryType)
 }
 
-func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Request) (*models.Contact, error) {
+func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Request) (*models.Contact, error, bool) {
 	// Find master contact
 	// If there is no parent contact Id or if the Linkedin field is not empty
 	if ct.ParentContact == 0 && ct.LinkedIn != "" {
@@ -198,15 +198,15 @@ func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Re
 			// Assign the Id of the parent contact to be the new master contact.
 			ct.ParentContact = newMasterContact.Id
 			ct.IsMasterContact = false
-			return ct, nil
+			return ct, nil, true
 		}
 
 		// Don't create master contact
 		ct.ParentContact = masterContact.Id
-		return ct, nil
+		return ct, nil, false
 	}
 
-	return ct, nil
+	return ct, nil, false
 }
 
 /*
@@ -274,8 +274,8 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 	ct.Create(c, r, currentUser)
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
-		findOrCreateMasterContact(c, ct, r)
-		linkedInSync(c, r, ct, true)
+		_, _, justCreated := findOrCreateMasterContact(c, ct, r)
+		linkedInSync(c, r, ct, justCreated)
 		checkAgainstParent(c, r, ct)
 	}
 
