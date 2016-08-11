@@ -25,3 +25,6 @@ env_variables:
 
 inbound_services:
 - mail
+
+automatic_scaling:
+  max_concurrent_requests: 50
