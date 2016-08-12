@@ -97,3 +97,21 @@ func (e *Email) MarkClicked(c context.Context) (*Email, error) {
 	}
 	return e, nil
 }
+
+func (e *Email) MarkDelivered(c context.Context) (*Email, error) {
+	e.Delievered = true
+	_, err := e.Save(c)
+	if err != nil {
+		return e, err
+	}
+	return e, nil
+}
+
+func (e *Email) MarkOpened(c context.Context) (*Email, error) {
+	e.Opened += 1
+	_, err := e.Save(c)
+	if err != nil {
+		return e, err
+	}
+	return e, nil
+}
