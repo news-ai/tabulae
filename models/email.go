@@ -26,6 +26,11 @@ type Email struct {
 
 	SendGridId string `json:"-"`
 
+	Delievered bool `json:"delievered"`
+	Bounce     bool `json:"bounce"`
+	Clicked    int  `json:"clicked"`
+	Opened     int  `json:"opened"`
+
 	IsSent bool `json:"issent"`
 }
 
