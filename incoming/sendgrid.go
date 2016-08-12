@@ -192,6 +192,6 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request) {
 		permissions.ReturnError(w, http.StatusInternalServerError, "SendGrid issue", "Event type did not match available")
 		return
 	}
-	permissions.ReturnError(w, http.StatusInternalServerError, "Agency handling error", "method not implemented")
+	permissions.ReturnError(w, http.StatusInternalServerError, "SendGrid handling error", "method not implemented")
 	return
 }
