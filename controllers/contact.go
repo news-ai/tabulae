@@ -52,7 +52,7 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 			return models.Contact{}, errors.New("Could not get user")
 		}
 
-		if !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
+		if !contact.IsMasterContact && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
 			return models.Contact{}, errors.New("Forbidden")
 		}
 
@@ -78,7 +78,7 @@ func filterContact(c context.Context, r *http.Request, queryType, query string) 
 			return models.Contact{}, errors.New("Could not get user")
 		}
 
-		if !permissions.AccessToObject(contacts[0].CreatedBy, user.Id) {
+		if !contacts[0].IsMasterContact && !permissions.AccessToObject(contacts[0].CreatedBy, user.Id) {
 			return models.Contact{}, errors.New("Forbidden")
 		}
 
@@ -145,7 +145,7 @@ func linkedInSync(c context.Context, r *http.Request, ct *models.Contact, justCr
 func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact, queryType, query string) (models.Contact, error) {
 	// Get an contact by a query type
 	contacts := []models.Contact{}
-	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).Filter("IsMasterContact = ", true).GetAll(c, &contacts)
+	ks, err := datastore.NewQuery("Contact").Filter(queryType+" = ", query).Filter("IsMasterContact = ", true).GetAll(c, &contacts)
 	if err != nil {
 		return models.Contact{}, err
 	}
@@ -155,7 +155,7 @@ func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact,
 			return models.Contact{}, errors.New("Could not get user")
 		}
 
-		if !permissions.AccessToObject(contacts[0].CreatedBy, user.Id) {
+		if !contacts[0].IsMasterContact && !permissions.AccessToObject(contacts[0].CreatedBy, user.Id) {
 			return models.Contact{}, errors.New("Forbidden")
 		}
 

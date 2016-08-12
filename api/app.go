@@ -12,6 +12,7 @@ import (
 	"github.com/unrolled/secure"
 
 	"github.com/news-ai/tabulae/auth"
+	"github.com/news-ai/tabulae/incoming"
 	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/router"
 	"github.com/news-ai/tabulae/routes"
@@ -78,6 +79,12 @@ func init() {
 	// Initialize the environment for a particular URL
 	utils.InitURL()
 	auth.SetRedirectURL()
+
+	// Incoming from other services
+	// Authentication is done through basic authentication
+	apiIncoming := r.PathPrefix("/api/incoming").Subrouter().StrictSlash(true)
+
+	apiIncoming.HandleFunc("/sendgrid", incoming.SendGridHandler)
 
 	// Main router
 	main := mux.NewRouter().StrictSlash(true)
