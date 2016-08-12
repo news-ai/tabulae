@@ -60,6 +60,24 @@ func getEmail(c context.Context, r *http.Request, id int64) (models.Email, error
 }
 
 /*
+* Filter methods
+ */
+
+func filterEmail(c context.Context, queryType, query string) (models.Email, error) {
+	// Get a publication by the URL
+	emails := []models.Email{}
+	ks, err := datastore.NewQuery("Email").Filter(queryType+" =", query).GetAll(c, &emails)
+	if err != nil {
+		return models.Email{}, err
+	}
+	if len(emails) > 0 {
+		emails[0].Id = ks[0].IntID()
+		return emails[0], nil
+	}
+	return models.Email{}, errors.New("No email by this " + queryType)
+}
+
+/*
 * Public methods
  */
 
@@ -160,6 +178,19 @@ func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (model
 
 	_, err := email.Save(c)
 	return email, err
+}
+
+/*
+* Filter methods
+ */
+
+func FilterEmailBySendGridID(c context.Context, sendGridId string) (models.Email, error) {
+	// Get the id of the current email
+	email, err := filterEmail(c, "SendGridId", sendGridId)
+	if err != nil {
+		return models.Email{}, err
+	}
+	return email, nil
 }
 
 /*

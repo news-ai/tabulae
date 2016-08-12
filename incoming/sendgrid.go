@@ -1,10 +1,17 @@
 package incoming
 
 import (
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
+
+	"google.golang.org/appengine"
+
+	"github.com/news-ai/tabulae/controllers"
 )
 
-type Event struct {
+type SendGridEvent struct {
 	SgMessageID string `json:"sg_message_id"`
 	Email       string `json:"email"`
 	Timestamp   int    `json:"timestamp"`
@@ -97,5 +104,43 @@ type OpenEvent struct {
 }
 
 func SendGridHandler(w http.ResponseWriter, r *http.Request) {
+	buf, _ := ioutil.ReadAll(r.Body)
+
+	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
+	decoder := json.NewDecoder(rdr1)
+	var singleEvent SendGridEvent
+	err := decoder.Decode(&singleEvent)
+
+	// If there is an error
+	if err != nil {
+	}
+
+	c := appengine.NewContext(r)
+
+	// Validate email exists with particular SendGridId
+	email, err := controllers.FilterEmailBySendGridID(c, singleEvent.SgMessageID)
+	if err != nil {
+
+	}
+
+	// Another decoder variable
+	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+	eventDecoder := json.NewDecoder(rdr2)
+
+	// Add to appropriate Email model
+	switch singleEvent.Event {
+	case "bounce":
+		var bounceEvent BounceEvent
+		err := eventDecoder.Decode(&bounceEvent)
+	case "click":
+		var clickEvent ClickEvent
+		err := eventDecoder.Decode(&clickEvent)
+	case "delivered":
+		var delieveredEvent DeliveredEvent
+		err := eventDecoder.Decode(&delieveredEvent)
+	case "open":
+		var openEvent OpenEvent
+		err := eventDecoder.Decode(&openEvent)
+	}
 
 }
