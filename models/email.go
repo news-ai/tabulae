@@ -26,10 +26,11 @@ type Email struct {
 
 	SendGridId string `json:"-"`
 
-	Delievered bool `json:"delievered"`
-	Bounced    bool `json:"bounced"`
-	Clicked    int  `json:"clicked"`
-	Opened     int  `json:"opened"`
+	Delievered    bool   `json:"delievered"`
+	BouncedReason string `json:"bouncedreason"`
+	Bounced       bool   `json:"bounced"`
+	Clicked       int    `json:"clicked"`
+	Opened        int    `json:"opened"`
 
 	IsSent bool `json:"issent"`
 }
@@ -71,6 +72,25 @@ func (e *Email) Save(c context.Context) (*Email, error) {
 func (e *Email) MarkSent(c context.Context, emailId string) (*Email, error) {
 	e.IsSent = true
 	e.SendGridId = emailId
+	_, err := e.Save(c)
+	if err != nil {
+		return e, err
+	}
+	return e, nil
+}
+
+func (e *Email) MarkBounced(c context.Context, reason string) (*Email, error) {
+	e.Bounced = true
+	e.BouncedReason = reason
+	_, err := e.Save(c)
+	if err != nil {
+		return e, err
+	}
+	return e, nil
+}
+
+func (e *Email) MarkClicked(c context.Context) (*Email, error) {
+	e.Clicked += 1
 	_, err := e.Save(c)
 	if err != nil {
 		return e, err

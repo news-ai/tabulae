@@ -132,15 +132,32 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request) {
 	case "bounce":
 		var bounceEvent BounceEvent
 		err := eventDecoder.Decode(&bounceEvent)
+
+		if err != nil {
+
+		}
+		email.MarkBounced(c, bounceEvent.Reason)
 	case "click":
 		var clickEvent ClickEvent
 		err := eventDecoder.Decode(&clickEvent)
+
+		if err != nil {
+
+		}
+		email.MarkClicked(c)
 	case "delivered":
 		var delieveredEvent DeliveredEvent
 		err := eventDecoder.Decode(&delieveredEvent)
+
+		if err != nil {
+
+		}
 	case "open":
 		var openEvent OpenEvent
 		err := eventDecoder.Decode(&openEvent)
+		if err != nil {
+
+		}
 	}
 
 }
