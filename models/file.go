@@ -14,6 +14,8 @@ type File struct {
 
 	FileName string `json:"filename"`
 	ListId   int64  `json:"listid"`
+
+	FileExists bool `json:"fileexists"`
 }
 
 type FileOrder struct {

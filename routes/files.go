@@ -13,7 +13,7 @@ import (
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/files"
-	"github.com/news-ai/tabulae/models"
+	// "github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/parse"
 	"github.com/news-ai/tabulae/permissions"
 )
@@ -93,6 +93,11 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 				val, err := parse.FileToExcelHeader(r, file)
 				if err == nil {
 					err = json.NewEncoder(w).Encode(val)
+					return
+				}
+				if err != nil {
+					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+					return
 				}
 			// case "POST":
 			// 	decoder := json.NewDecoder(r.Body)
@@ -108,9 +113,7 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		if err != nil {
-			permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
-			return
-		}
+		permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", "method not implemented")
+		return
 	}
 }
