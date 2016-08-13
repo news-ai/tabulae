@@ -453,6 +453,7 @@ func UpdateContactToParent(c context.Context, r *http.Request, ct *models.Contac
 	}
 
 	ct.Employers = parentContact.Employers
+	ct.PastEmployers = parentContact.PastEmployers
 	ct.IsOutdated = false
 	_, err = Save(c, r, ct)
 
