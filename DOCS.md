@@ -85,6 +85,36 @@ Archived is a boolean
 
 same as WorksAt.
 
+Upload
+
+`/api/lists/<id>/upload`
+
+```html
+<!DOCTYPE html>
+<html><body>
+<form action="https://tabulae.newsai.org/api/lists/5453796448665600/upload" method="POST" enctype="multipart/form-data">
+Upload File: <input type="file" name="file"><br>
+<input type="submit" name="submit" value="Submit">
+</form></body></html>
+```
+
+Sample form for uploading a excel sheet to the upload list. When you do a POST it'll return
+
+```
+{
+    "id": 5683127032741888,
+    "createdby": 5749563331706880,
+    "created": "2016-08-13T16:12:06.975990163Z",
+    "updated": "2016-08-13T16:12:06.975990513Z",
+    "filename": "5749563331706880-5722383033827328-69ehnQ8=-KSchloss-EditorList(version1).xlsx",
+    "listid": 5722383033827328
+}
+```
+
+Then you can navigate to `https://tabulae.newsai.org/api/files/5683127032741888`, which is the ID you want.
+
+Then to get the headers you can go to `https://tabulae.newsai.org/api/files/5683127032741888/headers`.
+
 —
 
 Create contact
