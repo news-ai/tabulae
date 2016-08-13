@@ -13,6 +13,7 @@ import (
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/files"
+	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/parse"
 	"github.com/news-ai/tabulae/permissions"
 )
