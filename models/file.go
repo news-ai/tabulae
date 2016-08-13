@@ -16,6 +16,10 @@ type File struct {
 	ListId   int64  `json:"listid"`
 }
 
+type FileOrder struct {
+	Order []string `json:"order"`
+}
+
 /*
 * Public methods
  */

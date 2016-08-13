@@ -113,7 +113,15 @@ Sample form for uploading a excel sheet to the upload list. When you do a POST i
 
 Then you can navigate to `https://tabulae.newsai.org/api/files/5683127032741888`, which is the ID you want.
 
-Then to get the headers you can go to `https://tabulae.newsai.org/api/files/5683127032741888/headers`.
+Then to get the headers you can do a GET request on `https://tabulae.newsai.org/api/files/5683127032741888/headers`.
+
+To set the headers you can do a POST request on `https://tabulae.newsai.org/api/files/5683127032741888/headers`.
+
+POST with data like this:
+
+```json
+{"order": ["", ""]}
+```
 
 —
 

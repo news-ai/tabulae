@@ -86,24 +86,24 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		switch r.Method {
-		case "GET":
-			if action == "headers" {
+		if action == "headers" {
+			switch r.Method {
+			case "GET":
 				val, err := parse.FileToExcelHeader(r, file)
 				if err == nil {
 					err = json.NewEncoder(w).Encode(val)
 				}
+
+			case "POST":
+				decoder := json.NewDecoder(r.Body)
+				var fileOrder models.FileOrder
+				err := decoder.Decode(&fileOrder)
+				if err != nil {
+					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+					return
+				}
+
 			}
-			// case "POST":
-			// 	if action == "header" {
-			// 		decoder := json.NewDecoder(r.Body)
-			// 		var publication models.Publication
-			// 		err := decoder.Decode(&publication)
-			// 		if err != nil {
-			// 			permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
-			// 			return
-			// 		}
-			// 	}
 		}
 
 		if err != nil {
