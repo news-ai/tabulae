@@ -25,6 +25,7 @@ type SendGridEvent struct {
 func SendGridHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
+		hasErrors := false
 		c := appengine.NewContext(r)
 
 		buf, _ := ioutil.ReadAll(r.Body)
@@ -48,6 +49,8 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request) {
 			sendGridId := strings.Split(singleEvent.SgMessageID, ".")[0]
 			email, err := controllers.FilterEmailBySendGridID(c, sendGridId)
 			if err != nil {
+				hasErrors = true
+				log.Errorf(c, "%v", singleEvent)
 				log.Errorf(c, "%v with value %v", err, sendGridId)
 			}
 
@@ -56,25 +59,43 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request) {
 			case "bounce":
 				_, err = email.MarkBounced(c, singleEvent.Reason)
 				if err != nil {
+					hasErrors = true
+					log.Errorf(c, "%v", singleEvent)
 					log.Errorf(c, "%v", err)
 				}
 			case "click":
 				_, err = email.MarkClicked(c)
 				if err != nil {
+					hasErrors = true
+					log.Errorf(c, "%v", singleEvent)
 					log.Errorf(c, "%v", err)
 				}
 			case "delivered":
 				_, err = email.MarkDelivered(c)
 				if err != nil {
+					hasErrors = true
+					log.Errorf(c, "%v", singleEvent)
 					log.Errorf(c, "%v", err)
 				}
 			case "open":
 				_, err = email.MarkOpened(c)
 				if err != nil {
+					hasErrors = true
+					log.Errorf(c, "%v", singleEvent)
 					log.Errorf(c, "%v", err)
 				}
+			default:
+				hasErrors = true
+				log.Errorf(c, "%v", singleEvent)
 			}
 		}
+
+		if hasErrors {
+			permissions.ReturnError(w, http.StatusInternalServerError, "SendGrid handling error", "Problem parsing data")
+			return
+		}
+		w.WriteHeader(200)
+		return
 	}
 
 	permissions.ReturnError(w, http.StatusInternalServerError, "SendGrid handling error", "method not implemented")
