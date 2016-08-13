@@ -50,7 +50,10 @@ func MediaListActionHandler(w http.ResponseWriter, r *http.Request) {
 		userId := strconv.FormatInt(user.Id, 10)
 
 		file, handler, err := r.FormFile("file")
-		noSpaceFileName := strings.Replace(handler.Filename, " ", "", -1)
+		noSpaceFileName := ""
+		if handler.Filename != "" {
+			noSpaceFileName = strings.Replace(handler.Filename, " ", "", -1)
+		}
 		fileName := strings.Join([]string{userId, listId, randToken(), noSpaceFileName}, "-")
 
 		val, err := files.UploadFile(r, fileName, file, userId, listId, handler.Header.Get("Content-Type"))
