@@ -99,7 +99,6 @@ func init() {
 	})
 
 	// HTTP router
-	app.Use(negroni.HandlerFunc(middleware.BasicAuthMiddleware))
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 	app.Use(negroni.HandlerFunc(secureMiddleware.HandlerFuncWithNext))
 	app.UseHandler(main)
