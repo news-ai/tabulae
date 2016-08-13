@@ -41,23 +41,34 @@ func MediaListActionHandler(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		listId, ok := vars["id"]
 		if !ok {
+			log.Errorf(c, "%v", err)
 			permissions.ReturnError(w, http.StatusInternalServerError, "Upload handling error", "List ID missing")
 			return
 		}
 
-		log.Debugf(c, "%v", user.Id)
-
 		userId := strconv.FormatInt(user.Id, 10)
 
 		file, handler, err := r.FormFile("file")
+
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			permissions.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
+			return
+		}
+
+		log.Debugf(c, "%v", file)
+		log.Debugf(c, "%v", handler)
+
 		noSpaceFileName := ""
 		if handler.Filename != "" {
 			noSpaceFileName = strings.Replace(handler.Filename, " ", "", -1)
 		}
 		fileName := strings.Join([]string{userId, listId, randToken(), noSpaceFileName}, "-")
+		log.Debugf(c, "%v", fileName)
 
 		val, err := files.UploadFile(r, fileName, file, userId, listId, handler.Header.Get("Content-Type"))
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			permissions.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
 			return
 		}
@@ -67,6 +78,7 @@ func MediaListActionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			permissions.ReturnError(w, http.StatusInternalServerError, "Upload handling error", err.Error())
 		}
 		return

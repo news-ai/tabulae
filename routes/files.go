@@ -94,16 +94,17 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 				if err == nil {
 					err = json.NewEncoder(w).Encode(val)
 				}
-
-			case "POST":
-				decoder := json.NewDecoder(r.Body)
-				var fileOrder models.FileOrder
-				err := decoder.Decode(&fileOrder)
-				if err != nil {
-					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
-					return
-				}
-
+			// case "POST":
+			// 	decoder := json.NewDecoder(r.Body)
+			// 	var fileOrder models.FileOrder
+			// 	err := decoder.Decode(&fileOrder)
+			// 	if err != nil {
+			// 		permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+			// 		return
+			// 	}
+			default:
+				permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", "method not implemented")
+				return
 			}
 		}
 
