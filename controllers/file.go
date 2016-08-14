@@ -36,7 +36,7 @@ func getFile(c context.Context, r *http.Request, id int64) (models.File, error) 
 		if err != nil {
 			return models.File{}, errors.New("Could not get user")
 		}
-		if files[0].CreatedBy != user.Id {
+		if files[0].CreatedBy != user.Id && !user.IsAdmin {
 			return models.File{}, errors.New("Forbidden")
 		}
 

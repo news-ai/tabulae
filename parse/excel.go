@@ -1,8 +1,12 @@
 package parse
 
 import (
+	"errors"
 	"net/http"
 	"strings"
+
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 
 	"github.com/tealeg/xlsx"
 )
@@ -12,12 +16,27 @@ type Column struct {
 }
 
 func FileToExcelHeader(r *http.Request, file []byte) ([]Column, error) {
+	c := appengine.NewContext(r)
+
 	xlFile, err := xlsx.OpenBinary(file)
 	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []Column{}, err
+	}
+
+	if len(xlFile.Sheets) == 0 {
+		err = errors.New("Sheet is empty")
+		log.Errorf(c, "%v", err)
 		return []Column{}, err
 	}
 
 	sheet := xlFile.Sheets[0]
+
+	if len(sheet.Rows) == 0 {
+		err = errors.New("No rows in sheet")
+		log.Errorf(c, "%v", err)
+		return []Column{}, err
+	}
 
 	// Number of rows to consider
 	numberOfRows := 15
