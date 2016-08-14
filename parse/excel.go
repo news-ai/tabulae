@@ -8,6 +8,8 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 
+	"golang.org/x/net/context"
+
 	"github.com/news-ai/tabulae/models"
 
 	"github.com/tealeg/xlsx"
@@ -70,7 +72,7 @@ func rowToContactStruct(r *http.Request, c context.Context, singleRow xlsx.Row, 
 func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string) (models.MediaList, error) {
 	c := appengine.NewContext(r)
 
-	customHeaders := []string{}
+	// customHeaders := []string{}
 
 	xlFile, err := xlsx.OpenBinary(file)
 	if err != nil {
