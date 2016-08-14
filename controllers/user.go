@@ -195,6 +195,8 @@ func NewOrUpdateUser(c context.Context, r *http.Request, email string, userDetai
 			user.LastName = userDetails["family_name"]
 			user.EmailConfirmed = true
 			_, err = user.Create(c, r)
+
+			CreateNotificationForUser(c, r)
 		} else {
 			gcontext.Set(r, "user", user)
 			Update(c, r, &user)
