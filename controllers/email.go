@@ -153,6 +153,8 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, error) {
 			if err != nil {
 				return []models.Email{}, err
 			}
+			// Logging the action happening
+			LogNotificationForResource(c, r, "Email", emails[i].Id, "CREATE", emails[i].Subject)
 			newEmails = append(newEmails, emails[i])
 		}
 
@@ -165,6 +167,8 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, error) {
 		return []models.Email{}, err
 	}
 
+	// Logging the action happening
+	LogNotificationForResource(c, r, "Email", email.Id, "CREATE", email.Subject)
 	return []models.Email{email}, nil
 }
 
@@ -177,6 +181,8 @@ func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (model
 	email.LastName = lastName
 
 	_, err := email.Save(c)
+
+	LogNotificationForResource(c, r, "Email", email.Id, "CREATE_INTERNAL", email.Subject)
 	return email, err
 }
 
@@ -197,7 +203,7 @@ func FilterEmailBySendGridID(c context.Context, sendGridId string) (models.Email
 * Update methods
  */
 
-func UpdateEmail(c context.Context, email *models.Email, updatedEmail models.Email) (models.Email, error) {
+func UpdateEmail(c context.Context, r *http.Request, email *models.Email, updatedEmail models.Email) (models.Email, error) {
 	if email.CreatedBy != updatedEmail.CreatedBy {
 		return *email, errors.New("You don't have permissions to edit this object")
 	}
@@ -211,6 +217,10 @@ func UpdateEmail(c context.Context, email *models.Email, updatedEmail models.Ema
 	}
 
 	email.Save(c)
+
+	// Logging the action happening
+	LogNotificationForResource(c, r, "Email", email.Id, "UPDATE", email.Subject)
+
 	return *email, nil
 }
 
@@ -237,7 +247,7 @@ func UpdateSingleEmail(c context.Context, r *http.Request, id string) (models.Em
 		return models.Email{}, err
 	}
 
-	return UpdateEmail(c, &email, updatedEmail)
+	return UpdateEmail(c, r, &email, updatedEmail)
 }
 
 func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, error) {
@@ -270,7 +280,7 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, error
 
 	newEmails := []models.Email{}
 	for i := 0; i < len(updatedEmails); i++ {
-		updatedEmail, err := UpdateEmail(c, &currentEmails[i], updatedEmails[i])
+		updatedEmail, err := UpdateEmail(c, r, &currentEmails[i], updatedEmails[i])
 		if err != nil {
 			return []models.Email{}, err
 		}
@@ -316,6 +326,10 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, err
 		if err != nil {
 			return *val, err
 		}
+
+		// Logging the action happening
+		LogNotificationForResource(c, r, "Email", email.Id, "SENT", email.Subject)
+
 		return *val, nil
 	}
 	return email, errors.New("Email could not be sent")
