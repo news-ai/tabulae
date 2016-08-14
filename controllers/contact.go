@@ -134,6 +134,9 @@ func linkedInSync(c context.Context, r *http.Request, ct *models.Contact, justCr
 			return ct, err
 		}
 
+		LogNotificationForResource(c, r, "Contact", ct.Id, "SYNC_LINKEDIN", ct.FirstName)
+		LogNotificationForResource(c, r, "Contact", parentContact.Id, "SYNC_LINKEDIN", parentContact.FirstName)
+
 		// Now that we have told the Influencer program that we are syncing Linkedin data
 		parentContact.LinkedInUpdated = time.Now()
 		parentContact.Save(c, r)
@@ -198,6 +201,10 @@ func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Re
 			// Assign the Id of the parent contact to be the new master contact.
 			ct.ParentContact = newMasterContact.Id
 			ct.IsMasterContact = false
+
+			// Logging the action happening
+			LogNotificationForResource(c, r, "Contact", ct.Id, "CREATE_PARENT", ct.FirstName)
+
 			return ct, nil, true
 		}
 
@@ -273,6 +280,7 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 
 	ct.Create(c, r, currentUser)
 
+	// Logging the action happening
 	LogNotificationForResource(c, r, "Contact", ct.Id, "CREATE", ct.FirstName)
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
@@ -371,6 +379,9 @@ func UpdateContact(c context.Context, r *http.Request, contact *models.Contact, 
 
 	Save(c, r, contact)
 
+	// Logging the action happening
+	LogNotificationForResource(c, r, "Contact", contact.Id, "UPDATE", contact.FirstName)
+
 	return *contact, nil
 }
 
@@ -459,6 +470,9 @@ func UpdateContactToParent(c context.Context, r *http.Request, ct *models.Contac
 	ct.IsOutdated = false
 	_, err = Save(c, r, ct)
 
+	// Logging the action happening
+	LogNotificationForResource(c, r, "Contact", ct.Id, "UPDATE_TO_PARENT", ct.FirstName)
+
 	if err != nil {
 		return ct, err
 	}
@@ -487,5 +501,10 @@ func LinkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*mode
 	// Now that we have told the Influencer program that we are syncing Linkedin data
 	parentContact.LinkedInUpdated = time.Now()
 	parentContact.Save(c, r)
+
+	// Logging the action happening
+	LogNotificationForResource(c, r, "Contact", ct.Id, "SYNC_LINKEDIN", ct.FirstName)
+	LogNotificationForResource(c, r, "Contact", parentContact.Id, "SYNC_LINKEDIN", parentContact.FirstName)
+
 	return ct, nil
 }
