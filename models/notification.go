@@ -41,7 +41,7 @@ type NotificationChange struct {
 * Create methods
  */
 
-func (n *Notification) Create(c context.Context, r *http.Request, currentUser User) (*Notification, error) {
+func (n *Notification) Create(c context.Context, currentUser User) (*Notification, error) {
 	n.CreatedBy = currentUser.Id
 	n.Created = time.Now()
 
@@ -74,7 +74,7 @@ func (n *Notification) Save(c context.Context) (*Notification, error) {
 * Create methods
  */
 
-func (no *NotificationObject) Create(c context.Context, r *http.Request, currentUser User) (*NotificationObject, error) {
+func (no *NotificationObject) Create(c context.Context, currentUser User) (*NotificationObject, error) {
 	no.CreatedBy = currentUser.Id
 	no.Created = time.Now()
 

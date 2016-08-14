@@ -10,19 +10,6 @@ import (
 	"google.golang.org/cloud/pubsub"
 )
 
-type LinkedInData struct {
-	Current []struct {
-		Date     string `json:"date"`
-		Position string `json:"position"`
-		Employer string `json:"employer"`
-	} `json:"current"`
-	Past []struct {
-		Date     string `json:"date"`
-		Position string `json:"position"`
-		Employer string `json:"employer"`
-	} `json:"past"`
-}
-
 func LinkedInSync(r *http.Request, contactLinkedIn string, contactId int64, justCreated bool) error {
 	c := appengine.NewContext(r)
 	PubsubClient, err := configurePubsub(r)
