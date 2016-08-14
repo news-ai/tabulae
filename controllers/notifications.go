@@ -138,7 +138,10 @@ func CreateNotificationObjectForUser(c context.Context, r *http.Request, resourc
 
 	userNotification, err := getUserNotification(c, r)
 	if err != nil {
-		return models.NotificationObject{}, err
+		userNotification, err = CreateNotificationForUser(c, r)
+		if err != nil {
+			return models.NotificationObject{}, err
+		}
 	}
 
 	notificationObject.NoticationId = userNotification.Id

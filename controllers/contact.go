@@ -273,6 +273,8 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 
 	ct.Create(c, r, currentUser)
 
+	LogNotificationForResource(c, r, "Contact", ct.Id, "CREATE", ct.FirstName)
+
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		_, _, justCreated := findOrCreateMasterContact(c, ct, r)
 		linkedInSync(c, r, ct, justCreated)
