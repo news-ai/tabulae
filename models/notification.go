@@ -110,6 +110,7 @@ func (no *NotificationObject) Save(c context.Context) (*NotificationObject, erro
 func (nc *NotificationChange) Create(c context.Context, r *http.Request, currentUser User) (*NotificationChange, error) {
 	nc.CreatedBy = currentUser.Id
 	nc.Created = time.Now()
+	nc.Read = false
 
 	_, err := nc.Save(c)
 	return nc, err

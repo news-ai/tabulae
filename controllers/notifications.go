@@ -12,15 +12,15 @@ import (
 )
 
 /*
-* Public methods
+* Private methods
  */
 
 /*
 * Get methods
  */
 
-// Gets every single media list
-func GetUserNotification(c context.Context, r *http.Request) (models.Notification, error) {
+// Get a user notification
+func getUserNotification(c context.Context, r *http.Request) (models.Notification, error) {
 	notifications := []models.Notification{}
 
 	user, err := GetCurrentUser(c, r)
@@ -40,6 +40,74 @@ func GetUserNotification(c context.Context, r *http.Request) (models.Notificatio
 
 	return models.Notification{}, errors.New("No notification for this user")
 }
+
+func getUserNotificationObjects(c context.Context, r *http.Request) ([]models.NotificationObject, error) {
+	notificationObjects := []models.NotificationObject{}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return []models.NotificationObject{}, err
+	}
+
+	ks, err := datastore.NewQuery("NotificationObject").Filter("CreatedBy =", user.Id).GetAll(c, &notificationObjects)
+	if err != nil {
+		return []models.NotificationObject{}, err
+	}
+
+	for i := 0; i < len(notificationObjects); i++ {
+		notificationObjects[i].Id = ks[i].IntID()
+	}
+
+	return notificationObjects, nil
+}
+
+/*
+* Create methods
+ */
+
+func createNotificationChange(c context.Context, r *http.Request, notificationObjectId int64, verb, actor string) (models.NotificationChange, error) {
+	notificationChange := models.NotificationChange{}
+	notificationChange.NoticationObjectId = notificationObjectId
+	notificationChange.Verb = verb
+	notificationChange.Actor = actor
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return models.NotificationChange{}, err
+	}
+
+	notificationChange.Create(c, r, user)
+
+	return notificationChange, nil
+}
+
+/*
+* Filter methods
+ */
+
+func filterNotificationObject(c context.Context, r *http.Request, resourceName string, resourceId int64) (models.NotificationObject, error) {
+	// Get notification by resource name
+	notificationObjects := []models.NotificationObject{}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return models.NotificationObject{}, err
+	}
+
+	ks, err := datastore.NewQuery("NotificationObject").Filter("CreatedBy =", user.Id).Filter("Object =", resourceName).Filter("ObjectId =", resourceId).GetAll(c, &notificationObjects)
+	if err != nil {
+		return models.NotificationObject{}, err
+	}
+	if len(notificationObjects) > 0 {
+		notificationObjects[0].Id = ks[0].IntID()
+		return notificationObjects[0], nil
+	}
+	return models.NotificationObject{}, errors.New("No notification object by this Object")
+}
+
+/*
+* Public methods
+ */
 
 /*
 * Create methods
@@ -68,7 +136,7 @@ func CreateNotificationObjectForUser(c context.Context, r *http.Request, resourc
 		return models.NotificationObject{}, err
 	}
 
-	userNotification, err := GetUserNotification(c, r)
+	userNotification, err := getUserNotification(c, r)
 	if err != nil {
 		return models.NotificationObject{}, err
 	}
@@ -82,4 +150,30 @@ func CreateNotificationObjectForUser(c context.Context, r *http.Request, resourc
 		return notificationObject, err
 	}
 	return notificationObject, nil
+}
+
+/*
+* Filter methods
+ */
+
+func FilterNotificationObjectByObject(c context.Context, r *http.Request, resourceName string, resourceId int64) (models.NotificationObject, error) {
+	// Get the id of a notification object for a user
+	notifiation, err := filterNotificationObject(c, r, resourceName, resourceId)
+	if err != nil {
+		return models.NotificationObject{}, err
+	}
+	return notifiation, nil
+}
+
+/*
+* Action methods
+ */
+
+func LogNotificationForResource(c context.Context, r *http.Request, resourceName string, resourceId int64, verb, actor string) (models.NotificationChange, error) {
+	notificationObject, err := FilterNotificationObjectByObject(c, r, resourceName, resourceId)
+	if err != nil {
+		notificationObject, err = CreateNotificationObjectForUser(c, r, resourceName, resourceId)
+		return createNotificationChange(c, r, notificationObject.Id, verb, actor)
+	}
+	return createNotificationChange(c, r, notificationObject.Id, verb, actor)
 }
