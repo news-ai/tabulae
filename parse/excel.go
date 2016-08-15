@@ -10,7 +10,9 @@ import (
 
 	"golang.org/x/net/context"
 
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/utils"
 
 	"github.com/tealeg/xlsx"
 )
@@ -63,16 +65,17 @@ func FileToExcelHeader(r *http.Request, file []byte) ([]Column, error) {
 	return columns, nil
 }
 
-func rowToContactStruct(r *http.Request, c context.Context, singleRow xlsx.Row, headers []string) (models.Contact, error) {
+func rowToContact(r *http.Request, c context.Context, singleRow *xlsx.Row, headers []string) (models.Contact, error) {
 	var contact models.Contact
+
+	for currentColumn, cell := range row.Cells {
+	}
 
 	return contact, nil
 }
 
-func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string) (models.MediaList, error) {
+func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, mediaListid int64) (models.MediaList, error) {
 	c := appengine.NewContext(r)
-
-	// customHeaders := []string{}
 
 	xlFile, err := xlsx.OpenBinary(file)
 	if err != nil {
@@ -94,10 +97,28 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string) (mo
 		return models.MediaList{}, err
 	}
 
-	var list models.MediaList
+	// Number of columns in sheet to compare
+	numberOfColumns := len(sheet.Rows[0].Cells)
+	if numberOfColumns != len(headers) {
+		return models.MediaList{}, errors.New("Number of headers does not match the ones for the sheet")
+	}
+
+	mediaListId := utils.IntIdToString(mediaListid)
+	mediaList, err := controllers.GetMediaList(c, r, mediaListId)
 
 	// Loop through all the rows
 	// Extract information
+	contacts := []int64{}
+	for _, row := range sheet.Rows {
+		contact, err := rowToContact(r, c, row, headers)
+		if err != nil {
+			return models.MediaList{}, err
+		}
+		contacts = append(contacts, contact.Id)
+	}
 
-	return list, nil
+	mediaList.Contacts = contacts
+	mediaList.Save(c)
+
+	return mediaList, nil
 }

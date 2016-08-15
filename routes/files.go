@@ -135,7 +135,7 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 				}
 
 				// Import the file
-				_, err = parse.ExcelHeadersToListModel(r, byteFile, file.Order)
+				_, err = parse.ExcelHeadersToListModel(r, byteFile, file.Order, file.ListId)
 				if err != nil {
 					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
 					return
