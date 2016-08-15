@@ -123,6 +123,8 @@ POST with data like this:
 {"order": ["", ""]}
 ```
 
+"ignore_column" ignores the column
+
 —
 
 Create contact

@@ -106,44 +106,46 @@ func rowToContact(r *http.Request, c context.Context, singleRow *xlsx.Row, heade
 	for columnIndex, cell := range singleRow.Cells {
 		columnName := headers[columnIndex]
 		cellName, _ := cell.String()
-		if customOrNative(columnName) {
-			switch columnName {
-			case "firstname":
-				contact.FirstName = cellName
-			case "lastname":
-				contact.LastName = cellName
-			case "email":
-				contact.Email = cellName
-			case "notes":
-				contact.Notes = cellName
-			case "employers":
-				singleEmployer, err := controllers.FindOrCreatePublication(c, r, cellName)
-				if err != nil {
-					log.Errorf(c, "employers error: %v", cellName, err)
+		if columnName != "ignore_column" {
+			if customOrNative(columnName) {
+				switch columnName {
+				case "firstname":
+					contact.FirstName = cellName
+				case "lastname":
+					contact.LastName = cellName
+				case "email":
+					contact.Email = cellName
+				case "notes":
+					contact.Notes = cellName
+				case "employers":
+					singleEmployer, err := controllers.FindOrCreatePublication(c, r, cellName)
+					if err != nil {
+						log.Errorf(c, "employers error: %v", cellName, err)
+					}
+					employers = append(employers, singleEmployer.Id)
+				case "pastemployers":
+					singleEmployer, err := controllers.FindOrCreatePublication(c, r, cellName)
+					if err != nil {
+						log.Errorf(c, "past employers error: %v", cellName, err)
+					}
+					pastEmployers = append(pastEmployers, singleEmployer.Id)
+				case "linkedin":
+					contact.LinkedIn = cellName
+				case "twitter":
+					contact.Twitter = cellName
+				case "instagram":
+					contact.Instagram = cellName
+				case "website":
+					contact.Website = cellName
+				case "blog":
+					contact.Blog = cellName
 				}
-				employers = append(employers, singleEmployer.Id)
-			case "pastemployers":
-				singleEmployer, err := controllers.FindOrCreatePublication(c, r, cellName)
-				if err != nil {
-					log.Errorf(c, "past employers error: %v", cellName, err)
-				}
-				pastEmployers = append(pastEmployers, singleEmployer.Id)
-			case "linkedin":
-				contact.LinkedIn = cellName
-			case "twitter":
-				contact.Twitter = cellName
-			case "instagram":
-				contact.Instagram = cellName
-			case "website":
-				contact.Website = cellName
-			case "blog":
-				contact.Blog = cellName
+			} else {
+				var customField models.CustomContactField
+				customField.Name = columnName
+				customField.Value = cellName
+				customFields = append(customFields, customField)
 			}
-		} else {
-			var customField models.CustomContactField
-			customField.Name = columnName
-			customField.Value = cellName
-			customFields = append(customFields, customField)
 		}
 	}
 
