@@ -85,7 +85,7 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 			switch r.Method {
 			case "GET":
 				// Read file
-				file, err := files.ReadFile(r, id)
+				file, contentType, err := files.ReadFile(r, id)
 				if err != nil {
 					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
 					return

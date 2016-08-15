@@ -305,6 +305,10 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, err
 		return email, err
 	}
 
+	if !user.EmailConfirmed {
+		return email, errors.New("Users email is not confirmed - the user cannot send emails.")
+	}
+
 	// Check if email is already sent
 	if email.IsSent {
 		return email, errors.New("Email has already been sent.")
