@@ -49,7 +49,28 @@ func XlsFileToExcelHeader(r *http.Request, file []byte) ([]Column, error) {
 		return []Column{}, errors.New("Sheet is empty")
 	}
 
-	return []Column{}, nil
+	// Number of rows to consider
+	numberOfRows := 15
+	if int(sheet.MaxRow) < numberOfRows+1 {
+		numberOfRows = int(sheet.MaxRow)
+	}
+
+	numberOfColumns := len(sheet.Rows[0].Cols)
+	columns := make([]Column, numberOfColumns)
+
+	for i := 0; i <= numberOfRows; i++ {
+		row := sheet.Rows[uint16(i)]
+		for x := 0; x < len(row.Cols); x++ {
+			currentRow := row.Cols[uint16(x)]
+			cellName := ""
+			if currentRow != nil {
+				cellName = row.Cols[uint16(x)].String(workbook)[0]
+			}
+			columns[x].Rows = append(columns[x].Rows, strings.Trim(cellName, " "))
+		}
+	}
+
+	return columns, nil
 }
 
 func FileToExcelHeader(r *http.Request, file []byte, contentType string) ([]Column, error) {
