@@ -12,7 +12,8 @@ import (
 type MediaList struct {
 	Base
 
-	Name string `json:"name"`
+	Name   string `json:"name"`
+	Client string `json:"client"`
 
 	Contacts     []int64  `json:"contacts"`
 	Fields       []string `json:"fields"`

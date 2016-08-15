@@ -342,7 +342,7 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 		keys = append(keys, contacts[i].Key(c))
 	}
 
-	ks, err := datastore.PutMulti(c, keys, contacts)
+	ks, err := nds.PutMulti(c, keys, contacts)
 	if err != nil {
 		return []int64{}, err
 	}
