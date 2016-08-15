@@ -150,11 +150,6 @@ func rowToContact(r *http.Request, c context.Context, singleRow *xlsx.Row, heade
 	contact.CustomFields = customFields
 	contact.Employers = employers
 	contact.PastEmployers = pastEmployers
-	_, err := controllers.Create(c, r, &contact)
-	if err != nil {
-		return models.Contact{}, err
-	}
-
 	return contact, nil
 }
 
@@ -192,16 +187,19 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 
 	// Loop through all the rows
 	// Extract information
-	contacts := []int64{}
+	contacts := []models.Contact{}
 	for _, row := range sheet.Rows {
 		contact, err := rowToContact(r, c, row, headers)
 		if err != nil {
 			return models.MediaList{}, err
 		}
-		contacts = append(contacts, contact.Id)
+		contacts = append(contacts, contact)
 	}
 
-	mediaList.Contacts = contacts
+	// Batch create all the contacts
+	contactIds := []int64{}
+
+	mediaList.Contacts = contactIds
 	mediaList.CustomFields = getCustomFields(r, c, sheet.Rows[0], headers)
 	mediaList.Save(c)
 	return mediaList, nil
