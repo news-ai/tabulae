@@ -60,7 +60,7 @@ func XlsFileToExcelHeader(r *http.Request, file []byte) ([]Column, error) {
 
 	for i := 0; i <= numberOfRows; i++ {
 		row := sheet.Rows[uint16(i)]
-		for x := 0; x < len(row.Cols); x++ {
+		for x := 0; x < numberOfColumns; x++ {
 			currentRow := row.Cols[uint16(x)]
 			cellName := ""
 			if currentRow != nil {
