@@ -110,6 +110,7 @@ func CreateFile(r *http.Request, fileName string, listid string, createdby strin
 	file.FileName = fileName
 	file.ListId = listId
 	file.CreatedBy = createdBy
+	file.FileExists = true
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
@@ -121,6 +122,14 @@ func CreateFile(r *http.Request, fileName string, listid string, createdby strin
 	if err != nil {
 		return models.File{}, err
 	}
+
+	// Attach the fileId to the media list associated to it
+	mediaList, err := GetMediaList(c, r, listid)
+	if err != nil {
+		return models.File{}, err
+	}
+	mediaList.FileUpload = file.Id
+	mediaList.Save(c)
 
 	return file, nil
 }

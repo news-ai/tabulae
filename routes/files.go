@@ -120,13 +120,30 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 				}
 				file.Order = fileOrder.Order
 
+				// Return the file
 				val, err := file.Save(c)
-				if err == nil {
-					err = json.NewEncoder(w).Encode(val)
-					return
-				}
 				if err != nil {
 					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+					return
+				}
+
+				// Read file
+				byteFile, err := files.ReadFile(r, id)
+				if err != nil {
+					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+					return
+				}
+
+				// Import the file
+				_, err = parse.ExcelHeadersToListModel(r, byteFile, file.Order)
+				if err != nil {
+					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+					return
+				}
+
+				// Return value
+				if err == nil {
+					err = json.NewEncoder(w).Encode(val)
 					return
 				}
 			default:
