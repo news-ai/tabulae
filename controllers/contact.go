@@ -334,6 +334,10 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error)
 	return []models.Contact{contact}, nil
 }
 
+func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, contacts []models.Contact) ([]int64, error) {
+
+}
+
 /*
 * Update methods
  */
