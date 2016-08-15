@@ -136,7 +136,13 @@ func rowToContact(r *http.Request, c context.Context, singleRow *xlsx.Row, heade
 	}
 
 	contact.CustomFields = customFields
-	contact.Save(c, r)
+	contact.Employers = employers
+	contact.PastEmployers = pastEmployers
+	_, err := controllers.Create(c, r, &contact)
+	if err != nil {
+		return models.Contact{}, err
+	}
+
 	return contact, nil
 }
 

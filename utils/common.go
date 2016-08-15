@@ -48,7 +48,7 @@ func NormalizeUrl(initialUrl string) (string, error) {
 func StripQueryString(inputUrl string) string {
 	u, err := url.Parse(inputUrl)
 	if err != nil {
-		panic(err)
+		return inputUrl
 	}
 	u.RawQuery = ""
 	return u.String()
