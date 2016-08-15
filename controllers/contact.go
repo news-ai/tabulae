@@ -335,7 +335,23 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error)
 }
 
 func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, contacts []models.Contact) ([]int64, error) {
+	var keys []*datastore.Key
+	var contactIds []int64
 
+	for i := 0; i < len(contacts); i++ {
+		keys = append(keys, contacts[i].Key(c))
+	}
+
+	ks, err := datastore.PutMulti(c, keys, contacts)
+	if err != nil {
+		return []int64{}, err
+	}
+
+	for i := 0; i < len(ks); i++ {
+		contactIds = append(contactIds, ks[i].IntID())
+	}
+
+	return contactIds, nil
 }
 
 /*

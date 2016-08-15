@@ -6,6 +6,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	"google.golang.org/appengine/datastore"
+
 	"github.com/news-ai/tabulae/utils"
 
 	"github.com/qedus/nds"
@@ -55,6 +57,10 @@ type Contact struct {
 /*
 * Public methods
  */
+
+func (ct *Contact) Key(c context.Context) *datastore.Key {
+	return ct.key(c, "Contact")
+}
 
 /*
 * Create methods

@@ -199,9 +199,13 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 	}
 
 	// Batch create all the contacts
-	contactIds := controllers.BatchCreateContactsForExcelUpload(c, r, contacts)
+	contactIds, err := controllers.BatchCreateContactsForExcelUpload(c, r, contacts)
+	if err != nil {
+		return models.MediaList{}, err
+	}
 
 	mediaList.Contacts = contactIds
+	mediaList.Fields = headers
 	mediaList.CustomFields = getCustomFields(r, c, sheet.Rows[0], headers)
 	mediaList.Save(c)
 	return mediaList, nil

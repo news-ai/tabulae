@@ -15,6 +15,7 @@ type MediaList struct {
 	Name string `json:"name"`
 
 	Contacts     []int64  `json:"contacts"`
+	Fields       []string `json:"fields"`
 	CustomFields []string `json:"customfields"`
 
 	FileUpload int64 `json:"fileupload"`
