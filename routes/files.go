@@ -121,6 +121,7 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 
 				if file.Imported {
 					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", "File has already been imported")
+					return
 				}
 
 				file.Order = fileOrder.Order
