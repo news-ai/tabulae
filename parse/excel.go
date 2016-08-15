@@ -84,6 +84,18 @@ func customOrNative(columnName string) bool {
 	return false
 }
 
+func getCustomFields(r *http.Request, c context.Context, singleRow *xlsx.Row, headers []string) []string {
+	var customFields []string
+
+	for columnIndex, _ := range singleRow.Cells {
+		columnName := headers[columnIndex]
+		if !customOrNative(columnName) {
+			customFields = append(customFields, columnName)
+		}
+	}
+	return customFields
+}
+
 func rowToContact(r *http.Request, c context.Context, singleRow *xlsx.Row, headers []string) (models.Contact, error) {
 	var contact models.Contact
 
@@ -190,6 +202,7 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 	}
 
 	mediaList.Contacts = contacts
+	mediaList.CustomFields = getCustomFields(r, c, sheet.Rows[0], headers)
 	mediaList.Save(c)
 	return mediaList, nil
 }

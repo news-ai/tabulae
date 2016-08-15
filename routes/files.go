@@ -118,14 +118,12 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
 					return
 				}
-				file.Order = fileOrder.Order
 
-				// Return the file
-				val, err := file.Save(c)
-				if err != nil {
-					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
-					return
+				if file.Imported {
+					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", "File has already been imported")
 				}
+
+				file.Order = fileOrder.Order
 
 				// Read file
 				byteFile, err := files.ReadFile(r, id)
@@ -136,6 +134,14 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 
 				// Import the file
 				_, err = parse.ExcelHeadersToListModel(r, byteFile, file.Order, file.ListId)
+				if err != nil {
+					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+					return
+				}
+
+				// Return the file
+				file.Imported = true
+				val, err := file.Save(c)
 				if err != nil {
 					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
 					return

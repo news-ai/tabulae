@@ -17,6 +17,7 @@ type File struct {
 
 	Order []string `json:"order"`
 
+	Imported   bool `json:"imported"`
 	FileExists bool `json:"fileexists"`
 }
 
