@@ -338,8 +338,23 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 	var keys []*datastore.Key
 	var contactIds []int64
 
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		return []int64{}, err
+	}
+
 	for i := 0; i < len(contacts); i++ {
+		contacts[i].CreatedBy = currentUser.Id
+		contacts[i].Created = time.Now()
+		contacts[i].Updated = time.Now()
+		contacts[i].Normalize()
 		keys = append(keys, contacts[i].Key(c))
+
+		if contacts[i].ParentContact == 0 && !contacts[i].IsMasterContact && contacts[i].LinkedIn != "" {
+			findOrCreateMasterContact(c, &contacts[i], r)
+			linkedInSync(c, r, &contacts[i], false)
+			checkAgainstParent(c, r, &contacts[i])
+		}
 	}
 
 	ks, err := nds.PutMulti(c, keys, contacts)
