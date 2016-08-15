@@ -17,7 +17,19 @@ import (
 	"github.com/tealeg/xlsx"
 )
 
-var nonCustomHeaders = [...]string{"firstname", "lastname", "email", "employers", "pastemployers", "notes", "linkedin", "twitter", "instagram", "website", "blog"}
+var nonCustomHeaders = map[string]bool{
+	"firstname":     true,
+	"lastname":      true,
+	"email":         true,
+	"employers":     true,
+	"pastemployers": true,
+	"notes":         true,
+	"linkedin":      true,
+	"twitter":       true,
+	"instagram":     true,
+	"website":       true,
+	"blog":          true,
+}
 
 type Column struct {
 	Rows []string `json:"rows"`
@@ -65,12 +77,66 @@ func FileToExcelHeader(r *http.Request, file []byte) ([]Column, error) {
 	return columns, nil
 }
 
+func customOrNative(columnName string) bool {
+	if _, ok := nonCustomHeaders[columnName]; ok {
+		return true
+	}
+	return false
+}
+
 func rowToContact(r *http.Request, c context.Context, singleRow *xlsx.Row, headers []string) (models.Contact, error) {
 	var contact models.Contact
 
-	for currentColumn, cell := range row.Cells {
+	var employers []int64
+	var pastEmployers []int64
+	var customFields []models.CustomContactField
+
+	for columnIndex, cell := range singleRow.Cells {
+		columnName := headers[columnIndex]
+		cellName, _ := cell.String()
+		if customOrNative(columnName) {
+			switch columnName {
+			case "firstname":
+				contact.FirstName = cellName
+			case "lastname":
+				contact.LastName = cellName
+			case "email":
+				contact.Email = cellName
+			case "notes":
+				contact.Notes = cellName
+			case "employers":
+				singleEmployer, err := controllers.FindOrCreatePublication(c, r, cellName)
+				if err != nil {
+					log.Errorf(c, "employers error: %v", cellName, err)
+				}
+				employers = append(employers, singleEmployer.Id)
+			case "pastemployers":
+				singleEmployer, err := controllers.FindOrCreatePublication(c, r, cellName)
+				if err != nil {
+					log.Errorf(c, "past employers error: %v", cellName, err)
+				}
+				pastEmployers = append(pastEmployers, singleEmployer.Id)
+			case "linkedin":
+				contact.LinkedIn = cellName
+			case "twitter":
+				contact.Twitter = cellName
+			case "instagram":
+				contact.Instagram = cellName
+			case "website":
+				contact.Website = cellName
+			case "blog":
+				contact.Blog = cellName
+			}
+		} else {
+			var customField models.CustomContactField
+			customField.Name = columnName
+			customField.Value = cellName
+			customFields = append(customFields, customField)
+		}
 	}
 
+	contact.CustomFields = customFields
+	contact.Save(c, r)
 	return contact, nil
 }
 
@@ -119,6 +185,5 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 
 	mediaList.Contacts = contacts
 	mediaList.Save(c)
-
 	return mediaList, nil
 }
