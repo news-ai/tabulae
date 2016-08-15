@@ -127,14 +127,14 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 				file.Order = fileOrder.Order
 
 				// Read file
-				byteFile, _, err := files.ReadFile(r, id)
+				byteFile, contentType, err := files.ReadFile(r, id)
 				if err != nil {
 					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
 					return
 				}
 
 				// Import the file
-				_, err = parse.ExcelHeadersToListModel(r, byteFile, file.Order, file.ListId)
+				_, err = parse.ExcelHeadersToListModel(r, byteFile, file.Order, file.ListId, contentType)
 				if err != nil {
 					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
 					return

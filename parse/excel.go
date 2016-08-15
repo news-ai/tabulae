@@ -198,19 +198,19 @@ func rowToContact(r *http.Request, c context.Context, singleRow *xlsx.Row, heade
 	return contact, nil
 }
 
-func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, mediaListid int64) (models.MediaList, error) {
+func XlsxToContactList(r *http.Request, file []byte, headers []string, mediaListid int64) ([]models.Contact, []string, error) {
 	c := appengine.NewContext(r)
 
 	xlFile, err := xlsx.OpenBinary(file)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return models.MediaList{}, err
+		return []models.Contact{}, []string{}, err
 	}
 
 	if len(xlFile.Sheets) == 0 {
 		err = errors.New("Sheet is empty")
 		log.Errorf(c, "%v", err)
-		return models.MediaList{}, err
+		return []models.Contact{}, []string{}, err
 	}
 
 	sheet := xlFile.Sheets[0]
@@ -218,17 +218,14 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 	if len(sheet.Rows) == 0 {
 		err = errors.New("No rows in sheet")
 		log.Errorf(c, "%v", err)
-		return models.MediaList{}, err
+		return []models.Contact{}, []string{}, err
 	}
 
 	// Number of columns in sheet to compare
 	numberOfColumns := len(sheet.Rows[0].Cells)
 	if numberOfColumns != len(headers) {
-		return models.MediaList{}, errors.New("Number of headers does not match the ones for the sheet")
+		return []models.Contact{}, []string{}, errors.New("Number of headers does not match the ones for the sheet")
 	}
-
-	mediaListId := utils.IntIdToString(mediaListid)
-	mediaList, err := controllers.GetMediaList(c, r, mediaListId)
 
 	// Loop through all the rows
 	// Extract information
@@ -236,9 +233,22 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 	for _, row := range sheet.Rows {
 		contact, err := rowToContact(r, c, row, headers)
 		if err != nil {
-			return models.MediaList{}, err
+			return []models.Contact{}, []string{}, err
 		}
 		contacts = append(contacts, contact)
+	}
+
+	// Get custom fields
+	customFields := getCustomFields(r, c, sheet.Rows[0], headers)
+
+	return contacts, customFields, nil
+}
+
+func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, mediaListid int64, contentType string) (models.MediaList, error) {
+	c := appengine.NewContext(r)
+	contacts, customFields, err := XlsxToContactList(r, file, headers, mediaListid)
+	if err != nil {
+		return models.MediaList{}, err
 	}
 
 	// Batch create all the contacts
@@ -247,9 +257,11 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 		return models.MediaList{}, err
 	}
 
+	mediaListId := utils.IntIdToString(mediaListid)
+	mediaList, err := controllers.GetMediaList(c, r, mediaListId)
 	mediaList.Contacts = contactIds
 	mediaList.Fields = headers
-	mediaList.CustomFields = getCustomFields(r, c, sheet.Rows[0], headers)
+	mediaList.CustomFields = customFields
 	mediaList.Save(c)
 	return mediaList, nil
 }
