@@ -356,8 +356,8 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 			checkAgainstParent(c, r, &contacts[i])
 		}
 	}
-
-	ks, err := nds.PutMulti(c, keys, contacts)
+	contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+	ks, err := nds.PutMulti(contextWithTimeout, keys, contacts)
 	if err != nil {
 		return []int64{}, err
 	}

@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"bytes"
 	"errors"
 	"net/http"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
 
+	"github.com/extrame/xls"
 	"github.com/tealeg/xlsx"
 )
 
@@ -35,8 +37,28 @@ type Column struct {
 	Rows []string `json:"rows"`
 }
 
-func FileToExcelHeader(r *http.Request, file []byte) ([]Column, error) {
+func XlsFileToExcelHeader(r *http.Request, file []byte) ([]Column, error) {
+	readerFile := bytes.NewReader(file)
+	workbook, err := xls.OpenReader(readerFile, "utf-8")
+	if err != nil {
+		return []Column{}, err
+	}
+
+	sheet := workbook.GetSheet(0)
+	if sheet == nil {
+		return []Column{}, errors.New("Sheet is empty")
+	}
+
+	return []Column{}, nil
+}
+
+func FileToExcelHeader(r *http.Request, file []byte, contentType string) ([]Column, error) {
 	c := appengine.NewContext(r)
+
+	if contentType == "application/vnd.ms-excel" {
+		log.Infof(c, "%v", contentType)
+		return XlsFileToExcelHeader(r, file)
+	}
 
 	xlFile, err := xlsx.OpenBinary(file)
 	if err != nil {

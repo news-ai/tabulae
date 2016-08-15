@@ -92,7 +92,7 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 				}
 
 				// Parse file headers and report to API
-				val, err := parse.FileToExcelHeader(r, file)
+				val, err := parse.FileToExcelHeader(r, file, contentType)
 				if err == nil {
 					err = json.NewEncoder(w).Encode(val)
 					return
@@ -127,7 +127,7 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 				file.Order = fileOrder.Order
 
 				// Read file
-				byteFile, err := files.ReadFile(r, id)
+				byteFile, _, err := files.ReadFile(r, id)
 				if err != nil {
 					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
 					return
