@@ -13,7 +13,7 @@ import (
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/files"
-	// "github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/parse"
 	"github.com/news-ai/tabulae/permissions"
 )
@@ -81,15 +81,17 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 	id, idOk := vars["id"]
 	action, actionOk := vars["action"]
 	if idOk && actionOk {
-		file, err := files.ReadFile(r, id)
-		if err != nil {
-			permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
-			return
-		}
-
 		if action == "headers" {
 			switch r.Method {
 			case "GET":
+				// Read file
+				file, err := files.ReadFile(r, id)
+				if err != nil {
+					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+					return
+				}
+
+				// Parse file headers and report to API
 				val, err := parse.FileToExcelHeader(r, file)
 				if err == nil {
 					err = json.NewEncoder(w).Encode(val)
@@ -99,14 +101,34 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
 					return
 				}
-			// case "POST":
-			// 	decoder := json.NewDecoder(r.Body)
-			// 	var fileOrder models.FileOrder
-			// 	err := decoder.Decode(&fileOrder)
-			// 	if err != nil {
-			// 		permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
-			// 		return
-			// 	}
+			case "POST":
+				// De-serialize fileOrder from POST data
+				c := appengine.NewContext(r)
+				decoder := json.NewDecoder(r.Body)
+				var fileOrder models.FileOrder
+				err := decoder.Decode(&fileOrder)
+				if err != nil {
+					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+					return
+				}
+
+				// Get & write file
+				file, err := controllers.GetFile(c, r, id)
+				if err != nil {
+					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+					return
+				}
+				file.Order = fileOrder.Order
+
+				val, err := file.Save(c)
+				if err == nil {
+					err = json.NewEncoder(w).Encode(val)
+					return
+				}
+				if err != nil {
+					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+					return
+				}
 			default:
 				permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", "method not implemented")
 				return
