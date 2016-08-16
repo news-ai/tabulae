@@ -13,7 +13,7 @@ import (
 	"github.com/extrame/xls"
 )
 
-func xlsGetCustomFields(r *http.Request, c context.Context, numberOfColumns int, singleRow *xls.Row, headers []string) []string {
+func xlsGetCustomFields(r *http.Request, c context.Context, numberOfColumns int, headers []string) []string {
 	var customFields []string
 
 	for x := 0; x < numberOfColumns; x++ {
@@ -25,8 +25,28 @@ func xlsGetCustomFields(r *http.Request, c context.Context, numberOfColumns int,
 	return customFields
 }
 
-func xlsRowToContact(r *http.Request, c context.Context, singleRow *xls.Row, headers []string) (models.Contact, error) {
-	return models.Contact{}, nil
+func xlsRowToContact(r *http.Request, c context.Context, numberOfColumns int, workbook *xls.WorkBook, singleRow *xls.Row, headers []string) (models.Contact, error) {
+	var (
+		contact       models.Contact
+		employers     []int64
+		pastEmployers []int64
+		customFields  []models.CustomContactField
+	)
+
+	for x := 0; x < numberOfColumns; x++ {
+		columnName := headers[x]
+		currentRow := singleRow.Cols[uint16(x)]
+		cellName := ""
+		if currentRow != nil {
+			cellName = singleRow.Cols[uint16(x)].String(workbook)[0]
+		}
+		rowToContact(r, c, columnName, cellName, &contact, &employers, &pastEmployers, &customFields)
+	}
+
+	contact.CustomFields = customFields
+	contact.Employers = employers
+	contact.PastEmployers = pastEmployers
+	return contact, nil
 }
 
 func XlsToContactList(r *http.Request, file []byte, headers []string, mediaListid int64) ([]models.Contact, []string, error) {

@@ -16,11 +16,11 @@ import (
 	"github.com/tealeg/xlsx"
 )
 
-func xlsxGetCustomFields(r *http.Request, c context.Context, singleRow *xlsx.Row, headers []string) []string {
+func xlsxGetCustomFields(r *http.Request, c context.Context, numberOfColumns int, headers []string) []string {
 	var customFields []string
 
-	for columnIndex, _ := range singleRow.Cells {
-		columnName := headers[columnIndex]
+	for i := 0; i < numberOfColumns; i++ {
+		columnName := headers[i]
 		if !customOrNative(columnName) {
 			customFields = append(customFields, columnName)
 		}
@@ -29,11 +29,12 @@ func xlsxGetCustomFields(r *http.Request, c context.Context, singleRow *xlsx.Row
 }
 
 func xlsxRowToContact(r *http.Request, c context.Context, singleRow *xlsx.Row, headers []string) (models.Contact, error) {
-	var contact models.Contact
-
-	var employers []int64
-	var pastEmployers []int64
-	var customFields []models.CustomContactField
+	var (
+		contact       models.Contact
+		employers     []int64
+		pastEmployers []int64
+		customFields  []models.CustomContactField
+	)
 
 	for columnIndex, cell := range singleRow.Cells {
 		columnName := headers[columnIndex]
@@ -93,7 +94,7 @@ func XlsxToContactList(r *http.Request, file []byte, headers []string, mediaList
 	}
 
 	// Get custom fields
-	customFields := xlsxGetCustomFields(r, c, sheet.Rows[0], headers)
+	customFields := xlsxGetCustomFields(r, c, len(sheet.Rows[0].Cells), headers)
 
 	return contacts, customFields, nil
 }
