@@ -1,6 +1,6 @@
 # tabulae
 
-API for media monitoring
+API for media list management.
 
 In the `/api/` folder:
 

@@ -41,6 +41,7 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 	err := nds.Get(c, contactId, &contact)
 
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Contact{}, err
 	}
 
@@ -49,11 +50,14 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
-			return models.Contact{}, errors.New("Could not get user")
+			log.Errorf(c, "%v", err)
+			return models.Contact{}, err
 		}
 
 		if !contact.IsMasterContact && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
-			return models.Contact{}, errors.New("Forbidden")
+			err = errors.New("Forbidden")
+			log.Errorf(c, "%v", err)
+			return models.Contact{}, err
 		}
 
 		return contact, nil
@@ -75,11 +79,14 @@ func filterContact(c context.Context, r *http.Request, queryType, query string) 
 	if len(contacts) > 0 {
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
-			return models.Contact{}, errors.New("Could not get user")
+			log.Errorf(c, "%v", err)
+			return models.Contact{}, err
 		}
 
 		if !contacts[0].IsMasterContact && !permissions.AccessToObject(contacts[0].CreatedBy, user.Id) {
-			return models.Contact{}, errors.New("Forbidden")
+			err = errors.New("Forbidden")
+			log.Errorf(c, "%v", err)
+			return models.Contact{}, err
 		}
 
 		contacts[0].Id = ks[0].IntID()
@@ -98,6 +105,7 @@ func checkAgainstParent(c context.Context, r *http.Request, ct *models.Contact) 
 		// Get parent contact
 		parentContact, err := getContact(c, r, ct.ParentContact)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return ct, err
 		}
 
@@ -119,6 +127,7 @@ func linkedInSync(c context.Context, r *http.Request, ct *models.Contact, justCr
 
 	parentContact, err := getContact(c, r, ct.ParentContact)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return ct, err
 	}
 
@@ -134,8 +143,8 @@ func linkedInSync(c context.Context, r *http.Request, ct *models.Contact, justCr
 			return ct, err
 		}
 
-		LogNotificationForResource(c, r, "Contact", ct.Id, "SYNC_LINKEDIN", ct.FirstName)
-		LogNotificationForResource(c, r, "Contact", parentContact.Id, "SYNC_LINKEDIN", parentContact.FirstName)
+		LogNotificationForResource(c, r, "Contact", ct.Id, "SYNC", "LINKEDIN")
+		LogNotificationForResource(c, r, "Contact", parentContact.Id, "SYNC", "LINKEDIN")
 
 		// Now that we have told the Influencer program that we are syncing Linkedin data
 		parentContact.LinkedInUpdated = time.Now()
@@ -155,11 +164,14 @@ func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact,
 	if len(contacts) > 0 {
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return models.Contact{}, errors.New("Could not get user")
 		}
 
 		if !contacts[0].IsMasterContact && !permissions.AccessToObject(contacts[0].CreatedBy, user.Id) {
-			return models.Contact{}, errors.New("Forbidden")
+			err = errors.New("Forbidden")
+			log.Errorf(c, "%v", err)
+			return models.Contact{}, err
 		}
 
 		contacts[0].Id = ks[0].IntID()
@@ -203,7 +215,7 @@ func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Re
 			ct.IsMasterContact = false
 
 			// Logging the action happening
-			LogNotificationForResource(c, r, "Contact", ct.Id, "CREATE_PARENT", ct.FirstName)
+			LogNotificationForResource(c, r, "Contact", ct.Id, "CREATE", "PARENT")
 
 			return ct, nil, true
 		}
@@ -230,11 +242,13 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, error) {
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Contact{}, err
 	}
 
 	ks, err := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", false).GetAll(c, &contacts)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Contact{}, err
 	}
 	for i := 0; i < len(contacts); i++ {
@@ -259,7 +273,7 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 	if contact.LinkedIn != "" {
 		_, err = linkedInSync(c, r, &contact, false)
 		if err != nil {
-			log.Errorf(c, "%v", err.Error())
+			log.Errorf(c, "%v", err)
 		}
 
 		checkAgainstParent(c, r, &contact)
@@ -275,13 +289,14 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return ct, err
 	}
 
 	ct.Create(c, r, currentUser)
 
 	// Logging the action happening
-	LogNotificationForResource(c, r, "Contact", ct.Id, "CREATE", ct.FirstName)
+	LogNotificationForResource(c, r, "Contact", ct.Id, "CREATE", "")
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		_, _, justCreated := findOrCreateMasterContact(c, ct, r)
@@ -310,6 +325,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error)
 		err = arrayDecoder.Decode(&contacts)
 
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return []models.Contact{}, err
 		}
 
@@ -317,6 +333,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error)
 		for i := 0; i < len(contacts); i++ {
 			_, err = Create(c, r, &contacts[i])
 			if err != nil {
+				log.Errorf(c, "%v", err)
 				return []models.Contact{}, err
 			}
 			newContacts = append(newContacts, contacts[i])
@@ -328,6 +345,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error)
 	// Create contact
 	_, err = Create(c, r, &contact)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Contact{}, err
 	}
 
@@ -340,6 +358,7 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []int64{}, err
 	}
 
@@ -359,6 +378,7 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 	contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
 	ks, err := nds.PutMulti(contextWithTimeout, keys, contacts)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []int64{}, err
 	}
 
@@ -412,10 +432,14 @@ func UpdateContact(c context.Context, r *http.Request, contact *models.Contact, 
 		contact.PastEmployers = updatedContact.PastEmployers
 	}
 
-	Save(c, r, contact)
+	_, err := Save(c, r, contact)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, err
+	}
 
 	// Logging the action happening
-	LogNotificationForResource(c, r, "Contact", contact.Id, "UPDATE", contact.FirstName)
+	LogNotificationForResource(c, r, "Contact", contact.Id, "UPDATE", "")
 
 	return *contact, nil
 }
@@ -424,11 +448,13 @@ func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.
 	// Get the details of the current contact
 	contact, err := GetContact(c, r, id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Contact{}, err
 	}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Contact{}, errors.New("Could not get user")
 	}
 
@@ -440,6 +466,7 @@ func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.
 	var updatedContact models.Contact
 	err = decoder.Decode(&updatedContact)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Contact{}, err
 	}
 
@@ -451,12 +478,14 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, e
 	var updatedContacts []models.Contact
 	err := decoder.Decode(&updatedContacts)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Contact{}, err
 	}
 
 	// Get logged in user
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Contact{}, errors.New("Could not get user")
 	}
 
@@ -465,6 +494,7 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, e
 	for i := 0; i < len(updatedContacts); i++ {
 		contact, err := getContact(c, r, updatedContacts[i].Id)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return []models.Contact{}, err
 		}
 
@@ -480,6 +510,7 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, e
 	for i := 0; i < len(updatedContacts); i++ {
 		updatedContact, err := UpdateContact(c, r, &currentContacts[i], updatedContacts[i])
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return []models.Contact{}, err
 		}
 
@@ -495,8 +526,8 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, e
 
 func UpdateContactToParent(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	parentContact, err := getContact(c, r, ct.ParentContact)
-
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return ct, err
 	}
 
@@ -506,9 +537,10 @@ func UpdateContactToParent(c context.Context, r *http.Request, ct *models.Contac
 	_, err = Save(c, r, ct)
 
 	// Logging the action happening
-	LogNotificationForResource(c, r, "Contact", ct.Id, "UPDATE_TO_PARENT", ct.FirstName)
+	LogNotificationForResource(c, r, "Contact", ct.Id, "UPDATE", "TO_PARENT")
 
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return ct, err
 	}
 
@@ -522,6 +554,7 @@ func LinkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*mode
 
 	parentContact, err := getContact(c, r, ct.ParentContact)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return ct, err
 	}
 
@@ -538,8 +571,8 @@ func LinkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*mode
 	parentContact.Save(c, r)
 
 	// Logging the action happening
-	LogNotificationForResource(c, r, "Contact", ct.Id, "SYNC_LINKEDIN", ct.FirstName)
-	LogNotificationForResource(c, r, "Contact", parentContact.Id, "SYNC_LINKEDIN", parentContact.FirstName)
+	LogNotificationForResource(c, r, "Contact", ct.Id, "SYNC", "LINKEDIN")
+	LogNotificationForResource(c, r, "Contact", parentContact.Id, "SYNC", "LINKEDIN")
 
 	return ct, nil
 }

@@ -154,7 +154,7 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, error) {
 				return []models.Email{}, err
 			}
 			// Logging the action happening
-			LogNotificationForResource(c, r, "Email", emails[i].Id, "CREATE", emails[i].Subject)
+			LogNotificationForResource(c, r, "Email", emails[i].Id, "CREATE", "")
 			newEmails = append(newEmails, emails[i])
 		}
 
@@ -168,7 +168,7 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, error) {
 	}
 
 	// Logging the action happening
-	LogNotificationForResource(c, r, "Email", email.Id, "CREATE", email.Subject)
+	LogNotificationForResource(c, r, "Email", email.Id, "CREATE", "")
 	return []models.Email{email}, nil
 }
 
@@ -182,7 +182,7 @@ func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (model
 
 	_, err := email.Save(c)
 
-	LogNotificationForResource(c, r, "Email", email.Id, "CREATE_INTERNAL", email.Subject)
+	LogNotificationForResource(c, r, "Email", email.Id, "CREATE", "INTERNAL")
 	return email, err
 }
 
@@ -219,7 +219,7 @@ func UpdateEmail(c context.Context, r *http.Request, email *models.Email, update
 	email.Save(c)
 
 	// Logging the action happening
-	LogNotificationForResource(c, r, "Email", email.Id, "UPDATE", email.Subject)
+	LogNotificationForResource(c, r, "Email", email.Id, "UPDATE", "")
 
 	return *email, nil
 }
@@ -332,7 +332,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, err
 		}
 
 		// Logging the action happening
-		LogNotificationForResource(c, r, "Email", email.Id, "SENT", email.Subject)
+		LogNotificationForResource(c, r, "Email", email.Id, "SENT", "")
 
 		return *val, nil
 	}

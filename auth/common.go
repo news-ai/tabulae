@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/hnakamur/gaesessions"
+	"github.com/news-ai/gaesessions"
 )
 
 type User struct {
