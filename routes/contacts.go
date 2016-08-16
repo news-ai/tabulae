@@ -29,7 +29,11 @@ func handleContact(c context.Context, r *http.Request, id string) (interface{}, 
 func handleContacts(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetContacts(c, r)
+		limit, offset, err := GetPagination(r)
+		if err != nil {
+			return nil, err
+		}
+		return controllers.GetContacts(c, r, limit, offset)
 	case "POST":
 		return controllers.CreateContact(c, r)
 	case "PATCH":

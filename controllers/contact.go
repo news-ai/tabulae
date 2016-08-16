@@ -39,7 +39,6 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 	contactId := datastore.NewKey(c, "Contact", "", id, nil)
 
 	err := nds.Get(c, contactId, &contact)
-
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Contact{}, err
@@ -71,11 +70,19 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 
 func filterContact(c context.Context, r *http.Request, queryType, query string) (models.Contact, error) {
 	// Get an contact by a query type
-	contacts := []models.Contact{}
-	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).GetAll(c, &contacts)
+	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		return models.Contact{}, err
 	}
+
+	var contacts []models.Contact
+	contacts = make([]models.Contact, len(ks))
+
+	err = nds.GetMulti(c, ks, contacts)
+	if err != nil {
+		return models.Contact{}, err
+	}
+
 	if len(contacts) > 0 {
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
@@ -237,20 +244,34 @@ func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Re
  */
 
 // Gets every single contact
-func GetContacts(c context.Context, r *http.Request) ([]models.Contact, error) {
-	contacts := []models.Contact{}
-
+func GetContacts(c context.Context, r *http.Request, limit int, offset int) ([]models.Contact, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, err
 	}
 
-	ks, err := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", false).GetAll(c, &contacts)
+	ks, err := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", false).KeysOnly().GetAll(c, nil)
+
+	// Pagination work
+	startPosition := offset
+	endPosition := startPosition + limit
+	if len(ks) < startPosition {
+		return []models.Contact{}, nil
+	}
+	if len(ks) < endPosition {
+		endPosition = len(ks)
+	}
+
+	subsetIds := ks[startPosition:endPosition]
+	contacts := []models.Contact{}
+	contacts = make([]models.Contact, len(subsetIds))
+	err = nds.GetMulti(c, subsetIds, contacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Contact{}, err
+		return contacts, err
 	}
+
 	for i := 0; i < len(contacts); i++ {
 		contacts[i].Id = ks[i].IntID()
 	}

@@ -176,11 +176,6 @@ func GetContactsForList(c context.Context, r *http.Request, id string, limit int
 		return []models.Contact{}, err
 	}
 
-	max_limit := 50
-	if limit > max_limit {
-		limit = max_limit
-	}
-
 	startPosition := offset
 	endPosition := startPosition + limit
 

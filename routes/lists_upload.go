@@ -48,26 +48,11 @@ func MediaListActionHandler(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
 			if action == "contacts" {
-				limit := 20
-				offset := 0
+				limit, offset, err := GetPagination(r)
 
-				queryLimit := r.URL.Query().Get("limit")
-				queryOffset := r.URL.Query().Get("offset")
-
-				if len(queryLimit) != 0 {
-					limit, err = strconv.Atoi(queryLimit)
-					if err != nil {
-						permissions.ReturnError(w, http.StatusInternalServerError, "List handling error", err.Error())
-						return
-					}
-				}
-
-				if len(queryOffset) != 0 {
-					offset, err = strconv.Atoi(queryOffset)
-					if err != nil {
-						permissions.ReturnError(w, http.StatusInternalServerError, "List handling error", err.Error())
-						return
-					}
+				if err != nil {
+					permissions.ReturnError(w, http.StatusInternalServerError, "Media List handling error", err.Error())
+					return
 				}
 
 				val, err := controllers.GetContactsForList(c, r, listId, limit, offset)
