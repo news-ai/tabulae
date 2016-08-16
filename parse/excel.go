@@ -12,31 +12,6 @@ import (
 	"github.com/news-ai/tabulae/utils"
 )
 
-var nonCustomHeaders = map[string]bool{
-	"firstname":     true,
-	"lastname":      true,
-	"email":         true,
-	"employers":     true,
-	"pastemployers": true,
-	"notes":         true,
-	"linkedin":      true,
-	"twitter":       true,
-	"instagram":     true,
-	"website":       true,
-	"blog":          true,
-}
-
-type Column struct {
-	Rows []string `json:"rows"`
-}
-
-func customOrNative(columnName string) bool {
-	if _, ok := nonCustomHeaders[columnName]; ok {
-		return true
-	}
-	return false
-}
-
 func FileToExcelHeader(r *http.Request, file []byte, contentType string) ([]Column, error) {
 	c := appengine.NewContext(r)
 	if contentType == "application/vnd.ms-excel" {

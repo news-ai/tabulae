@@ -3,6 +3,7 @@ package parse
 import (
 	"errors"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"google.golang.org/appengine"
@@ -10,13 +11,12 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
 
 	"github.com/tealeg/xlsx"
 )
 
-func getCustomFields(r *http.Request, c context.Context, singleRow *xlsx.Row, headers []string) []string {
+func xlsxGetCustomFields(r *http.Request, c context.Context, singleRow *xlsx.Row, headers []string) []string {
 	var customFields []string
 
 	for columnIndex, _ := range singleRow.Cells {
@@ -28,7 +28,7 @@ func getCustomFields(r *http.Request, c context.Context, singleRow *xlsx.Row, he
 	return customFields
 }
 
-func rowToContact(r *http.Request, c context.Context, singleRow *xlsx.Row, headers []string) (models.Contact, error) {
+func xlsxRowToContact(r *http.Request, c context.Context, singleRow *xlsx.Row, headers []string) (models.Contact, error) {
 	var contact models.Contact
 
 	var employers []int64
@@ -38,47 +38,7 @@ func rowToContact(r *http.Request, c context.Context, singleRow *xlsx.Row, heade
 	for columnIndex, cell := range singleRow.Cells {
 		columnName := headers[columnIndex]
 		cellName, _ := cell.String()
-		if columnName != "ignore_column" {
-			if customOrNative(columnName) {
-				switch columnName {
-				case "firstname":
-					contact.FirstName = cellName
-				case "lastname":
-					contact.LastName = cellName
-				case "email":
-					contact.Email = cellName
-				case "notes":
-					contact.Notes = cellName
-				case "employers":
-					singleEmployer, err := controllers.FindOrCreatePublication(c, r, cellName)
-					if err != nil {
-						log.Errorf(c, "employers error: %v", cellName, err)
-					}
-					employers = append(employers, singleEmployer.Id)
-				case "pastemployers":
-					singleEmployer, err := controllers.FindOrCreatePublication(c, r, cellName)
-					if err != nil {
-						log.Errorf(c, "past employers error: %v", cellName, err)
-					}
-					pastEmployers = append(pastEmployers, singleEmployer.Id)
-				case "linkedin":
-					contact.LinkedIn = cellName
-				case "twitter":
-					contact.Twitter = cellName
-				case "instagram":
-					contact.Instagram = cellName
-				case "website":
-					contact.Website = cellName
-				case "blog":
-					contact.Blog = cellName
-				}
-			} else {
-				var customField models.CustomContactField
-				customField.Name = columnName
-				customField.Value = cellName
-				customFields = append(customFields, customField)
-			}
-		}
+		rowToContact(r, c, columnName, cellName, &contact, &employers, &pastEmployers, &customFields)
 	}
 
 	contact.CustomFields = customFields
@@ -118,17 +78,22 @@ func XlsxToContactList(r *http.Request, file []byte, headers []string, mediaList
 
 	// Loop through all the rows
 	// Extract information
+	emptyContact := models.Contact{}
 	contacts := []models.Contact{}
 	for _, row := range sheet.Rows {
-		contact, err := rowToContact(r, c, row, headers)
+		contact, err := xlsxRowToContact(r, c, row, headers)
 		if err != nil {
 			return []models.Contact{}, []string{}, err
 		}
-		contacts = append(contacts, contact)
+
+		// To get rid of empty contacts. We don't want to create empty contacts.
+		if !reflect.DeepEqual(emptyContact, contact) {
+			contacts = append(contacts, contact)
+		}
 	}
 
 	// Get custom fields
-	customFields := getCustomFields(r, c, sheet.Rows[0], headers)
+	customFields := xlsxGetCustomFields(r, c, sheet.Rows[0], headers)
 
 	return contacts, customFields, nil
 }

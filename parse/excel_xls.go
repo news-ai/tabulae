@@ -8,8 +8,26 @@ import (
 
 	"github.com/news-ai/tabulae/models"
 
+	"golang.org/x/net/context"
+
 	"github.com/extrame/xls"
 )
+
+func xlsGetCustomFields(r *http.Request, c context.Context, numberOfColumns int, singleRow *xls.Row, headers []string) []string {
+	var customFields []string
+
+	for x := 0; x < numberOfColumns; x++ {
+		columnName := headers[x]
+		if !customOrNative(columnName) {
+			customFields = append(customFields, columnName)
+		}
+	}
+	return customFields
+}
+
+func xlsRowToContact(r *http.Request, c context.Context, singleRow *xls.Row, headers []string) (models.Contact, error) {
+	return models.Contact{}, nil
+}
 
 func XlsToContactList(r *http.Request, file []byte, headers []string, mediaListid int64) ([]models.Contact, []string, error) {
 	return []models.Contact{}, []string{}, nil
