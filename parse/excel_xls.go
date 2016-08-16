@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/news-ai/tabulae/models"
+
+	"google.golang.org/appengine"
 
 	"golang.org/x/net/context"
 
@@ -49,11 +52,51 @@ func xlsRowToContact(r *http.Request, c context.Context, numberOfColumns int, wo
 	return contact, nil
 }
 
-func XlsToContactList(r *http.Request, file []byte, headers []string, mediaListid int64) ([]models.Contact, []string, error) {
-	return []models.Contact{}, []string{}, nil
+func xlsToContactList(r *http.Request, file []byte, headers []string, mediaListid int64) ([]models.Contact, []string, error) {
+	c := appengine.NewContext(r)
+
+	readerFile := bytes.NewReader(file)
+	workbook, err := xls.OpenReader(readerFile, "utf-8")
+	if err != nil {
+		return []models.Contact{}, []string{}, err
+	}
+
+	sheet := workbook.GetSheet(0)
+	if sheet == nil {
+		return []models.Contact{}, []string{}, errors.New("Sheet is empty")
+	}
+
+	// Number of columns in sheet to compare
+	numberOfColumns := len(sheet.Rows[0].Cols)
+	if numberOfColumns != len(headers) {
+		return []models.Contact{}, []string{}, errors.New("Number of headers does not match the ones for the sheet")
+	}
+
+	// Loop through all the rows
+	// Extract information
+	emptyContact := models.Contact{}
+	contacts := []models.Contact{}
+
+	for i := 0; i < int(sheet.MaxRow); i++ {
+		row := sheet.Rows[uint16(i)]
+		contact, err := xlsRowToContact(r, c, numberOfColumns, workbook, row, headers)
+		if err != nil {
+			return []models.Contact{}, []string{}, err
+		}
+
+		// To get rid of empty contacts. We don't want to create empty contacts.
+		if !reflect.DeepEqual(emptyContact, contact) {
+			contacts = append(contacts, contact)
+		}
+	}
+
+	// Get custom fields
+	customFields := xlsGetCustomFields(r, c, numberOfColumns, headers)
+
+	return contacts, customFields, nil
 }
 
-func XlsFileToExcelHeader(r *http.Request, file []byte) ([]Column, error) {
+func xlsFileToExcelHeader(r *http.Request, file []byte) ([]Column, error) {
 	readerFile := bytes.NewReader(file)
 	workbook, err := xls.OpenReader(readerFile, "utf-8")
 	if err != nil {

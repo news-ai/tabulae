@@ -16,9 +16,9 @@ func FileToExcelHeader(r *http.Request, file []byte, contentType string) ([]Colu
 	c := appengine.NewContext(r)
 	if contentType == "application/vnd.ms-excel" {
 		log.Infof(c, "%v", contentType)
-		return XlsFileToExcelHeader(r, file)
+		return xlsFileToExcelHeader(r, file)
 	}
-	return XlsxFileToExcelHeader(r, file)
+	return xlsxFileToExcelHeader(r, file)
 }
 
 func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, mediaListid int64, contentType string) (models.MediaList, error) {
@@ -30,12 +30,12 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 
 	if contentType == "application/vnd.ms-excel" {
 		log.Infof(c, "%v", contentType)
-		contacts, customFields, err = XlsToContactList(r, file, headers, mediaListid)
+		contacts, customFields, err = xlsToContactList(r, file, headers, mediaListid)
 		if err != nil {
 			return models.MediaList{}, err
 		}
 	} else {
-		contacts, customFields, err = XlsxToContactList(r, file, headers, mediaListid)
+		contacts, customFields, err = xlsxToContactList(r, file, headers, mediaListid)
 		if err != nil {
 			return models.MediaList{}, err
 		}
