@@ -9,6 +9,8 @@ import (
 
 	"google.golang.org/appengine/datastore"
 
+	"github.com/qedus/nds"
+
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
 )
@@ -161,4 +163,52 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 
 	mediaList.Save(c)
 	return mediaList, nil
+}
+
+/*
+* Action methods
+ */
+
+func GetContactsForList(c context.Context, r *http.Request, id string, limit int, offset int) ([]models.Contact, error) {
+	// Get the details of the current media list
+	mediaList, err := GetMediaList(c, r, id)
+	if err != nil {
+		return []models.Contact{}, err
+	}
+
+	max_limit := 50
+	if limit > max_limit {
+		limit = max_limit
+	}
+
+	startPosition := offset
+	endPosition := startPosition + limit
+
+	if len(mediaList.Contacts) < startPosition {
+		return []models.Contact{}, nil
+	}
+
+	if len(mediaList.Contacts) < endPosition {
+		endPosition = len(mediaList.Contacts)
+	}
+
+	subsetIds := mediaList.Contacts[startPosition:endPosition]
+	subsetKeyIds := []*datastore.Key{}
+	for i := 0; i < len(subsetIds); i++ {
+		subsetKeyIds = append(subsetKeyIds, datastore.NewKey(c, "Contact", "", subsetIds[i], nil))
+	}
+
+	var contacts []models.Contact
+	contacts = make([]models.Contact, len(subsetIds))
+
+	err = nds.GetMulti(c, subsetKeyIds, contacts)
+	if err != nil {
+		return contacts, err
+	}
+
+	for i := 0; i < len(contacts); i++ {
+		contacts[i].Id = subsetKeyIds[i].IntID()
+	}
+
+	return contacts, nil
 }
