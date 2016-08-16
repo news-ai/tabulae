@@ -10,15 +10,17 @@ import (
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
+
+	"github.com/news-ai/goexcel"
 )
 
-func FileToExcelHeader(r *http.Request, file []byte, contentType string) ([]Column, error) {
+func FileToExcelHeader(r *http.Request, file []byte, contentType string) ([]goexcel.Column, error) {
 	c := appengine.NewContext(r)
 	if contentType == "application/vnd.ms-excel" {
 		log.Infof(c, "%v", contentType)
-		return xlsFileToExcelHeader(r, file)
+		return goexcel.XlsFileToExcelHeader(r, file)
 	}
-	return xlsxFileToExcelHeader(r, file)
+	return goexcel.XlsxFileToExcelHeader(r, file)
 }
 
 func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, mediaListid int64, contentType string) (models.MediaList, error) {
@@ -30,12 +32,12 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 
 	if contentType == "application/vnd.ms-excel" {
 		log.Infof(c, "%v", contentType)
-		contacts, customFields, err = xlsToContactList(r, file, headers, mediaListid)
+		contacts, customFields, err = goexcel.XlsToContactList(r, file, headers, mediaListid)
 		if err != nil {
 			return models.MediaList{}, err
 		}
 	} else {
-		contacts, customFields, err = xlsxToContactList(r, file, headers, mediaListid)
+		contacts, customFields, err = goexcel.XlsxToContactList(r, file, headers, mediaListid)
 		if err != nil {
 			return models.MediaList{}, err
 		}
