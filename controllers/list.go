@@ -106,6 +106,9 @@ func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) 
 		return medialist, err
 	}
 
+	// Initial values for fieldsmap
+	// fieldsmap := []models.CustomFieldsMap{}
+
 	// Create media list
 	_, err = medialist.Create(c, r, currentUser)
 	if err != nil {
@@ -146,9 +149,6 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 
 	if len(updatedMediaList.Contacts) > 0 {
 		mediaList.Contacts = updatedMediaList.Contacts
-	}
-	if len(updatedMediaList.CustomFields) > 0 {
-		mediaList.CustomFields = updatedMediaList.CustomFields
 	}
 	if len(updatedMediaList.FieldsMap) > 0 {
 		mediaList.FieldsMap = updatedMediaList.FieldsMap

@@ -52,17 +52,6 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 	mediaListId := utils.IntIdToString(mediaListid)
 	mediaList, err := controllers.GetMediaList(c, r, mediaListId)
 	mediaList.Contacts = contactIds
-	mediaList.Fields = headers
-
-	// Get fields from the array
-	customFieldsKeys := make([]string, len(customFields))
-	i := 0
-	for k := range customFields {
-		customFieldsKeys[i] = k
-		i++
-	}
-	mediaList.CustomFields = customFieldsKeys
-
 	customFieldsList := []models.CustomFieldsMap{}
 	for i := 0; i < len(headers); i++ {
 		customField := models.CustomFieldsMap{}
