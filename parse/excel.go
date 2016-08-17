@@ -68,7 +68,11 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 		customField := models.CustomFieldsMap{}
 		customField.Name = headers[i]
 		customField.Value = headers[i]
-		customField.CustomField = false
+		if _, ok := customFields[headers[i]]; ok {
+			customField.CustomField = true
+		} else {
+			customField.CustomField = false
+		}
 		customField.Hidden = false
 		customFieldsList = append(customFieldsList, customField)
 	}

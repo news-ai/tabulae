@@ -150,6 +150,9 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	if len(updatedMediaList.CustomFields) > 0 {
 		mediaList.CustomFields = updatedMediaList.CustomFields
 	}
+	if len(updatedMediaList.FieldsMap) > 0 {
+		mediaList.FieldsMap = updatedMediaList.FieldsMap
+	}
 
 	// If new media list wants to be archived then archive it
 	if updatedMediaList.Archived == true {
