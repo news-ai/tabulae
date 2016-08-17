@@ -16,6 +16,12 @@ import (
 )
 
 /*
+* Private
+ */
+
+var nonCustomHeaders = []string{"firstname", "lastname", "email", "employers", "pastemployers", "notes", "linkedin", "twitter", "instagram", "website", "blog"}
+
+/*
 * Private methods
  */
 
@@ -45,6 +51,22 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 		return mediaLists[0], nil
 	}
 	return models.MediaList{}, errors.New("No media list by this id")
+}
+
+func getFieldsMap() []models.CustomFieldsMap {
+	fieldsmap := []models.CustomFieldsMap{}
+
+	for i := 0; i < len(nonCustomHeaders); i++ {
+		field := models.CustomFieldsMap{
+			Name:        nonCustomHeaders[i],
+			Value:       nonCustomHeaders[i],
+			CustomField: false,
+			Hidden:      false,
+		}
+		fieldsmap = append(fieldsmap, field)
+	}
+
+	return fieldsmap
 }
 
 /*
@@ -107,7 +129,7 @@ func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Initial values for fieldsmap
-	// fieldsmap := []models.CustomFieldsMap{}
+	medialist.FieldsMap = getFieldsMap()
 
 	// Create media list
 	_, err = medialist.Create(c, r, currentUser)
