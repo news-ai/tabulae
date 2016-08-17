@@ -27,7 +27,7 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 	c := appengine.NewContext(r)
 
 	contacts := []models.Contact{}
-	customFields := []string{}
+	var customFields map[string]bool
 	err := errors.New("")
 
 	if contentType == "application/vnd.ms-excel" {
@@ -53,7 +53,28 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 	mediaList, err := controllers.GetMediaList(c, r, mediaListId)
 	mediaList.Contacts = contactIds
 	mediaList.Fields = headers
-	mediaList.CustomFields = customFields
+
+	// Get fields from the array
+	customFieldsKeys := make([]string, len(customFields))
+	i := 0
+	for k := range customFields {
+		customFieldsKeys[i] = k
+		i++
+	}
+	mediaList.CustomFields = customFieldsKeys
+
+	customFieldsList := []models.CustomFieldsMap{}
+	for i := 0; i < len(headers); i++ {
+		customField := models.CustomFieldsMap{}
+		customField.Name = headers[i]
+		customField.Value = headers[i]
+		customField.CustomField = false
+		customField.Hidden = false
+		customFieldsList = append(customFieldsList, customField)
+	}
+
+	mediaList.FieldsMap = customFieldsList
+
 	mediaList.Save(c)
 	return mediaList, nil
 }

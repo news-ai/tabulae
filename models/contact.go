@@ -13,11 +13,6 @@ import (
 	"github.com/qedus/nds"
 )
 
-type CustomContactField struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
 type Contact struct {
 	Base
 

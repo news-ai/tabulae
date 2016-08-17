@@ -9,13 +9,23 @@ import (
 	"github.com/qedus/nds"
 )
 
+type CustomFieldsMap struct {
+	Name        string `json:"name"`
+	Value       string `json:"value"`
+	CustomField bool   `json:"customfield"`
+	Hidden      bool   `json:"hidden"`
+}
+
 type MediaList struct {
 	Base
 
 	Name   string `json:"name"`
 	Client string `json:"client"`
 
-	Contacts     []int64  `json:"contacts"`
+	Contacts []int64 `json:"contacts"`
+
+	FieldsMap []CustomFieldsMap `json:"fieldsmap"`
+
 	Fields       []string `json:"fields"`
 	CustomFields []string `json:"customfields"`
 
