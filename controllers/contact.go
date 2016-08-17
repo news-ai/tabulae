@@ -396,8 +396,19 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 			checkAgainstParent(c, r, &contacts[i])
 		}
 	}
-	contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
-	ks, err := nds.PutMulti(contextWithTimeout, keys, contacts)
+
+	ks := []*datastore.Key{}
+
+	err = nds.RunInTransaction(c, func(ctx context.Context) error {
+		contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+		ks, err = nds.PutMulti(contextWithTimeout, keys, contacts)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return err
+		}
+		return nil
+	}, nil)
+
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []int64{}, err
