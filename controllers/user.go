@@ -9,11 +9,13 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/permissions"
 	"github.com/news-ai/tabulae/utils"
 )
 
@@ -25,7 +27,7 @@ import (
 * Get methods
  */
 
-func getUser(c context.Context, id int64) (models.User, error) {
+func getUser(c context.Context, r *http.Request, id int64) (models.User, error) {
 	// Get the current signed in user details by Id
 	var user models.User
 	userId := datastore.NewKey(c, "User", "", id, nil)
@@ -35,8 +37,21 @@ func getUser(c context.Context, id int64) (models.User, error) {
 		return models.User{}, err
 	}
 
-	if user.FirstName != "" {
+	if user.Email != "" {
 		user.Id = userId.IntID()
+
+		currentUser, err := GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, err
+		}
+
+		if !permissions.AccessToObject(user.Id, currentUser.Id) && !user.IsAdmin {
+			err = errors.New("Forbidden")
+			log.Errorf(c, "%v", err)
+			return models.User{}, err
+		}
+
 		return user, nil
 	}
 
@@ -108,7 +123,7 @@ func GetUser(c context.Context, r *http.Request, id string) (models.User, error)
 		if err != nil {
 			return models.User{}, err
 		}
-		user, err := getUser(c, userId)
+		user, err := getUser(c, r, userId)
 		if err != nil {
 			return models.User{}, errors.New("No user by this id")
 		}

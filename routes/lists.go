@@ -2,7 +2,7 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 
 	"golang.org/x/net/context"
@@ -22,7 +22,7 @@ func handleMediaList(c context.Context, r *http.Request, id string) (interface{}
 	case "PATCH":
 		return controllers.UpdateMediaList(c, r, id)
 	}
-	return nil, fmt.Errorf("method not implemented")
+	return nil, errors.New("method not implemented")
 }
 
 func handleMediaLists(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
@@ -32,7 +32,7 @@ func handleMediaLists(c context.Context, w http.ResponseWriter, r *http.Request)
 	case "POST":
 		return controllers.CreateMediaList(c, w, r)
 	}
-	return nil, fmt.Errorf("method not implemented")
+	return nil, errors.New("method not implemented")
 }
 
 // Handler for when the user wants all the agencies.

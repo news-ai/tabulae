@@ -2,7 +2,7 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 
 	"golang.org/x/net/context"
@@ -12,38 +12,31 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/permissions"
 )
 
-func handleUser(c context.Context, r *http.Request, id string) (models.User, error) {
+func handleUser(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetUser(c, r, id)
 	case "PATCH":
 		return controllers.UpdateUser(c, r, id)
 	}
-	return models.User{}, fmt.Errorf("method not implemented")
+	return nil, errors.New("method not implemented")
 }
 
-func handleUsers(c context.Context, r *http.Request) ([]models.User, error) {
+func handleUsers(c context.Context, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		return controllers.GetUsers(c)
 	}
-	return []models.User{}, fmt.Errorf("method not implemented")
+	return nil, errors.New("method not implemented")
 }
 
 // Handler for when the user wants all the users.
 func UsersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
-	err := IsAdmin(w, r)
-	if err != nil {
-		permissions.ReturnError(w, http.StatusForbidden, "Forbidden", err.Error())
-		return
-	}
 
 	val, err := handleUsers(c, r)
 
@@ -66,15 +59,6 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 	if ok {
-		// If the user is trying to get something that is not just their
-		// own profile then require them to be an administrator.
-		if id != "me" {
-			err := IsAdmin(w, r)
-			if err != nil {
-				permissions.ReturnError(w, http.StatusForbidden, "Forbidden", err.Error())
-				return
-			}
-		}
 		val, err := handleUser(c, r, id)
 
 		if err == nil {

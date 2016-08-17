@@ -2,7 +2,7 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 
 	"golang.org/x/net/context"
@@ -23,7 +23,7 @@ func handleFile(c context.Context, r *http.Request, id string) (interface{}, err
 	case "GET":
 		return controllers.GetFile(c, r, id)
 	}
-	return nil, fmt.Errorf("method not implemented")
+	return nil, errors.New("method not implemented")
 }
 
 func handleFiles(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
@@ -31,7 +31,7 @@ func handleFiles(c context.Context, w http.ResponseWriter, r *http.Request) (int
 	case "GET":
 		return controllers.GetFiles(c, r)
 	}
-	return nil, fmt.Errorf("method not implemented")
+	return nil, errors.New("method not implemented")
 }
 
 // Handler for when the user wants all the files.

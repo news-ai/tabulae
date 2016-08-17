@@ -2,7 +2,7 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 
 	"golang.org/x/net/context"
@@ -20,7 +20,7 @@ func handlePublication(c context.Context, r *http.Request, id string) (interface
 	case "GET":
 		return controllers.GetPublication(c, id)
 	}
-	return nil, fmt.Errorf("method not implemented")
+	return nil, errors.New("method not implemented")
 }
 
 func handlePublications(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
@@ -36,7 +36,7 @@ func handlePublications(c context.Context, w http.ResponseWriter, r *http.Reques
 	case "POST":
 		return controllers.CreatePublication(c, w, r)
 	}
-	return nil, fmt.Errorf("method not implemented")
+	return nil, errors.New("method not implemented")
 }
 
 // Handler for when the user wants all the agencies.
@@ -65,13 +65,12 @@ func PublicationHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 	if ok {
-		// Convert ID to int64
 		val, err := handlePublication(c, r, id)
+
 		if err == nil {
 			err = json.NewEncoder(w).Encode(val)
 		}
 
-		// If any error from handlePublication function
 		if err != nil {
 			permissions.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())
 			return

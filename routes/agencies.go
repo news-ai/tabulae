@@ -2,7 +2,7 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 
 	"golang.org/x/net/context"
@@ -20,7 +20,7 @@ func handleAgency(c context.Context, r *http.Request, id string) (interface{}, e
 	case "GET":
 		return controllers.GetAgency(c, id)
 	}
-	return nil, fmt.Errorf("method not implemented")
+	return nil, errors.New("method not implemented")
 }
 
 func handleAgencies(c context.Context, r *http.Request) (interface{}, error) {
@@ -28,19 +28,13 @@ func handleAgencies(c context.Context, r *http.Request) (interface{}, error) {
 	case "GET":
 		return controllers.GetAgencies(c)
 	}
-	return nil, fmt.Errorf("method not implemented")
+	return nil, errors.New("method not implemented")
 }
 
 // Handler for when the user wants all the agencies.
 func AgenciesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
-	err := IsAdmin(w, r)
-	if err != nil {
-		permissions.ReturnError(w, http.StatusForbidden, "Forbidden", err.Error())
-		return
-	}
 
 	val, err := handleAgencies(c, r)
 
