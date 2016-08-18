@@ -18,8 +18,20 @@ import (
 	"github.com/news-ai/tabulae/permissions"
 )
 
-func handleFileAction(c context.Context, r *http.Request, id string) (interface{}, error) {
-	return nil, nil
+func handleFileAction(c context.Context, r *http.Request, action string, id string) (interface{}, error) {
+	switch r.Method {
+	case "GET":
+		switch action {
+		case "headers":
+			return files.HandleFileGetHeaders(c, r, id)
+		}
+	case "POST":
+		switch action {
+		case "headers":
+			return files.HandleFileUploadHeaders(c, r, id)
+		}
+	}
+	return nil, errors.New("method not implemented")
 }
 
 func handleFile(c context.Context, r *http.Request, id string) (interface{}, error) {
@@ -79,91 +91,22 @@ func FileHandler(w http.ResponseWriter, r *http.Request) {
 
 func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	c := appengine.NewContext(r)
 
 	// If there is an ID
 	vars := mux.Vars(r)
 	id, idOk := vars["id"]
 	action, actionOk := vars["action"]
 	if idOk && actionOk {
-		if action == "headers" {
-			switch r.Method {
-			case "GET":
-				// Read file
-				file, contentType, err := files.ReadFile(r, id)
-				if err != nil {
-					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
-					return
-				}
+		val, err := handleFileAction(c, r, action, id)
 
-				// Parse file headers and report to API
-				val, err := parse.FileToExcelHeader(r, file, contentType)
-				if err == nil {
-					err = json.NewEncoder(w).Encode(val)
-					return
-				}
-				if err != nil {
-					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
-					return
-				}
-			case "POST":
-				// De-serialize fileOrder from POST data
-				c := appengine.NewContext(r)
-				decoder := json.NewDecoder(r.Body)
-				var fileOrder models.FileOrder
-				err := decoder.Decode(&fileOrder)
-				if err != nil {
-					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
-					return
-				}
-
-				// Get & write file
-				file, err := controllers.GetFile(c, r, id)
-				if err != nil {
-					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
-					return
-				}
-
-				if file.Imported {
-					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", "File has already been imported")
-					return
-				}
-
-				file.Order = fileOrder.Order
-
-				// Read file
-				byteFile, contentType, err := files.ReadFile(r, id)
-				if err != nil {
-					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
-					return
-				}
-
-				// Import the file
-				_, err = parse.ExcelHeadersToListModel(r, byteFile, file.Order, file.ListId, contentType)
-				if err != nil {
-					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
-					return
-				}
-
-				// Return the file
-				file.Imported = true
-				val, err := file.Save(c)
-				if err != nil {
-					permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
-					return
-				}
-
-				// Return value
-				if err == nil {
-					err = json.NewEncoder(w).Encode(val)
-					return
-				}
-			default:
-				permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", "method not implemented")
-				return
-			}
+		if err == nil {
+			err = json.NewEncoder(w).Encode(val)
 		}
 
-		permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", "method not implemented")
-		return
+		if err != nil {
+			permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+			return
+		}
 	}
 }

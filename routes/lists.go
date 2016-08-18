@@ -24,34 +24,6 @@ var (
 	errMediaListHandling = "Media List handling error"
 )
 
-func handleMediaListActionUpload(c context.Context, r *http.Request, id string, limit int, offset int) (interface{}, error) {
-	user, err := GetUser(r)
-	if err != nil {
-		return nil, err
-	}
-	userId := strconv.FormatInt(user.Id, 10)
-
-	file, handler, err := r.FormFile("file")
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, err
-	}
-
-	noSpaceFileName := ""
-	if handler.Filename != "" {
-		noSpaceFileName = strings.Replace(handler.Filename, " ", "", -1)
-	}
-
-	fileName := strings.Join([]string{userId, id, utils.RandToken(), noSpaceFileName}, "-")
-	val, err := files.UploadFile(r, fileName, file, userId, id, handler.Header.Get("Content-Type"))
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, err
-	}
-
-	return val, nil
-}
-
 func handleMediaListActions(c context.Context, r *http.Request, id string, action string, limit int, offset int) (interface{}, error) {
 	switch r.Method {
 	case "GET":
@@ -62,7 +34,11 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 	case "POST":
 		switch action {
 		case "upload":
-			return handleMediaListActionUpload(c, r, id, limit, offset)
+			user, err := GetUser(r)
+			if err != nil {
+				return nil, err
+			}
+			return files.HandleMediaListActionUpload(c, r, id, user, limit, offset)
 		}
 	}
 	return nil, errors.New("method not implemented")
