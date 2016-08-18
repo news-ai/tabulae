@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -10,6 +9,7 @@ import (
 	"google.golang.org/appengine"
 
 	"github.com/gorilla/mux"
+	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/files"
@@ -56,7 +56,7 @@ func FilesHandler(w http.ResponseWriter, r *http.Request) {
 	val, err := handleFiles(c, w, r)
 
 	if err == nil {
-		err = json.NewEncoder(w).Encode(val)
+		err = ffjson.NewEncoder(w).Encode(val)
 	}
 
 	if err != nil {
@@ -77,7 +77,7 @@ func FileHandler(w http.ResponseWriter, r *http.Request) {
 		val, err := handleFile(c, r, id)
 
 		if err == nil {
-			err = json.NewEncoder(w).Encode(val)
+			err = ffjson.NewEncoder(w).Encode(val)
 		}
 
 		if err != nil {
@@ -99,7 +99,7 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 		val, err := handleFileAction(c, r, id, action)
 
 		if err == nil {
-			err = json.NewEncoder(w).Encode(val)
+			err = ffjson.NewEncoder(w).Encode(val)
 		}
 
 		if err != nil {

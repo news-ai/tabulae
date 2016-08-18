@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -10,6 +9,7 @@ import (
 	"google.golang.org/appengine"
 
 	"github.com/gorilla/mux"
+	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/permissions"
@@ -39,7 +39,7 @@ func AgenciesHandler(w http.ResponseWriter, r *http.Request) {
 	val, err := handleAgencies(c, r)
 
 	if err == nil {
-		err = json.NewEncoder(w).Encode(val)
+		err = ffjson.NewEncoder(w).Encode(val)
 	}
 
 	if err != nil {
@@ -60,7 +60,7 @@ func AgencyHandler(w http.ResponseWriter, r *http.Request) {
 		val, err := handleAgency(c, r, id)
 
 		if err == nil {
-			err = json.NewEncoder(w).Encode(val)
+			err = ffjson.NewEncoder(w).Encode(val)
 		}
 
 		if err != nil {

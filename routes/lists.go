@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -10,6 +9,7 @@ import (
 	"google.golang.org/appengine"
 
 	"github.com/gorilla/mux"
+	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/files"
@@ -68,7 +68,7 @@ func MediaListsHandler(w http.ResponseWriter, r *http.Request) {
 	val, err := handleMediaLists(c, w, r)
 
 	if err == nil {
-		err = json.NewEncoder(w).Encode(val)
+		err = ffjson.NewEncoder(w).Encode(val)
 	}
 
 	if err != nil {
@@ -89,7 +89,7 @@ func MediaListHandler(w http.ResponseWriter, r *http.Request) {
 		val, err := handleMediaList(c, r, id)
 
 		if err == nil {
-			err = json.NewEncoder(w).Encode(val)
+			err = ffjson.NewEncoder(w).Encode(val)
 		}
 
 		if err != nil {
@@ -119,7 +119,7 @@ func MediaListActionHandler(w http.ResponseWriter, r *http.Request) {
 		val, err := handleMediaListActions(c, r, id, action, limit, offset)
 
 		if err == nil {
-			err = json.NewEncoder(w).Encode(val)
+			err = ffjson.NewEncoder(w).Encode(val)
 		}
 
 		if err != nil {
