@@ -14,7 +14,6 @@ func BasicAuthLogin(w http.ResponseWriter, r *http.Request, apiKey string) bool 
 	// Save the session for each of the users
 	session, _ := Store.Get(r, "sess")
 	session.Values["state"] = state
-
 	session.Save(r, w)
 
 	user, err := controllers.GetUserFromApiKey(r, apiKey)

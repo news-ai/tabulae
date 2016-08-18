@@ -39,7 +39,6 @@ func getUser(c context.Context, r *http.Request, id int64) (models.User, error) 
 
 	if user.Email != "" {
 		user.Id = userId.IntID()
-
 		currentUser, err := GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -54,12 +53,11 @@ func getUser(c context.Context, r *http.Request, id int64) (models.User, error) 
 
 		return user, nil
 	}
-
 	return models.User{}, errors.New("No user by this id")
 }
 
 // Gets every single user
-func getUsers(c context.Context) ([]models.User, error) {
+func getUsers(c context.Context, r *http.Request) ([]models.User, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		return []models.User{}, err
@@ -120,9 +118,9 @@ func filterUser(c context.Context, queryType, query string) (models.User, error)
 * Get methods
  */
 
-func GetUsers(c context.Context) ([]models.User, error) {
+func GetUsers(c context.Context, r *http.Request) ([]models.User, error) {
 	// Get the current user
-	users, err := getUsers(c)
+	users, err := getUsers(c, r)
 	if err != nil {
 		return []models.User{}, err
 	}
@@ -191,11 +189,9 @@ func GetCurrentUser(c context.Context, r *http.Request) (models.User, error) {
 func GetUserFromApiKey(r *http.Request, ApiKey string) (models.User, error) {
 	c := appengine.NewContext(r)
 	user, err := GetUserByApiKey(c, ApiKey)
-
 	if err != nil {
 		return models.User{}, err
 	}
-
 	return user, nil
 }
 
@@ -212,19 +208,6 @@ func RegisterUser(r *http.Request, user models.User) (bool, error) {
 		return true, nil
 	}
 	return false, errors.New("User with the email already exists")
-}
-
-func ValidateUserPassword(r *http.Request, email string, password string) (bool, error) {
-	c := appengine.NewContext(r)
-	user, err := GetUserByEmail(c, email)
-	if err == nil {
-		err = utils.ValidatePassword(user.Password, password)
-		if err != nil {
-			return false, nil
-		}
-		return true, nil
-	}
-	return false, errors.New("User does not exist")
 }
 
 func AddUserToContext(c context.Context, r *http.Request, email string) {
@@ -273,4 +256,21 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, err
 
 	user.Save(c)
 	return user, nil
+}
+
+/*
+* Action methods
+ */
+
+func ValidateUserPassword(r *http.Request, email string, password string) (bool, error) {
+	c := appengine.NewContext(r)
+	user, err := GetUserByEmail(c, email)
+	if err == nil {
+		err = utils.ValidatePassword(user.Password, password)
+		if err != nil {
+			return false, nil
+		}
+		return true, nil
+	}
+	return false, errors.New("User does not exist")
 }

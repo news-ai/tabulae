@@ -36,6 +36,18 @@ func GetCurrentUserEmail(r *http.Request) (string, error) {
 	return session.Values["email"].(string), nil
 }
 
+// Gets the email of the current user that is logged in
+func GetCurrentUserId(r *http.Request) (string, error) {
+	session, err := Store.Get(r, "sess")
+	if err != nil {
+		return "", errors.New("No user logged in")
+	}
+	if session.Values["id"] == nil {
+		return "", errors.New("No user logged in")
+	}
+	return session.Values["id"].(string), nil
+}
+
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := Store.Get(r, "sess")
 	delete(session.Values, "state")
