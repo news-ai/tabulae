@@ -318,10 +318,10 @@ func GetDiff(c context.Context, r *http.Request, id string) (interface{}, error)
 	}
 
 	newEmployers := []string{}
+	newPastEmployers := []string{}
 	for i := 0; i < len(parentContact.Employers); i++ {
 		// Get each publication
-		currentPublicationId := strconv.FormatInt(parentContact.Employers[i], 10)
-		currentPublication, err := GetPublication(c, currentPublicationId)
+		currentPublication, err := getPublication(c, parentContact.Employers[i])
 		if err != nil {
 			err = errors.New("Only actions are diff and update")
 			return nil, err
@@ -329,10 +329,22 @@ func GetDiff(c context.Context, r *http.Request, id string) (interface{}, error)
 		newEmployers = append(newEmployers, currentPublication.Name)
 	}
 
+	for i := 0; i < len(parentContact.PastEmployers); i++ {
+		// Get each publication
+		currentPublication, err := getPublication(c, parentContact.PastEmployers[i])
+		if err != nil {
+			err = errors.New("Only actions are diff and update")
+			return nil, err
+		}
+		newPastEmployers = append(newPastEmployers, currentPublication.Name)
+	}
+
 	data := struct {
-		Changes []string `json:"changes"`
+		NewEmployers     []string `json:"employers"`
+		NewPastEmployers []string `json:"pastemployers"`
 	}{
 		newEmployers,
+		newPastEmployers,
 	}
 
 	return data, nil

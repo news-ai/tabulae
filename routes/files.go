@@ -16,7 +16,7 @@ import (
 	"github.com/news-ai/tabulae/permissions"
 )
 
-func handleFileAction(c context.Context, r *http.Request, action string, id string) (interface{}, error) {
+func handleFileAction(c context.Context, r *http.Request, id string, action string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		switch action {
@@ -96,7 +96,7 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request) {
 	id, idOk := vars["id"]
 	action, actionOk := vars["action"]
 	if idOk && actionOk {
-		val, err := handleFileAction(c, r, action, id)
+		val, err := handleFileAction(c, r, id, action)
 
 		if err == nil {
 			err = json.NewEncoder(w).Encode(val)

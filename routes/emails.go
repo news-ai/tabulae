@@ -15,7 +15,7 @@ import (
 	"github.com/news-ai/tabulae/permissions"
 )
 
-func handleEmailAction(c context.Context, r *http.Request, action string, id string) (interface{}, error) {
+func handleEmailAction(c context.Context, r *http.Request, id string, action string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		switch action {
@@ -96,7 +96,7 @@ func EmailActionHandler(w http.ResponseWriter, r *http.Request) {
 	id, idOk := vars["id"]
 	action, actionOk := vars["action"]
 	if idOk && actionOk {
-		val, err := handleEmailAction(c, r, action, id)
+		val, err := handleEmailAction(c, r, id, action)
 
 		if err == nil {
 			err = json.NewEncoder(w).Encode(val)

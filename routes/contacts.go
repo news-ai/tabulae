@@ -104,7 +104,7 @@ func ContactActionHandler(w http.ResponseWriter, r *http.Request) {
 	id, idOk := vars["id"]
 	action, actionOk := vars["action"]
 	if idOk && actionOk {
-		val, err := handleContactAction(c, r, action, id)
+		val, err := handleContactAction(c, r, id, action)
 
 		if err == nil {
 			err = json.NewEncoder(w).Encode(val)
