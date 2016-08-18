@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/bradleyg/go-sentroni"
 	"github.com/codegangsta/negroni"
-	"github.com/getsentry/raven-go"
 	"github.com/gorilla/context"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
@@ -100,11 +100,13 @@ func init() {
 	})
 
 	// Setup error logging
-	raven.SetDSN("https://eccfde5212974b1b9c284995885d0446:592890e0beac49a58d410f1e7061983e@app.getsentry.com/92935")
+	dsn := "https://eccfde5212974b1b9c284995885d0446:592890e0beac49a58d410f1e7061983e@app.getsentry.com/92935"
 
 	// HTTP router
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 	app.Use(negroni.HandlerFunc(secureMiddleware.HandlerFuncWithNext))
+	app.Use(sentroni.NewRecovery(dsn))
+
 	app.UseHandler(main)
-	http.Handle("/", raven.RecoveryHandler(context.ClearHandler(app)))
+	http.Handle("/", context.ClearHandler(app))
 }
