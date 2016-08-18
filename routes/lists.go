@@ -4,20 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine"
-	"google.golang.org/appengine/log"
 
 	"github.com/gorilla/mux"
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/files"
 	"github.com/news-ai/tabulae/permissions"
-	"github.com/news-ai/tabulae/utils"
 )
 
 var (
