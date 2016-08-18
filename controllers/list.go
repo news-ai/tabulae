@@ -194,18 +194,20 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 * Action methods
  */
 
-func GetContactsForList(c context.Context, r *http.Request, id string, limit int, offset int) ([]models.Contact, error) {
+func GetContactsForList(c context.Context, r *http.Request, id string, limit int, offset int) (models.BaseResponse, error) {
+	response := models.BaseResponse{}
+
 	// Get the details of the current media list
 	mediaList, err := GetMediaList(c, r, id)
 	if err != nil {
-		return []models.Contact{}, err
+		return response, err
 	}
 
 	startPosition := offset
 	endPosition := startPosition + limit
 
 	if len(mediaList.Contacts) < startPosition {
-		return []models.Contact{}, nil
+		return response, nil
 	}
 
 	if len(mediaList.Contacts) < endPosition {
@@ -223,7 +225,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string, limit int
 
 	err = nds.GetMulti(c, subsetKeyIds, contacts)
 	if err != nil {
-		return contacts, err
+		return response, err
 	}
 
 	for i := 0; i < len(contacts); i++ {
@@ -236,5 +238,8 @@ func GetContactsForList(c context.Context, r *http.Request, id string, limit int
 		contacts[i].Id = subsetKeyIds[i].IntID()
 	}
 
-	return contacts, nil
+	response.Count = len(contacts)
+	response.Results = contacts
+
+	return response, nil
 }

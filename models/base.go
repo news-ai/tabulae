@@ -13,6 +13,13 @@ type CustomContactField struct {
 	Value string `json:"value"`
 }
 
+type BaseResponse struct {
+	Count    int         `json:"count"`
+	Next     string      `json:"-"`
+	Results  interface{} `json:"results"`
+	Includes interface{} `json:"includes"`
+}
+
 type Base struct {
 	Id int64 `json:"id" datastore:"-"`
 

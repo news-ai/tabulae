@@ -26,6 +26,9 @@ type MediaList struct {
 
 	FieldsMap []CustomFieldsMap `json:"fieldsmap"`
 
+	CustomFields []string `json:"-"`
+	Fields       []string `json:"-"`
+
 	FileUpload int64 `json:"fileupload"`
 
 	Archived bool `json:"archived"`

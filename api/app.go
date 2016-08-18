@@ -28,7 +28,7 @@ func init() {
 
 	// CORs
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"https://newsai.org", "http://localhost:3000", "http://site.newsai.org", "http://104.196.166.10"},
+		AllowedOrigins:   []string{"https://newsai.org", "http://localhost:3000", "https://site.newsai.org", "http://site.newsai.org"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"},
 		Debug:            true,
