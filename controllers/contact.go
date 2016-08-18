@@ -624,15 +624,20 @@ func UpdateContactToParent(c context.Context, r *http.Request, id string) (model
 	return contact, nil
 }
 
-func LinkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
-	if ct.ParentContact == 0 {
-		return ct, nil
+func LinkedInSync(c context.Context, r *http.Request, id string) (models.Contact, error) {
+	contact, err := GetContact(c, r, id)
+	if err != nil {
+		return contact, err
 	}
 
-	parentContact, err := getContact(c, r, ct.ParentContact)
+	if contact.ParentContact == 0 {
+		return contact, nil
+	}
+
+	parentContact, err := getContact(c, r, contact.ParentContact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return ct, err
+		return contact, err
 	}
 
 	// Send a pub to Influencer
@@ -640,7 +645,7 @@ func LinkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*mode
 
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return ct, err
+		return contact, err
 	}
 
 	// Now that we have told the Influencer program that we are syncing Linkedin data
@@ -648,8 +653,8 @@ func LinkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*mode
 	parentContact.Save(c, r)
 
 	// Logging the action happening
-	LogNotificationForResource(c, r, "Contact", ct.Id, "SYNC", "LINKEDIN")
+	LogNotificationForResource(c, r, "Contact", contact.Id, "SYNC", "LINKEDIN")
 	LogNotificationForResource(c, r, "Contact", parentContact.Id, "SYNC", "LINKEDIN")
 
-	return ct, nil
+	return contact, nil
 }
