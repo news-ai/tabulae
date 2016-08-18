@@ -10,6 +10,8 @@ import (
 
 	"google.golang.org/appengine/datastore"
 
+	"github.com/qedus/nds"
+
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
 )
@@ -23,17 +25,22 @@ import (
  */
 
 func getPublication(c context.Context, id int64) (models.Publication, error) {
+	if id == 0 {
+		return models.Publication{}, errors.New("datastore: no such entity")
+	}
 	// Get the publication details by id
-	publications := []models.Publication{}
+	var publication models.Publication
 	publicationId := datastore.NewKey(c, "Publication", "", id, nil)
-	ks, err := datastore.NewQuery("Publication").Filter("__key__ =", publicationId).GetAll(c, &publications)
+
+	err := nds.Get(c, publicationId, &publication)
+
 	if err != nil {
 		return models.Publication{}, err
 	}
 
-	if len(publications) > 0 {
-		publications[0].Id = ks[0].IntID()
-		return publications[0], nil
+	if !publication.Created.IsZero() {
+		publication.Id = publicationId.IntID()
+		return publication, nil
 	}
 	return models.Publication{}, errors.New("No publication by this id")
 }
