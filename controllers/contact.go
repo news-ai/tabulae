@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
+	"strconv"
 	"time"
 
 	"golang.org/x/net/context"
@@ -303,6 +304,40 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 	return contact, nil
 }
 
+func GetDiff(c context.Context, r *http.Request, id string) (interface{}, error) {
+	contact, err := GetContact(c, r, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get parent contact
+	parentContactId := strconv.FormatInt(contact.ParentContact, 10)
+	parentContact, err := GetContact(c, r, parentContactId)
+	if err != nil {
+		return nil, err
+	}
+
+	newEmployers := []string{}
+	for i := 0; i < len(parentContact.Employers); i++ {
+		// Get each publication
+		currentPublicationId := strconv.FormatInt(parentContact.Employers[i], 10)
+		currentPublication, err := GetPublication(c, currentPublicationId)
+		if err != nil {
+			err = errors.New("Only actions are diff and update")
+			return nil, err
+		}
+		newEmployers = append(newEmployers, currentPublication.Name)
+	}
+
+	data := struct {
+		Changes []string `json:"changes"`
+	}{
+		newEmployers,
+	}
+
+	return data, nil
+}
+
 /*
 * Create methods
  */
@@ -556,27 +591,37 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, e
 * Normalization methods
  */
 
-func UpdateContactToParent(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
-	parentContact, err := getContact(c, r, ct.ParentContact)
+func UpdateContactToParent(c context.Context, r *http.Request, id string) (models.Contact, error) {
+	// Get current contact
+	contact, err := GetContact(c, r, id)
 	if err != nil {
-		log.Errorf(c, "%v", err)
-		return ct, err
+		return contact, err
 	}
 
-	ct.Employers = parentContact.Employers
-	ct.PastEmployers = parentContact.PastEmployers
-	ct.IsOutdated = false
-	_, err = Save(c, r, ct)
+	if !contact.IsOutdated {
+		return contact, nil
+	}
+
+	parentContact, err := getContact(c, r, contact.ParentContact)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return contact, err
+	}
+
+	contact.Employers = parentContact.Employers
+	contact.PastEmployers = parentContact.PastEmployers
+	contact.IsOutdated = false
+	_, err = Save(c, r, &contact)
 
 	// Logging the action happening
-	LogNotificationForResource(c, r, "Contact", ct.Id, "UPDATE", "TO_PARENT")
+	LogNotificationForResource(c, r, "Contact", contact.Id, "UPDATE", "TO_PARENT")
 
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return ct, err
+		return contact, err
 	}
 
-	return ct, nil
+	return contact, nil
 }
 
 func LinkedInSync(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {

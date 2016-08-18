@@ -24,8 +24,7 @@ var (
 	errMediaListHandling = "Media List handling error"
 )
 
-func handleMediaListActionUpload(c context.Context, r *http.Request, id string, action string, limit int, offset int) (interface{}, error) {
-
+func handleMediaListActionUpload(c context.Context, r *http.Request, id string, limit int, offset int) (interface{}, error) {
 	user, err := GetUser(r)
 	if err != nil {
 		return nil, err
@@ -63,7 +62,7 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 	case "POST":
 		switch action {
 		case "upload":
-			return controllers.GetContactsForList(c, r, id, limit, offset)
+			return handleMediaListActionUpload(c, r, id, limit, offset)
 		}
 	}
 	return nil, errors.New("method not implemented")

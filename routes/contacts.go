@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"golang.org/x/net/context"
 
@@ -15,6 +14,21 @@ import (
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/permissions"
 )
+
+func handleContactAction(c context.Context, r *http.Request, id string, action string) (interface{}, error) {
+	switch r.Method {
+	case "GET":
+		switch action {
+		case "diff":
+			return controllers.GetDiff(c, r, id)
+		case "update":
+			return controllers.UpdateContactToParent(c, r, id)
+		case "sync":
+			return nil, nil
+		}
+	}
+	return nil, errors.New("method not implemented")
+}
 
 func handleContact(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
@@ -87,75 +101,18 @@ func ContactActionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// If there is an ID
 	vars := mux.Vars(r)
-	id, ok := vars["id"]
+	id, idOk := vars["id"]
 	action, actionOk := vars["action"]
-	if ok && actionOk {
-		// Get current contact
-		contact, err := controllers.GetContact(c, r, id)
+	if idOk && actionOk {
+		val, err := handleContactAction(c, r, action, id)
+
+		if err == nil {
+			err = json.NewEncoder(w).Encode(val)
+		}
+
 		if err != nil {
 			permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
 			return
 		}
-
-		// Get parent contact
-		parentContact, err := controllers.GetContact(c, r, strconv.FormatInt(contact.ParentContact, 10))
-		if err != nil {
-			permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
-			return
-		}
-
-		// Two actions: diff, update
-		if action == "diff" {
-			newEmployers := []string{}
-			for i := 0; i < len(parentContact.Employers); i++ {
-				// Get each publication
-				currentPublication, err := controllers.GetPublication(c, strconv.FormatInt(parentContact.Employers[i], 10))
-				if err != nil {
-					permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", "Only actions are diff and update")
-					return
-				}
-				newEmployers = append(newEmployers, currentPublication.Name)
-			}
-			data := struct {
-				Changes []string `json:"changes"`
-			}{
-				newEmployers,
-			}
-
-			json.NewEncoder(w).Encode(data)
-			return
-		} else if action == "update" {
-			if !contact.IsOutdated {
-				err = json.NewEncoder(w).Encode(contact)
-				return
-			}
-
-			val, err := controllers.UpdateContactToParent(c, r, &contact)
-
-			if err == nil {
-				err = json.NewEncoder(w).Encode(val)
-				return
-			}
-
-			if err != nil {
-				permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
-				return
-			}
-		} else if action == "sync" {
-			val, err := controllers.LinkedInSync(c, r, &contact)
-
-			if err == nil {
-				err = json.NewEncoder(w).Encode(val)
-				return
-			}
-
-			if err != nil {
-				permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
-				return
-			}
-		}
-
-		permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", "Only actions are diff and update")
-		return
 	}
 }

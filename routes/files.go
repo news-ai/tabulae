@@ -18,6 +18,10 @@ import (
 	"github.com/news-ai/tabulae/permissions"
 )
 
+func handleFileAction(c context.Context, r *http.Request, id string) (interface{}, error) {
+	return nil, nil
+}
+
 func handleFile(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
