@@ -9,6 +9,8 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
 
+	"github.com/news-ai/tabulae/controllers"
+	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
 
 	"golang.org/x/oauth2"
@@ -97,16 +99,16 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	newUser := models.User{}
+	newUser.Email = googleUser.Email
+	newUser.GoogleId = googleUser.ID
+	newUser.FirstName = googleUser.GivenName
+	newUser.LastName = googleUser.FamilyName
+	newUser.EmailConfirmed = true
+	controllers.RegisterUser(r, newUser)
+
 	session.Values["email"] = googleUser.Email
-	session.Values["id"] = googleUser.ID
-	session.Values["verifiedemail"] = googleUser.VerifiedEmail
-	session.Values["name"] = googleUser.Name
-	session.Values["given_name"] = googleUser.GivenName
-	session.Values["family_name"] = googleUser.FamilyName
-	session.Values["picture"] = googleUser.Picture
-	session.Values["locale"] = googleUser.Locale
-	session.Values["hd"] = googleUser.Hd
-	session.Values["accessToken"] = tkn.AccessToken
+	session.Values["id"] = newUser.Id
 	session.Save(r, w)
 
 	if session.Values["next"] != nil {

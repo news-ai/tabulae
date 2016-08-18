@@ -60,6 +60,15 @@ func getUser(c context.Context, r *http.Request, id int64) (models.User, error) 
 
 // Gets every single user
 func getUsers(c context.Context) ([]models.User, error) {
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return []models.User{}, err
+	}
+
+	if !user.IsAdmin {
+		return []models.User{}, errors.New("Forbidden")
+	}
+
 	// Get the current signed in user details by Email
 	users := []models.User{}
 	ks, err := datastore.NewQuery("User").GetAll(c, &users)
@@ -79,15 +88,26 @@ func getUsers(c context.Context) ([]models.User, error) {
 
 func filterUser(c context.Context, queryType, query string) (models.User, error) {
 	// Get the current signed in user details by Id
-	users := []models.User{}
-	ks, err := datastore.NewQuery("User").Filter(queryType+" =", query).GetAll(c, &users)
+	ks, err := datastore.NewQuery("User").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		return models.User{}, err
 	}
 
-	if len(users) > 0 {
-		users[0].Id = ks[0].IntID()
-		return users[0], nil
+	if len(ks) == 0 {
+		return models.User{}, errors.New("No user by the field " + queryType)
+	}
+
+	user := models.User{}
+	userId := ks[0]
+
+	err = nds.Get(c, userId, &user)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	if !user.Created.IsZero() {
+		user.Id = userId.IntID()
+		return user, nil
 	}
 	return models.User{}, errors.New("No user by this " + queryType)
 }
@@ -168,6 +188,17 @@ func GetCurrentUser(c context.Context, r *http.Request) (models.User, error) {
 	return user, nil
 }
 
+func GetUserFromApiKey(r *http.Request, ApiKey string) (models.User, error) {
+	c := appengine.NewContext(r)
+	user, err := GetUserByApiKey(c, ApiKey)
+
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}
+
 /*
 * Create methods
  */
@@ -196,41 +227,16 @@ func ValidateUserPassword(r *http.Request, email string, password string) (bool,
 	return false, errors.New("User does not exist")
 }
 
-func NewOrUpdateUser(c context.Context, r *http.Request, email string, userDetails map[string]string) {
+func AddUserToContext(c context.Context, r *http.Request, email string) {
 	_, ok := gcontext.GetOk(r, "user")
 	if !ok {
-		user, err := GetUserByEmail(c, email)
-		if err != nil {
-			// Add the user if there is no user
-			// If the registration comes from Google
-			user := models.User{}
-			user.GoogleId = userDetails["id"]
-			user.Email = userDetails["email"]
-			user.FirstName = userDetails["given_name"]
-			user.LastName = userDetails["family_name"]
-			user.EmailConfirmed = true
-			_, err = user.Create(c, r)
-
-			CreateNotificationForUser(c, r)
-		} else {
-			gcontext.Set(r, "user", user)
-			Update(c, r, &user)
-		}
+		user, _ := GetUserByEmail(c, email)
+		gcontext.Set(r, "user", user)
+		Update(c, r, &user)
 	} else {
 		user := gcontext.Get(r, "user").(models.User)
 		Update(c, r, &user)
 	}
-}
-
-func GetUserFromApiKey(r *http.Request, ApiKey string) (models.User, error) {
-	c := appengine.NewContext(r)
-	user, err := GetUserByApiKey(c, ApiKey)
-
-	if err != nil {
-		return models.User{}, err
-	}
-
-	return user, nil
 }
 
 /*

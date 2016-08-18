@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -35,31 +34,6 @@ func GetCurrentUserEmail(r *http.Request) (string, error) {
 		return "", errors.New("No user logged in")
 	}
 	return session.Values["email"].(string), nil
-}
-
-// Gets the full details of the current user
-func GetUserDetails(r *http.Request) (map[string]string, error) {
-	session, err := Store.Get(r, "sess")
-
-	// If there is no session
-	if err != nil {
-		return nil, errors.New("No user logged in")
-	}
-
-	// If there exists no email then user not logged in
-	if session.Values["email"].(string) == "" {
-		return nil, errors.New("No user logged in")
-	}
-
-	// Takes interface{} values and converts them into string
-	userDetails := map[string]string{}
-	for k, v := range session.Values {
-		key := fmt.Sprint(k)
-		value := fmt.Sprint(v)
-		userDetails[key] = value
-	}
-
-	return userDetails, nil
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {

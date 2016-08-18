@@ -28,10 +28,10 @@ func UpdateOrCreateUser(w http.ResponseWriter, r *http.Request, next http.Handle
 		return
 	} else {
 		if email != "" {
-			userDetails, _ := auth.GetUserDetails(r)
-			controllers.NewOrUpdateUser(c, r, email, userDetails)
+			controllers.AddUserToContext(c, r, email)
 		}
 	}
+
 	next(w, r)
 
 	if apiKey != "" {
