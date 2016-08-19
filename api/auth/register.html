@@ -14,6 +14,10 @@
                     {{ .csrfField }}
                     <h2>NewsAI <small>Tabulae</small></h2>
                     <hr class="colorgraph">
+                    <div class="alert alert-danger" role="alert" id="alertBox" style="display:none">
+                      <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                      <span class="sr-only">Error:</span> <span id="errorMessage"></span>
+                    </div>
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">

@@ -18,6 +18,8 @@ $(function () {
         // Checking password
         $('form').on('submit',function(){
            if($('#password').val()!=$('#password_confirmation').val()){
+                document.getElementById("alertBox").style.display = "block";
+                document.getElementById("errorMessage").innerHTML = "Password does not match";
                return false;
            }
            return true;

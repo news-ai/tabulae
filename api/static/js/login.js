@@ -1,7 +1,12 @@
 var successParameter = $.urlParam('success');
 var messageParameter = $.urlParam('message');
+if (successParameter === "true") {
+    document.getElementById("alertBoxSuccess").style.display = "block";
+    messageParameter = decodeURIComponent((messageParameter+'').replace(/\+/g, '%20'));
+    document.getElementById("successMessage").innerHTML = messageParameter;
+}
 if (successParameter === "false") {
-    document.getElementById("alertBox").style.display = "block";
+    document.getElementById("alertBoxFail").style.display = "block";
     messageParameter = decodeURIComponent((messageParameter+'').replace(/\+/g, '%20'));
     document.getElementById("errorMessage").innerHTML = messageParameter;
 }

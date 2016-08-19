@@ -58,7 +58,7 @@ func init() {
 	router.Handler("GET", "/api/auth/confirmation", CSRF(auth.EmailConfirmationHandler()))
 	router.Handler("GET", "/api/auth/registration", CSRF(auth.PasswordRegisterPageHandler()))
 	router.Handler("POST", "/api/auth/userlogin", CSRF(auth.PasswordLoginHandler()))
-	router.Handler("POST", "/api/auth/userregister", CSRF(auth.ForgetPasswordHandler()))
+	router.Handler("POST", "/api/auth/userregister", CSRF(auth.PasswordRegisterHandler()))
 	router.Handler("POST", "/api/auth/userforget", CSRF(auth.ForgetPasswordHandler()))
 
 	router.GET("/api/auth/google", auth.GoogleLoginHandler)
