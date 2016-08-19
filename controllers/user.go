@@ -67,9 +67,14 @@ func getUsers(c context.Context, r *http.Request) ([]models.User, error) {
 		return []models.User{}, errors.New("Forbidden")
 	}
 
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	log.Infof(c, "%v", offset)
+
 	// Get the current signed in user details by Email
 	users := []models.User{}
-	ks, err := datastore.NewQuery("User").GetAll(c, &users)
+	ks, err := datastore.NewQuery("User").Limit(limit).Offset(offset).GetAll(c, &users)
 	if err != nil {
 		return []models.User{}, err
 	}

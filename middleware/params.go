@@ -17,13 +17,11 @@ func GetPagination(r *http.Request) (int, int) {
 	// check if query exists
 	if len(queryLimit) != 0 {
 		limit, _ = strconv.Atoi(queryLimit)
-		return limit, offset
 	}
 
 	// check if offset exists
 	if len(queryOffset) != 0 {
 		offset, _ = strconv.Atoi(queryOffset)
-		return limit, offset
 	}
 
 	// Boundary checks

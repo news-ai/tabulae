@@ -45,6 +45,7 @@ func init() {
 	// Initialize router
 	router := httprouter.New()
 
+	// Not found Handler
 	router.GET("/", routes.NotFoundHandler)
 	router.GET("/api", routes.NotFoundHandler)
 
@@ -114,19 +115,15 @@ func init() {
 
 	// Security fixes
 	secureMiddleware := secure.New(secure.Options{
-		FrameDeny: true,
-		// ContentSecurityPolicy: "default-src 'self'",
+		FrameDeny:        true,
 		BrowserXssFilter: true,
 	})
-
-	// // Setup error logging
-	dsn := "https://eccfde5212974b1b9c284995885d0446:592890e0beac49a58d410f1e7061983e@app.getsentry.com/92935"
 
 	// HTTP router
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 	app.Use(negroni.HandlerFunc(middleware.AttachParameters))
 	app.Use(negroni.HandlerFunc(secureMiddleware.HandlerFuncWithNext))
-	app.Use(sentroni.NewRecovery(dsn))
+	app.Use(sentroni.NewRecovery(os.Getenv("SENTRY_DSN")))
 	app.UseHandler(router)
 
 	http.Handle("/", context.ClearHandler(app))

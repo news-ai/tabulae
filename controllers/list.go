@@ -50,6 +50,7 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return models.MediaList{}, errors.New("Could not get user")
 		}
 		if mediaList.CreatedBy != user.Id {
@@ -213,8 +214,6 @@ func GetContactsForList(c context.Context, r *http.Request, id string) (models.B
 
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
-
-	log.Infof(c, "%v", offset)
 
 	startPosition := offset
 	endPosition := startPosition + limit

@@ -22,10 +22,11 @@ env_variables:
   SENDGRID_USER: 'newsaiorg'
   SENDGRID_KEY: 'EswwpT3vxR9i6,]yzpQP'
   SENDGRID_API_KEY: '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'
+  SENTRY_DSN: 'https://eccfde5212974b1b9c284995885d0446:592890e0beac49a58d410f1e7061983e@app.getsentry.com/92935'
 
 inbound_services:
 - mail
 
 automatic_scaling:
   max_concurrent_requests: 30
-  max_idle_instances: 1
+  max_idle_instances: 2
