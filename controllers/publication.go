@@ -10,6 +10,7 @@ import (
 
 	"google.golang.org/appengine/datastore"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -71,9 +72,21 @@ func filterPublication(c context.Context, queryType, query string) (models.Publi
 * Get methods
  */
 
-func GetPublications(c context.Context) ([]models.Publication, error) {
+func GetPublications(c context.Context, r *http.Request) ([]models.Publication, error) {
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return []models.Publication{}, err
+	}
+
+	if !user.IsAdmin {
+		return []models.Publication{}, errors.New("Forbidden")
+	}
+
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
 	publications := []models.Publication{}
-	ks, err := datastore.NewQuery("Publication").GetAll(c, &publications)
+	ks, err := datastore.NewQuery("Publication").Limit(limit).Offset(offset).GetAll(c, &publications)
 	if err != nil {
 		return []models.Publication{}, err
 	}

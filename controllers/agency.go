@@ -10,6 +10,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -83,8 +84,20 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
  */
 
 // Gets every single agency
-func GetAgencies(c context.Context) ([]models.Agency, error) {
-	ks, err := datastore.NewQuery("Agency").KeysOnly().GetAll(c, nil)
+func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, error) {
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return []models.Agency{}, err
+	}
+
+	if !user.IsAdmin {
+		return []models.Agency{}, errors.New("Forbidden")
+	}
+
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	ks, err := datastore.NewQuery("Agency").Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		return []models.Agency{}, err
 	}

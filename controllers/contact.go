@@ -15,6 +15,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -245,29 +246,21 @@ func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Re
  */
 
 // Gets every single contact
-func GetContacts(c context.Context, r *http.Request, limit int, offset int) ([]models.Contact, error) {
+func GetContacts(c context.Context, r *http.Request) ([]models.Contact, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, err
 	}
 
-	ks, err := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", false).KeysOnly().GetAll(c, nil)
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
 
-	// Pagination work
-	startPosition := offset
-	endPosition := startPosition + limit
-	if len(ks) < startPosition {
-		return []models.Contact{}, nil
-	}
-	if len(ks) < endPosition {
-		endPosition = len(ks)
-	}
+	ks, err := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", false).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 
-	subsetIds := ks[startPosition:endPosition]
 	contacts := []models.Contact{}
-	contacts = make([]models.Contact, len(subsetIds))
-	err = nds.GetMulti(c, subsetIds, contacts)
+	contacts = make([]models.Contact, len(ks))
+	err = nds.GetMulti(c, ks, contacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return contacts, err

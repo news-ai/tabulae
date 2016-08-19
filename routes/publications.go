@@ -30,9 +30,8 @@ func handlePublications(c context.Context, w http.ResponseWriter, r *http.Reques
 			if val, ok := r.URL.Query()["name"]; ok && len(val) > 0 {
 				return controllers.FilterPublicationByName(c, val[0])
 			}
-		} else {
-			return controllers.GetPublications(c)
 		}
+		return controllers.GetPublications(c, r)
 	case "POST":
 		return controllers.CreatePublication(c, w, r)
 	}

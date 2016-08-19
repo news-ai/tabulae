@@ -26,7 +26,7 @@ func handleAgency(c context.Context, r *http.Request, id string) (interface{}, e
 func handleAgencies(c context.Context, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetAgencies(c)
+		return controllers.GetAgencies(c, r)
 	}
 	return nil, errors.New("method not implemented")
 }
