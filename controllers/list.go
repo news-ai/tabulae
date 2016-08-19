@@ -30,25 +30,31 @@ var nonCustomHeaders = []string{"firstname", "lastname", "email", "employers", "
  */
 
 func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaList, error) {
+	if id == 0 {
+		return models.MediaList{}, errors.New("datastore: no such entity")
+	}
+
 	// Get the MediaList by id
-	mediaLists := []models.MediaList{}
+	var mediaList models.MediaList
 	mediaListId := datastore.NewKey(c, "MediaList", "", id, nil)
-	ks, err := datastore.NewQuery("MediaList").Filter("__key__ =", mediaListId).GetAll(c, &mediaLists)
+
+	err := nds.Get(c, mediaListId, &mediaList)
 	if err != nil {
 		return models.MediaList{}, err
 	}
-	if len(mediaLists) > 0 {
-		mediaLists[0].Id = ks[0].IntID()
+
+	if !mediaList.Created.IsZero() {
+		mediaList.Id = mediaListId.IntID()
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
 			return models.MediaList{}, errors.New("Could not get user")
 		}
-		if mediaLists[0].CreatedBy != user.Id {
+		if mediaList.CreatedBy != user.Id {
 			return models.MediaList{}, errors.New("Forbidden")
 		}
 
-		return mediaLists[0], nil
+		return mediaList, nil
 	}
 	return models.MediaList{}, errors.New("No media list by this id")
 }
