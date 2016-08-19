@@ -9,6 +9,8 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 
+	"github.com/qedus/nds"
+
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
 )
@@ -23,24 +25,26 @@ import (
 
 func getFile(c context.Context, r *http.Request, id int64) (models.File, error) {
 	// Get the File by id
-	files := []models.File{}
+	var file models.File
 	fileId := datastore.NewKey(c, "File", "", id, nil)
-	ks, err := datastore.NewQuery("File").Filter("__key__ =", fileId).GetAll(c, &files)
+
+	err := nds.Get(c, fileId, &file)
 	if err != nil {
 		return models.File{}, err
 	}
-	if len(files) > 0 {
-		files[0].Id = ks[0].IntID()
+
+	if !file.Created.IsZero() {
+		file.Id = fileId.IntID()
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
 			return models.File{}, errors.New("Could not get user")
 		}
-		if files[0].CreatedBy != user.Id && !user.IsAdmin {
+		if file.CreatedBy != user.Id && !user.IsAdmin {
 			return models.File{}, errors.New("Forbidden")
 		}
 
-		return files[0], nil
+		return file, nil
 	}
 	return models.File{}, errors.New("No file by this id")
 }
