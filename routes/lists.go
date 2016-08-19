@@ -20,12 +20,12 @@ var (
 	errMediaListHandling = "Media List handling error"
 )
 
-func handleMediaListActions(c context.Context, r *http.Request, id string, action string, limit int, offset int) (interface{}, error) {
+func handleMediaListActions(c context.Context, r *http.Request, id string, action string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		switch action {
 		case "contacts":
-			return controllers.GetContactsForList(c, r, id, limit, offset)
+			return controllers.GetContactsForList(c, r, id)
 		}
 	case "POST":
 		switch action {
@@ -34,7 +34,7 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 			if err != nil {
 				return nil, err
 			}
-			return files.HandleMediaListActionUpload(c, r, id, user, limit, offset)
+			return files.HandleMediaListActionUpload(c, r, id, user)
 		}
 	}
 	return nil, errors.New("method not implemented")
@@ -99,13 +99,8 @@ func MediaListActionHandler(w http.ResponseWriter, r *http.Request, ps httproute
 	c := appengine.NewContext(r)
 	id := ps.ByName("id")
 	action := ps.ByName("action")
-	limit, offset, err := GetPagination(r)
-	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
-		return
-	}
 
-	val, err := handleMediaListActions(c, r, id, action, limit, offset)
+	val, err := handleMediaListActions(c, r, id, action)
 	if err == nil {
 		err = ffjson.NewEncoder(w).Encode(val)
 	}

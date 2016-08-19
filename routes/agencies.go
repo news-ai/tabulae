@@ -50,6 +50,7 @@ func AgenciesHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 // Handler for when there is a key present after /users/<id> route.
 func AgencyHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
+	c := appengine.NewContext(r)
 	id := ps.ByName("id")
 	val, err := handleAgency(c, r, id)
 

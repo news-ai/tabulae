@@ -16,7 +16,7 @@ import (
 	"github.com/news-ai/tabulae/utils"
 )
 
-func HandleMediaListActionUpload(c context.Context, r *http.Request, id string, user models.User, limit int, offset int) (interface{}, error) {
+func HandleMediaListActionUpload(c context.Context, r *http.Request, id string, user models.User) (interface{}, error) {
 	userId := strconv.FormatInt(user.Id, 10)
 
 	file, handler, err := r.FormFile("file")

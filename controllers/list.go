@@ -8,7 +8,9 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -200,7 +202,7 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 * Action methods
  */
 
-func GetContactsForList(c context.Context, r *http.Request, id string, limit int, offset int) (models.BaseResponse, error) {
+func GetContactsForList(c context.Context, r *http.Request, id string) (models.BaseResponse, error) {
 	response := models.BaseResponse{}
 
 	// Get the details of the current media list
@@ -208,6 +210,11 @@ func GetContactsForList(c context.Context, r *http.Request, id string, limit int
 	if err != nil {
 		return response, err
 	}
+
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	log.Infof(c, "%v", offset)
 
 	startPosition := offset
 	endPosition := startPosition + limit

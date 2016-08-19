@@ -124,6 +124,7 @@ func init() {
 
 	// HTTP router
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
+	app.Use(negroni.HandlerFunc(middleware.AttachParameters))
 	app.Use(negroni.HandlerFunc(secureMiddleware.HandlerFuncWithNext))
 	app.Use(sentroni.NewRecovery(dsn))
 	app.UseHandler(router)

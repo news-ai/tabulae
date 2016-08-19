@@ -33,8 +33,4 @@ func UpdateOrCreateUser(w http.ResponseWriter, r *http.Request, next http.Handle
 	}
 
 	next(w, r)
-
-	if apiKey != "" {
-		auth.BasicAuthLogout(w, r)
-	}
 }
