@@ -130,14 +130,14 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
 
-	decoder := json.NewDecoder(rdr1)
-	var email models.Email
-	err := decoder.Decode(&email)
-
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		return []models.Email{}, err
 	}
+
+	decoder := json.NewDecoder(rdr1)
+	var email models.Email
+	err = decoder.Decode(&email)
 
 	// If it is an array and you need to do BATCH processing
 	if err != nil {

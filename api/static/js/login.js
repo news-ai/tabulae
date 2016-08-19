@@ -1,6 +1,13 @@
+var successParameter = $.urlParam('success');
+var messageParameter = $.urlParam('message');
+if (successParameter === "false") {
+    document.getElementById("alertBox").style.display = "block";
+    messageParameter = decodeURIComponent((messageParameter+'').replace(/\+/g, '%20'));
+    document.getElementById("errorMessage").innerHTML = messageParameter;
+}
+
 $(function () {
     $('.button-checkbox').each(function () {
-
         // Settings
         var $widget = $(this),
             $button = $widget.find('button'),

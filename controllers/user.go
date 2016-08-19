@@ -45,7 +45,7 @@ func getUser(c context.Context, r *http.Request, id int64) (models.User, error) 
 			return models.User{}, err
 		}
 
-		if !permissions.AccessToObject(user.Id, currentUser.Id) && !user.IsAdmin {
+		if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.IsAdmin {
 			err = errors.New("Forbidden")
 			log.Errorf(c, "%v", err)
 			return models.User{}, err
@@ -145,7 +145,7 @@ func GetUser(c context.Context, r *http.Request, id string) (models.User, error)
 		}
 		user, err := getUser(c, r, userId)
 		if err != nil {
-			return models.User{}, errors.New("No user by this id")
+			return models.User{}, err
 		}
 		return user, nil
 	}

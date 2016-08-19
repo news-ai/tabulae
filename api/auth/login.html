@@ -10,10 +10,14 @@
     <div class="container">
         <div class="row">
             <div class="col-xs-12 col-sm-8 col-md-6 col-sm-offset-2 col-md-offset-3">
-                <form role="form" method="post" action="userlogin">
+                <form role="form" method="post" action="/api/auth/userlogin">
                     {{ .csrfField }}
                     <h2>NewsAI <small>Tabulae</small></h2>
                     <hr class="colorgraph">
+                    <div class="alert alert-danger" role="alert" id="alertBox" style="display:none">
+                      <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                      <span class="sr-only">Error:</span> <span id="errorMessage"></span>
+                    </div>
                     <div class="form-group">
                         <input type="email" name="email" id="email" class="form-control input-lg" placeholder="Email Address" tabindex="1">
                     </div>
@@ -29,12 +33,13 @@
                     </div>
                 </form>
                 <br>
-                <p style="text-align:center;"><a href="/api/auth/forget">Forgot password<a></p>
+                <!-- <p style="text-align:center;"><a href="/api/auth/forget">Forgot password<a></p> -->
             </div>
         </div>
     </div>
 </body>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-<script src="/static/js/register.js"></script>
+<script src="/static/js/common.js"></script>
+<script src="/static/js/login.js"></script>
 </html>
