@@ -9,6 +9,8 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
 
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/utils"
@@ -38,7 +40,7 @@ func SetRedirectURL() {
 }
 
 // Handler to redirect user to the Google OAuth2 page
-func GoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
+func GoogleLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Generate a random state that we identify the user with
 	state := utils.RandToken()
 
@@ -58,7 +60,7 @@ func GoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handler to get information when callback comes back from Google
-func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
+func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	c := appengine.NewContext(r)
 	session, err := Store.Get(r, "sess")
 	if err != nil {

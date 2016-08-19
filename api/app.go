@@ -8,14 +8,15 @@ import (
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
 	"github.com/gorilla/csrf"
-	"github.com/gorilla/mux"
+	// "github.com/gorilla/mux"
+	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
 
 	"github.com/news-ai/tabulae/auth"
 	"github.com/news-ai/tabulae/incoming"
 	"github.com/news-ai/tabulae/middleware"
-	"github.com/news-ai/tabulae/router"
+	// "github.com/news-ai/tabulae/router"
 	"github.com/news-ai/tabulae/routes"
 	"github.com/news-ai/tabulae/utils"
 )
@@ -39,58 +40,48 @@ func init() {
 	// Initialize CSRF
 	CSRF := csrf.Protect([]byte(os.Getenv("CSRFKEY")), csrf.Secure(false))
 
-	r := mux.NewRouter().StrictSlash(true)
-
-	// API router
-	api := r.PathPrefix("/api").Subrouter().StrictSlash(true)
-
-	// Register routes
-	apiRoutes := router.GetRoutes()
-	for i := 0; i < len(apiRoutes); i++ {
-		api.HandleFunc(apiRoutes[i].HandlerName, apiRoutes[i].Routes["/"])
-		if len(apiRoutes[i].Routes) > 1 {
-			routeName := "/{id}"
-			api.HandleFunc(apiRoutes[i].HandlerName+routeName, apiRoutes[i].Routes[routeName])
-			if len(apiRoutes[i].Routes) == 3 {
-				routeName = "/{id}/{action}"
-				api.HandleFunc(apiRoutes[i].HandlerName+routeName, apiRoutes[i].Routes[routeName])
-			}
-		}
-	}
-
-	// Authentication
-	apiAuth := r.PathPrefix("/api/auth").Subrouter().StrictSlash(true)
-
-	// Password based authentication
-	apiAuth.Handle("/", CSRF(auth.PasswordLoginPageHandler()))
-	apiAuth.Handle("/userlogin", CSRF(auth.PasswordLoginHandler()))
-	apiAuth.Handle("/userregister", CSRF(auth.PasswordRegisterHandler()))
-	apiAuth.Handle("/userforget", CSRF(auth.ForgetPasswordHandler()))
-	apiAuth.Handle("/registration", CSRF(auth.PasswordRegisterPageHandler()))
-	apiAuth.Handle("/forget", CSRF(auth.ForgetPasswordPageHandler()))
-	apiAuth.Handle("/confirmation", CSRF(auth.EmailConfirmationHandler()))
-
-	// Login with Google-based authentication
-	apiAuth.HandleFunc("/google", auth.GoogleLoginHandler)
-	apiAuth.HandleFunc("/callback", auth.GoogleCallbackHandler)
-
-	// Common
-	apiAuth.HandleFunc("/logout", auth.LogoutHandler)
-
-	// Initialize the environment for a particular URL
+	// // Initialize the environment for a particular URL
 	utils.InitURL()
 	auth.SetRedirectURL()
 
-	// Incoming from other services
-	// Authentication is done through basic authentication
-	apiIncoming := r.PathPrefix("/api/incoming").Subrouter().StrictSlash(true)
+	router := httprouter.New()
 
-	apiIncoming.HandleFunc("/sendgrid", incoming.SendGridHandler)
+	router.GET("/", routes.NotFoundHandler)
+	router.GET("/api", routes.NotFoundHandler)
 
-	// Main router
-	main := mux.NewRouter().StrictSlash(true)
-	main.PathPrefix("/api").Handler(negroni.New(negroni.Wrap(r)))
-	main.HandleFunc("/", routes.NotFoundHandler)
+	router.Handler("GET", "/api/auth", CSRF(auth.PasswordLoginPageHandler()))
+	router.Handler("GET", "/api/auth/forget", CSRF(auth.ForgetPasswordPageHandler()))
+	router.Handler("GET", "/api/auth/confirmation", CSRF(auth.EmailConfirmationHandler()))
+	router.Handler("GET", "/api/auth/registration", CSRF(auth.PasswordRegisterPageHandler()))
+	router.Handler("POST", "/api/auth/userlogin", CSRF(auth.PasswordLoginHandler()))
+	router.Handler("POST", "/api/auth/userregister", CSRF(auth.ForgetPasswordHandler()))
+	router.Handler("POST", "/api/auth/userforget", CSRF(auth.ForgetPasswordHandler()))
+
+	router.GET("/api/auth/google", auth.GoogleLoginHandler)
+	router.GET("/api/auth/callback", auth.GoogleCallbackHandler)
+
+	router.GET("/api/auth/logout", auth.LogoutHandler)
+
+	router.POST("/api/incoming/sendgrid", incoming.SendGridHandler)
+
+	// // Register routes
+	// apiRoutes := router.GetRoutes()
+	// for i := 0; i < len(apiRoutes); i++ {
+	// 	api.HandleFunc(apiRoutes[i].HandlerName, apiRoutes[i].Routes["/"])
+	// 	if len(apiRoutes[i].Routes) > 1 {
+	// 		routeName := "/{id}"
+	// 		api.HandleFunc(apiRoutes[i].HandlerName+routeName, apiRoutes[i].Routes[routeName])
+	// 		if len(apiRoutes[i].Routes) == 3 {
+	// 			routeName = "/{id}/{action}"
+	// 			api.HandleFunc(apiRoutes[i].HandlerName+routeName, apiRoutes[i].Routes[routeName])
+	// 		}
+	// 	}
+	// }
+
+	// // Main router
+	// main := mux.NewRouter().StrictSlash(true)
+	// main.PathPrefix("/api").Handler(negroni.New(negroni.Wrap(r)))
+	// main.HandleFunc("/", routes.NotFoundHandler)
 
 	// Security fixes
 	secureMiddleware := secure.New(secure.Options{
@@ -99,14 +90,14 @@ func init() {
 		BrowserXssFilter: true,
 	})
 
-	// Setup error logging
+	// // Setup error logging
 	dsn := "https://eccfde5212974b1b9c284995885d0446:592890e0beac49a58d410f1e7061983e@app.getsentry.com/92935"
 
 	// HTTP router
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 	app.Use(negroni.HandlerFunc(secureMiddleware.HandlerFuncWithNext))
 	app.Use(sentroni.NewRecovery(dsn))
+	app.UseHandler(router)
 
-	app.UseHandler(main)
 	http.Handle("/", context.ClearHandler(app))
 }

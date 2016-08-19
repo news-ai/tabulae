@@ -10,6 +10,8 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/permissions"
 )
@@ -22,7 +24,7 @@ type SendGridEvent struct {
 	Reason      string `json:"reason"`
 }
 
-func SendGridHandler(w http.ResponseWriter, r *http.Request) {
+func SendGridHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	switch r.Method {
 	case "POST":
 		hasErrors := false

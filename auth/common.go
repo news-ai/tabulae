@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/news-ai/gaesessions"
 )
 
@@ -48,7 +50,7 @@ func GetCurrentUserId(r *http.Request) (string, error) {
 	return session.Values["id"].(string), nil
 }
 
-func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+func LogoutHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	session, _ := Store.Get(r, "sess")
 	delete(session.Values, "state")
 	delete(session.Values, "email")
