@@ -60,7 +60,6 @@ func handleContacts(c context.Context, w http.ResponseWriter, r *http.Request) (
 func ContactsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
 	val, err := handleContacts(c, w, r)
 
 	if err == nil {
@@ -77,8 +76,6 @@ func ContactsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 func ContactHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
-	// If there is an ID
 	id := ps.ByName("id")
 	val, err := handleContact(c, r, id)
 
@@ -95,8 +92,6 @@ func ContactHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 func ContactActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
-	// If there is an ID
 	id := ps.ByName("id")
 	action := ps.ByName("action")
 	val, err := handleContactAction(c, r, id, action)

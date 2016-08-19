@@ -52,7 +52,6 @@ func handleEmails(c context.Context, w http.ResponseWriter, r *http.Request) (in
 func EmailsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
 	val, err := handleEmails(c, w, r)
 
 	if err == nil {
@@ -69,8 +68,6 @@ func EmailsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 func EmailHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
-	// If there is an ID
 	id := ps.ByName("id")
 	val, err := handleEmail(c, r, id)
 
@@ -87,8 +84,6 @@ func EmailHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 func EmailActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
-	// If there is an ID
 	id := ps.ByName("id")
 	action := ps.ByName("action")
 	val, err := handleEmailAction(c, r, id, action)

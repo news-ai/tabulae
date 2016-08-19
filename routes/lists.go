@@ -64,7 +64,6 @@ func handleMediaLists(c context.Context, w http.ResponseWriter, r *http.Request)
 func MediaListsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
 	val, err := handleMediaLists(c, w, r)
 
 	if err == nil {
@@ -81,8 +80,6 @@ func MediaListsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 func MediaListHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
-	// If there is an ID
 	id := ps.ByName("id")
 	val, err := handleMediaList(c, r, id)
 
@@ -100,11 +97,8 @@ func MediaListHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 func MediaListActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
-	// If there is an ID
 	id := ps.ByName("id")
 	action := ps.ByName("action")
-
 	limit, offset, err := GetPagination(r)
 	if err != nil {
 		permissions.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
@@ -112,7 +106,6 @@ func MediaListActionHandler(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 
 	val, err := handleMediaListActions(c, r, id, action, limit, offset)
-
 	if err == nil {
 		err = ffjson.NewEncoder(w).Encode(val)
 	}

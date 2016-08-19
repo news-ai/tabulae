@@ -43,7 +43,6 @@ func handlePublications(c context.Context, w http.ResponseWriter, r *http.Reques
 func PublicationsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
 	val, err := handlePublications(c, w, r)
 
 	if err == nil {
@@ -60,8 +59,6 @@ func PublicationsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 func PublicationHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
-	// If there is an ID
 	id := ps.ByName("id")
 	val, err := handlePublication(c, r, id)
 

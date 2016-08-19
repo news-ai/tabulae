@@ -52,7 +52,6 @@ func handleFiles(c context.Context, w http.ResponseWriter, r *http.Request) (int
 func FilesHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
 	val, err := handleFiles(c, w, r)
 
 	if err == nil {
@@ -69,8 +68,6 @@ func FilesHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 func FileHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
-	// If there is an ID
 	id := ps.ByName("id")
 	val, err := handleFile(c, r, id)
 
@@ -87,8 +84,6 @@ func FileHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func FileActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
-	// If there is an ID
 	id := ps.ByName("id")
 	action := ps.ByName("action")
 	val, err := handleFileAction(c, r, id, action)

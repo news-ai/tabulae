@@ -37,7 +37,6 @@ func handleUsers(c context.Context, r *http.Request) (interface{}, error) {
 func UsersHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
 	val, err := handleUsers(c, r)
 
 	if err == nil {
@@ -46,8 +45,8 @@ func UsersHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	if err != nil {
 		permissions.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
-		return
 	}
+	return
 }
 
 // Handler for when there is a key present after /users/<id> route.
@@ -63,6 +62,6 @@ func UserHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	if err != nil {
 		permissions.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
-		return
 	}
+	return
 }

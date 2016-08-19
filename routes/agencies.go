@@ -35,7 +35,6 @@ func handleAgencies(c context.Context, r *http.Request) (interface{}, error) {
 func AgenciesHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
-
 	val, err := handleAgencies(c, r)
 
 	if err == nil {
@@ -44,16 +43,13 @@ func AgenciesHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 
 	if err != nil {
 		permissions.ReturnError(w, http.StatusInternalServerError, "Agency handling error", err.Error())
-		return
 	}
+	return
 }
 
 // Handler for when there is a key present after /users/<id> route.
 func AgencyHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
-	c := appengine.NewContext(r)
-
-	// If there is an ID
 	id := ps.ByName("id")
 	val, err := handleAgency(c, r, id)
 
@@ -63,6 +59,6 @@ func AgencyHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 
 	if err != nil {
 		permissions.ReturnError(w, http.StatusInternalServerError, "Agency handling error", err.Error())
-		return
 	}
+	return
 }
