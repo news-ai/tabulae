@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/appengine"
 
-	"github.com/gorilla/mux"
+	"github.com/julienschmidt/httprouter"
 	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
@@ -57,7 +57,7 @@ func handleContacts(c context.Context, w http.ResponseWriter, r *http.Request) (
 }
 
 // Handler for when the user wants all the contacts.
-func ContactsHandler(w http.ResponseWriter, r *http.Request) {
+func ContactsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
 
@@ -69,50 +69,44 @@ func ContactsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
-		return
 	}
+	return
 }
 
 // Handler for when there is a key present after /users/<id> route.
-func ContactHandler(w http.ResponseWriter, r *http.Request) {
+func ContactHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
 
 	// If there is an ID
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
-	if ok {
-		val, err := handleContact(c, r, id)
+	id := ps.ByName("id")
+	val, err := handleContact(c, r, id)
 
-		if err == nil {
-			err = ffjson.NewEncoder(w).Encode(val)
-		}
-
-		if err != nil {
-			permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
-			return
-		}
+	if err == nil {
+		err = ffjson.NewEncoder(w).Encode(val)
 	}
+
+	if err != nil {
+		permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+	}
+	return
 }
 
-func ContactActionHandler(w http.ResponseWriter, r *http.Request) {
+func ContactActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
 
 	// If there is an ID
-	vars := mux.Vars(r)
-	id, idOk := vars["id"]
-	action, actionOk := vars["action"]
-	if idOk && actionOk {
-		val, err := handleContactAction(c, r, id, action)
+	id := ps.ByName("id")
+	action := ps.ByName("action")
+	val, err := handleContactAction(c, r, id, action)
 
-		if err == nil {
-			err = ffjson.NewEncoder(w).Encode(val)
-		}
-
-		if err != nil {
-			permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
-			return
-		}
+	if err == nil {
+		err = ffjson.NewEncoder(w).Encode(val)
 	}
+
+	if err != nil {
+		permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+	}
+	return
 }

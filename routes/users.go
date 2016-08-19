@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/appengine"
 
-	"github.com/gorilla/mux"
+	"github.com/julienschmidt/httprouter"
 	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
@@ -34,7 +34,7 @@ func handleUsers(c context.Context, r *http.Request) (interface{}, error) {
 }
 
 // Handler for when the user wants all the users.
-func UsersHandler(w http.ResponseWriter, r *http.Request) {
+func UsersHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
 
@@ -51,23 +51,18 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handler for when there is a key present after /users/<id> route.
-func UserHandler(w http.ResponseWriter, r *http.Request) {
+func UserHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
+	id := ps.ByName("id")
+	val, err := handleUser(c, r, id)
 
-	// If there is an ID
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
-	if ok {
-		val, err := handleUser(c, r, id)
+	if err == nil {
+		err = ffjson.NewEncoder(w).Encode(val)
+	}
 
-		if err == nil {
-			err = ffjson.NewEncoder(w).Encode(val)
-		}
-
-		if err != nil {
-			permissions.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
-			return
-		}
+	if err != nil {
+		permissions.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
+		return
 	}
 }

@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/appengine"
 
-	"github.com/gorilla/mux"
+	"github.com/julienschmidt/httprouter"
 	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
@@ -61,7 +61,7 @@ func handleMediaLists(c context.Context, w http.ResponseWriter, r *http.Request)
 }
 
 // Handler for when the user wants all the agencies.
-func MediaListsHandler(w http.ResponseWriter, r *http.Request) {
+func MediaListsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
 
@@ -73,58 +73,52 @@ func MediaListsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		permissions.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
-		return
 	}
+	return
 }
 
 // Handler for when there is a key present after /users/<id> route.
-func MediaListHandler(w http.ResponseWriter, r *http.Request) {
+func MediaListHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
 
 	// If there is an ID
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
-	if ok {
-		val, err := handleMediaList(c, r, id)
+	id := ps.ByName("id")
+	val, err := handleMediaList(c, r, id)
 
-		if err == nil {
-			err = ffjson.NewEncoder(w).Encode(val)
-		}
-
-		if err != nil {
-			permissions.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
-			return
-		}
+	if err == nil {
+		err = ffjson.NewEncoder(w).Encode(val)
 	}
+
+	if err != nil {
+		permissions.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
+	}
+	return
 }
 
 // Handler for when the user wants to perform an action on the lists
-func MediaListActionHandler(w http.ResponseWriter, r *http.Request) {
+func MediaListActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
 
-	// Get Id and Action
-	vars := mux.Vars(r)
-	id, idOk := vars["id"]
-	action, actionOk := vars["action"]
+	// If there is an ID
+	id := ps.ByName("id")
+	action := ps.ByName("action")
 
-	if idOk && actionOk {
-		limit, offset, err := GetPagination(r)
-		if err != nil {
-			permissions.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
-			return
-		}
-
-		val, err := handleMediaListActions(c, r, id, action, limit, offset)
-
-		if err == nil {
-			err = ffjson.NewEncoder(w).Encode(val)
-		}
-
-		if err != nil {
-			permissions.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
-			return
-		}
+	limit, offset, err := GetPagination(r)
+	if err != nil {
+		permissions.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
+		return
 	}
+
+	val, err := handleMediaListActions(c, r, id, action, limit, offset)
+
+	if err == nil {
+		err = ffjson.NewEncoder(w).Encode(val)
+	}
+
+	if err != nil {
+		permissions.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
+	}
+	return
 }

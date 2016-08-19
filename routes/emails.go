@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/appengine"
 
-	"github.com/gorilla/mux"
+	"github.com/julienschmidt/httprouter"
 	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
@@ -49,7 +49,7 @@ func handleEmails(c context.Context, w http.ResponseWriter, r *http.Request) (in
 }
 
 // Handler for when the user wants all the contacts.
-func EmailsHandler(w http.ResponseWriter, r *http.Request) {
+func EmailsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
 
@@ -61,50 +61,44 @@ func EmailsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
-		return
 	}
+	return
 }
 
 // Handler for when there is a key present after /users/<id> route.
-func EmailHandler(w http.ResponseWriter, r *http.Request) {
+func EmailHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
 
 	// If there is an ID
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
-	if ok {
-		val, err := handleEmail(c, r, id)
+	id := ps.ByName("id")
+	val, err := handleEmail(c, r, id)
 
-		if err == nil {
-			err = ffjson.NewEncoder(w).Encode(val)
-		}
-
-		if err != nil {
-			permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
-			return
-		}
+	if err == nil {
+		err = ffjson.NewEncoder(w).Encode(val)
 	}
+
+	if err != nil {
+		permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
+	}
+	return
 }
 
-func EmailActionHandler(w http.ResponseWriter, r *http.Request) {
+func EmailActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
 
 	// If there is an ID
-	vars := mux.Vars(r)
-	id, idOk := vars["id"]
-	action, actionOk := vars["action"]
-	if idOk && actionOk {
-		val, err := handleEmailAction(c, r, id, action)
+	id := ps.ByName("id")
+	action := ps.ByName("action")
+	val, err := handleEmailAction(c, r, id, action)
 
-		if err == nil {
-			err = ffjson.NewEncoder(w).Encode(val)
-		}
-
-		if err != nil {
-			permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
-			return
-		}
+	if err == nil {
+		err = ffjson.NewEncoder(w).Encode(val)
 	}
+
+	if err != nil {
+		permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
+	}
+	return
 }
