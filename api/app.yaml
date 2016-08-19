@@ -27,5 +27,5 @@ inbound_services:
 - mail
 
 automatic_scaling:
-  max_concurrent_requests: 50
+  max_concurrent_requests: 30
   max_idle_instances: 1

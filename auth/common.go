@@ -53,6 +53,7 @@ func GetCurrentUserId(r *http.Request) (string, error) {
 func LogoutHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	session, _ := Store.Get(r, "sess")
 	delete(session.Values, "state")
+	delete(session.Values, "id")
 	delete(session.Values, "email")
 	session.Save(r, w)
 

@@ -21,6 +21,7 @@ func BasicAuthLogin(w http.ResponseWriter, r *http.Request, apiKey string) bool 
 		return false
 	}
 
+	session.Values["id"] = user.Id
 	session.Values["email"] = user.Email
 	session.Save(r, w)
 

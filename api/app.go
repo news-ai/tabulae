@@ -42,6 +42,7 @@ func init() {
 	utils.InitURL()
 	auth.SetRedirectURL()
 
+	// Initialize router
 	router := httprouter.New()
 
 	router.GET("/", routes.NotFoundHandler)
