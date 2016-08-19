@@ -12,6 +12,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/emails"
@@ -93,7 +94,10 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, error) {
 		return []models.Email{}, err
 	}
 
-	ks, err := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).GetAll(c, &emails)
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	ks, err := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).GetAll(c, &emails)
 	if err != nil {
 		return []models.Email{}, err
 	}

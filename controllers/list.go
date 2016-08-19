@@ -95,7 +95,10 @@ func GetMediaLists(c context.Context, r *http.Request) ([]models.MediaList, erro
 		return []models.MediaList{}, err
 	}
 
-	ks, err := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id).GetAll(c, &mediaLists)
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	ks, err := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).GetAll(c, &mediaLists)
 	if err != nil {
 		return []models.MediaList{}, err
 	}

@@ -9,6 +9,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -66,7 +67,10 @@ func GetFiles(c context.Context, r *http.Request) ([]models.File, error) {
 		return []models.File{}, err
 	}
 
-	ks, err := datastore.NewQuery("File").Filter("CreatedBy =", user.Id).GetAll(c, &files)
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	ks, err := datastore.NewQuery("File").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).GetAll(c, &files)
 	if err != nil {
 		return []models.File{}, err
 	}
