@@ -171,7 +171,7 @@ func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact,
 	}
 
 	if len(ks) == 0 {
-		return models.Agency{}, errors.New("No contact by the field " + queryType)
+		return models.Contact{}, errors.New("No contact by the field " + queryType)
 	}
 
 	var contacts []models.Contact

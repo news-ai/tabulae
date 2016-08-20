@@ -66,11 +66,23 @@ func getEmail(c context.Context, r *http.Request, id int64) (models.Email, error
 
 func filterEmail(c context.Context, queryType, query string) (models.Email, error) {
 	// Get a publication by the URL
-	emails := []models.Email{}
-	ks, err := datastore.NewQuery("Email").Filter(queryType+" =", query).GetAll(c, &emails)
+	ks, err := datastore.NewQuery("Email").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		return models.Email{}, err
 	}
+
+	if len(ks) == 0 {
+		return models.Email{}, errors.New("No email by the field " + queryType)
+	}
+
+	var emails []models.Email
+	emails = make([]models.Email, len(ks))
+
+	err = nds.GetMulti(c, ks, emails)
+	if err != nil {
+		return models.Email{}, err
+	}
+
 	if len(emails) > 0 {
 		emails[0].Id = ks[0].IntID()
 		return emails[0], nil
@@ -97,10 +109,13 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	ks, err := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).GetAll(c, &emails)
+	ks, err := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
+	emails = make([]models.Email, len(ks))
+	err = nds.GetMulti(c, ks, emails)
 	if err != nil {
 		return []models.Email{}, err
 	}
+
 	for i := 0; i < len(emails); i++ {
 		emails[i].Id = ks[i].IntID()
 	}
