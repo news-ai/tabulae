@@ -29,6 +29,8 @@ func handleTemplates(c context.Context, w http.ResponseWriter, r *http.Request) 
 	switch r.Method {
 	case "GET":
 		return controllers.GetTemplates(c, r)
+	case "POST":
+		return controllers.CreateTemplate(c, r)
 	}
 	return nil, errors.New("method not implemented")
 }

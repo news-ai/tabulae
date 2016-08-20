@@ -99,11 +99,37 @@ func GetTemplates(c context.Context, r *http.Request) ([]models.Template, error)
 }
 
 /*
+* Create methods
+ */
+
+func CreateTemplate(c context.Context, r *http.Request) (models.Template, error) {
+	decoder := json.NewDecoder(r.Body)
+	var template models.Template
+	err := decoder.Decode(&template)
+	if err != nil {
+		return models.Template{}, err
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		return template, err
+	}
+
+	// Create template
+	_, err = template.Create(c, r, currentUser)
+	if err != nil {
+		return models.Template{}, err
+	}
+
+	return template, nil
+}
+
+/*
 * Update methods
  */
 
 func UpdateTemplate(c context.Context, r *http.Request, id string) (models.Template, error) {
-	// Get the details of the current media list
+	// Get the details of the current template
 	template, err := GetTemplate(c, r, id)
 	if err != nil {
 		return models.Template{}, err
