@@ -104,7 +104,7 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, error) {
 	err = nds.GetMulti(c, ks, agencies)
 	if err != nil {
 		log.Infof(c, "%v", err)
-		return []models.Agency{}, err
+		return agencies, err
 	}
 
 	for i := 0; i < len(agencies); i++ {

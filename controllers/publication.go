@@ -9,6 +9,7 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
@@ -52,11 +53,19 @@ func getPublication(c context.Context, id int64) (models.Publication, error) {
 
 func filterPublication(c context.Context, queryType, query string) (models.Publication, error) {
 	// Get a publication by the URL
-	publications := []models.Publication{}
-	ks, err := datastore.NewQuery("Publication").Filter(queryType+" =", query).GetAll(c, &publications)
+	ks, err := datastore.NewQuery("Publication").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		return models.Publication{}, err
 	}
+
+	var publications []models.Publication
+	publications = make([]models.Publication, len(ks))
+	err = nds.GetMulti(c, ks, publications)
+	if err != nil {
+		log.Infof(c, "%v", err)
+		return models.Publication{}, err
+	}
+
 	if len(publications) > 0 {
 		publications[0].Id = ks[0].IntID()
 		return publications[0], nil
@@ -85,10 +94,17 @@ func GetPublications(c context.Context, r *http.Request) ([]models.Publication, 
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	publications := []models.Publication{}
-	ks, err := datastore.NewQuery("Publication").Limit(limit).Offset(offset).GetAll(c, &publications)
+	ks, err := datastore.NewQuery("Publication").Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		return []models.Publication{}, err
+	}
+
+	var publications []models.Publication
+	publications = make([]models.Publication, len(ks))
+	err = nds.GetMulti(c, ks, publications)
+	if err != nil {
+		log.Infof(c, "%v", err)
+		return publications, err
 	}
 
 	for i := 0; i < len(publications); i++ {

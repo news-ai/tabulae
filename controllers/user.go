@@ -70,10 +70,17 @@ func getUsers(c context.Context, r *http.Request) ([]models.User, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	users := []models.User{}
-	ks, err := datastore.NewQuery("User").Limit(limit).Offset(offset).GetAll(c, &users)
+	ks, err := datastore.NewQuery("User").Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		return []models.User{}, err
+	}
+
+	var users []models.User
+	users = make([]models.User, len(ks))
+	err = nds.GetMulti(c, ks, users)
+	if err != nil {
+		log.Infof(c, "%v", err)
+		return users, err
 	}
 
 	for i := 0; i < len(users); i++ {
