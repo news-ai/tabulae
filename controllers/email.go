@@ -36,9 +36,7 @@ func getEmail(c context.Context, r *http.Request, id int64) (models.Email, error
 	// Get the email by id
 	var email models.Email
 	emailId := datastore.NewKey(c, "Email", "", id, nil)
-
 	err := nds.Get(c, emailId, &email)
-
 	if err != nil {
 		return models.Email{}, err
 	}
@@ -77,7 +75,6 @@ func filterEmail(c context.Context, queryType, query string) (models.Email, erro
 
 	var emails []models.Email
 	emails = make([]models.Email, len(ks))
-
 	err = nds.GetMulti(c, ks, emails)
 	if err != nil {
 		return models.Email{}, err

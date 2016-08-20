@@ -32,9 +32,7 @@ func getAgency(c context.Context, id int64) (models.Agency, error) {
 	// Get the agency by id
 	var agency models.Agency
 	agencyId := datastore.NewKey(c, "Agency", "", id, nil)
-
 	err := nds.Get(c, agencyId, &agency)
-
 	if err != nil {
 		return models.Agency{}, err
 	}
@@ -62,7 +60,6 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
 
 	var agencies []models.Agency
 	agencies = make([]models.Agency, len(ks))
-
 	err = nds.GetMulti(c, ks, agencies)
 	if err != nil {
 		return models.Agency{}, err
@@ -104,7 +101,6 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, error) {
 
 	var agencies []models.Agency
 	agencies = make([]models.Agency, len(ks))
-
 	err = nds.GetMulti(c, ks, agencies)
 	if err != nil {
 		log.Infof(c, "%v", err)

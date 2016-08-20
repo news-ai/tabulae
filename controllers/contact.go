@@ -39,7 +39,6 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 	// Get the Contact by id
 	var contact models.Contact
 	contactId := datastore.NewKey(c, "Contact", "", id, nil)
-
 	err := nds.Get(c, contactId, &contact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -79,7 +78,6 @@ func filterContact(c context.Context, r *http.Request, queryType, query string) 
 
 	var contacts []models.Contact
 	contacts = make([]models.Contact, len(ks))
-
 	err = nds.GetMulti(c, ks, contacts)
 	if err != nil {
 		return models.Contact{}, err
@@ -176,7 +174,6 @@ func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact,
 
 	var contacts []models.Contact
 	contacts = make([]models.Contact, len(ks))
-
 	err = nds.GetMulti(c, ks, contacts)
 	if err != nil {
 		return models.Contact{}, err

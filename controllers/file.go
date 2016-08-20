@@ -70,7 +70,9 @@ func GetFiles(c context.Context, r *http.Request) ([]models.File, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	ks, err := datastore.NewQuery("File").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).GetAll(c, &files)
+	ks, err := datastore.NewQuery("File").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
+	files = make([]models.File, len(ks))
+	err = nds.GetMulti(c, ks, files)
 	if err != nil {
 		return []models.File{}, err
 	}
