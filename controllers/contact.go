@@ -165,11 +165,23 @@ func linkedInSync(c context.Context, r *http.Request, ct *models.Contact, justCr
 
 func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact, queryType, query string) (models.Contact, error) {
 	// Get an contact by a query type
-	contacts := []models.Contact{}
-	ks, err := datastore.NewQuery("Contact").Filter(queryType+" = ", query).Filter("IsMasterContact = ", true).GetAll(c, &contacts)
+	ks, err := datastore.NewQuery("Contact").Filter(queryType+" = ", query).Filter("IsMasterContact = ", true).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		return models.Contact{}, err
 	}
+
+	if len(ks) == 0 {
+		return models.Agency{}, errors.New("No contact by the field " + queryType)
+	}
+
+	var contacts []models.Contact
+	contacts = make([]models.Contact, len(ks))
+
+	err = nds.GetMulti(c, ks, contacts)
+	if err != nil {
+		return models.Contact{}, err
+	}
+
 	if len(contacts) > 0 {
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
