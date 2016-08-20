@@ -13,7 +13,8 @@ type Email struct {
 	Base
 
 	// Which list it belongs to
-	ListId int64 `json:"listid"`
+	ListId     int64 `json:"listid"`
+	TemplateId int64 `json:"templateid"`
 
 	Sender  string `json:"sender"`
 	To      string `json:"to"`

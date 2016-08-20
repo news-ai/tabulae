@@ -220,6 +220,10 @@ func UpdateEmail(c context.Context, r *http.Request, email *models.Email, update
 		email.ListId = updatedEmail.ListId
 	}
 
+	if updatedEmail.TemplateId != 0 {
+		email.TemplateId = updatedEmail.TemplateId
+	}
+
 	email.Save(c)
 
 	// Logging the action happening
