@@ -28,7 +28,7 @@ func handleTemplates(c context.Context, w http.ResponseWriter, r *http.Request) 
 }
 
 // Handler for when the user wants all the agencies.
-func PublicationsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func TemplatesHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
 	val, err := handleTemplates(c, w, r)
@@ -44,7 +44,7 @@ func PublicationsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 }
 
 // Handler for when there is a key present after /users/<id> route.
-func PublicationHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func TemplateHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
 	id := ps.ByName("id")
