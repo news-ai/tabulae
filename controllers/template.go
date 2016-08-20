@@ -2,15 +2,17 @@ package controllers
 
 import (
 	"errors"
+	"net/http"
 
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
-	"github.com/news-ai/tabulae/utils"
 )
 
 /*
@@ -50,15 +52,10 @@ func getTemplate(c context.Context, id int64) (models.Template, error) {
 * Get methods
  */
 
-// Gets every template
 func GetTemplates(c context.Context, r *http.Request) ([]models.Template, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		return []models.Template{}, err
-	}
-
-	if !user.IsAdmin {
-		return []models.Template{}, errors.New("Forbidden")
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
