@@ -8,6 +8,8 @@ import (
 
 	"google.golang.org/appengine/datastore"
 
+	"github.com/qedus/nds"
+
 	"github.com/news-ai/tabulae/models"
 )
 
@@ -22,13 +24,18 @@ import (
 // Get a user notification
 func getUserNotification(c context.Context, r *http.Request) (models.Notification, error) {
 	notifications := []models.Notification{}
-
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		return models.Notification{}, err
 	}
 
-	ks, err := datastore.NewQuery("Notification").Filter("CreatedBy =", user.Id).GetAll(c, &notifications)
+	ks, err := datastore.NewQuery("Notification").Filter("CreatedBy =", user.Id).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		return models.Notification{}, err
+	}
+
+	notifications = make([]models.Notification, len(ks))
+	err = nds.GetMulti(c, ks, notifications)
 	if err != nil {
 		return models.Notification{}, err
 	}
@@ -49,7 +56,13 @@ func getUserNotificationObjects(c context.Context, r *http.Request) ([]models.No
 		return []models.NotificationObject{}, err
 	}
 
-	ks, err := datastore.NewQuery("NotificationObject").Filter("CreatedBy =", user.Id).GetAll(c, &notificationObjects)
+	ks, err := datastore.NewQuery("NotificationObject").Filter("CreatedBy =", user.Id).Limit(1).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		return []models.NotificationObject{}, err
+	}
+
+	notificationObjects = make([]models.NotificationObject, len(ks))
+	err = nds.GetMulti(c, ks, notificationObjects)
 	if err != nil {
 		return []models.NotificationObject{}, err
 	}
@@ -57,7 +70,6 @@ func getUserNotificationObjects(c context.Context, r *http.Request) ([]models.No
 	for i := 0; i < len(notificationObjects); i++ {
 		notificationObjects[i].Id = ks[i].IntID()
 	}
-
 	return notificationObjects, nil
 }
 
