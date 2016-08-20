@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/utils"
 )
 
 /*
@@ -52,6 +54,20 @@ func getTemplate(c context.Context, id int64) (models.Template, error) {
 * Get methods
  */
 
+func GetTemplate(c context.Context, r *http.Request, id string) (models.Template, error) {
+	// Get the details of the current user
+	currentId, err := utils.StringIdToInt(id)
+	if err != nil {
+		return models.Template{}, err
+	}
+
+	template, err := getTemplate(c, currentId)
+	if err != nil {
+		return models.Template{}, err
+	}
+	return template, nil
+}
+
 func GetTemplates(c context.Context, r *http.Request) ([]models.Template, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
@@ -80,4 +96,38 @@ func GetTemplates(c context.Context, r *http.Request) ([]models.Template, error)
 	}
 
 	return templates, nil
+}
+
+/*
+* Update methods
+ */
+
+func UpdateTemplate(c context.Context, r *http.Request, id string) (models.Template, error) {
+	// Get the details of the current media list
+	template, err := GetTemplate(c, r, id)
+	if err != nil {
+		return models.Template{}, err
+	}
+
+	// Checking if the current user logged in can edit this particular id
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return models.Template{}, err
+	}
+	if template.CreatedBy != user.Id {
+		return models.Template{}, errors.New("Forbidden")
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var updatedTemplate models.Template
+	err = decoder.Decode(&updatedTemplate)
+	if err != nil {
+		return models.Template{}, err
+	}
+
+	utils.UpdateIfNotBlank(&template.Subject, updatedTemplate.Subject)
+	utils.UpdateIfNotBlank(&template.Body, updatedTemplate.Body)
+
+	template.Save(c)
+	return template, nil
 }

@@ -16,6 +16,12 @@ import (
 )
 
 func handleTemplate(c context.Context, r *http.Request, id string) (interface{}, error) {
+	switch r.Method {
+	case "GET":
+		return controllers.GetTemplate(c, r, id)
+	case "PATCH":
+		return controllers.UpdateTemplate(c, r, id)
+	}
 	return nil, errors.New("method not implemented")
 }
 
