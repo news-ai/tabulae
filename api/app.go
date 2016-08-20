@@ -114,7 +114,9 @@ func init() {
 	router.GET("/api/emails/:id/:action", routes.EmailActionHandler)
 
 	router.GET("/api/templates", routes.TemplatesHandler)
+	router.POST("/api/templates", routes.TemplatesHandler)
 	router.GET("/api/templates/:id", routes.TemplateHandler)
+	router.PATCH("/api/templates/:id", routes.TemplateHandler)
 
 	// Security fixes
 	secureMiddleware := secure.New(secure.Options{
