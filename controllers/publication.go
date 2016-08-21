@@ -164,7 +164,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 				return []models.Publication{}, err
 			}
 
-			presentPublication, err := FilterPublicationByName(c, publication.Name)
+			presentPublication, err := FilterPublicationByName(c, publications[i].Name)
 			if err != nil {
 				_, err = publications[i].Create(c, r, currentUser)
 				if err != nil {
