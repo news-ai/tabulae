@@ -131,13 +131,39 @@ func GetPublication(c context.Context, id string) (models.Publication, error) {
 * Create methods
  */
 
-func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request) (models.Publication, error) {
+func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	// Parse JSON
-	decoder := json.NewDecoder(r.Body)
+	buf, _ := ioutil.ReadAll(r.Body)
+	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
+
+	decoder := json.NewDecoder(rdr1)
 	var publication models.Publication
 	err := decoder.Decode(&publication)
+
 	if err != nil {
-		return models.Publication{}, err
+		var publications []models.Publication
+
+		rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+		arrayDecoder := json.NewDecoder(rdr2)
+		err = arrayDecoder.Decode(&publications)
+
+		if err != nil {
+			return []models.Publication{}, err
+		}
+
+		newPublications := []models.Publication{}
+		for i := 0; i < len(publications); i++ {
+			_, err = publications[i].Create(c, r, currentUser)
+			if err != nil {
+				return []models.Publication{}, err
+			}
+			// Logging the action happening
+			LogNotificationForResource(c, r, "Publication", publications[i].Id, "CREATE", "")
+			newPublications = append(newPublications, publications[i])
+		}
+
+		return newEmails, err
+
 	}
 
 	// Validate Fields
