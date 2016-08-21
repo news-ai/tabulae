@@ -188,7 +188,6 @@ func LogNotificationForResource(c context.Context, r *http.Request, resourceName
 	notificationObject, err := FilterNotificationObjectByObject(c, r, resourceName, resourceId)
 	if err != nil {
 		notificationObject, err = CreateNotificationObjectForUser(c, r, resourceName, resourceId)
-		return createNotificationChange(c, r, notificationObject.Id, verb, actor)
 	}
 	return createNotificationChange(c, r, notificationObject.Id, verb, actor)
 }

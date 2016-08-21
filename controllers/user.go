@@ -95,7 +95,7 @@ func getUsers(c context.Context, r *http.Request) ([]models.User, error) {
 
 func filterUser(c context.Context, queryType, query string) (models.User, error) {
 	// Get the current signed in user details by Id
-	ks, err := datastore.NewQuery("User").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
+	ks, err := datastore.NewQuery("User").Filter(queryType+" =", query).Limit(1).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		return models.User{}, err
 	}
