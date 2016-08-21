@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -141,8 +143,12 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 	err := decoder.Decode(&publication)
 
 	if err != nil {
-		var publications []models.Publication
+		currentUser, err := GetCurrentUser(c, r)
+		if err != nil {
+			return []models.Publication{}, err
+		}
 
+		var publications []models.Publication
 		rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
 		arrayDecoder := json.NewDecoder(rdr2)
 		err = arrayDecoder.Decode(&publications)
@@ -153,30 +159,28 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 
 		newPublications := []models.Publication{}
 		for i := 0; i < len(publications); i++ {
-			_, err = publications[i].Create(c, r, currentUser)
+			_, err = publications[i].Validate(c)
 			if err != nil {
 				return []models.Publication{}, err
 			}
-			// Logging the action happening
-			LogNotificationForResource(c, r, "Publication", publications[i].Id, "CREATE", "")
-			newPublications = append(newPublications, publications[i])
+
+			presentPublication, err := FilterPublicationByName(c, publication.Name)
+			if err != nil {
+				_, err = publications[i].Create(c, r, currentUser)
+				if err != nil {
+					return []models.Publication{}, err
+				}
+				newPublications = append(newPublications, publications[i])
+			} else {
+				newPublications = append(newPublications, presentPublication)
+			}
 		}
-
-		return newEmails, err
-
+		return newPublications, err
 	}
 
-	// Validate Fields
-	if publication.Name == "" {
-		return models.Publication{}, errors.New("Missing fields")
-	}
-
-	// Format URL properly
-	if publication.Url != "" {
-		publication.Url, err = utils.NormalizeUrl(publication.Url)
-		if err != nil {
-			return models.Publication{}, err
-		}
+	_, err = publication.Validate(c)
+	if err != nil {
+		return models.Publication{}, err
 	}
 
 	presentPublication, err := FilterPublicationByName(c, publication.Name)
@@ -185,7 +189,6 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 		if err != nil {
 			return models.Publication{}, err
 		}
-
 		// Create publication
 		_, err = publication.Create(c, r, currentUser)
 		if err != nil {
@@ -193,7 +196,6 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 		}
 		return publication, nil
 	}
-
 	return presentPublication, nil
 }
 

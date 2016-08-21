@@ -1,12 +1,15 @@
 package models
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
 	"golang.org/x/net/context"
 
 	"github.com/qedus/nds"
+
+	"github.com/news-ai/tabulae/utils"
 )
 
 type Publication struct {
@@ -48,5 +51,22 @@ func (p *Publication) Save(c context.Context) (*Publication, error) {
 		return nil, err
 	}
 	p.Id = k.IntID()
+	return p, nil
+}
+
+func (p *Publication) Validate(c context.Context) (*Publication, error) {
+	// Validate Fields
+	if p.Name == "" {
+		return p, errors.New("Missing fields")
+	}
+
+	// Format URL properly
+	if p.Url != "" {
+		normalizedUrl, err := utils.NormalizeUrl(p.Url)
+		if err != nil {
+			return p, err
+		}
+		p.Url = normalizedUrl
+	}
 	return p, nil
 }
