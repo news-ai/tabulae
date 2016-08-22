@@ -21,12 +21,12 @@ func handleFileAction(c context.Context, r *http.Request, id string, action stri
 	case "GET":
 		switch action {
 		case "headers":
-			return files.HandleFileGetHeaders(c, r, id)
+			return baseSingleResponseHandler(files.HandleFileGetHeaders(c, r, id))
 		}
 	case "POST":
 		switch action {
 		case "headers":
-			return files.HandleFileUploadHeaders(c, r, id)
+			return baseSingleResponseHandler(files.HandleFileUploadHeaders(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")
@@ -35,7 +35,7 @@ func handleFileAction(c context.Context, r *http.Request, id string, action stri
 func handleFile(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetFile(c, r, id)
+		return baseSingleResponseHandler(controllers.GetFile(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -43,7 +43,7 @@ func handleFile(c context.Context, r *http.Request, id string) (interface{}, err
 func handleFiles(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetFiles(c, r)
+		return baseResponseHandler(controllers.GetFiles(c, r))
 	}
 	return nil, errors.New("method not implemented")
 }

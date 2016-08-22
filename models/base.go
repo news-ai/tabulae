@@ -15,7 +15,7 @@ type CustomContactField struct {
 
 type BaseResponse struct {
 	Count    int         `json:"count"`
-	Next     string      `json:"-"`
+	Next     string      `json:"next"`
 	Data     interface{} `json:"data"`
 	Included interface{} `json:"included"`
 }

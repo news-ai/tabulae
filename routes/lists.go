@@ -34,7 +34,7 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 			if err != nil {
 				return nil, err
 			}
-			return files.HandleMediaListActionUpload(c, r, id, user)
+			return baseSingleResponseHandler(files.HandleMediaListActionUpload(c, r, id, user))
 		}
 	}
 	return nil, errors.New("method not implemented")
