@@ -50,7 +50,7 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 	}
 
 	mediaListId := utils.IntIdToString(mediaListid)
-	mediaList, err := controllers.GetMediaList(c, r, mediaListId)
+	mediaList, _, err := controllers.GetMediaList(c, r, mediaListId)
 	mediaList.Contacts = contactIds
 	customFieldsList := []models.CustomFieldsMap{}
 	for i := 0; i < len(headers); i++ {

@@ -134,7 +134,7 @@ func CreateFile(r *http.Request, fileName string, listid string, createdby strin
 	}
 
 	// Attach the fileId to the media list associated to it
-	mediaList, err := GetMediaList(c, r, listid)
+	mediaList, _, err := GetMediaList(c, r, listid)
 	if err != nil {
 		return models.File{}, err
 	}

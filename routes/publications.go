@@ -18,7 +18,7 @@ import (
 func handlePublication(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetPublication(c, id)
+		return baseSingleResponseHandler(controllers.GetPublication(c, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -28,12 +28,12 @@ func handlePublications(c context.Context, w http.ResponseWriter, r *http.Reques
 	case "GET":
 		if len(r.URL.Query()) > 0 {
 			if val, ok := r.URL.Query()["name"]; ok && len(val) > 0 {
-				return controllers.FilterPublicationByName(c, val[0])
+				return baseSingleResponseHandler(controllers.FilterPublicationByName(c, val[0]))
 			}
 		}
-		return controllers.GetPublications(c, r)
+		return baseResponseHandler(controllers.GetPublications(c, r))
 	case "POST":
-		return controllers.CreatePublication(c, w, r)
+		return baseSingleResponseHandler(controllers.CreatePublication(c, w, r))
 	}
 	return nil, errors.New("method not implemented")
 }

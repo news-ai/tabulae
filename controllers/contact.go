@@ -256,11 +256,11 @@ func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Re
  */
 
 // Gets every single contact
-func GetContacts(c context.Context, r *http.Request) ([]models.Contact, error) {
+func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Contact{}, err
+		return []models.Contact{}, nil, 0, err
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -273,26 +273,26 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, error) {
 	err = nds.GetMulti(c, ks, contacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return contacts, err
+		return contacts, nil, 0, err
 	}
 
 	for i := 0; i < len(contacts); i++ {
 		contacts[i].Id = ks[i].IntID()
 	}
 
-	return contacts, nil
+	return contacts, nil, len(contacts), nil
 }
 
-func GetContact(c context.Context, r *http.Request, id string) (models.Contact, error) {
+func GetContact(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
-		return models.Contact{}, err
+		return models.Contact{}, nil, err
 	}
 
 	contact, err := getContact(c, r, currentId)
 	if err != nil {
-		return models.Contact{}, err
+		return models.Contact{}, nil, err
 	}
 
 	if contact.LinkedIn != "" {
@@ -304,20 +304,20 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 		checkAgainstParent(c, r, &contact)
 	}
 
-	return contact, nil
+	return contact, nil, nil
 }
 
-func GetDiff(c context.Context, r *http.Request, id string) (interface{}, error) {
-	contact, err := GetContact(c, r, id)
+func GetDiff(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	contact, _, err := GetContact(c, r, id)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Get parent contact
 	parentContactId := strconv.FormatInt(contact.ParentContact, 10)
-	parentContact, err := GetContact(c, r, parentContactId)
+	parentContact, _, err := GetContact(c, r, parentContactId)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	newEmployers := []string{}
@@ -327,7 +327,7 @@ func GetDiff(c context.Context, r *http.Request, id string) (interface{}, error)
 		currentPublication, err := getPublication(c, parentContact.Employers[i])
 		if err != nil {
 			err = errors.New("Only actions are diff and update")
-			return nil, err
+			return nil, nil, err
 		}
 		newEmployers = append(newEmployers, currentPublication.Name)
 	}
@@ -337,7 +337,7 @@ func GetDiff(c context.Context, r *http.Request, id string) (interface{}, error)
 		currentPublication, err := getPublication(c, parentContact.PastEmployers[i])
 		if err != nil {
 			err = errors.New("Only actions are diff and update")
-			return nil, err
+			return nil, nil, err
 		}
 		newPastEmployers = append(newPastEmployers, currentPublication.Name)
 	}
@@ -350,7 +350,7 @@ func GetDiff(c context.Context, r *http.Request, id string) (interface{}, error)
 		newPastEmployers,
 	}
 
-	return data, nil
+	return data, nil, nil
 }
 
 /*
@@ -379,7 +379,7 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 	return ct, err
 }
 
-func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error) {
+func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
 
@@ -397,7 +397,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error)
 
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return []models.Contact{}, err
+			return []models.Contact{}, nil, 0, err
 		}
 
 		newContacts := []models.Contact{}
@@ -405,22 +405,22 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, error)
 			_, err = Create(c, r, &contacts[i])
 			if err != nil {
 				log.Errorf(c, "%v", err)
-				return []models.Contact{}, err
+				return []models.Contact{}, nil, 0, err
 			}
 			newContacts = append(newContacts, contacts[i])
 		}
 
-		return newContacts, nil
+		return newContacts, nil, len(newContacts), nil
 	}
 
 	// Create contact
 	_, err = Create(c, r, &contact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Contact{}, err
+		return []models.Contact{}, nil, 0, err
 	}
 
-	return []models.Contact{contact}, nil
+	return []models.Contact{contact}, nil, 0, nil
 }
 
 func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, contacts []models.Contact) ([]int64, error) {
@@ -491,7 +491,7 @@ func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Conta
 	return ct, nil
 }
 
-func UpdateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, error) {
+func UpdateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, interface{}, error) {
 	utils.UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
 	utils.UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
 	utils.UpdateIfNotBlank(&contact.Email, updatedContact.Email)
@@ -517,31 +517,31 @@ func UpdateContact(c context.Context, r *http.Request, contact *models.Contact, 
 	_, err := Save(c, r, contact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return models.Contact{}, err
+		return models.Contact{}, nil, err
 	}
 
 	// Logging the action happening
 	LogNotificationForResource(c, r, "Contact", contact.Id, "UPDATE", "")
 
-	return *contact, nil
+	return *contact, nil, nil
 }
 
-func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.Contact, error) {
+func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
 	// Get the details of the current contact
-	contact, err := GetContact(c, r, id)
+	contact, _, err := GetContact(c, r, id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return models.Contact{}, err
+		return models.Contact{}, nil, err
 	}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return models.Contact{}, errors.New("Could not get user")
+		return models.Contact{}, nil, errors.New("Could not get user")
 	}
 
 	if !permissions.AccessToObject(contact.CreatedBy, user.Id) {
-		return models.Contact{}, errors.New("You don't have permissions to edit these objects")
+		return models.Contact{}, nil, errors.New("You don't have permissions to edit these objects")
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -549,26 +549,26 @@ func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.
 	err = decoder.Decode(&updatedContact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return models.Contact{}, err
+		return models.Contact{}, nil, err
 	}
 
 	return UpdateContact(c, r, &contact, updatedContact)
 }
 
-func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, error) {
+func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, error) {
 	decoder := json.NewDecoder(r.Body)
 	var updatedContacts []models.Contact
 	err := decoder.Decode(&updatedContacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Contact{}, err
+		return []models.Contact{}, nil, 0, err
 	}
 
 	// Get logged in user
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Contact{}, errors.New("Could not get user")
+		return []models.Contact{}, nil, 0, errors.New("Could not get user")
 	}
 
 	// Check if each of the contacts have permissions before updating anything
@@ -577,11 +577,11 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, e
 		contact, err := getContact(c, r, updatedContacts[i].Id)
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return []models.Contact{}, err
+			return []models.Contact{}, nil, 0, err
 		}
 
 		if !permissions.AccessToObject(contact.CreatedBy, user.Id) {
-			return []models.Contact{}, errors.New("Forbidden")
+			return []models.Contact{}, nil, 0, errors.New("Forbidden")
 		}
 
 		currentContacts = append(currentContacts, contact)
@@ -590,37 +590,37 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, e
 	// Update each of the contacts
 	newContacts := []models.Contact{}
 	for i := 0; i < len(updatedContacts); i++ {
-		updatedContact, err := UpdateContact(c, r, &currentContacts[i], updatedContacts[i])
+		updatedContact, _, err := UpdateContact(c, r, &currentContacts[i], updatedContacts[i])
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return []models.Contact{}, err
+			return []models.Contact{}, nil, 0, err
 		}
 
 		newContacts = append(newContacts, updatedContact)
 	}
 
-	return newContacts, nil
+	return newContacts, nil, len(newContacts), nil
 }
 
 /*
 * Normalization methods
  */
 
-func UpdateContactToParent(c context.Context, r *http.Request, id string) (models.Contact, error) {
+func UpdateContactToParent(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
 	// Get current contact
-	contact, err := GetContact(c, r, id)
+	contact, _, err := GetContact(c, r, id)
 	if err != nil {
-		return contact, err
+		return contact, nil, err
 	}
 
 	if !contact.IsOutdated {
-		return contact, nil
+		return contact, nil, nil
 	}
 
 	parentContact, err := getContact(c, r, contact.ParentContact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return contact, err
+		return contact, nil, err
 	}
 
 	contact.Employers = parentContact.Employers
@@ -633,26 +633,26 @@ func UpdateContactToParent(c context.Context, r *http.Request, id string) (model
 
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return contact, err
+		return contact, nil, err
 	}
 
-	return contact, nil
+	return contact, nil, nil
 }
 
-func LinkedInSync(c context.Context, r *http.Request, id string) (models.Contact, error) {
-	contact, err := GetContact(c, r, id)
+func LinkedInSync(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
+	contact, _, err := GetContact(c, r, id)
 	if err != nil {
-		return contact, err
+		return contact, nil, err
 	}
 
 	if contact.ParentContact == 0 {
-		return contact, nil
+		return contact, nil, nil
 	}
 
 	parentContact, err := getContact(c, r, contact.ParentContact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return contact, err
+		return contact, nil, err
 	}
 
 	// Send a pub to Influencer
@@ -660,7 +660,7 @@ func LinkedInSync(c context.Context, r *http.Request, id string) (models.Contact
 
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return contact, err
+		return contact, nil, err
 	}
 
 	// Now that we have told the Influencer program that we are syncing Linkedin data
@@ -671,5 +671,5 @@ func LinkedInSync(c context.Context, r *http.Request, id string) (models.Contact
 	LogNotificationForResource(c, r, "Contact", contact.Id, "SYNC", "LINKEDIN")
 	LogNotificationForResource(c, r, "Contact", parentContact.Id, "SYNC", "LINKEDIN")
 
-	return contact, nil
+	return contact, nil, nil
 }

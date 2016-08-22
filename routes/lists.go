@@ -43,9 +43,9 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 func handleMediaList(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetMediaList(c, r, id)
+		return baseSingleResponseHandler(controllers.GetMediaList(c, r, id))
 	case "PATCH":
-		return controllers.UpdateMediaList(c, r, id)
+		return baseSingleResponseHandler(controllers.UpdateMediaList(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -53,9 +53,9 @@ func handleMediaList(c context.Context, r *http.Request, id string) (interface{}
 func handleMediaLists(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetMediaLists(c, r)
+		return baseResponseHandler(controllers.GetMediaLists(c, r))
 	case "POST":
-		return controllers.CreateMediaList(c, w, r)
+		return baseSingleResponseHandler(controllers.CreateMediaList(c, w, r))
 	}
 	return nil, errors.New("method not implemented")
 }
