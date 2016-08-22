@@ -271,15 +271,15 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, err
 * Action methods
  */
 
-func ValidateUserPassword(r *http.Request, email string, password string) (bool, error) {
+func ValidateUserPassword(r *http.Request, email string, password string) (models.User, bool, error) {
 	c := appengine.NewContext(r)
 	user, err := GetUserByEmail(c, email)
 	if err == nil {
 		err = utils.ValidatePassword(user.Password, password)
 		if err != nil {
-			return false, nil
+			return models.User{}, false, nil
 		}
-		return true, nil
+		return user, true, nil
 	}
-	return false, errors.New("User does not exist")
+	return models.User{}, false, errors.New("User does not exist")
 }

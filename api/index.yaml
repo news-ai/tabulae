@@ -70,5 +70,7 @@ indexes:
 - kind: User
   ancestor: no
   properties:
+    - name: apikey
+    - name: confirmationcode
     - name: email
     - name: password

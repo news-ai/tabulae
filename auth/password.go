@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/emails"
@@ -38,9 +39,15 @@ func PasswordLoginHandler() http.HandlerFunc {
 		session.Values["state"] = state
 		session.Save(r, w)
 
-		isOk, _ := controllers.ValidateUserPassword(r, validEmail.Address, password)
+		user, isOk, _ := controllers.ValidateUserPassword(r, validEmail.Address, password)
 		if isOk {
 			// // Now that the user is created/retrieved save the email in the session
+			if !user.EmailConfirmed {
+				emailNotConfirmedMessage := url.QueryEscape("You have not confirmed your email yet! Please check your email.")
+				http.Redirect(w, r, "/api/auth?success=false&message="+emailNotConfirmedMessage, 302)
+				return
+			}
+
 			session.Values["email"] = validEmail.Address
 			session.Save(r, w)
 
@@ -54,6 +61,7 @@ func PasswordLoginHandler() http.HandlerFunc {
 		}
 		wrongPasswordMessage := url.QueryEscape("You entered the wrong password!")
 		http.Redirect(w, r, "/api/auth?success=false&message="+wrongPasswordMessage, 302)
+		return
 	}
 }
 
@@ -225,13 +233,14 @@ func EmailConfirmationHandler() http.HandlerFunc {
 		if val, ok := r.URL.Query()["code"]; ok {
 			code := val[0]
 			user, err := controllers.GetUserByConfirmationCode(c, strings.Trim(code, " "))
-
 			if err != nil {
+				log.Infof(c, "%v", err)
 				http.Redirect(w, r, "/api/auth?success=false&message="+invalidConfirmation, 302)
 			}
 
 			_, err = user.ConfirmEmail(c)
 			if err != nil {
+				log.Infof(c, "%v", err)
 				http.Redirect(w, r, "/api/auth?success=false&message="+invalidConfirmation, 302)
 			}
 
