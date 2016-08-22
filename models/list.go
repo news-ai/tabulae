@@ -24,10 +24,10 @@ type MediaList struct {
 
 	Contacts []int64 `json:"contacts"`
 
-	FieldsMap []CustomFieldsMap `json:"fieldsmap"`
+	FieldsMap []CustomFieldsMap `json:"fieldsmap" datastore:",noindex"`
 
-	CustomFields []string `json:"-"`
-	Fields       []string `json:"-"`
+	CustomFields []string `json:"-" datastore:",noindex"`
+	Fields       []string `json:"-" datastore:",noindex"`
 
 	FileUpload int64 `json:"fileupload"`
 

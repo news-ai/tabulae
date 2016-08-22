@@ -12,8 +12,8 @@ import (
 type Template struct {
 	Base
 
-	Subject string `json:"subject"`
-	Body    string `json:"body"`
+	Subject string `json:"subject" datastore:",noindex"`
+	Body    string `json:"body" datastore:",noindex"`
 }
 
 /*

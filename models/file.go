@@ -15,7 +15,7 @@ type File struct {
 	FileName string `json:"filename"`
 	ListId   int64  `json:"listid"`
 
-	Order []string `json:"order"`
+	Order []string `json:"order" datastore:",noindex"`
 
 	Imported   bool `json:"imported"`
 	FileExists bool `json:"fileexists"`

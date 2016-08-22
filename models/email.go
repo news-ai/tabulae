@@ -18,8 +18,8 @@ type Email struct {
 
 	Sender  string `json:"sender"`
 	To      string `json:"to"`
-	Subject string `json:"subject"`
-	Body    string `json:"body"`
+	Subject string `json:"subject" datastore:",noindex"`
+	Body    string `json:"body" datastore:",noindex"`
 
 	// User details
 	FirstName string `json:"firstname"`
