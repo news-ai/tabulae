@@ -12,6 +12,7 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
+	// "github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/permissions"
 )
 
@@ -28,7 +29,7 @@ func handleTemplate(c context.Context, r *http.Request, id string) (interface{},
 func handleTemplates(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetTemplates(c, r)
+		return baseResponseHandler(controllers.GetTemplates(c, r))
 	case "POST":
 		return controllers.CreateTemplate(c, r)
 	}
@@ -40,6 +41,10 @@ func TemplatesHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Param
 	w.Header().Set("Content-Type", "application/json")
 	c := appengine.NewContext(r)
 	val, err := handleTemplates(c, w, r)
+
+	// response := models.BaseResponse{}
+	// response.Count = len(val)
+	// response.Results = val
 
 	if err == nil {
 		err = ffjson.NewEncoder(w).Encode(val)

@@ -20,6 +20,11 @@ type BaseResponse struct {
 	Includes interface{} `json:"includes"`
 }
 
+type BaseSingleResponse struct {
+	Data     interface{} `json:"data"`
+	Included interface{} `json:"included"`
+}
+
 type Base struct {
 	Id int64 `json:"id" datastore:"-"`
 

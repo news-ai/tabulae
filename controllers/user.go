@@ -127,13 +127,17 @@ func filterUser(c context.Context, queryType, query string) (models.User, error)
 * Get methods
  */
 
-func GetUsers(c context.Context, r *http.Request) ([]models.User, error) {
+func GetUsers(c context.Context, r *http.Request) (models.BaseResponse, error) {
+	response := models.BaseResponse{}
 	// Get the current user
 	users, err := getUsers(c, r)
 	if err != nil {
-		return []models.User{}, err
+		return response, err
 	}
-	return users, nil
+
+	response.Count = len(users)
+	response.Results = users
+	return response, nil
 }
 
 func GetUser(c context.Context, r *http.Request, id string) (models.User, error) {
