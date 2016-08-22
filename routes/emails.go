@@ -20,7 +20,7 @@ func handleEmailAction(c context.Context, r *http.Request, id string, action str
 	case "GET":
 		switch action {
 		case "send":
-			return controllers.SendEmail(c, r, id)
+			return baseSingleResponseHandler(controllers.SendEmail(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")
@@ -29,9 +29,9 @@ func handleEmailAction(c context.Context, r *http.Request, id string, action str
 func handleEmail(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetEmail(c, r, id)
+		return baseSingleResponseHandler(controllers.GetEmail(c, r, id))
 	case "PATCH":
-		return controllers.UpdateSingleEmail(c, r, id)
+		return baseSingleResponseHandler(controllers.UpdateSingleEmail(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -39,11 +39,11 @@ func handleEmail(c context.Context, r *http.Request, id string) (interface{}, er
 func handleEmails(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetEmails(c, r)
+		return baseResponseHandler(controllers.GetEmails(c, r))
 	case "POST":
-		return controllers.CreateEmail(c, r)
+		return baseSingleResponseHandler(controllers.CreateEmail(c, r))
 	case "PATCH":
-		return controllers.UpdateBatchEmail(c, r)
+		return baseSingleResponseHandler(controllers.UpdateBatchEmail(c, r))
 	}
 	return nil, errors.New("method not implemented")
 }

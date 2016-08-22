@@ -42,10 +42,6 @@ func TemplatesHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Param
 	c := appengine.NewContext(r)
 	val, err := handleTemplates(c, w, r)
 
-	// response := models.BaseResponse{}
-	// response.Count = len(val)
-	// response.Results = val
-
 	if err == nil {
 		err = ffjson.NewEncoder(w).Encode(val)
 	}

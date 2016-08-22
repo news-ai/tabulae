@@ -16,13 +16,13 @@ import (
 	"github.com/news-ai/tabulae/utils"
 )
 
-func HandleMediaListActionUpload(c context.Context, r *http.Request, id string, user models.User) (interface{}, error) {
+func HandleMediaListActionUpload(c context.Context, r *http.Request, id string, user models.User) (interface{}, interface{}, error) {
 	userId := strconv.FormatInt(user.Id, 10)
 
 	file, handler, err := r.FormFile("file")
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	noSpaceFileName := ""
@@ -34,28 +34,28 @@ func HandleMediaListActionUpload(c context.Context, r *http.Request, id string, 
 	val, err := UploadFile(r, fileName, file, userId, id, handler.Header.Get("Content-Type"))
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, err
+		return nil, nil, err
 	}
 
-	return val, nil
+	return val, nil, nil
 }
 
-func HandleFileUploadHeaders(c context.Context, r *http.Request, id string) (interface{}, error) {
+func HandleFileUploadHeaders(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
 	decoder := json.NewDecoder(r.Body)
 	var fileOrder models.FileOrder
 	err := decoder.Decode(&fileOrder)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Get & write file
-	file, err := controllers.GetFile(c, r, id)
+	file, _, err := controllers.GetFile(c, r, id)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if file.Imported {
-		return nil, err
+		return nil, nil, err
 	}
 
 	file.Order = fileOrder.Order
@@ -63,41 +63,41 @@ func HandleFileUploadHeaders(c context.Context, r *http.Request, id string) (int
 	// Read file
 	byteFile, contentType, err := ReadFile(r, id)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Import the file
 	_, err = parse.ExcelHeadersToListModel(r, byteFile, file.Order, file.ListId, contentType)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Return the file
 	file.Imported = true
 	val, err := file.Save(c)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Return value
 	if err == nil {
-		return val, nil
+		return val, nil, nil
 	}
 
-	return nil, err
+	return nil, nil, err
 }
 
-func HandleFileGetHeaders(c context.Context, r *http.Request, id string) (interface{}, error) {
+func HandleFileGetHeaders(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
 	file, contentType, err := ReadFile(r, id)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Parse file headers and report to API
 	val, err := parse.FileToExcelHeader(r, file, contentType)
 	if err == nil {
-		return val, nil
+		return val, nil, nil
 	}
 
-	return nil, err
+	return nil, nil, err
 }

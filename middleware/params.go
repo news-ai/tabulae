@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	gcontext "github.com/gorilla/context"
+
+	"github.com/news-ai/tabulae/utils"
 )
 
 func GetPagination(r *http.Request) (int, int) {
@@ -33,8 +35,14 @@ func GetPagination(r *http.Request) (int, int) {
 	return limit, offset
 }
 
+func GetURL(r *http.Request) string {
+	return utils.StripQueryString(r.URL.String())
+}
+
 func AttachParameters(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	limit, offset := GetPagination(r)
+	url := GetURL(r)
+	gcontext.Set(r, "url", url)
 	gcontext.Set(r, "limit", limit)
 	gcontext.Set(r, "offset", offset)
 	next(w, r)
