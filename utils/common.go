@@ -50,7 +50,12 @@ func StripQueryString(inputUrl string) string {
 	if err != nil {
 		return inputUrl
 	}
-	u.Scheme = "https"
+	if u.Scheme == "http" {
+		u.Scheme = "https"
+	}
+	if u.Host != "" && !strings.Contains(u.Host, "www.") {
+		u.Host = "www." + u.Host
+	}
 	u.RawQuery = ""
 	return u.String()
 }

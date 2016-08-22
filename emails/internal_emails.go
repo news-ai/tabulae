@@ -2,6 +2,7 @@ package emails
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/news-ai/tabulae/models"
 
@@ -27,6 +28,6 @@ func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode
 	m.SetReplyToEmail(&fromNewsAIEmail)
 	m.AddFilter("templates", "enable", "1")
 	m.AddFilter("templates", "template_id", "a64e454c-19d5-4bba-9cef-bd185e7c9b0b")
-	m.AddSubstitution("{CONFIRMATION_CODE}", confirmationCode)
+	m.AddSubstitution("{CONFIRMATION_CODE}", url.QueryEscape(confirmationCode))
 	sg.Send(m)
 }

@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"net/mail"
 	"net/url"
-	"strings"
 	"text/template"
 
 	"google.golang.org/appengine"
@@ -232,8 +231,15 @@ func EmailConfirmationHandler() http.HandlerFunc {
 
 		if val, ok := r.URL.Query()["code"]; ok {
 			code := val[0]
-			user, err := controllers.GetUserByConfirmationCode(c, strings.Trim(code, " "))
+			codeUnscape, err := url.QueryUnescape(code)
 			if err != nil {
+				log.Infof(c, "%v", codeUnscape)
+				log.Infof(c, "%v", err)
+				http.Redirect(w, r, "/api/auth?success=false&message="+invalidConfirmation, 302)
+			}
+			user, err := controllers.GetUserByConfirmationCode(c, codeUnscape)
+			if err != nil {
+				log.Infof(c, "%v", codeUnscape)
 				log.Infof(c, "%v", err)
 				http.Redirect(w, r, "/api/auth?success=false&message="+invalidConfirmation, 302)
 			}
