@@ -120,18 +120,20 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, error) {
 	return emails, nil
 }
 
-func GetEmail(c context.Context, r *http.Request, id string) (models.Email, error) {
+func GetEmail(c context.Context, r *http.Request, id string) (models.BaseSingleResponse, error) {
+	response := models.BaseSingleResponse{}
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
-		return models.Email{}, err
+		return response, err
 	}
 
 	email, err := getEmail(c, r, currentId)
 	if err != nil {
-		return models.Email{}, err
+		return response, err
 	}
-	return email, nil
+	response.Data = email
+	return response, nil
 }
 
 /*
@@ -246,10 +248,11 @@ func UpdateEmail(c context.Context, r *http.Request, email *models.Email, update
 
 func UpdateSingleEmail(c context.Context, r *http.Request, id string) (models.Email, error) {
 	// Get the details of the current email
-	email, err := GetEmail(c, r, id)
+	baseEmail, err := GetEmail(c, r, id)
 	if err != nil {
 		return models.Email{}, err
 	}
+	email := baseEmail.Data.(models.Email)
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
@@ -315,10 +318,11 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, error
  */
 
 func SendEmail(c context.Context, r *http.Request, id string) (models.Email, error) {
-	email, err := GetEmail(c, r, id)
+	baseEmail, err := GetEmail(c, r, id)
 	if err != nil {
 		return models.Email{}, err
 	}
+	email := baseEmail.Data.(models.Email)
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {

@@ -65,13 +65,14 @@ func GetTemplate(c context.Context, r *http.Request, id string) (models.Template
 	if err != nil {
 		return models.Template{}, err
 	}
+
 	return template, nil
 }
 
-func GetTemplates(c context.Context, r *http.Request) ([]models.Template, error) {
+func GetTemplates(c context.Context, r *http.Request) ([]models.Template, int, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
-		return []models.Template{}, err
+		return []models.Template{}, 0, err
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -79,7 +80,7 @@ func GetTemplates(c context.Context, r *http.Request) ([]models.Template, error)
 
 	ks, err := datastore.NewQuery("Template").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	if err != nil {
-		return []models.Template{}, err
+		return []models.Template{}, 0, err
 	}
 
 	var templates []models.Template
@@ -88,14 +89,14 @@ func GetTemplates(c context.Context, r *http.Request) ([]models.Template, error)
 	err = nds.GetMulti(c, ks, templates)
 	if err != nil {
 		log.Infof(c, "%v", err)
-		return []models.Template{}, err
+		return []models.Template{}, 0, err
 	}
 
 	for i := 0; i < len(templates); i++ {
 		templates[i].Id = ks[i].IntID()
 	}
 
-	return templates, nil
+	return templates, len(templates), nil
 }
 
 /*
