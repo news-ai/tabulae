@@ -87,12 +87,12 @@ func getFieldsMap() []models.CustomFieldsMap {
  */
 
 // Gets every single media list
-func GetMediaLists(c context.Context, r *http.Request) ([]models.MediaList, error) {
+func GetMediaLists(c context.Context, r *http.Request) ([]models.MediaList, interface{}, int, error) {
 	mediaLists := []models.MediaList{}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
-		return []models.MediaList{}, err
+		return []models.MediaList{}, nil, 0, err
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -102,44 +102,44 @@ func GetMediaLists(c context.Context, r *http.Request) ([]models.MediaList, erro
 	mediaLists = make([]models.MediaList, len(ks))
 	err = nds.GetMulti(c, ks, mediaLists)
 	if err != nil {
-		return []models.MediaList{}, err
+		return []models.MediaList{}, nil, 0, err
 	}
 
 	for i := 0; i < len(mediaLists); i++ {
 		mediaLists[i].Id = ks[i].IntID()
 	}
-	return mediaLists, nil
+	return mediaLists, nil, len(mediaLists), nil
 }
 
-func GetMediaList(c context.Context, r *http.Request, id string) (models.MediaList, error) {
+func GetMediaList(c context.Context, r *http.Request, id string) (models.MediaList, interface{}, error) {
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
-		return models.MediaList{}, err
+		return models.MediaList{}, nil, err
 	}
 
 	mediaList, err := getMediaList(c, r, currentId)
 	if err != nil {
-		return models.MediaList{}, err
+		return models.MediaList{}, nil, err
 	}
-	return mediaList, nil
+	return mediaList, nil, nil
 }
 
 /*
 * Create methods
  */
 
-func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) (models.MediaList, error) {
+func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) (models.MediaList, interface{}, error) {
 	decoder := json.NewDecoder(r.Body)
 	var medialist models.MediaList
 	err := decoder.Decode(&medialist)
 	if err != nil {
-		return models.MediaList{}, err
+		return models.MediaList{}, nil, err
 	}
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
-		return medialist, err
+		return medialist, nil, err
 	}
 
 	// Initial values for fieldsmap
@@ -148,37 +148,37 @@ func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) 
 	// Create media list
 	_, err = medialist.Create(c, r, currentUser)
 	if err != nil {
-		return models.MediaList{}, err
+		return models.MediaList{}, nil, err
 	}
 
-	return medialist, nil
+	return medialist, nil, nil
 }
 
 /*
 * Update methods
  */
 
-func UpdateMediaList(c context.Context, r *http.Request, id string) (models.MediaList, error) {
+func UpdateMediaList(c context.Context, r *http.Request, id string) (models.MediaList, interface{}, error) {
 	// Get the details of the current media list
-	mediaList, err := GetMediaList(c, r, id)
+	mediaList, _, err := GetMediaList(c, r, id)
 	if err != nil {
-		return models.MediaList{}, err
+		return models.MediaList{}, nil, err
 	}
 
 	// Checking if the current user logged in can edit this particular id
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
-		return models.MediaList{}, err
+		return models.MediaList{}, nil, err
 	}
 	if mediaList.CreatedBy != user.Id {
-		return models.MediaList{}, errors.New("Forbidden")
+		return models.MediaList{}, nil, errors.New("Forbidden")
 	}
 
 	decoder := json.NewDecoder(r.Body)
 	var updatedMediaList models.MediaList
 	err = decoder.Decode(&updatedMediaList)
 	if err != nil {
-		return models.MediaList{}, err
+		return models.MediaList{}, nil, err
 	}
 
 	utils.UpdateIfNotBlank(&mediaList.Name, updatedMediaList.Name)
@@ -201,7 +201,7 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	}
 
 	mediaList.Save(c)
-	return mediaList, nil
+	return mediaList, nil, nil
 }
 
 /*
@@ -210,7 +210,7 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 
 func GetContactsForList(c context.Context, r *http.Request, id string) ([]models.Contact, interface{}, int, error) {
 	// Get the details of the current media list
-	mediaList, err := GetMediaList(c, r, id)
+	mediaList, _, err := GetMediaList(c, r, id)
 	if err != nil {
 		return []models.Contact{}, nil, 0, err
 	}
