@@ -17,27 +17,37 @@ import (
 )
 
 // Send an email confirmation to a new user
+// Someday convert this to a batch so we can send multiple confirmation emails at once
 func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode string) (bool, string, error) {
 	c := appengine.NewContext(r)
-
 	sendgrid.DefaultClient.HTTPClient = urlfetch.Client(c)
 
-	emailFullName := strings.Join([]string{email.FirstName, email.LastName}, " ")
-
-	from := mail.NewEmail("Abhi from NewsAI", "abhi@newsai.org")
-	to := mail.NewEmail(emailFullName, email.To)
-	content := mail.NewContent("text/html", email.Body)
-	m := mail.NewV3MailInit(from, "Thanks for signing up!", to, content)
+	m := mail.NewV3Mail()
 	m.SetTemplateID("a64e454c-19d5-4bba-9cef-bd185e7c9b0b")
 
-	// personalization := mail.Personalization{}
-	// personalization.Substitutions
+	// Default from from a NewsAI account
+	from := mail.NewEmail("Abhi from NewsAI", "abhi@newsai.org")
+	m.SetFrom(from)
 
-	// m.AddPersonalizations()
-	// m.AddS
+	// Adding a personalization for the email
+	p := mail.NewPersonalization()
+	p.Subject = "Thanks for signing up!"
 
-	//url.QueryEscape(confirmationCode)
+	// Adding who we are sending the email to
+	emailFullName := strings.Join([]string{email.FirstName, email.LastName}, " ")
+	tos := []*mail.Email{
+		mail.NewEmail(emailFullName, email.To),
+	}
+	p.AddTos(tos...)
 
+	// Adding the confirmation code for emails
+	encodedConfirmationCode := url.QueryEscape(confirmationCode)
+	p.SetSubstitution("{CONFIRMATION_CODE}", encodedConfirmationCode)
+
+	// Add personalization
+	m.AddPersonalizations(p)
+
+	// Send the email
 	request := sendgrid.GetRequest(os.Getenv("SENDGRID_API_KEY"), "/v3/mail/send", "https://api.sendgrid.com")
 	request.Method = "POST"
 	request.Body = mail.GetRequestBody(m)
@@ -48,8 +58,6 @@ func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode
 		log.Errorf(c, "error: %v", err)
 		return false, "", err
 	}
-
-	// 	m.AddSubstitution("{CONFIRMATION_CODE}", url.QueryEscape(confirmationCode))
 
 	emailId := ""
 	if len(response.Headers["X-Message-Id"]) > 0 {
