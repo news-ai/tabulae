@@ -60,6 +60,7 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 			return models.Contact{}, err
 		}
 
+		contact.Type = "contact"
 		return contact, nil
 	}
 	return models.Contact{}, errors.New("No contact by this id")

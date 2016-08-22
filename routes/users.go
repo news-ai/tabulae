@@ -18,9 +18,9 @@ import (
 func handleUser(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetUser(c, r, id)
+		return baseSingleResponseHandler(controllers.GetUser(c, r, id))
 	case "PATCH":
-		return controllers.UpdateUser(c, r, id)
+		return baseSingleResponseHandler(controllers.UpdateUser(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -28,7 +28,7 @@ func handleUser(c context.Context, r *http.Request, id string) (interface{}, err
 func handleUsers(c context.Context, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetUsers(c, r)
+		return baseResponseHandler(controllers.GetUsers(c, r))
 	}
 	return nil, errors.New("method not implemented")
 }

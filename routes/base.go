@@ -16,16 +16,18 @@ import (
 
 var resourcesHandlers map[string](func(context.Context, http.ResponseWriter, *http.Request) (interface{}, error))
 
-func baseResponseHandler(val interface{}, count int, err error) (models.BaseResponse, error) {
+func baseResponseHandler(val interface{}, included interface{}, count int, err error) (models.BaseResponse, error) {
 	response := models.BaseResponse{}
-	response.Results = val
+	response.Data = val
+	response.Included = included
 	response.Count = count
 	return response, err
 }
 
-func baseSingleResponseHandler(val interface{}, err error) (models.BaseSingleResponse, error) {
+func baseSingleResponseHandler(val interface{}, included interface{}, err error) (models.BaseSingleResponse, error) {
 	response := models.BaseSingleResponse{}
 	response.Data = val
+	response.Included = included
 	return response, err
 }
 

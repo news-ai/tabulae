@@ -25,7 +25,7 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 	case "GET":
 		switch action {
 		case "contacts":
-			return controllers.GetContactsForList(c, r, id)
+			return baseResponseHandler(controllers.GetContactsForList(c, r, id))
 		}
 	case "POST":
 		switch action {
