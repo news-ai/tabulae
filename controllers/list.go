@@ -208,13 +208,11 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 * Action methods
  */
 
-func GetContactsForList(c context.Context, r *http.Request, id string) (models.BaseResponse, error) {
-	response := models.BaseResponse{}
-
+func GetContactsForList(c context.Context, r *http.Request, id string) ([]models.Contact, interface{}, int, error) {
 	// Get the details of the current media list
 	mediaList, err := GetMediaList(c, r, id)
 	if err != nil {
-		return response, err
+		return []models.Contact{}, nil, 0, err
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -224,7 +222,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) (models.B
 	endPosition := startPosition + limit
 
 	if len(mediaList.Contacts) < startPosition {
-		return response, nil
+		return []models.Contact{}, nil, 0, err
 	}
 
 	if len(mediaList.Contacts) < endPosition {
@@ -242,7 +240,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) (models.B
 
 	err = nds.GetMulti(c, subsetKeyIds, contacts)
 	if err != nil {
-		return response, err
+		return []models.Contact{}, nil, 0, err
 	}
 
 	publicationIds := []int64{}
@@ -261,9 +259,6 @@ func GetContactsForList(c context.Context, r *http.Request, id string) (models.B
 		publicationIds = append(publicationIds, contacts[i].PastEmployers...)
 	}
 
-	response.Count = len(contacts)
-	response.Results = contacts
-
 	// Work on includes
 	publications := []models.Publication{}
 	publicationExists := map[int64]bool{}
@@ -277,7 +272,5 @@ func GetContactsForList(c context.Context, r *http.Request, id string) (models.B
 		}
 	}
 
-	response.Includes = publications
-
-	return response, nil
+	return contacts, publications, len(contacts), nil
 }

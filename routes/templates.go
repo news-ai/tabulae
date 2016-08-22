@@ -19,9 +19,9 @@ import (
 func handleTemplate(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetTemplate(c, r, id)
+		return baseSingleResponseHandler(controllers.GetTemplate(c, r, id))
 	case "PATCH":
-		return controllers.UpdateTemplate(c, r, id)
+		return baseSingleResponseHandler(controllers.UpdateTemplate(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -31,7 +31,7 @@ func handleTemplates(c context.Context, w http.ResponseWriter, r *http.Request) 
 	case "GET":
 		return baseResponseHandler(controllers.GetTemplates(c, r))
 	case "POST":
-		return controllers.CreateTemplate(c, r)
+		return baseSingleResponseHandler(controllers.CreateTemplate(c, r))
 	}
 	return nil, errors.New("method not implemented")
 }

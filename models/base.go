@@ -16,8 +16,8 @@ type CustomContactField struct {
 type BaseResponse struct {
 	Count    int         `json:"count"`
 	Next     string      `json:"-"`
-	Results  interface{} `json:"results"`
-	Includes interface{} `json:"includes"`
+	Data     interface{} `json:"data"`
+	Included interface{} `json:"included"`
 }
 
 type BaseSingleResponse struct {
@@ -27,6 +27,8 @@ type BaseSingleResponse struct {
 
 type Base struct {
 	Id int64 `json:"id" datastore:"-"`
+
+	Type string `json:"type" datastore:"-"`
 
 	CreatedBy int64 `json:"createdby"`
 
