@@ -75,6 +75,7 @@ func ForgetPasswordHandler() http.HandlerFunc {
 // This is just to give them the ability to register an account.
 func PasswordRegisterHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		c := appengine.NewContext(r)
 		// Setup to authenticate the user into the API
 		firstName := r.FormValue("firstname")
 		lastName := r.FormValue("lastname")
@@ -104,7 +105,17 @@ func PasswordRegisterHandler() http.HandlerFunc {
 
 		// Email could fail to send if there is no singleUser. Create check later.
 		emailConfirmation, _ := controllers.CreateEmailInternal(r, email, firstName, lastName)
-		emails.SendConfirmationEmail(r, emailConfirmation, user.ConfirmationCode)
+		emailSent, emailId, err := emails.SendConfirmationEmail(r, emailConfirmation, user.ConfirmationCode)
+		if !emailSent || err != nil {
+			// Redirect user back to login page
+			log.Errorf(c, "%v", "Confirmation email was not sent for "+email)
+			log.Errorf(c, "%v", err)
+			emailRegistered := url.QueryEscape("Could not send confirmation email. We'll fix this soon!")
+			http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
+			return
+		}
+
+		emailConfirmation.MarkSent(c, emailId)
 
 		// Redirect user back to login page
 		confirmationMessage := url.QueryEscape("We sent you a confirmation email!")
