@@ -50,6 +50,7 @@ func StripQueryString(inputUrl string) string {
 	if err != nil {
 		return inputUrl
 	}
+	u.Scheme = "https"
 	u.RawQuery = ""
 	return u.String()
 }
