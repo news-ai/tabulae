@@ -213,7 +213,17 @@ func RegisterUser(r *http.Request, user models.User) (bool, error) {
 	_, err := GetUserByEmail(c, user.Email)
 
 	if err != nil {
+		if user.Email == "" {
+			noEmailErr := errors.New("User does have an email")
+			log.Errorf(c, "%v", noEmailErr)
+			log.Errorf(c, "%v", user)
+			return false, noEmailErr
+		}
 		_, err = user.Create(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return false, err
+		}
 		return true, nil
 	}
 	return false, errors.New("User with the email already exists")
