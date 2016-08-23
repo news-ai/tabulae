@@ -33,7 +33,11 @@ func handlePublications(c context.Context, w http.ResponseWriter, r *http.Reques
 		}
 		return baseResponseHandler(controllers.GetPublications(c, r))
 	case "POST":
-		return baseSingleResponseHandler(controllers.CreatePublication(c, w, r))
+		val, included, count, err := controllers.CreatePublication(c, w, r)
+		if count == 1 {
+			return baseSingleResponseHandler(val, included, err)
+		}
+		return baseResponseHandler(val, included, count, err)
 	}
 	return nil, errors.New("method not implemented")
 }
