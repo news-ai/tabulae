@@ -52,21 +52,16 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 	mediaListId := utils.IntIdToString(mediaListid)
 	mediaList, _, err := controllers.GetMediaList(c, r, mediaListId)
 	mediaList.Contacts = contactIds
-	customFieldsList := []models.CustomFieldsMap{}
 	for i := 0; i < len(headers); i++ {
-		customField := models.CustomFieldsMap{}
-		customField.Name = headers[i]
-		customField.Value = headers[i]
 		if _, ok := customFields[headers[i]]; ok {
+			customField := models.CustomFieldsMap{}
+			customField.Name = headers[i]
+			customField.Value = headers[i]
 			customField.CustomField = true
-		} else {
-			customField.CustomField = false
+			customField.Hidden = false
+			mediaList.FieldsMap = append(mediaList.FieldsMap, customField)
 		}
-		customField.Hidden = false
-		customFieldsList = append(customFieldsList, customField)
 	}
-
-	mediaList.FieldsMap = customFieldsList
 
 	mediaList.Save(c)
 	return mediaList, nil

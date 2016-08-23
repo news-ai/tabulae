@@ -289,3 +289,22 @@ func GetEmailsForList(c context.Context, r *http.Request, id string) ([]models.E
 
 	return emails, nil, count, nil
 }
+
+func DuplicateList(c context.Context, r *http.Request, id string) ([]models.MediaList, interface{}, error) {
+	// Get the details of the current media list
+	mediaList, _, err := GetMediaList(c, r, id)
+	if err != nil {
+		return models.MediaList{}, nil, err
+	}
+
+	// Checking if the current user logged in can edit this particular id
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return models.MediaList{}, nil, err
+	}
+	if mediaList.CreatedBy != user.Id {
+		return models.MediaList{}, nil, errors.New("Forbidden")
+	}
+
+	return []models.Email{}, nil, nil
+}

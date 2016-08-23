@@ -3,9 +3,6 @@ package auth
 import (
 	"os"
 
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/urlfetch"
-
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/linkedin"
 )

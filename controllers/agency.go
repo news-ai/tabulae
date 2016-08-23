@@ -112,7 +112,7 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface
 		agencies[i].Id = ks[i].IntID()
 	}
 
-	return agencies, nil, 0, nil
+	return agencies, nil, len(agencies), nil
 }
 
 func GetAgency(c context.Context, id string) (models.Agency, interface{}, error) {
