@@ -290,7 +290,7 @@ func GetEmailsForList(c context.Context, r *http.Request, id string) ([]models.E
 	return emails, nil, count, nil
 }
 
-func DuplicateList(c context.Context, r *http.Request, id string) ([]models.MediaList, interface{}, error) {
+func DuplicateList(c context.Context, r *http.Request, id string) (models.MediaList, interface{}, error) {
 	// Get the details of the current media list
 	mediaList, _, err := GetMediaList(c, r, id)
 	if err != nil {
@@ -306,5 +306,5 @@ func DuplicateList(c context.Context, r *http.Request, id string) ([]models.Medi
 		return models.MediaList{}, nil, errors.New("Forbidden")
 	}
 
-	return []models.Email{}, nil, nil
+	return models.MediaList{}, nil, nil
 }
