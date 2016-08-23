@@ -87,6 +87,31 @@ func filterEmail(c context.Context, queryType, query string) (models.Email, erro
 	return models.Email{}, errors.New("No email by this " + queryType)
 }
 
+func filterEmailbyListId(c context.Context, r *http.Request, listId int64) ([]models.Email, int, error) {
+	emails := []models.Email{}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return []models.Email{}, 0, err
+	}
+
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	ks, err := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("ListId =", listId).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
+	emails = make([]models.Email, len(ks))
+	err = nds.GetMulti(c, ks, emails)
+	if err != nil {
+		return []models.Email{}, 0, err
+	}
+
+	for i := 0; i < len(emails); i++ {
+		emails[i].Id = ks[i].IntID()
+	}
+
+	return emails, len(emails), nil
+}
+
 /*
 * Public methods
  */
@@ -117,7 +142,7 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 		emails[i].Id = ks[i].IntID()
 	}
 
-	return emails, nil, 0, nil
+	return emails, nil, len(emails), nil
 }
 
 func GetEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
@@ -219,8 +244,8 @@ func FilterEmailBySendGridID(c context.Context, sendGridId string) (models.Email
 * Update methods
  */
 
-func UpdateEmail(c context.Context, r *http.Request, email *models.Email, updatedEmail models.Email) (models.Email, interface{}, error) {
-	if email.CreatedBy != updatedEmail.CreatedBy {
+func UpdateEmail(c context.Context, r *http.Request, currentUser models.User, email *models.Email, updatedEmail models.Email) (models.Email, interface{}, error) {
+	if email.CreatedBy != currentUser.Id {
 		return *email, nil, errors.New("You don't have permissions to edit this object")
 	}
 
@@ -267,7 +292,7 @@ func UpdateSingleEmail(c context.Context, r *http.Request, id string) (models.Em
 		return models.Email{}, nil, err
 	}
 
-	return UpdateEmail(c, r, &email, updatedEmail)
+	return UpdateEmail(c, r, user, &email, updatedEmail)
 }
 
 func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, error) {
@@ -300,7 +325,7 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, inter
 
 	newEmails := []models.Email{}
 	for i := 0; i < len(updatedEmails); i++ {
-		updatedEmail, _, err := UpdateEmail(c, r, &currentEmails[i], updatedEmails[i])
+		updatedEmail, _, err := UpdateEmail(c, r, user, &currentEmails[i], updatedEmails[i])
 		if err != nil {
 			return []models.Email{}, nil, err
 		}
