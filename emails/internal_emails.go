@@ -41,7 +41,7 @@ func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode
 	p.AddTos(tos...)
 
 	// Adding the confirmation code for emails
-	t = &url.URL{Path: confirmationCode}
+	t := &url.URL{Path: confirmationCode}
 	encodedConfirmationCode := t.String()
 	p.SetSubstitution("{CONFIRMATION_CODE}", encodedConfirmationCode)
 
