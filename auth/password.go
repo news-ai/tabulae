@@ -82,15 +82,23 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
+		// Validate email
+		validEmail, err := mail.ParseAddress(email)
+		if err != nil || email == "" {
+			invalidEmailAlert := url.QueryEscape("Validation failed on registration. Sorry about that!")
+			http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
+		}
+
 		// Hash the password and save it into the datastore
 		hashedPassword, _ := utils.HashPassword(password)
 
 		user := models.User{}
 		user.FirstName = firstName
 		user.LastName = lastName
-		user.Email = email
+		user.Email = validEmail.Address
 		user.Password = hashedPassword
 		user.EmailConfirmed = false
+		user.AgreeTermsAndConditions = true
 		user.ConfirmationCode = utils.RandToken()
 
 		// Register user
