@@ -133,7 +133,7 @@ func GetPublication(c context.Context, id string) (models.Publication, interface
 * Create methods
  */
 
-func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, interface{}, int, error) {
 	// Parse JSON
 	buf, _ := ioutil.ReadAll(r.Body)
 	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
@@ -145,7 +145,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 	if err != nil {
 		currentUser, err := GetCurrentUser(c, r)
 		if err != nil {
-			return []models.Publication{}, err
+			return []models.Publication{}, nil, 0, err
 		}
 
 		var publications []models.Publication
@@ -154,49 +154,49 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 		err = arrayDecoder.Decode(&publications)
 
 		if err != nil {
-			return []models.Publication{}, err
+			return []models.Publication{}, nil, 0, err
 		}
 
 		newPublications := []models.Publication{}
 		for i := 0; i < len(publications); i++ {
 			_, err = publications[i].Validate(c)
 			if err != nil {
-				return []models.Publication{}, err
+				return []models.Publication{}, nil, 0, err
 			}
 
 			presentPublication, _, err := FilterPublicationByName(c, publications[i].Name)
 			if err != nil {
 				_, err = publications[i].Create(c, r, currentUser)
 				if err != nil {
-					return []models.Publication{}, err
+					return []models.Publication{}, nil, 0, err
 				}
 				newPublications = append(newPublications, publications[i])
 			} else {
 				newPublications = append(newPublications, presentPublication)
 			}
 		}
-		return newPublications, err
+		return newPublications, nil, len(newPublications), err
 	}
 
 	_, err = publication.Validate(c)
 	if err != nil {
-		return models.Publication{}, err
+		return models.Publication{}, nil, 0, err
 	}
 
 	presentPublication, _, err := FilterPublicationByName(c, publication.Name)
 	if err != nil {
 		currentUser, err := GetCurrentUser(c, r)
 		if err != nil {
-			return models.Publication{}, err
+			return models.Publication{}, nil, 0, err
 		}
 		// Create publication
 		_, err = publication.Create(c, r, currentUser)
 		if err != nil {
-			return models.Publication{}, err
+			return models.Publication{}, nil, 0, err
 		}
-		return publication, nil
+		return publication, nil, 1, nil
 	}
-	return presentPublication, nil
+	return presentPublication, nil, 1, nil
 }
 
 func FindOrCreatePublication(c context.Context, r *http.Request, name string) (models.Publication, error) {
