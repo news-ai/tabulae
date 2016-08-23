@@ -274,3 +274,18 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 
 	return contacts, publications, len(contacts), nil
 }
+
+func GetEmailsForList(c context.Context, r *http.Request, id string) ([]models.Email, interface{}, int, error) {
+	// Get the details of the current media list
+	mediaList, _, err := GetMediaList(c, r, id)
+	if err != nil {
+		return []models.Email{}, nil, 0, err
+	}
+
+	emails, count, err := filterEmailbyListId(c, r, mediaList.Id)
+	if err != nil {
+		return []models.Email{}, nil, 0, err
+	}
+
+	return emails, nil, count, nil
+}

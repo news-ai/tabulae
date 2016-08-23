@@ -39,6 +39,7 @@ func getAgency(c context.Context, id int64) (models.Agency, error) {
 
 	if !agency.Created.IsZero() {
 		agency.Id = agencyId.IntID()
+		agency.Type = "agencies"
 		return agency, nil
 	}
 	return models.Agency{}, errors.New("No agency by this id")
