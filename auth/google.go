@@ -109,8 +109,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	newUser.FirstName = googleUser.GivenName
 	newUser.LastName = googleUser.FamilyName
 	newUser.EmailConfirmed = true
-	newUser.LastLoggedIn = time.Now()
-	_, isNewUser, _ := controllers.RegisterUser(r, newUser)
+	controllers.RegisterUser(r, newUser)
 
 	session.Values["email"] = googleUser.Email
 	session.Values["id"] = newUser.Id
@@ -122,12 +121,15 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 		if err != nil {
 			http.Redirect(w, r, returnURL, 302)
 		}
-		if isNewUser {
+		if newUser.LastLoggedIn.IsZero() {
 			q := u.Query()
 			q.Set("firstTimeUser", "true")
 			u.RawQuery = q.Encode()
+			newUser.LastLoggedIn = time.Now()
+			newUser.Save(c)
 		}
 		http.Redirect(w, r, u.String(), 302)
+		return
 	}
 
 	http.Redirect(w, r, "/", 302)
