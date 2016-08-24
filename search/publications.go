@@ -1,6 +1,6 @@
 package search
 
-type AgencySearch struct {
+type PublicationSearch struct {
 	Id   int64
 	Name string
 }
