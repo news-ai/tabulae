@@ -102,7 +102,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		user.ConfirmationCode = utils.RandToken()
 
 		// Register user
-		isOk, err := controllers.RegisterUser(r, user)
+		isOk, _, err := controllers.RegisterUser(r, user)
 
 		if !isOk && err != nil {
 			// Redirect user back to login page

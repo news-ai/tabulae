@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 
 	"google.golang.org/appengine"
@@ -107,14 +108,31 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	newUser.FirstName = googleUser.GivenName
 	newUser.LastName = googleUser.FamilyName
 	newUser.EmailConfirmed = true
-	controllers.RegisterUser(r, newUser)
+	isOk, isNewUser, err := controllers.RegisterUser(r, newUser)
+
+	if !isOk && err != nil {
+		// Redirect user back to login page
+		emailRegistered := url.QueryEscape("Email has already been registered")
+		http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
+		return
+	}
 
 	session.Values["email"] = googleUser.Email
 	session.Values["id"] = newUser.Id
 	session.Save(r, w)
 
 	if session.Values["next"] != nil {
-		http.Redirect(w, r, session.Values["next"].(string), 302)
+		returnURL := session.Values["next"].(string)
+		u, err := url.Parse(returnURL)
+		if err != nil {
+			http.Redirect(w, r, returnURL, 302)
+		}
+		if isNewUser {
+			q := u.Query()
+			q.Set("firstTimeUser", "true")
+			u.RawQuery = q.Encode()
+		}
+		http.Redirect(w, r, u.String(), 302)
 	}
 
 	http.Redirect(w, r, "/", 302)
