@@ -214,16 +214,29 @@ func RegisterUser(r *http.Request, user models.User) (bool, error) {
 	_, err := GetUserByEmail(c, user.Email)
 
 	if err != nil {
+		// Validation if the email is null
 		if user.Email == "" {
 			noEmailErr := errors.New("User does have an email")
 			log.Errorf(c, "%v", noEmailErr)
 			log.Errorf(c, "%v", user)
 			return false, noEmailErr
 		}
+
+		// Add the user to datastore
 		_, err = user.Create(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return false, err
+		}
+
+		// Set the user
+		gcontext.Set(r, "user", user)
+		Update(c, r, &user)
+
+		// Create a sample media list for the user
+		_, _, err = CreateSampleMediaList(c, r, user)
+		if err != nil {
+			log.Errorf(c, "%v", err)
 		}
 		return true, nil
 	}

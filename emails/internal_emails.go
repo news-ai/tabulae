@@ -69,3 +69,10 @@ func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode
 	encodedConfirmationCode := t.String()
 	return SendInternalEmail(r, email, "a64e454c-19d5-4bba-9cef-bd185e7c9b0b", "Thanks for signing up!", "{CONFIRMATION_CODE}", encodedConfirmationCode)
 }
+
+func SendListUploadedEmail(r *http.Request, email models.Email, listId string) (bool, string, error) {
+	// Adding the confirmation code for emails
+	t := &url.URL{Path: listId}
+	encodedListId := t.String()
+	return SendInternalEmail(r, email, "b55f71f4-8f0a-4540-a2b5-d74ee5249da1", "Your list has been uploaded!", "{LIST_ID}", encodedListId)
+}

@@ -154,6 +154,37 @@ func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) 
 	return medialist, nil, nil
 }
 
+func CreateSampleMediaList(c context.Context, r *http.Request, user models.User) (models.MediaList, interface{}, error) {
+	// Create a fake media list
+	mediaList := models.MediaList{}
+	mediaList.Name = "My first list!"
+	mediaList.Client = "Microsoft"
+	mediaList.FieldsMap = getFieldsMap()
+
+	// Create a new contact for this list
+	contacts := []int64{}
+	singleContact := models.Contact{}
+	singleContact.FirstName = "Shereen"
+	singleContact.LastName = "Bhan"
+	singleContact.Email = "shereen.bhan@network18online.com"
+	singleContact.LinkedIn = "https://www.linkedin.com/in/shereenbhan"
+	singleContact.Twitter = "https://twitter.com/ShereenBhan"
+	singleContact.CreatedBy = user.Id
+	_, err := Create(c, r, &singleContact)
+	if err != nil {
+		return mediaList, nil, err
+	}
+
+	// Add a contact into the list
+	contacts = append(contacts, singleContact.Id)
+	mediaList.Contacts = contacts
+	mediaList.CreatedBy = user.Id
+
+	// Save and return a media list
+	mediaList.Save(c)
+	return mediaList, nil, nil
+}
+
 /*
 * Update methods
  */
