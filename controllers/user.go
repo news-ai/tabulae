@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -209,9 +210,9 @@ func GetUserFromApiKey(r *http.Request, ApiKey string) (models.User, error) {
 * Create methods
  */
 
-func RegisterUser(r *http.Request, user models.User) (bool, bool, error) {
+func RegisterUser(r *http.Request, user models.User) (models.User, bool, error) {
 	c := appengine.NewContext(r)
-	_, err := GetUserByEmail(c, user.Email)
+	existingUser, err := GetUserByEmail(c, user.Email)
 
 	if err != nil {
 		// Validation if the email is null
@@ -219,14 +220,14 @@ func RegisterUser(r *http.Request, user models.User) (bool, bool, error) {
 			noEmailErr := errors.New("User does have an email")
 			log.Errorf(c, "%v", noEmailErr)
 			log.Errorf(c, "%v", user)
-			return false, true, noEmailErr
+			return models.User{}, false, noEmailErr
 		}
 
 		// Add the user to datastore
 		_, err = user.Create(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return false, true, err
+			return user, false, err
 		}
 
 		// Set the user
@@ -238,9 +239,9 @@ func RegisterUser(r *http.Request, user models.User) (bool, bool, error) {
 		if err != nil {
 			log.Errorf(c, "%v", err)
 		}
-		return true, true, nil
+		return user, true, nil
 	}
-	return false, false, errors.New("User with the email already exists")
+	return existingUser, false, errors.New("User with the email already exists")
 }
 
 func AddUserToContext(c context.Context, r *http.Request, email string) {
@@ -260,6 +261,9 @@ func AddUserToContext(c context.Context, r *http.Request, email string) {
  */
 
 func Update(c context.Context, r *http.Request, u *models.User) (*models.User, error) {
+	if u.LastLoggedIn.IsZero() {
+		u.LastLoggedIn = time.Now()
+	}
 	if len(u.Employers) == 0 {
 		CreateAgencyFromUser(c, r, u)
 	}
