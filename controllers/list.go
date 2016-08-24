@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -170,6 +171,7 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user models.User)
 	singleContact.LinkedIn = "https://www.linkedin.com/in/shereenbhan"
 	singleContact.Twitter = "https://twitter.com/ShereenBhan"
 	singleContact.CreatedBy = user.Id
+	singleContact.Created = time.Now()
 	_, err := Create(c, r, &singleContact)
 	if err != nil {
 		return mediaList, nil, err
@@ -179,6 +181,7 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user models.User)
 	contacts = append(contacts, singleContact.Id)
 	mediaList.Contacts = contacts
 	mediaList.CreatedBy = user.Id
+	mediaList.Created = time.Now()
 
 	// Save and return a media list
 	mediaList.Save(c)
