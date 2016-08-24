@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
@@ -108,6 +109,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	newUser.FirstName = googleUser.GivenName
 	newUser.LastName = googleUser.FamilyName
 	newUser.EmailConfirmed = true
+	newUser.LastLoggedIn = time.Now()
 	isOk, isNewUser, err := controllers.RegisterUser(r, newUser)
 
 	if !isOk && err != nil {

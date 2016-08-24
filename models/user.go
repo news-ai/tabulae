@@ -26,6 +26,8 @@ type User struct {
 	ResetPasswordCode string `json:"-"`
 	ConfirmationCode  string `json:"-"`
 
+	LastLoggedIn time.Time `json:"-"`
+
 	AgreeTermsAndConditions bool `json:"-"`
 	EmailConfirmed          bool `json:"emailconfirmed"`
 	IsAdmin                 bool `json:"-"`
