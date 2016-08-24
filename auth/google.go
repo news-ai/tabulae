@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
+	"time"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
@@ -114,7 +116,20 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	session.Save(r, w)
 
 	if session.Values["next"] != nil {
-		http.Redirect(w, r, session.Values["next"].(string), 302)
+		returnURL := session.Values["next"].(string)
+		u, err := url.Parse(returnURL)
+		if err != nil {
+			http.Redirect(w, r, returnURL, 302)
+		}
+		if newUser.LastLoggedIn.IsZero() {
+			q := u.Query()
+			q.Set("firstTimeUser", "true")
+			u.RawQuery = q.Encode()
+			newUser.LastLoggedIn = time.Now()
+			newUser.Save(c)
+		}
+		http.Redirect(w, r, u.String(), 302)
+		return
 	}
 
 	http.Redirect(w, r, "/", 302)

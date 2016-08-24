@@ -209,7 +209,7 @@ func GetUserFromApiKey(r *http.Request, ApiKey string) (models.User, error) {
 * Create methods
  */
 
-func RegisterUser(r *http.Request, user models.User) (bool, error) {
+func RegisterUser(r *http.Request, user models.User) (bool, bool, error) {
 	c := appengine.NewContext(r)
 	_, err := GetUserByEmail(c, user.Email)
 
@@ -219,14 +219,14 @@ func RegisterUser(r *http.Request, user models.User) (bool, error) {
 			noEmailErr := errors.New("User does have an email")
 			log.Errorf(c, "%v", noEmailErr)
 			log.Errorf(c, "%v", user)
-			return false, noEmailErr
+			return false, true, noEmailErr
 		}
 
 		// Add the user to datastore
 		_, err = user.Create(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return false, err
+			return false, true, err
 		}
 
 		// Set the user
@@ -238,9 +238,9 @@ func RegisterUser(r *http.Request, user models.User) (bool, error) {
 		if err != nil {
 			log.Errorf(c, "%v", err)
 		}
-		return true, nil
+		return true, true, nil
 	}
-	return false, errors.New("User with the email already exists")
+	return false, false, errors.New("User with the email already exists")
 }
 
 func AddUserToContext(c context.Context, r *http.Request, email string) {

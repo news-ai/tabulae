@@ -1,7 +1,8 @@
 application: newsai-1166
-version: 1
+version: dev
 runtime: go
 api_version: go1
+module: default
 
 handlers:
 - url: /static
@@ -14,7 +15,7 @@ handlers:
   secure: always
 
 env_variables:
-  # BASE_URL: 'https://dev-dot-newsai-1166.appspot.com/api'
+  BASE_URL: 'https://dev-dot-newsai-1166.appspot.com/api'
   GOOGLEAUTHKEY: '66057093659-gdof2fgsc2j1e9v3ugkt5uvkek669ael.apps.googleusercontent.com'
   GOOGLEAUTHSECRET: 'JLJLL4sV8nse8AyW8qE5zxnu'
   SECRETKEY: 'Cab7MNoPdBdX%fxN?yg3yWVM4^7KecETjfem6HwXizQqZTsG4#'

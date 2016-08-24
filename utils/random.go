@@ -14,5 +14,6 @@ func RandToken() string {
 
 	randomString := base64.StdEncoding.EncodeToString(b)
 	randomString = strings.Replace(randomString, "/", "-", -1)
+	randomString = strings.Replace(randomString, "+", "-", -1)
 	return randomString
 }

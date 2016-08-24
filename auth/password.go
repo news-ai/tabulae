@@ -5,6 +5,7 @@ import (
 	"net/mail"
 	"net/url"
 	"text/template"
+	"time"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
@@ -102,7 +103,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		user.ConfirmationCode = utils.RandToken()
 
 		// Register user
-		isOk, err := controllers.RegisterUser(r, user)
+		isOk, _, err := controllers.RegisterUser(r, user)
 
 		if !isOk && err != nil {
 			// Redirect user back to login page
@@ -138,7 +139,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 func PasswordLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		_, err := controllers.GetCurrentUser(c, r)
+		user, err := controllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -147,7 +148,19 @@ func PasswordLoginPageHandler() http.HandlerFunc {
 
 			// If there is a next and the user has been logged in
 			if err == nil {
-				http.Redirect(w, r, r.URL.Query().Get("next"), 302)
+				returnURL := session.Values["next"].(string)
+				u, err := url.Parse(returnURL)
+				if err != nil {
+					http.Redirect(w, r, returnURL, 302)
+				}
+				if user.LastLoggedIn.IsZero() {
+					q := u.Query()
+					q.Set("firstTimeUser", "true")
+					u.RawQuery = q.Encode()
+					user.LastLoggedIn = time.Now()
+					user.Save(c)
+				}
+				http.Redirect(w, r, u.String(), 302)
 				return
 			}
 		}
