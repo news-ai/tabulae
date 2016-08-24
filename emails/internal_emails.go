@@ -39,7 +39,7 @@ func SendInternalEmail(r *http.Request, email models.Email, templateId string, s
 		mail.NewEmail(emailFullName, email.To),
 	}
 	p.AddTos(tos...)
-	p.SetSubstitution("substitution", confirmationCode)
+	p.SetSubstitution(substitution, confirmationCode)
 
 	// Add personalization
 	m.AddPersonalizations(p)

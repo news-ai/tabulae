@@ -540,7 +540,7 @@ func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.
 		return models.Contact{}, nil, errors.New("Could not get user")
 	}
 
-	if !permissions.AccessToObject(contact.CreatedBy, user.Id) {
+	if !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
 		return models.Contact{}, nil, errors.New("You don't have permissions to edit these objects")
 	}
 
@@ -580,7 +580,7 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, i
 			return []models.Contact{}, nil, 0, err
 		}
 
-		if !permissions.AccessToObject(contact.CreatedBy, user.Id) {
+		if !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
 			return []models.Contact{}, nil, 0, errors.New("Forbidden")
 		}
 
