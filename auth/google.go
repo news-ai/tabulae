@@ -110,14 +110,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	newUser.LastName = googleUser.FamilyName
 	newUser.EmailConfirmed = true
 	newUser.LastLoggedIn = time.Now()
-	isOk, isNewUser, err := controllers.RegisterUser(r, newUser)
-
-	if !isOk && err != nil {
-		// Redirect user back to login page
-		emailRegistered := url.QueryEscape("Email has already been registered")
-		http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
-		return
-	}
+	_, isNewUser, _ := controllers.RegisterUser(r, newUser)
 
 	session.Values["email"] = googleUser.Email
 	session.Values["id"] = newUser.Id
