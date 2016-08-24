@@ -263,6 +263,7 @@ func AddUserToContext(c context.Context, r *http.Request, email string) {
 func Update(c context.Context, r *http.Request, u *models.User) (*models.User, error) {
 	if u.LastLoggedIn.IsZero() {
 		u.LastLoggedIn = time.Now()
+		u.Save(c)
 	}
 	if len(u.Employers) == 0 {
 		CreateAgencyFromUser(c, r, u)
