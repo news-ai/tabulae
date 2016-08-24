@@ -127,34 +127,35 @@ func filterUser(c context.Context, queryType, query string) (models.User, error)
 * Get methods
  */
 
-func GetUsers(c context.Context, r *http.Request) ([]models.User, error) {
+func GetUsers(c context.Context, r *http.Request) ([]models.User, interface{}, int, error) {
 	// Get the current user
 	users, err := getUsers(c, r)
 	if err != nil {
-		return []models.User{}, err
+		return []models.User{}, nil, 0, err
 	}
-	return users, nil
+
+	return users, nil, len(users), nil
 }
 
-func GetUser(c context.Context, r *http.Request, id string) (models.User, error) {
+func GetUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
 	// Get the details of the current user
 	switch id {
 	case "me":
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
-			return models.User{}, err
+			return models.User{}, nil, err
 		}
-		return user, err
+		return user, nil, err
 	default:
 		userId, err := utils.StringIdToInt(id)
 		if err != nil {
-			return models.User{}, err
+			return models.User{}, nil, err
 		}
 		user, err := getUser(c, r, userId)
 		if err != nil {
-			return models.User{}, err
+			return models.User{}, nil, err
 		}
-		return user, nil
+		return user, nil, nil
 	}
 }
 
@@ -213,16 +214,29 @@ func RegisterUser(r *http.Request, user models.User) (bool, error) {
 	_, err := GetUserByEmail(c, user.Email)
 
 	if err != nil {
+		// Validation if the email is null
 		if user.Email == "" {
 			noEmailErr := errors.New("User does have an email")
 			log.Errorf(c, "%v", noEmailErr)
 			log.Errorf(c, "%v", user)
 			return false, noEmailErr
 		}
+
+		// Add the user to datastore
 		_, err = user.Create(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return false, err
+		}
+
+		// Set the user
+		gcontext.Set(r, "user", user)
+		Update(c, r, &user)
+
+		// Create a sample media list for the user
+		_, _, err = CreateSampleMediaList(c, r, user)
+		if err != nil {
+			log.Errorf(c, "%v", err)
 		}
 		return true, nil
 	}
@@ -252,18 +266,18 @@ func Update(c context.Context, r *http.Request, u *models.User) (*models.User, e
 	return u, nil
 }
 
-func UpdateUser(c context.Context, r *http.Request, id string) (models.User, error) {
+func UpdateUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
 	// Get the details of the current user
-	user, err := GetUser(c, r, id)
+	user, _, err := GetUser(c, r, id)
 	if err != nil {
-		return models.User{}, err
+		return models.User{}, nil, err
 	}
 
 	decoder := json.NewDecoder(r.Body)
 	var updatedUser models.User
 	err = decoder.Decode(&updatedUser)
 	if err != nil {
-		return models.User{}, err
+		return models.User{}, nil, err
 	}
 
 	utils.UpdateIfNotBlank(&user.FirstName, updatedUser.FirstName)
@@ -274,7 +288,7 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, err
 	}
 
 	user.Save(c)
-	return user, nil
+	return user, nil, nil
 }
 
 /*

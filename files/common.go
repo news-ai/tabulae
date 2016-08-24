@@ -28,7 +28,7 @@ func getStorageBucket(r *http.Request, bucket string) (string, error) {
 
 func getFile(r *http.Request, fileId string) (models.File, error) {
 	c := appengine.NewContext(r)
-	file, err := controllers.GetFile(c, r, fileId)
+	file, _, err := controllers.GetFile(c, r, fileId)
 	if err != nil {
 		return models.File{}, err
 	}

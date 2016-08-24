@@ -20,11 +20,11 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 	case "GET":
 		switch action {
 		case "diff":
-			return controllers.GetDiff(c, r, id)
+			return baseSingleResponseHandler(controllers.GetDiff(c, r, id))
 		case "update":
-			return controllers.UpdateContactToParent(c, r, id)
+			return baseSingleResponseHandler(controllers.UpdateContactToParent(c, r, id))
 		case "sync":
-			return controllers.LinkedInSync(c, r, id)
+			return baseSingleResponseHandler(controllers.LinkedInSync(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")
@@ -33,9 +33,9 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 func handleContact(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetContact(c, r, id)
+		return baseSingleResponseHandler(controllers.GetContact(c, r, id))
 	case "PATCH":
-		return controllers.UpdateSingleContact(c, r, id)
+		return baseSingleResponseHandler(controllers.UpdateSingleContact(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -43,11 +43,11 @@ func handleContact(c context.Context, r *http.Request, id string) (interface{}, 
 func handleContacts(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return controllers.GetContacts(c, r)
+		return baseResponseHandler(controllers.GetContacts(c, r))
 	case "POST":
-		return controllers.CreateContact(c, r)
+		return baseResponseHandler(controllers.CreateContact(c, r))
 	case "PATCH":
-		return controllers.UpdateBatchContact(c, r)
+		return baseResponseHandler(controllers.UpdateBatchContact(c, r))
 	}
 	return nil, errors.New("method not implemented")
 }

@@ -59,12 +59,12 @@ func getFile(c context.Context, r *http.Request, id int64) (models.File, error) 
  */
 
 // Gets every single file by the user
-func GetFiles(c context.Context, r *http.Request) ([]models.File, error) {
+func GetFiles(c context.Context, r *http.Request) ([]models.File, interface{}, int, error) {
 	files := []models.File{}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
-		return []models.File{}, err
+		return []models.File{}, nil, 0, err
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -74,27 +74,27 @@ func GetFiles(c context.Context, r *http.Request) ([]models.File, error) {
 	files = make([]models.File, len(ks))
 	err = nds.GetMulti(c, ks, files)
 	if err != nil {
-		return []models.File{}, err
+		return []models.File{}, nil, 0, err
 	}
 
 	for i := 0; i < len(files); i++ {
 		files[i].Id = ks[i].IntID()
 	}
-	return files, nil
+	return files, nil, len(files), nil
 }
 
-func GetFile(c context.Context, r *http.Request, id string) (models.File, error) {
+func GetFile(c context.Context, r *http.Request, id string) (models.File, interface{}, error) {
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
-		return models.File{}, err
+		return models.File{}, nil, err
 	}
 
 	file, err := getFile(c, r, currentId)
 	if err != nil {
-		return models.File{}, err
+		return models.File{}, nil, err
 	}
-	return file, nil
+	return file, nil, nil
 }
 
 /*
@@ -134,7 +134,7 @@ func CreateFile(r *http.Request, fileName string, listid string, createdby strin
 	}
 
 	// Attach the fileId to the media list associated to it
-	mediaList, err := GetMediaList(c, r, listid)
+	mediaList, _, err := GetMediaList(c, r, listid)
 	if err != nil {
 		return models.File{}, err
 	}

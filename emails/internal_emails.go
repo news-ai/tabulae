@@ -18,12 +18,12 @@ import (
 
 // Send an email confirmation to a new user
 // Someday convert this to a batch so we can send multiple confirmation emails at once
-func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode string) (bool, string, error) {
+func SendInternalEmail(r *http.Request, email models.Email, templateId string, subject string, substitution string, confirmationCode string) (bool, string, error) {
 	c := appengine.NewContext(r)
 	sendgrid.DefaultClient.HTTPClient = urlfetch.Client(c)
 
 	m := mail.NewV3Mail()
-	m.SetTemplateID("a64e454c-19d5-4bba-9cef-bd185e7c9b0b")
+	m.SetTemplateID(templateId)
 
 	// Default from from a NewsAI account
 	from := mail.NewEmail("Abhi from NewsAI", "abhi@newsai.org")
@@ -31,7 +31,7 @@ func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode
 
 	// Adding a personalization for the email
 	p := mail.NewPersonalization()
-	p.Subject = "Thanks for signing up!"
+	p.Subject = subject
 
 	// Adding who we are sending the email to
 	emailFullName := strings.Join([]string{email.FirstName, email.LastName}, " ")
@@ -39,11 +39,7 @@ func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode
 		mail.NewEmail(emailFullName, email.To),
 	}
 	p.AddTos(tos...)
-
-	// Adding the confirmation code for emails
-	t := &url.URL{Path: confirmationCode}
-	encodedConfirmationCode := t.String()
-	p.SetSubstitution("{CONFIRMATION_CODE}", encodedConfirmationCode)
+	p.SetSubstitution(substitution, confirmationCode)
 
 	// Add personalization
 	m.AddPersonalizations(p)
@@ -65,4 +61,18 @@ func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode
 		emailId = response.Headers["X-Message-Id"][0]
 	}
 	return true, emailId, nil
+}
+
+func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode string) (bool, string, error) {
+	// Adding the confirmation code for emails
+	t := &url.URL{Path: confirmationCode}
+	encodedConfirmationCode := t.String()
+	return SendInternalEmail(r, email, "a64e454c-19d5-4bba-9cef-bd185e7c9b0b", "Thanks for signing up!", "{CONFIRMATION_CODE}", encodedConfirmationCode)
+}
+
+func SendListUploadedEmail(r *http.Request, email models.Email, listId string) (bool, string, error) {
+	// Adding the confirmation code for emails
+	t := &url.URL{Path: listId}
+	encodedListId := t.String()
+	return SendInternalEmail(r, email, "b55f71f4-8f0a-4540-a2b5-d74ee5249da1", "Your list has been uploaded!", "{LIST_ID}", encodedListId)
 }

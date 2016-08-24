@@ -39,6 +39,7 @@ func getAgency(c context.Context, id int64) (models.Agency, error) {
 
 	if !agency.Created.IsZero() {
 		agency.Id = agencyId.IntID()
+		agency.Type = "agencies"
 		return agency, nil
 	}
 	return models.Agency{}, errors.New("No agency by this id")
@@ -81,14 +82,14 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
  */
 
 // Gets every single agency
-func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, error) {
+func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface{}, int, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
-		return []models.Agency{}, err
+		return []models.Agency{}, nil, 0, err
 	}
 
 	if !user.IsAdmin {
-		return []models.Agency{}, errors.New("Forbidden")
+		return []models.Agency{}, nil, 0, errors.New("Forbidden")
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -96,7 +97,7 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, error) {
 
 	ks, err := datastore.NewQuery("Agency").Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	if err != nil {
-		return []models.Agency{}, err
+		return []models.Agency{}, nil, 0, err
 	}
 
 	var agencies []models.Agency
@@ -104,28 +105,28 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, error) {
 	err = nds.GetMulti(c, ks, agencies)
 	if err != nil {
 		log.Infof(c, "%v", err)
-		return agencies, err
+		return agencies, nil, 0, err
 	}
 
 	for i := 0; i < len(agencies); i++ {
 		agencies[i].Id = ks[i].IntID()
 	}
 
-	return agencies, nil
+	return agencies, nil, len(agencies), nil
 }
 
-func GetAgency(c context.Context, id string) (models.Agency, error) {
+func GetAgency(c context.Context, id string) (models.Agency, interface{}, error) {
 	// Get the details of the current agency
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
-		return models.Agency{}, err
+		return models.Agency{}, nil, err
 	}
 
 	agency, err := getAgency(c, currentId)
 	if err != nil {
-		return models.Agency{}, err
+		return models.Agency{}, nil, err
 	}
-	return agency, nil
+	return agency, nil, nil
 }
 
 /*

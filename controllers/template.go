@@ -54,24 +54,25 @@ func getTemplate(c context.Context, id int64) (models.Template, error) {
 * Get methods
  */
 
-func GetTemplate(c context.Context, r *http.Request, id string) (models.Template, error) {
+func GetTemplate(c context.Context, r *http.Request, id string) (models.Template, interface{}, error) {
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
-		return models.Template{}, err
+		return models.Template{}, nil, err
 	}
 
 	template, err := getTemplate(c, currentId)
 	if err != nil {
-		return models.Template{}, err
+		return models.Template{}, nil, err
 	}
-	return template, nil
+
+	return template, nil, nil
 }
 
-func GetTemplates(c context.Context, r *http.Request) ([]models.Template, error) {
+func GetTemplates(c context.Context, r *http.Request) ([]models.Template, interface{}, int, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
-		return []models.Template{}, err
+		return []models.Template{}, nil, 0, err
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -79,7 +80,7 @@ func GetTemplates(c context.Context, r *http.Request) ([]models.Template, error)
 
 	ks, err := datastore.NewQuery("Template").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	if err != nil {
-		return []models.Template{}, err
+		return []models.Template{}, nil, 0, err
 	}
 
 	var templates []models.Template
@@ -88,72 +89,72 @@ func GetTemplates(c context.Context, r *http.Request) ([]models.Template, error)
 	err = nds.GetMulti(c, ks, templates)
 	if err != nil {
 		log.Infof(c, "%v", err)
-		return []models.Template{}, err
+		return []models.Template{}, nil, 0, err
 	}
 
 	for i := 0; i < len(templates); i++ {
 		templates[i].Id = ks[i].IntID()
 	}
 
-	return templates, nil
+	return templates, nil, len(templates), nil
 }
 
 /*
 * Create methods
  */
 
-func CreateTemplate(c context.Context, r *http.Request) (models.Template, error) {
+func CreateTemplate(c context.Context, r *http.Request) (models.Template, interface{}, error) {
 	decoder := json.NewDecoder(r.Body)
 	var template models.Template
 	err := decoder.Decode(&template)
 	if err != nil {
-		return models.Template{}, err
+		return models.Template{}, nil, err
 	}
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
-		return template, err
+		return template, nil, err
 	}
 
 	// Create template
 	_, err = template.Create(c, r, currentUser)
 	if err != nil {
-		return models.Template{}, err
+		return models.Template{}, nil, err
 	}
 
-	return template, nil
+	return template, nil, nil
 }
 
 /*
 * Update methods
  */
 
-func UpdateTemplate(c context.Context, r *http.Request, id string) (models.Template, error) {
+func UpdateTemplate(c context.Context, r *http.Request, id string) (models.Template, interface{}, error) {
 	// Get the details of the current template
-	template, err := GetTemplate(c, r, id)
+	template, _, err := GetTemplate(c, r, id)
 	if err != nil {
-		return models.Template{}, err
+		return models.Template{}, nil, err
 	}
 
 	// Checking if the current user logged in can edit this particular id
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
-		return models.Template{}, err
+		return models.Template{}, nil, err
 	}
 	if template.CreatedBy != user.Id {
-		return models.Template{}, errors.New("Forbidden")
+		return models.Template{}, nil, errors.New("Forbidden")
 	}
 
 	decoder := json.NewDecoder(r.Body)
 	var updatedTemplate models.Template
 	err = decoder.Decode(&updatedTemplate)
 	if err != nil {
-		return models.Template{}, err
+		return models.Template{}, nil, err
 	}
 
 	utils.UpdateIfNotBlank(&template.Subject, updatedTemplate.Subject)
 	utils.UpdateIfNotBlank(&template.Body, updatedTemplate.Body)
 
 	template.Save(c)
-	return template, nil
+	return template, nil, nil
 }

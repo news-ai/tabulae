@@ -87,6 +87,31 @@ func filterEmail(c context.Context, queryType, query string) (models.Email, erro
 	return models.Email{}, errors.New("No email by this " + queryType)
 }
 
+func filterEmailbyListId(c context.Context, r *http.Request, listId int64) ([]models.Email, int, error) {
+	emails := []models.Email{}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		return []models.Email{}, 0, err
+	}
+
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	ks, err := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("ListId =", listId).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
+	emails = make([]models.Email, len(ks))
+	err = nds.GetMulti(c, ks, emails)
+	if err != nil {
+		return []models.Email{}, 0, err
+	}
+
+	for i := 0; i < len(emails); i++ {
+		emails[i].Id = ks[i].IntID()
+	}
+
+	return emails, len(emails), nil
+}
+
 /*
 * Public methods
  */
@@ -95,12 +120,12 @@ func filterEmail(c context.Context, queryType, query string) (models.Email, erro
 * Get methods
  */
 
-func GetEmails(c context.Context, r *http.Request) ([]models.Email, error) {
+func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
 	emails := []models.Email{}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
-		return []models.Email{}, err
+		return []models.Email{}, nil, 0, err
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -110,41 +135,41 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, error) {
 	emails = make([]models.Email, len(ks))
 	err = nds.GetMulti(c, ks, emails)
 	if err != nil {
-		return []models.Email{}, err
+		return []models.Email{}, nil, 0, err
 	}
 
 	for i := 0; i < len(emails); i++ {
 		emails[i].Id = ks[i].IntID()
 	}
 
-	return emails, nil
+	return emails, nil, len(emails), nil
 }
 
-func GetEmail(c context.Context, r *http.Request, id string) (models.Email, error) {
+func GetEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
-		return models.Email{}, err
+		return models.Email{}, nil, err
 	}
 
 	email, err := getEmail(c, r, currentId)
 	if err != nil {
-		return models.Email{}, err
+		return models.Email{}, nil, err
 	}
-	return email, nil
+	return email, nil, nil
 }
 
 /*
 * Create methods
  */
 
-func CreateEmail(c context.Context, r *http.Request) ([]models.Email, error) {
+func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
-		return []models.Email{}, err
+		return []models.Email{}, nil, err
 	}
 
 	decoder := json.NewDecoder(rdr1)
@@ -160,32 +185,32 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, error) {
 		err = arrayDecoder.Decode(&emails)
 
 		if err != nil {
-			return []models.Email{}, err
+			return []models.Email{}, nil, err
 		}
 
 		newEmails := []models.Email{}
 		for i := 0; i < len(emails); i++ {
 			_, err = emails[i].Create(c, r, currentUser)
 			if err != nil {
-				return []models.Email{}, err
+				return []models.Email{}, nil, err
 			}
 			// Logging the action happening
 			LogNotificationForResource(c, r, "Email", emails[i].Id, "CREATE", "")
 			newEmails = append(newEmails, emails[i])
 		}
 
-		return newEmails, err
+		return newEmails, nil, err
 	}
 
 	// Create email
 	_, err = email.Create(c, r, currentUser)
 	if err != nil {
-		return []models.Email{}, err
+		return []models.Email{}, nil, err
 	}
 
 	// Logging the action happening
 	LogNotificationForResource(c, r, "Email", email.Id, "CREATE", "")
-	return []models.Email{email}, nil
+	return []models.Email{email}, nil, nil
 }
 
 func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (models.Email, error) {
@@ -219,9 +244,9 @@ func FilterEmailBySendGridID(c context.Context, sendGridId string) (models.Email
 * Update methods
  */
 
-func UpdateEmail(c context.Context, r *http.Request, email *models.Email, updatedEmail models.Email) (models.Email, error) {
-	if email.CreatedBy != updatedEmail.CreatedBy {
-		return *email, errors.New("You don't have permissions to edit this object")
+func UpdateEmail(c context.Context, r *http.Request, currentUser models.User, email *models.Email, updatedEmail models.Email) (models.Email, interface{}, error) {
+	if email.CreatedBy != currentUser.Id {
+		return *email, nil, errors.New("You don't have permissions to edit this object")
 	}
 
 	utils.UpdateIfNotBlank(&email.Subject, updatedEmail.Subject)
@@ -241,58 +266,58 @@ func UpdateEmail(c context.Context, r *http.Request, email *models.Email, update
 	// Logging the action happening
 	LogNotificationForResource(c, r, "Email", email.Id, "UPDATE", "")
 
-	return *email, nil
+	return *email, nil, nil
 }
 
-func UpdateSingleEmail(c context.Context, r *http.Request, id string) (models.Email, error) {
+func UpdateSingleEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
 	// Get the details of the current email
-	email, err := GetEmail(c, r, id)
+	email, _, err := GetEmail(c, r, id)
 	if err != nil {
-		return models.Email{}, err
+		return models.Email{}, nil, err
 	}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
-		return models.Email{}, errors.New("Could not get user")
+		return models.Email{}, nil, errors.New("Could not get user")
 	}
 
 	if !permissions.AccessToObject(email.CreatedBy, user.Id) {
-		return models.Email{}, errors.New("Forbidden")
+		return models.Email{}, nil, errors.New("Forbidden")
 	}
 
 	decoder := json.NewDecoder(r.Body)
 	var updatedEmail models.Email
 	err = decoder.Decode(&updatedEmail)
 	if err != nil {
-		return models.Email{}, err
+		return models.Email{}, nil, err
 	}
 
-	return UpdateEmail(c, r, &email, updatedEmail)
+	return UpdateEmail(c, r, user, &email, updatedEmail)
 }
 
-func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, error) {
+func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, error) {
 	decoder := json.NewDecoder(r.Body)
 	var updatedEmails []models.Email
 	err := decoder.Decode(&updatedEmails)
 	if err != nil {
-		return []models.Email{}, err
+		return []models.Email{}, nil, err
 	}
 
 	// Get logged in user
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
-		return []models.Email{}, errors.New("Could not get user")
+		return []models.Email{}, nil, errors.New("Could not get user")
 	}
 
 	currentEmails := []models.Email{}
 	for i := 0; i < len(updatedEmails); i++ {
 		email, err := getEmail(c, r, updatedEmails[i].Id)
 		if err != nil {
-			return []models.Email{}, err
+			return []models.Email{}, nil, err
 		}
 
 		if !permissions.AccessToObject(email.CreatedBy, user.Id) {
-			return []models.Email{}, errors.New("Forbidden")
+			return []models.Email{}, nil, errors.New("Forbidden")
 		}
 
 		currentEmails = append(currentEmails, email)
@@ -300,61 +325,61 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, error
 
 	newEmails := []models.Email{}
 	for i := 0; i < len(updatedEmails); i++ {
-		updatedEmail, err := UpdateEmail(c, r, &currentEmails[i], updatedEmails[i])
+		updatedEmail, _, err := UpdateEmail(c, r, user, &currentEmails[i], updatedEmails[i])
 		if err != nil {
-			return []models.Email{}, err
+			return []models.Email{}, nil, err
 		}
 		newEmails = append(newEmails, updatedEmail)
 	}
 
-	return newEmails, nil
+	return newEmails, nil, nil
 }
 
 /*
 * Action methods
  */
 
-func SendEmail(c context.Context, r *http.Request, id string) (models.Email, error) {
-	email, err := GetEmail(c, r, id)
+func SendEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
+	email, _, err := GetEmail(c, r, id)
 	if err != nil {
-		return models.Email{}, err
+		return models.Email{}, nil, err
 	}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
-		return email, err
+		return email, nil, err
 	}
 
 	if !user.EmailConfirmed {
-		return email, errors.New("Users email is not confirmed - the user cannot send emails.")
+		return email, nil, errors.New("Users email is not confirmed - the user cannot send emails.")
 	}
 
 	// Check if email is already sent
 	if email.IsSent {
-		return email, errors.New("Email has already been sent.")
+		return email, nil, errors.New("Email has already been sent.")
 	}
 
 	// Validate if HTML is valid
 	validHTML := utils.ValidateHTML(email.Body)
 	if !validHTML {
-		return email, errors.New("Invalid HTML")
+		return email, nil, errors.New("Invalid HTML")
 	}
 
 	emailSent, emailId, err := emails.SendEmail(r, email, user)
 	if err != nil {
-		return email, err
+		return email, nil, err
 	}
 
 	if emailSent {
 		val, err := email.MarkSent(c, emailId)
 		if err != nil {
-			return *val, err
+			return *val, nil, err
 		}
 
 		// Logging the action happening
 		LogNotificationForResource(c, r, "Email", email.Id, "SENT", "")
 
-		return *val, nil
+		return *val, nil, nil
 	}
-	return email, errors.New("Email could not be sent")
+	return email, nil, errors.New("Email could not be sent")
 }

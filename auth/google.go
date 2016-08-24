@@ -21,7 +21,7 @@ import (
 
 var (
 	googleOauthConfig = &oauth2.Config{
-		RedirectURL:  "http://tabulae.newsai.org/api/auth/callback",
+		RedirectURL:  "http://tabulae.newsai.org/api/auth/googlecallback",
 		ClientID:     os.Getenv("GOOGLEAUTHKEY"),
 		ClientSecret: os.Getenv("GOOGLEAUTHSECRET"),
 		Scopes: []string{
@@ -36,7 +36,7 @@ var (
 )
 
 func SetRedirectURL() {
-	googleOauthConfig.RedirectURL = utils.APIURL + "/auth/callback"
+	googleOauthConfig.RedirectURL = utils.APIURL + "/auth/googlecallback"
 }
 
 // Handler to redirect user to the Google OAuth2 page
