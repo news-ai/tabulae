@@ -17,6 +17,14 @@ type Publication struct {
 
 	Name string `json:"name"`
 	Url  string `json:"url"`
+
+	// Social information
+	LinkedIn  string `json:"linkedin"`
+	Twitter   string `json:"twitter"`
+	Instagram string `json:"instagram"`
+	MuckRack  string `json:"-"`
+	Website   string `json:"website"`
+	Blog      string `json:"blog"`
 }
 
 /*

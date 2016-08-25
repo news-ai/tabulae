@@ -10,8 +10,8 @@ In the `/api/` folder:
 
 Indexes:
 
-- Update: `appcfg.py update_indexes .`
-- Delete: `appcfg.py vacuum_indexes .`
+- Update: `appcfg.py update_indexes api/ -A newsai-1166`
+- Delete: `appcfg.py vacuum_indexes api/ -A newsai-1166`
 
 Cron:
 
