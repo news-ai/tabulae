@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 
 	"github.com/julienschmidt/httprouter"
@@ -46,14 +47,21 @@ func GoogleLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	state := utils.RandToken()
 
 	// Save the session for each of the users
-	session, _ := Store.Get(r, "sess")
+	session, err := Store.Get(r, "sess")
+	if err != nil {
+		log.Errorf(c, "%v", err)
+	}
+
 	session.Values["state"] = state
 
 	if r.URL.Query().Get("next") != "" {
 		session.Values["next"] = r.URL.Query().Get("next")
 	}
 
-	session.Save(r, w)
+	err = session.Save(r, w)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+	}
 
 	// Redirect the user to the login page
 	url := googleOauthConfig.AuthCodeURL(state)
@@ -65,6 +73,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	c := appengine.NewContext(r)
 	session, err := Store.Get(r, "sess")
 	if err != nil {
+		log.Infof(c, "%v", err)
 		fmt.Fprintln(w, "aborted")
 		return
 	}
