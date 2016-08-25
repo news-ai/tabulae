@@ -12,3 +12,7 @@ Indexes:
 
 - Update: `appcfg.py update_indexes .`
 - Delete: `appcfg.py vacuum_indexes .`
+
+Cron:
+
+- `appcfg.py update_cron api/ -A newsai-1166`

@@ -8,6 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/gaesessions"
 )
@@ -30,7 +31,10 @@ var Store = gaesessions.NewMemcacheDatastoreStore("", "",
 
 func RemoveExpiredSessionsHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	gaesessions.RemoveExpiredDatastoreSessions(c, "")
+	err := gaesessions.RemoveExpiredDatastoreSessions(c, "")
+	if err != nil {
+		log.Errorf(c, "%v", err)
+	}
 }
 
 // Gets the email of the current user that is logged in
