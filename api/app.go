@@ -131,5 +131,6 @@ func init() {
 	app.Use(sentroni.NewRecovery(os.Getenv("SENTRY_DSN")))
 	app.UseHandler(router)
 
+	http.HandleFunc("/tasks/removeExpiredSessions", auth.RemoveExpiredSessionsHandler)
 	http.Handle("/", context.ClearHandler(app))
 }

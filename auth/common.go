@@ -7,6 +7,8 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
+	"google.golang.org/appengine"
+
 	"github.com/news-ai/gaesessions"
 )
 
@@ -25,6 +27,11 @@ type User struct {
 var Store = gaesessions.NewMemcacheDatastoreStore("", "",
 	gaesessions.DefaultNonPersistentSessionDuration,
 	[]byte(os.Getenv("SECRETKEY")))
+
+func RemoveExpiredSessionsHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	gaesessions.RemoveExpiredDatastoreSessions(c, "")
+}
 
 // Gets the email of the current user that is logged in
 func GetCurrentUserEmail(r *http.Request) (string, error) {
