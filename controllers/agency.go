@@ -14,6 +14,7 @@ import (
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/search"
 	"github.com/news-ai/tabulae/utils"
 )
 
@@ -90,6 +91,12 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Agency{}, nil, 0, err
+	}
+
+	// If there's a query parameter
+	query := gcontext.Get(r, "query").(string)
+	if query != "" {
+		search.SearchAgency(c, query)
 	}
 
 	if !user.IsAdmin {
