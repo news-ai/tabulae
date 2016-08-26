@@ -83,7 +83,7 @@ func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httproute
 		return
 	}
 
-	client := linkedinOauthConfig.Client(oauth2.NoContext, tkn)
+	client := linkedinOauthConfig.Client(c, tkn)
 	req, err := http.NewRequest("GET", "https://api.linkedin.com/v1/people/~:(email-address,first-name,last-name,id,headline)?format=json", nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -105,11 +105,12 @@ func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httproute
 	}
 
 	var linkedinUser struct {
-		Id        string
-		FirstName string `json:"firstName"`
-		LastName  string `json:"lastName"`
-		Headline  string
-		Email     string `json:"emailAddress"`
+		Id          string
+		FirstName   string `json:"firstName"`
+		LastName    string `json:"lastName"`
+		Headline    string
+		Email       string `json:"emailAddress"`
+		AccessToken string
 	}
 
 	err = json.Unmarshal(str, &linkedinUser)
@@ -117,6 +118,8 @@ func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httproute
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	linkedinUser.AccessToken = tkn.AccessToken
 
 	log.Infof(c, "%v", linkedinUser)
 }
