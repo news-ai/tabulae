@@ -16,6 +16,7 @@ import (
 	"github.com/news-ai/tabulae/incoming"
 	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/routes"
+	"github.com/news-ai/tabulae/search"
 	"github.com/news-ai/tabulae/tasks"
 	"github.com/news-ai/tabulae/utils"
 )
@@ -42,6 +43,7 @@ func init() {
 	// Initialize the environment for a particular URL
 	utils.InitURL()
 	auth.SetRedirectURL()
+	search.InitializeElasticSearch()
 
 	// Initialize router
 	router := httprouter.New()

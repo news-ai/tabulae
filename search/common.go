@@ -1,16 +1,20 @@
 package search
 
 import (
+	"errors"
+
 	"gopkg.in/olivere/elastic.v3"
 )
 
 var (
-	ElasticClient *elastic.Client
+	elasticClient *elastic.Client
 )
 
 func InitializeElasticSearch() error {
-	ElasticClient, err := elastic.NewClient(elastic.SetURL("https://search.newsai.org"))
+	err := errors.New("")
+	elasticClient, err = elastic.NewClient(elastic.SetURL("https://search.newsai.org"))
 	if err != nil {
 		return err
 	}
+	return nil
 }
