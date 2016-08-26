@@ -15,3 +15,10 @@ var (
 		Endpoint:     linkedin.Endpoint,
 	}
 )
+
+func LinkedinLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+}
+
+func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+}
