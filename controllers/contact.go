@@ -119,7 +119,7 @@ func updateSocial(c context.Context, r *http.Request, contact *models.Contact, u
 	}
 
 	// Logging the action happening
-	LogNotificationForResource(c, r, "Contact", contact.Id, "UPDATE", "")
+	LogNotificationForResource(c, r, "Contact", contact.Id, "UPDATE", "SOCIAL")
 
 	return *contact, nil, nil
 }
@@ -202,7 +202,7 @@ func socialSync(c context.Context, r *http.Request, ct *models.Contact, justCrea
 	// Update LinkedIn contact
 	if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (time.Now().After(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {
 		// Send a pub to Influencer
-		err = sync.SocialSync(r, parentContact.LinkedIn, parentContact.Id, justCreated)
+		err = sync.SocialSync(r, "linkedinUrl", parentContact.LinkedIn, parentContact.Id, justCreated)
 
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -681,7 +681,7 @@ func SocialSync(c context.Context, r *http.Request, id string) (models.Contact, 
 	}
 
 	// Send a pub to Influencer
-	err = sync.SocialSync(r, parentContact.LinkedIn, parentContact.Id, false)
+	err = sync.SocialSync(r, "linkedinUrl", parentContact.LinkedIn, parentContact.Id, false)
 
 	if err != nil {
 		log.Errorf(c, "%v", err)

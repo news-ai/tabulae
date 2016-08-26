@@ -10,7 +10,7 @@ import (
 	"google.golang.org/cloud/pubsub"
 )
 
-func SocialSync(r *http.Request, contactLinkedIn string, contactId int64, justCreated bool) error {
+func SocialSync(r *http.Request, socialField string, url string, contactId int64, justCreated bool) error {
 	c := appengine.NewContext(r)
 	PubsubClient, err := configurePubsub(r)
 	if err != nil {
@@ -20,7 +20,7 @@ func SocialSync(r *http.Request, contactLinkedIn string, contactId int64, justCr
 	// Create an map with linkedinUrl and Id of the corresponding contact
 	data := map[string]string{
 		"Id":          strconv.FormatInt(contactId, 10),
-		"linkedinUrl": contactLinkedIn,
+		socialField:   url,
 		"justCreated": strconv.FormatBool(justCreated),
 	}
 
