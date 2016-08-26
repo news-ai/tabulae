@@ -67,6 +67,64 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 }
 
 /*
+* Update methods
+ */
+
+func updateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, interface{}, error) {
+	utils.UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
+	utils.UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
+	utils.UpdateIfNotBlank(&contact.Email, updatedContact.Email)
+	utils.UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
+	utils.UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
+	utils.UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
+	utils.UpdateIfNotBlank(&contact.Website, updatedContact.Website)
+	utils.UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
+	utils.UpdateIfNotBlank(&contact.Notes, updatedContact.Notes)
+
+	if len(updatedContact.CustomFields) > 0 {
+		contact.CustomFields = updatedContact.CustomFields
+	}
+
+	if len(updatedContact.Employers) > 0 {
+		contact.Employers = updatedContact.Employers
+	}
+
+	if len(updatedContact.PastEmployers) > 0 {
+		contact.PastEmployers = updatedContact.PastEmployers
+	}
+
+	_, err := Save(c, r, contact)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, err
+	}
+
+	// Logging the action happening
+	LogNotificationForResource(c, r, "Contact", contact.Id, "UPDATE", "")
+
+	return *contact, nil, nil
+}
+
+func updateSocial(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, interface{}, error) {
+	utils.UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
+	utils.UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
+	utils.UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
+	utils.UpdateIfNotBlank(&contact.Website, updatedContact.Website)
+	utils.UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
+
+	_, err := Save(c, r, contact)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, err
+	}
+
+	// Logging the action happening
+	LogNotificationForResource(c, r, "Contact", contact.Id, "UPDATE", "")
+
+	return *contact, nil, nil
+}
+
+/*
 * Filter methods
  */
 
@@ -493,41 +551,6 @@ func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Conta
 	return ct, nil
 }
 
-func UpdateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, interface{}, error) {
-	utils.UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
-	utils.UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
-	utils.UpdateIfNotBlank(&contact.Email, updatedContact.Email)
-	utils.UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
-	utils.UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
-	utils.UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
-	utils.UpdateIfNotBlank(&contact.Website, updatedContact.Website)
-	utils.UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
-	utils.UpdateIfNotBlank(&contact.Notes, updatedContact.Notes)
-
-	if len(updatedContact.CustomFields) > 0 {
-		contact.CustomFields = updatedContact.CustomFields
-	}
-
-	if len(updatedContact.Employers) > 0 {
-		contact.Employers = updatedContact.Employers
-	}
-
-	if len(updatedContact.PastEmployers) > 0 {
-		contact.PastEmployers = updatedContact.PastEmployers
-	}
-
-	_, err := Save(c, r, contact)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.Contact{}, nil, err
-	}
-
-	// Logging the action happening
-	LogNotificationForResource(c, r, "Contact", contact.Id, "UPDATE", "")
-
-	return *contact, nil, nil
-}
-
 func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
 	// Get the details of the current contact
 	contact, _, err := GetContact(c, r, id)
@@ -554,7 +577,7 @@ func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.
 		return models.Contact{}, nil, err
 	}
 
-	return UpdateContact(c, r, &contact, updatedContact)
+	return updateContact(c, r, &contact, updatedContact)
 }
 
 func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, error) {
@@ -592,7 +615,7 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, i
 	// Update each of the contacts
 	newContacts := []models.Contact{}
 	for i := 0; i < len(updatedContacts); i++ {
-		updatedContact, _, err := UpdateContact(c, r, &currentContacts[i], updatedContacts[i])
+		updatedContact, _, err := updateContact(c, r, &currentContacts[i], updatedContacts[i])
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return []models.Contact{}, nil, 0, err
