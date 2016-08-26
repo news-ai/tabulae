@@ -29,6 +29,9 @@ var (
 
 func LinkedinLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	c := appengine.NewContext(r)
+
+	// Make sure the user has been logged in when at linkedin auth
+
 	// Generate a random state that we identify the user with
 	state := utils.RandToken()
 
@@ -56,19 +59,19 @@ func LinkedinLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.P
 
 func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	c := appengine.NewContext(r)
-	session, err := Store.Get(r, "linkedin_state")
+	session, err := Store.Get(r, "sess")
 	if err != nil {
 		log.Infof(c, "%v", err)
 		fmt.Fprintln(w, "aborted")
 		return
 	}
 
-	if r.URL.Query().Get("state") != session.Values["state"] {
+	if r.URL.Query().Get("state") != session.Values["linkedin_state"] {
 		fmt.Fprintln(w, "no state match; possible csrf OR cookies not enabled")
 		return
 	}
 
-	tkn, err := googleOauthConfig.Exchange(c, r.URL.Query().Get("code"))
+	tkn, err := linkedinOauthConfig.Exchange(c, r.URL.Query().Get("code"))
 
 	if err != nil {
 		fmt.Fprintln(w, "there was an issue getting your token")
@@ -114,4 +117,6 @@ func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httproute
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	log.Infof(c, "%v", linkedinUser)
 }

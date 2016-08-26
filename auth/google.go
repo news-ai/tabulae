@@ -37,10 +37,6 @@ var (
 	}
 )
 
-func SetRedirectURL() {
-	googleOauthConfig.RedirectURL = utils.APIURL + "/auth/googlecallback"
-}
-
 // Handler to redirect user to the Google OAuth2 page
 func GoogleLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	c := appengine.NewContext(r)

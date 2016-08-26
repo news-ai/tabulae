@@ -11,6 +11,8 @@ import (
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/gaesessions"
+
+	"github.com/news-ai/tabulae/utils"
 )
 
 type User struct {
@@ -28,6 +30,11 @@ type User struct {
 var Store = gaesessions.NewMemcacheDatastoreStore("", "",
 	gaesessions.DefaultNonPersistentSessionDuration,
 	[]byte(os.Getenv("SECRETKEY")))
+
+func SetRedirectURL() {
+	googleOauthConfig.RedirectURL = utils.APIURL + "/auth/googlecallback"
+	linkedinOauthConfig.RedirectURL = utils.APIURL + "/auth/linkedincallback"
+}
 
 func RemoveExpiredSessionsHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
