@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 
 	"golang.org/x/oauth2"
@@ -13,6 +14,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/utils"
 
 	"github.com/julienschmidt/httprouter"
@@ -20,7 +22,7 @@ import (
 
 var (
 	linkedinOauthConfig = &oauth2.Config{
-		RedirectURL:  "http://tabulae.newsai.org/api/auth/linkedincallback",
+		RedirectURL:  "https://tabulae.newsai.org/api/internal_auth/linkedincallback",
 		ClientID:     os.Getenv("LINKEDINAUTHKEY"),
 		ClientSecret: os.Getenv("LINKEDINAUTHSECRET"),
 		Endpoint:     linkedin.Endpoint,
@@ -31,6 +33,12 @@ func LinkedinLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.P
 	c := appengine.NewContext(r)
 
 	// Make sure the user has been logged in when at linkedin auth
+	_, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		fmt.Fprintln(w, "user not logged in")
+		return
+	}
 
 	// Generate a random state that we identify the user with
 	state := utils.RandToken()
@@ -59,6 +67,14 @@ func LinkedinLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.P
 
 func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	c := appengine.NewContext(r)
+
+	currentUser, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Infof(c, "%v", err)
+		fmt.Fprintln(w, "user not logged in")
+		return
+	}
+
 	session, err := Store.Get(r, "sess")
 	if err != nil {
 		log.Infof(c, "%v", err)
@@ -121,5 +137,19 @@ func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httproute
 
 	linkedinUser.AccessToken = tkn.AccessToken
 
-	log.Infof(c, "%v", linkedinUser)
+	currentUser.LinkedinId = linkedinUser.Id
+	currentUser.LinkedinAuthKey = tkn.AccessToken
+	currentUser.Save(c)
+
+	if session.Values["next"] != nil {
+		returnURL := session.Values["next"].(string)
+		u, err := url.Parse(returnURL)
+		if err != nil {
+			http.Redirect(w, r, returnURL, 302)
+		}
+		http.Redirect(w, r, u.String(), 302)
+		return
+	}
+
+	http.Redirect(w, r, "/", 302)
 }

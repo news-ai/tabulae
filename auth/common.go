@@ -33,7 +33,7 @@ var Store = gaesessions.NewMemcacheDatastoreStore("", "",
 
 func SetRedirectURL() {
 	googleOauthConfig.RedirectURL = utils.APIURL + "/auth/googlecallback"
-	linkedinOauthConfig.RedirectURL = utils.APIURL + "/auth/linkedincallback"
+	linkedinOauthConfig.RedirectURL = utils.APIURL + "/internal_auth/linkedincallback"
 }
 
 func RemoveExpiredSessionsHandler(w http.ResponseWriter, r *http.Request) {

@@ -23,7 +23,7 @@ import (
 
 var (
 	googleOauthConfig = &oauth2.Config{
-		RedirectURL:  "http://tabulae.newsai.org/api/auth/googlecallback",
+		RedirectURL:  "https://tabulae.newsai.org/api/auth/googlecallback",
 		ClientID:     os.Getenv("GOOGLEAUTHKEY"),
 		ClientSecret: os.Getenv("GOOGLEAUTHSECRET"),
 		Scopes: []string{

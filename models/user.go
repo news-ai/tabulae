@@ -28,6 +28,7 @@ type User struct {
 
 	LastLoggedIn time.Time `json:"-"`
 
+	LinkedinId      string `json:"-"`
 	LinkedinAuthKey string `json:"-"`
 
 	AgreeTermsAndConditions bool `json:"-"`
