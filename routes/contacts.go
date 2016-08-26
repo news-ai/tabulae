@@ -24,7 +24,7 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 		case "update":
 			return baseSingleResponseHandler(controllers.UpdateContactToParent(c, r, id))
 		case "sync":
-			return baseSingleResponseHandler(controllers.LinkedInSync(c, r, id))
+			return baseSingleResponseHandler(controllers.SocialSync(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")

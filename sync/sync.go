@@ -10,7 +10,7 @@ import (
 	"google.golang.org/cloud/pubsub"
 )
 
-func LinkedInSync(r *http.Request, contactLinkedIn string, contactId int64, justCreated bool) error {
+func SocialSync(r *http.Request, contactLinkedIn string, contactId int64, justCreated bool) error {
 	c := appengine.NewContext(r)
 	PubsubClient, err := configurePubsub(r)
 	if err != nil {

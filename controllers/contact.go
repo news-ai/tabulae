@@ -128,7 +128,7 @@ func checkAgainstParent(c context.Context, r *http.Request, ct *models.Contact) 
 	return ct, nil
 }
 
-func linkedInSync(c context.Context, r *http.Request, ct *models.Contact, justCreated bool) (*models.Contact, error) {
+func socialSync(c context.Context, r *http.Request, ct *models.Contact, justCreated bool) (*models.Contact, error) {
 	if ct.ParentContact == 0 {
 		return ct, nil
 	}
@@ -144,7 +144,7 @@ func linkedInSync(c context.Context, r *http.Request, ct *models.Contact, justCr
 	// Update LinkedIn contact
 	if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (time.Now().After(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {
 		// Send a pub to Influencer
-		err = sync.LinkedInSync(r, parentContact.LinkedIn, parentContact.Id, justCreated)
+		err = sync.SocialSync(r, parentContact.LinkedIn, parentContact.Id, justCreated)
 
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -239,6 +239,8 @@ func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Re
 			return ct, nil, true
 		}
 
+		// Update social information
+
 		// Don't create master contact
 		ct.ParentContact = masterContact.Id
 		return ct, nil, false
@@ -296,7 +298,7 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 	}
 
 	if contact.LinkedIn != "" {
-		_, err = linkedInSync(c, r, &contact, false)
+		_, err = SocialSync(c, r, &contact, false)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 		}
@@ -371,7 +373,7 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		_, _, justCreated := findOrCreateMasterContact(c, ct, r)
-		linkedInSync(c, r, ct, justCreated)
+		SocialSync(c, r, ct, justCreated)
 		checkAgainstParent(c, r, ct)
 	}
 
@@ -442,7 +444,7 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 
 		if contacts[i].ParentContact == 0 && !contacts[i].IsMasterContact && contacts[i].LinkedIn != "" {
 			findOrCreateMasterContact(c, &contacts[i], r)
-			linkedInSync(c, r, &contacts[i], false)
+			SocialSync(c, r, &contacts[i], false)
 			checkAgainstParent(c, r, &contacts[i])
 		}
 	}
@@ -482,7 +484,7 @@ func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Conta
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, ct, r)
-		linkedInSync(c, r, ct, false)
+		SocialSync(c, r, ct, false)
 		checkAgainstParent(c, r, ct)
 	}
 
@@ -639,7 +641,7 @@ func UpdateContactToParent(c context.Context, r *http.Request, id string) (model
 	return contact, nil, nil
 }
 
-func LinkedInSync(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
+func SocialSync(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
 	contact, _, err := GetContact(c, r, id)
 	if err != nil {
 		return contact, nil, err
@@ -656,7 +658,7 @@ func LinkedInSync(c context.Context, r *http.Request, id string) (models.Contact
 	}
 
 	// Send a pub to Influencer
-	err = sync.LinkedInSync(r, parentContact.LinkedIn, parentContact.Id, false)
+	err = sync.SocialSync(r, parentContact.LinkedIn, parentContact.Id, false)
 
 	if err != nil {
 		log.Errorf(c, "%v", err)
