@@ -298,7 +298,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 	for i := 0; i < len(contacts); i++ {
 		if contacts[i].LinkedIn != "" {
 			findOrCreateMasterContact(c, &contacts[i], r)
-			linkedInSync(c, r, &contacts[i], false)
+			socialSync(c, r, &contacts[i], false)
 			checkAgainstParent(c, r, &contacts[i])
 		}
 

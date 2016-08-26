@@ -64,6 +64,9 @@ func init() {
 	router.GET("/api/auth/google", auth.GoogleLoginHandler)
 	router.GET("/api/auth/googlecallback", auth.GoogleCallbackHandler)
 
+	router.GET("/api/auth/linkedin", auth.LinkedinLoginHandler)
+	router.GET("/api/auth/linkedincallback", auth.LinkedinCallbackHandler)
+
 	router.GET("/api/auth/logout", auth.LogoutHandler)
 
 	/*

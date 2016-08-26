@@ -14,6 +14,7 @@ func SocialSync(r *http.Request, socialField string, url string, contactId int64
 	c := appengine.NewContext(r)
 	PubsubClient, err := configurePubsub(r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return err
 	}
 
@@ -26,12 +27,14 @@ func SocialSync(r *http.Request, socialField string, url string, contactId int64
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return err
 	}
 
 	topic := PubsubClient.Topic(PubsubTopicID)
 	_, err = topic.Publish(c, &pubsub.Message{Data: jsonData})
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return err
 	}
 	return nil
