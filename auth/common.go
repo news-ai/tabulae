@@ -7,9 +7,6 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/log"
-
 	"github.com/news-ai/gaesessions"
 
 	"github.com/news-ai/tabulae/utils"
@@ -34,14 +31,6 @@ var Store = gaesessions.NewMemcacheDatastoreStore("", "",
 func SetRedirectURL() {
 	googleOauthConfig.RedirectURL = utils.APIURL + "/auth/googlecallback"
 	linkedinOauthConfig.RedirectURL = utils.APIURL + "/internal_auth/linkedincallback"
-}
-
-func RemoveExpiredSessionsHandler(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
-	err := gaesessions.RemoveExpiredDatastoreSessions(c, "")
-	if err != nil {
-		log.Errorf(c, "%v", err)
-	}
 }
 
 // Gets the email of the current user that is logged in

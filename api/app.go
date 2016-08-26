@@ -16,6 +16,7 @@ import (
 	"github.com/news-ai/tabulae/incoming"
 	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/routes"
+	"github.com/news-ai/tabulae/tasks"
 	"github.com/news-ai/tabulae/utils"
 )
 
@@ -134,6 +135,6 @@ func init() {
 	app.Use(sentroni.NewRecovery(os.Getenv("SENTRY_DSN")))
 	app.UseHandler(router)
 
-	http.HandleFunc("/tasks/removeExpiredSessions", auth.RemoveExpiredSessionsHandler)
+	http.HandleFunc("/tasks/removeExpiredSessions", tasks.RemoveExpiredSessionsHandler)
 	http.Handle("/", context.ClearHandler(app))
 }
