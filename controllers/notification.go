@@ -7,6 +7,7 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
 	"github.com/qedus/nds"
 
@@ -26,17 +27,20 @@ func getUserNotification(c context.Context, r *http.Request) (models.Notificatio
 	notifications := []models.Notification{}
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Notification{}, err
 	}
 
 	ks, err := datastore.NewQuery("Notification").Filter("CreatedBy =", user.Id).KeysOnly().GetAll(c, nil)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Notification{}, err
 	}
 
 	notifications = make([]models.Notification, len(ks))
 	err = nds.GetMulti(c, ks, notifications)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Notification{}, err
 	}
 
@@ -53,17 +57,20 @@ func getUserNotificationObjects(c context.Context, r *http.Request) ([]models.No
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.NotificationObject{}, err
 	}
 
 	ks, err := datastore.NewQuery("NotificationObject").Filter("CreatedBy =", user.Id).Limit(1).KeysOnly().GetAll(c, nil)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.NotificationObject{}, err
 	}
 
 	notificationObjects = make([]models.NotificationObject, len(ks))
 	err = nds.GetMulti(c, ks, notificationObjects)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.NotificationObject{}, err
 	}
 
@@ -85,6 +92,7 @@ func createNotificationChange(c context.Context, r *http.Request, notificationOb
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.NotificationChange{}, err
 	}
 
@@ -103,11 +111,13 @@ func filterNotificationObject(c context.Context, r *http.Request, resourceName s
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.NotificationObject{}, err
 	}
 
 	ks, err := datastore.NewQuery("NotificationObject").Filter("CreatedBy =", user.Id).Filter("Object =", resourceName).Filter("ObjectId =", resourceId).GetAll(c, &notificationObjects)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.NotificationObject{}, err
 	}
 	if len(notificationObjects) > 0 {
@@ -130,11 +140,13 @@ func CreateNotificationForUser(c context.Context, r *http.Request) (models.Notif
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Notification{}, err
 	}
 
 	_, err = notification.Create(c, currentUser)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return notification, err
 	}
 	return notification, nil
@@ -145,6 +157,7 @@ func CreateNotificationObjectForUser(c context.Context, r *http.Request, resourc
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.NotificationObject{}, err
 	}
 
@@ -152,6 +165,7 @@ func CreateNotificationObjectForUser(c context.Context, r *http.Request, resourc
 	if err != nil {
 		userNotification, err = CreateNotificationForUser(c, r)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return models.NotificationObject{}, err
 		}
 	}
@@ -162,6 +176,7 @@ func CreateNotificationObjectForUser(c context.Context, r *http.Request, resourc
 
 	_, err = notificationObject.Create(c, currentUser)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return notificationObject, err
 	}
 	return notificationObject, nil
@@ -175,6 +190,7 @@ func FilterNotificationObjectByObject(c context.Context, r *http.Request, resour
 	// Get the id of a notification object for a user
 	notifiation, err := filterNotificationObject(c, r, resourceName, resourceId)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.NotificationObject{}, err
 	}
 	return notifiation, nil
@@ -187,6 +203,7 @@ func FilterNotificationObjectByObject(c context.Context, r *http.Request, resour
 func LogNotificationForResource(c context.Context, r *http.Request, resourceName string, resourceId int64, verb, actor string) (models.NotificationChange, error) {
 	notificationObject, err := FilterNotificationObjectByObject(c, r, resourceName, resourceId)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		notificationObject, err = CreateNotificationObjectForUser(c, r, resourceName, resourceId)
 	}
 	return createNotificationChange(c, r, notificationObject.Id, verb, actor)

@@ -8,6 +8,7 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
@@ -31,6 +32,7 @@ func getFile(c context.Context, r *http.Request, id int64) (models.File, error) 
 
 	err := nds.Get(c, fileId, &file)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.File{}, err
 	}
 
@@ -39,6 +41,7 @@ func getFile(c context.Context, r *http.Request, id int64) (models.File, error) 
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return models.File{}, errors.New("Could not get user")
 		}
 		if file.CreatedBy != user.Id && !user.IsAdmin {
@@ -64,6 +67,7 @@ func GetFiles(c context.Context, r *http.Request) ([]models.File, interface{}, i
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.File{}, nil, 0, err
 	}
 
@@ -74,6 +78,7 @@ func GetFiles(c context.Context, r *http.Request) ([]models.File, interface{}, i
 	files = make([]models.File, len(ks))
 	err = nds.GetMulti(c, ks, files)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.File{}, nil, 0, err
 	}
 
@@ -87,11 +92,13 @@ func GetFile(c context.Context, r *http.Request, id string) (models.File, interf
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.File{}, nil, err
 	}
 
 	file, err := getFile(c, r, currentId)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.File{}, nil, err
 	}
 	return file, nil, nil
@@ -108,10 +115,12 @@ func CreateFile(r *http.Request, fileName string, listid string, createdby strin
 	// Convert listId and createdById from string to int64
 	listId, err := utils.StringIdToInt(listid)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.File{}, err
 	}
 	createdBy, err := utils.StringIdToInt(createdby)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.File{}, err
 	}
 
@@ -124,18 +133,21 @@ func CreateFile(r *http.Request, fileName string, listid string, createdby strin
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return file, err
 	}
 
 	// Create file
 	_, err = file.Create(c, r, currentUser)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.File{}, err
 	}
 
 	// Attach the fileId to the media list associated to it
 	mediaList, _, err := GetMediaList(c, r, listid)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.File{}, err
 	}
 	mediaList.FileUpload = file.Id

@@ -34,6 +34,7 @@ func getAgency(c context.Context, id int64) (models.Agency, error) {
 	agencyId := datastore.NewKey(c, "Agency", "", id, nil)
 	err := nds.Get(c, agencyId, &agency)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Agency{}, err
 	}
 
@@ -52,6 +53,7 @@ func getAgency(c context.Context, id int64) (models.Agency, error) {
 func filterAgency(c context.Context, queryType, query string) (models.Agency, error) {
 	ks, err := datastore.NewQuery("Agency").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Agency{}, err
 	}
 
@@ -63,6 +65,7 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
 	agencies = make([]models.Agency, len(ks))
 	err = nds.GetMulti(c, ks, agencies)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Agency{}, err
 	}
 
@@ -85,6 +88,7 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
 func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface{}, int, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Agency{}, nil, 0, err
 	}
 
@@ -97,6 +101,7 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface
 
 	ks, err := datastore.NewQuery("Agency").Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Agency{}, nil, 0, err
 	}
 
@@ -119,11 +124,13 @@ func GetAgency(c context.Context, id string) (models.Agency, interface{}, error)
 	// Get the details of the current agency
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Agency{}, nil, err
 	}
 
 	agency, err := getAgency(c, currentId)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Agency{}, nil, err
 	}
 	return agency, nil, nil
@@ -136,6 +143,7 @@ func GetAgency(c context.Context, id string) (models.Agency, interface{}, error)
 func CreateAgencyFromUser(c context.Context, r *http.Request, u *models.User) (models.Agency, error) {
 	agencyEmail, err := utils.ExtractAgencyEmail(u.Email)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Agency{}, err
 	} else {
 		agency, err := FilterAgencyByEmail(c, agencyEmail)
@@ -150,6 +158,7 @@ func CreateAgencyFromUser(c context.Context, r *http.Request, u *models.User) (m
 			agency.Administrators = append(agency.Administrators, u.Id)
 			currentUser, err := GetCurrentUser(c, r)
 			if err != nil {
+				log.Errorf(c, "%v", err)
 				return agency, err
 			}
 			agency.Create(c, r, currentUser)
@@ -169,6 +178,7 @@ func FilterAgencyByEmail(c context.Context, email string) (models.Agency, error)
 	// Get the id of the current agency
 	agency, err := filterAgency(c, "Email", email)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Agency{}, err
 	}
 	return agency, nil

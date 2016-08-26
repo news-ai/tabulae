@@ -43,6 +43,7 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 
 	err := nds.Get(c, mediaListId, &mediaList)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.MediaList{}, err
 	}
 
@@ -93,6 +94,7 @@ func GetMediaLists(c context.Context, r *http.Request) ([]models.MediaList, inte
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.MediaList{}, nil, 0, err
 	}
 
@@ -103,6 +105,7 @@ func GetMediaLists(c context.Context, r *http.Request) ([]models.MediaList, inte
 	mediaLists = make([]models.MediaList, len(ks))
 	err = nds.GetMulti(c, ks, mediaLists)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.MediaList{}, nil, 0, err
 	}
 
@@ -116,11 +119,13 @@ func GetMediaList(c context.Context, r *http.Request, id string) (models.MediaLi
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
 
 	mediaList, err := getMediaList(c, r, currentId)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
 	return mediaList, nil, nil
@@ -135,11 +140,13 @@ func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) 
 	var medialist models.MediaList
 	err := decoder.Decode(&medialist)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return medialist, nil, err
 	}
 
@@ -149,6 +156,7 @@ func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) 
 	// Create media list
 	_, err = medialist.Create(c, r, currentUser)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
 
@@ -174,6 +182,7 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user models.User)
 	singleContact.Created = time.Now()
 	_, err := Create(c, r, &singleContact)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return mediaList, nil, err
 	}
 
@@ -196,12 +205,14 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	// Get the details of the current media list
 	mediaList, _, err := GetMediaList(c, r, id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
 
 	// Checking if the current user logged in can edit this particular id
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
 	if mediaList.CreatedBy != user.Id {
@@ -212,6 +223,7 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	var updatedMediaList models.MediaList
 	err = decoder.Decode(&updatedMediaList)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
 
@@ -246,6 +258,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 	// Get the details of the current media list
 	mediaList, _, err := GetMediaList(c, r, id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, err
 	}
 
@@ -274,6 +287,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 
 	err = nds.GetMulti(c, subsetKeyIds, contacts)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, err
 	}
 
@@ -313,11 +327,13 @@ func GetEmailsForList(c context.Context, r *http.Request, id string) ([]models.E
 	// Get the details of the current media list
 	mediaList, _, err := GetMediaList(c, r, id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, 0, err
 	}
 
 	emails, count, err := filterEmailbyListId(c, r, mediaList.Id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, 0, err
 	}
 
@@ -328,12 +344,14 @@ func DuplicateList(c context.Context, r *http.Request, id string) (models.MediaL
 	// Get the details of the current media list
 	mediaList, _, err := GetMediaList(c, r, id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
 
 	// Checking if the current user logged in can edit this particular id
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
 	if mediaList.CreatedBy != user.Id {

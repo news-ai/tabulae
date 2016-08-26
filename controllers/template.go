@@ -36,6 +36,7 @@ func getTemplate(c context.Context, id int64) (models.Template, error) {
 	err := nds.Get(c, templateId, &template)
 
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Template{}, err
 	}
 
@@ -58,11 +59,13 @@ func GetTemplate(c context.Context, r *http.Request, id string) (models.Template
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Template{}, nil, err
 	}
 
 	template, err := getTemplate(c, currentId)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Template{}, nil, err
 	}
 
@@ -72,6 +75,7 @@ func GetTemplate(c context.Context, r *http.Request, id string) (models.Template
 func GetTemplates(c context.Context, r *http.Request) ([]models.Template, interface{}, int, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Template{}, nil, 0, err
 	}
 
@@ -80,6 +84,7 @@ func GetTemplates(c context.Context, r *http.Request) ([]models.Template, interf
 
 	ks, err := datastore.NewQuery("Template").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Template{}, nil, 0, err
 	}
 
@@ -108,17 +113,20 @@ func CreateTemplate(c context.Context, r *http.Request) (models.Template, interf
 	var template models.Template
 	err := decoder.Decode(&template)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Template{}, nil, err
 	}
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return template, nil, err
 	}
 
 	// Create template
 	_, err = template.Create(c, r, currentUser)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Template{}, nil, err
 	}
 
@@ -133,12 +141,14 @@ func UpdateTemplate(c context.Context, r *http.Request, id string) (models.Templ
 	// Get the details of the current template
 	template, _, err := GetTemplate(c, r, id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Template{}, nil, err
 	}
 
 	// Checking if the current user logged in can edit this particular id
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Template{}, nil, err
 	}
 	if template.CreatedBy != user.Id {
@@ -149,6 +159,7 @@ func UpdateTemplate(c context.Context, r *http.Request, id string) (models.Templ
 	var updatedTemplate models.Template
 	err = decoder.Decode(&updatedTemplate)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Template{}, nil, err
 	}
 

@@ -39,6 +39,7 @@ func getPublication(c context.Context, id int64) (models.Publication, error) {
 	err := nds.Get(c, publicationId, &publication)
 
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Publication{}, err
 	}
 
@@ -57,6 +58,7 @@ func filterPublication(c context.Context, queryType, query string) (models.Publi
 	// Get a publication by the URL
 	ks, err := datastore.NewQuery("Publication").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Publication{}, err
 	}
 
@@ -86,6 +88,7 @@ func filterPublication(c context.Context, queryType, query string) (models.Publi
 func GetPublications(c context.Context, r *http.Request) ([]models.Publication, interface{}, int, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Publication{}, nil, 0, err
 	}
 
@@ -98,6 +101,7 @@ func GetPublications(c context.Context, r *http.Request) ([]models.Publication, 
 
 	ks, err := datastore.NewQuery("Publication").Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Publication{}, nil, 0, err
 	}
 
@@ -119,11 +123,13 @@ func GetPublication(c context.Context, id string) (models.Publication, interface
 	// Get a publication by id
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Publication{}, nil, err
 	}
 
 	publication, err := getPublication(c, currentId)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Publication{}, nil, err
 	}
 	return publication, nil, nil
@@ -145,6 +151,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 	if err != nil {
 		currentUser, err := GetCurrentUser(c, r)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return []models.Publication{}, nil, 0, err
 		}
 
@@ -154,6 +161,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 		err = arrayDecoder.Decode(&publications)
 
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return []models.Publication{}, nil, 0, err
 		}
 
@@ -161,6 +169,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 		for i := 0; i < len(publications); i++ {
 			_, err = publications[i].Validate(c)
 			if err != nil {
+				log.Errorf(c, "%v", err)
 				return []models.Publication{}, nil, 0, err
 			}
 
@@ -168,6 +177,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 			if err != nil {
 				_, err = publications[i].Create(c, r, currentUser)
 				if err != nil {
+					log.Errorf(c, "%v", err)
 					return []models.Publication{}, nil, 0, err
 				}
 				newPublications = append(newPublications, publications[i])
@@ -180,6 +190,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 
 	_, err = publication.Validate(c)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Publication{}, nil, 0, err
 	}
 
@@ -187,11 +198,13 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 	if err != nil {
 		currentUser, err := GetCurrentUser(c, r)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return models.Publication{}, nil, 0, err
 		}
 		// Create publication
 		_, err = publication.Create(c, r, currentUser)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return models.Publication{}, nil, 0, err
 		}
 		return publication, nil, 1, nil
@@ -205,6 +218,7 @@ func FindOrCreatePublication(c context.Context, r *http.Request, name string) (m
 	if err != nil {
 		currentUser, err := GetCurrentUser(c, r)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return models.Publication{}, err
 		}
 
@@ -212,6 +226,7 @@ func FindOrCreatePublication(c context.Context, r *http.Request, name string) (m
 		newPublication.Name = name
 		_, err = newPublication.Create(c, r, currentUser)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return models.Publication{}, err
 		}
 		return newPublication, nil
@@ -228,6 +243,7 @@ func FilterPublicationByUrl(c context.Context, url string) (models.Publication, 
 	// Get the id of the current publication
 	publication, err := filterPublication(c, "Url", url)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Publication{}, err
 	}
 	return publication, nil
@@ -237,6 +253,7 @@ func FilterPublicationByName(c context.Context, name string) (models.Publication
 	// Get the id of the current publication
 	publication, err := filterPublication(c, "Name", name)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Publication{}, nil, err
 	}
 	return publication, nil, nil

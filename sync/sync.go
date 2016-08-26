@@ -24,8 +24,6 @@ func SocialSync(r *http.Request, socialField string, url string, contactId int64
 		"justCreated": strconv.FormatBool(justCreated),
 	}
 
-	log.Infof(c, "%v", data)
-
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -36,6 +34,5 @@ func SocialSync(r *http.Request, socialField string, url string, contactId int64
 	if err != nil {
 		return err
 	}
-
 	return nil
 }

@@ -132,6 +132,7 @@ func filterContact(c context.Context, r *http.Request, queryType, query string) 
 	// Get an contact by a query type
 	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Contact{}, err
 	}
 
@@ -139,6 +140,7 @@ func filterContact(c context.Context, r *http.Request, queryType, query string) 
 	contacts = make([]models.Contact, len(ks))
 	err = nds.GetMulti(c, ks, contacts)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Contact{}, err
 	}
 
@@ -224,6 +226,7 @@ func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact,
 	// Get an contact by a query type
 	ks, err := datastore.NewQuery("Contact").Filter(queryType+" = ", query).Filter("IsMasterContact = ", true).KeysOnly().GetAll(c, nil)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Contact{}, err
 	}
 
@@ -235,6 +238,7 @@ func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact,
 	contacts = make([]models.Contact, len(ks))
 	err = nds.GetMulti(c, ks, contacts)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Contact{}, err
 	}
 
@@ -347,11 +351,13 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Contact{}, nil, err
 	}
 
 	contact, err := getContact(c, r, currentId)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Contact{}, nil, err
 	}
 
@@ -370,6 +376,7 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 func GetDiff(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
 	contact, _, err := GetContact(c, r, id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, nil, err
 	}
 
@@ -377,6 +384,7 @@ func GetDiff(c context.Context, r *http.Request, id string) (interface{}, interf
 	parentContactId := strconv.FormatInt(contact.ParentContact, 10)
 	parentContact, _, err := GetContact(c, r, parentContactId)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, nil, err
 	}
 
@@ -387,6 +395,7 @@ func GetDiff(c context.Context, r *http.Request, id string) (interface{}, interf
 		currentPublication, err := getPublication(c, parentContact.Employers[i])
 		if err != nil {
 			err = errors.New("Only actions are diff and update")
+			log.Errorf(c, "%v", err)
 			return nil, nil, err
 		}
 		newEmployers = append(newEmployers, currentPublication.Name)
@@ -397,6 +406,7 @@ func GetDiff(c context.Context, r *http.Request, id string) (interface{}, interf
 		currentPublication, err := getPublication(c, parentContact.PastEmployers[i])
 		if err != nil {
 			err = errors.New("Only actions are diff and update")
+			log.Errorf(c, "%v", err)
 			return nil, nil, err
 		}
 		newPastEmployers = append(newPastEmployers, currentPublication.Name)
@@ -635,6 +645,7 @@ func UpdateContactToParent(c context.Context, r *http.Request, id string) (model
 	// Get current contact
 	contact, _, err := GetContact(c, r, id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return contact, nil, err
 	}
 
@@ -667,6 +678,7 @@ func UpdateContactToParent(c context.Context, r *http.Request, id string) (model
 func SocialSync(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
 	contact, _, err := GetContact(c, r, id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return contact, nil, err
 	}
 

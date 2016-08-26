@@ -35,6 +35,7 @@ func getUser(c context.Context, r *http.Request, id int64) (models.User, error) 
 	err := nds.Get(c, userId, &user)
 
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.User{}, err
 	}
 
@@ -61,6 +62,7 @@ func getUser(c context.Context, r *http.Request, id int64) (models.User, error) 
 func getUsers(c context.Context, r *http.Request) ([]models.User, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.User{}, err
 	}
 
@@ -73,6 +75,7 @@ func getUsers(c context.Context, r *http.Request) ([]models.User, error) {
 
 	ks, err := datastore.NewQuery("User").Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.User{}, err
 	}
 
@@ -98,6 +101,7 @@ func filterUser(c context.Context, queryType, query string) (models.User, error)
 	// Get the current signed in user details by Id
 	ks, err := datastore.NewQuery("User").Filter(queryType+" =", query).Limit(1).KeysOnly().GetAll(c, nil)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.User{}, err
 	}
 
@@ -110,6 +114,7 @@ func filterUser(c context.Context, queryType, query string) (models.User, error)
 
 	err = nds.Get(c, userId, &user)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.User{}, err
 	}
 
@@ -132,6 +137,7 @@ func GetUsers(c context.Context, r *http.Request) ([]models.User, interface{}, i
 	// Get the current user
 	users, err := getUsers(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.User{}, nil, 0, err
 	}
 
@@ -144,16 +150,19 @@ func GetUser(c context.Context, r *http.Request, id string) (models.User, interf
 	case "me":
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return models.User{}, nil, err
 		}
 		return user, nil, err
 	default:
 		userId, err := utils.StringIdToInt(id)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return models.User{}, nil, err
 		}
 		user, err := getUser(c, r, userId)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return models.User{}, nil, err
 		}
 		return user, nil, nil
@@ -164,6 +173,7 @@ func GetUserByEmail(c context.Context, email string) (models.User, error) {
 	// Get the current user
 	user, err := filterUser(c, "Email", email)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.User{}, err
 	}
 	return user, nil
@@ -173,6 +183,7 @@ func GetUserByApiKey(c context.Context, apiKey string) (models.User, error) {
 	// Get the current user
 	user, err := filterUser(c, "ApiKey", apiKey)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.User{}, err
 	}
 	return user, nil
@@ -182,6 +193,7 @@ func GetUserByConfirmationCode(c context.Context, confirmationCode string) (mode
 	// Get the current user
 	user, err := filterUser(c, "ConfirmationCode", confirmationCode)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.User{}, err
 	}
 	return user, nil
@@ -201,6 +213,7 @@ func GetUserFromApiKey(r *http.Request, ApiKey string) (models.User, error) {
 	c := appengine.NewContext(r)
 	user, err := GetUserByApiKey(c, ApiKey)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.User{}, err
 	}
 	return user, nil
@@ -275,6 +288,7 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 	// Get the details of the current user
 	user, _, err := GetUser(c, r, id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.User{}, nil, err
 	}
 
@@ -282,6 +296,7 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 	var updatedUser models.User
 	err = decoder.Decode(&updatedUser)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.User{}, nil, err
 	}
 
@@ -306,6 +321,7 @@ func ValidateUserPassword(r *http.Request, email string, password string) (model
 	if err == nil {
 		err = utils.ValidatePassword(user.Password, password)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return models.User{}, false, nil
 		}
 		return user, true, nil

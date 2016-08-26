@@ -11,6 +11,7 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
@@ -38,6 +39,7 @@ func getEmail(c context.Context, r *http.Request, id int64) (models.Email, error
 	emailId := datastore.NewKey(c, "Email", "", id, nil)
 	err := nds.Get(c, emailId, &email)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Email{}, err
 	}
 
@@ -46,6 +48,7 @@ func getEmail(c context.Context, r *http.Request, id int64) (models.Email, error
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return models.Email{}, errors.New("Could not get user")
 		}
 
@@ -66,6 +69,7 @@ func filterEmail(c context.Context, queryType, query string) (models.Email, erro
 	// Get a publication by the URL
 	ks, err := datastore.NewQuery("Email").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Email{}, err
 	}
 
@@ -77,6 +81,7 @@ func filterEmail(c context.Context, queryType, query string) (models.Email, erro
 	emails = make([]models.Email, len(ks))
 	err = nds.GetMulti(c, ks, emails)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Email{}, err
 	}
 
@@ -92,6 +97,7 @@ func filterEmailbyListId(c context.Context, r *http.Request, listId int64) ([]mo
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Email{}, 0, err
 	}
 
@@ -102,6 +108,7 @@ func filterEmailbyListId(c context.Context, r *http.Request, listId int64) ([]mo
 	emails = make([]models.Email, len(ks))
 	err = nds.GetMulti(c, ks, emails)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Email{}, 0, err
 	}
 
@@ -125,6 +132,7 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, 0, err
 	}
 
@@ -135,6 +143,7 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 	emails = make([]models.Email, len(ks))
 	err = nds.GetMulti(c, ks, emails)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, 0, err
 	}
 
@@ -149,11 +158,13 @@ func GetEmail(c context.Context, r *http.Request, id string) (models.Email, inte
 	// Get the details of the current user
 	currentId, err := utils.StringIdToInt(id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Email{}, nil, err
 	}
 
 	email, err := getEmail(c, r, currentId)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Email{}, nil, err
 	}
 	return email, nil, nil
@@ -169,6 +180,7 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, err
 	}
 
@@ -185,6 +197,7 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 		err = arrayDecoder.Decode(&emails)
 
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return []models.Email{}, nil, err
 		}
 
@@ -192,6 +205,7 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 		for i := 0; i < len(emails); i++ {
 			_, err = emails[i].Create(c, r, currentUser)
 			if err != nil {
+				log.Errorf(c, "%v", err)
 				return []models.Email{}, nil, err
 			}
 			// Logging the action happening
@@ -205,6 +219,7 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 	// Create email
 	_, err = email.Create(c, r, currentUser)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, err
 	}
 
@@ -235,6 +250,7 @@ func FilterEmailBySendGridID(c context.Context, sendGridId string) (models.Email
 	// Get the id of the current email
 	email, err := filterEmail(c, "SendGridId", sendGridId)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Email{}, err
 	}
 	return email, nil
@@ -273,11 +289,13 @@ func UpdateSingleEmail(c context.Context, r *http.Request, id string) (models.Em
 	// Get the details of the current email
 	email, _, err := GetEmail(c, r, id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Email{}, nil, err
 	}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Email{}, nil, errors.New("Could not get user")
 	}
 
@@ -289,6 +307,7 @@ func UpdateSingleEmail(c context.Context, r *http.Request, id string) (models.Em
 	var updatedEmail models.Email
 	err = decoder.Decode(&updatedEmail)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Email{}, nil, err
 	}
 
@@ -300,12 +319,14 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, inter
 	var updatedEmails []models.Email
 	err := decoder.Decode(&updatedEmails)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, err
 	}
 
 	// Get logged in user
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, errors.New("Could not get user")
 	}
 
@@ -313,6 +334,7 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, inter
 	for i := 0; i < len(updatedEmails); i++ {
 		email, err := getEmail(c, r, updatedEmails[i].Id)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return []models.Email{}, nil, err
 		}
 
@@ -327,6 +349,7 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, inter
 	for i := 0; i < len(updatedEmails); i++ {
 		updatedEmail, _, err := UpdateEmail(c, r, user, &currentEmails[i], updatedEmails[i])
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return []models.Email{}, nil, err
 		}
 		newEmails = append(newEmails, updatedEmail)
@@ -342,11 +365,13 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, inter
 func SendEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
 	email, _, err := GetEmail(c, r, id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.Email{}, nil, err
 	}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return email, nil, err
 	}
 
@@ -367,12 +392,14 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 
 	emailSent, emailId, err := emails.SendEmail(r, email, user)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return email, nil, err
 	}
 
 	if emailSent {
 		val, err := email.MarkSent(c, emailId)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return *val, nil, err
 		}
 
