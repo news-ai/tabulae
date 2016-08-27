@@ -103,10 +103,17 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface
 		return []models.Agency{}, nil, 0, errors.New("Forbidden")
 	}
 
+	order := gcontext.Get(r, "order").(string)
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	ks, err := datastore.NewQuery("Agency").Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
+	query := datastore.NewQuery("Agency").Limit(limit).Offset(offset)
+
+	if order != "" {
+		query = query.Order(order)
+	}
+
+	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Agency{}, nil, 0, err
