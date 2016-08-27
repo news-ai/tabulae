@@ -13,7 +13,6 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
-	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/emails"
@@ -101,10 +100,14 @@ func filterEmailbyListId(c context.Context, r *http.Request, listId int64) ([]mo
 		return []models.Email{}, 0, err
 	}
 
-	offset := gcontext.Get(r, "offset").(int)
-	limit := gcontext.Get(r, "limit").(int)
+	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("ListId =", listId)
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, 0, err
+	}
 
-	ks, err := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("ListId =", listId).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	emails = make([]models.Email, len(ks))
 	err = nds.GetMulti(c, ks, emails)
 	if err != nil {
@@ -136,10 +139,14 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 		return []models.Email{}, nil, 0, err
 	}
 
-	offset := gcontext.Get(r, "offset").(int)
-	limit := gcontext.Get(r, "limit").(int)
+	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id)
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, 0, err
+	}
 
-	ks, err := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	emails = make([]models.Email, len(ks))
 	err = nds.GetMulti(c, ks, emails)
 	if err != nil {

@@ -98,10 +98,14 @@ func GetMediaLists(c context.Context, r *http.Request) ([]models.MediaList, inte
 		return []models.MediaList{}, nil, 0, err
 	}
 
-	offset := gcontext.Get(r, "offset").(int)
-	limit := gcontext.Get(r, "limit").(int)
+	query := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id)
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.MediaList{}, nil, 0, err
+	}
 
-	ks, err := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	mediaLists = make([]models.MediaList, len(ks))
 	err = nds.GetMulti(c, ks, mediaLists)
 	if err != nil {

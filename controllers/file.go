@@ -10,7 +10,6 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
-	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -71,10 +70,14 @@ func GetFiles(c context.Context, r *http.Request) ([]models.File, interface{}, i
 		return []models.File{}, nil, 0, err
 	}
 
-	offset := gcontext.Get(r, "offset").(int)
-	limit := gcontext.Get(r, "limit").(int)
+	query := datastore.NewQuery("File").Filter("CreatedBy =", user.Id)
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.File{}, nil, 0, err
+	}
 
-	ks, err := datastore.NewQuery("File").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
 	files = make([]models.File, len(ks))
 	err = nds.GetMulti(c, ks, files)
 	if err != nil {

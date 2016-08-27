@@ -10,7 +10,6 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
-	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -79,10 +78,9 @@ func GetTemplates(c context.Context, r *http.Request) ([]models.Template, interf
 		return []models.Template{}, nil, 0, err
 	}
 
-	offset := gcontext.Get(r, "offset").(int)
-	limit := gcontext.Get(r, "limit").(int)
-
-	ks, err := datastore.NewQuery("Template").Filter("CreatedBy =", user.Id).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
+	query := datastore.NewQuery("Template").Filter("CreatedBy =", user.Id)
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Template{}, nil, 0, err

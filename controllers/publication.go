@@ -13,7 +13,6 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
-	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -96,10 +95,9 @@ func GetPublications(c context.Context, r *http.Request) ([]models.Publication, 
 		return []models.Publication{}, nil, 0, errors.New("Forbidden")
 	}
 
-	offset := gcontext.Get(r, "offset").(int)
-	limit := gcontext.Get(r, "limit").(int)
-
-	ks, err := datastore.NewQuery("Publication").Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
+	query := datastore.NewQuery("Publication")
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Publication{}, nil, 0, err

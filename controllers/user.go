@@ -70,10 +70,9 @@ func getUsers(c context.Context, r *http.Request) ([]models.User, error) {
 		return []models.User{}, errors.New("Forbidden")
 	}
 
-	offset := gcontext.Get(r, "offset").(int)
-	limit := gcontext.Get(r, "limit").(int)
-
-	ks, err := datastore.NewQuery("User").Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
+	query := datastore.NewQuery("User")
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.User{}, err

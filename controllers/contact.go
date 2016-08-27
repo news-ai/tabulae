@@ -15,7 +15,6 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
-	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -327,10 +326,13 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 		return []models.Contact{}, nil, 0, err
 	}
 
-	offset := gcontext.Get(r, "offset").(int)
-	limit := gcontext.Get(r, "limit").(int)
-
-	ks, err := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", false).Limit(limit).Offset(offset).KeysOnly().GetAll(c, nil)
+	query := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", false)
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, nil, 0, err
+	}
 
 	contacts := []models.Contact{}
 	contacts = make([]models.Contact, len(ks))
