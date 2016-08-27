@@ -42,13 +42,33 @@ func GetParams(r *http.Request) (string, string, string) {
 	return url, searchQuery, order
 }
 
+func ConstructNext(r *http.Request, limit int, offset int, query string, order string) string {
+	url := r.URL
+	q := r.URL.Query()
+	q.Set("limit", strconv.Itoa(limit))
+	q.Set("offset", strconv.Itoa(offset+limit))
+
+	if query != "" {
+		q.Set("query", query)
+	}
+
+	if order != "" {
+		q.Set("order", order)
+	}
+
+	url.RawQuery = q.Encode()
+	return utils.BASEURL + url.String()
+}
+
 func AttachParameters(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	limit, offset := GetPagination(r)
 	url, query, order := GetParams(r)
+	nextUrl := ConstructNext(r, limit, offset, query, order)
 	gcontext.Set(r, "query", query)
 	gcontext.Set(r, "url", url)
 	gcontext.Set(r, "order", order)
 	gcontext.Set(r, "limit", limit)
 	gcontext.Set(r, "offset", offset)
+	gcontext.Set(r, "next", nextUrl)
 	next(w, r)
 }

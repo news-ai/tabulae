@@ -29,7 +29,8 @@ func handleTemplate(c context.Context, r *http.Request, id string) (interface{},
 func handleTemplates(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return baseResponseHandler(controllers.GetTemplates(c, r))
+		val, included, count, err := controllers.GetTemplates(c, r)
+		return baseResponseHandler(val, included, count, err, r)
 	case "POST":
 		return baseSingleResponseHandler(controllers.CreateTemplate(c, r))
 	}

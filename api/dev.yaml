@@ -18,7 +18,7 @@ handlers:
   secure: always
 
 env_variables:
-  BASE_URL: 'https://dev-dot-newsai-1166.appspot.com/api'
+  BASE_URL: 'https://dev-dot-newsai-1166.appspot.com'
   GOOGLEAUTHKEY: '66057093659-gdof2fgsc2j1e9v3ugkt5uvkek669ael.apps.googleusercontent.com'
   GOOGLEAUTHSECRET: 'JLJLL4sV8nse8AyW8qE5zxnu'
   LINKEDINAUTHKEY: '77kb6tooljh1iw'

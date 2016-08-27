@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/net/context"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pquerna/ffjson/ffjson"
 
@@ -16,11 +17,12 @@ import (
 
 var resourcesHandlers map[string](func(context.Context, http.ResponseWriter, *http.Request) (interface{}, error))
 
-func baseResponseHandler(val interface{}, included interface{}, count int, err error) (models.BaseResponse, error) {
+func baseResponseHandler(val interface{}, included interface{}, count int, err error, r *http.Request) (models.BaseResponse, error) {
 	response := models.BaseResponse{}
 	response.Data = val
 	response.Included = included
 	response.Count = count
+	response.Next = gcontext.Get(r, "next").(string)
 	return response, err
 }
 

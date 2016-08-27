@@ -28,7 +28,8 @@ func handleUser(c context.Context, r *http.Request, id string) (interface{}, err
 func handleUsers(c context.Context, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return baseResponseHandler(controllers.GetUsers(c, r))
+		val, included, count, err := controllers.GetUsers(c, r)
+		return baseResponseHandler(val, included, count, err, r)
 	}
 	return nil, errors.New("method not implemented")
 }

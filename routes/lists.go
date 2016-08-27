@@ -25,9 +25,11 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 	case "GET":
 		switch action {
 		case "contacts":
-			return baseResponseHandler(controllers.GetContactsForList(c, r, id))
+			val, included, count, err := controllers.GetContactsForList(c, r, id)
+			return baseResponseHandler(val, included, count, err, r)
 		case "emails":
-			return baseResponseHandler(controllers.GetEmailsForList(c, r, id))
+			val, included, count, err := controllers.GetEmailsForList(c, r, id)
+			return baseResponseHandler(val, included, count, err, r)
 		}
 	case "POST":
 		switch action {
@@ -55,7 +57,8 @@ func handleMediaList(c context.Context, r *http.Request, id string) (interface{}
 func handleMediaLists(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return baseResponseHandler(controllers.GetMediaLists(c, r))
+		val, included, count, err := controllers.GetMediaLists(c, r)
+		return baseResponseHandler(val, included, count, err, r)
 	case "POST":
 		return baseSingleResponseHandler(controllers.CreateMediaList(c, w, r))
 	}

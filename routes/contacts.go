@@ -43,11 +43,14 @@ func handleContact(c context.Context, r *http.Request, id string) (interface{}, 
 func handleContacts(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return baseResponseHandler(controllers.GetContacts(c, r))
+		val, included, count, err := controllers.GetContacts(c, r)
+		return baseResponseHandler(val, included, count, err, r)
 	case "POST":
-		return baseResponseHandler(controllers.CreateContact(c, r))
+		val, included, count, err := controllers.CreateContact(c, r)
+		return baseResponseHandler(val, included, count, err, r)
 	case "PATCH":
-		return baseResponseHandler(controllers.UpdateBatchContact(c, r))
+		val, included, count, err := controllers.UpdateBatchContact(c, r)
+		return baseResponseHandler(val, included, count, err, r)
 	}
 	return nil, errors.New("method not implemented")
 }
