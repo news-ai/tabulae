@@ -35,21 +35,19 @@ func GetPagination(r *http.Request) (int, int) {
 	return limit, offset
 }
 
-func GetSearchQuery(r *http.Request) string {
+func GetParams(r *http.Request) (string, string, string) {
+	url := utils.StripQueryString(r.URL.String())
 	searchQuery := r.URL.Query().Get("q")
-	return searchQuery
-}
-
-func GetURL(r *http.Request) string {
-	return utils.StripQueryString(r.URL.String())
+	order := r.URL.Query().Get("order")
+	return url, searchQuery, order
 }
 
 func AttachParameters(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	limit, offset := GetPagination(r)
-	url := GetURL(r)
-	query := GetSearchQuery(r)
+	url, query, order := GetParams(r)
 	gcontext.Set(r, "query", query)
 	gcontext.Set(r, "url", url)
+	gcontext.Set(r, "order", order)
 	gcontext.Set(r, "limit", limit)
 	gcontext.Set(r, "offset", offset)
 	next(w, r)

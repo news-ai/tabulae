@@ -17,6 +17,8 @@ func SearchAgency(c context.Context, search string) (interface{}, error) {
 	termQuery := elastic.NewTermQuery("data.Name", search)
 	searchResult, err := elasticClient.Search().Index("Agency").Query(termQuery).Do()
 
+	log.Infof(c, "%v", searchResult)
+
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
