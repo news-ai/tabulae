@@ -10,7 +10,6 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
-	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -93,25 +92,12 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface
 		return []models.Agency{}, nil, 0, err
 	}
 
-	// // If there's a query parameter
-	// query := gcontext.Get(r, "query").(string)
-	// if query != "" {
-	// 	search.SearchAgency(c, query)
-	// }
-
 	if !user.IsAdmin {
 		return []models.Agency{}, nil, 0, errors.New("Forbidden")
 	}
 
-	order := gcontext.Get(r, "order").(string)
-	offset := gcontext.Get(r, "offset").(int)
-	limit := gcontext.Get(r, "limit").(int)
-
-	query := datastore.NewQuery("Agency").Limit(limit).Offset(offset)
-
-	if order != "" {
-		query = query.Order(order)
-	}
+	query := datastore.NewQuery("Agency")
+	query = constructQuery(query, r)
 
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
