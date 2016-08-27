@@ -57,7 +57,7 @@ func ConstructNext(r *http.Request, limit int, offset int, query string, order s
 	}
 
 	url.RawQuery = q.Encode()
-	return utils.BASEURL + url.String()
+	return url.String()
 }
 
 func AttachParameters(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
