@@ -1,11 +1,13 @@
 package search
 
 import (
-	"errors"
+	"encoding/json"
+	"net/url"
 
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/urlfetch"
 
 	"github.com/news-ai/tabulae/models"
 )
@@ -33,10 +35,13 @@ type AgencyResponse struct {
 	} `json:"hits"`
 }
 
-func SearchAgency(c context.Context, search string) (interface{}, error) {
+func SearchAgency(c context.Context, search string) ([]models.Agency, error) {
+	search = url.QueryEscape(search)
+
 	client := urlfetch.Client(c)
-	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo?alt=json&access_token=" + tkn.AccessToken)
+	resp, err := client.Get("https://search.newsai.org/agencies/_search?q=data.Name:" + search)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 
@@ -44,6 +49,7 @@ func SearchAgency(c context.Context, search string) (interface{}, error) {
 	var agencyResponse AgencyResponse
 	err = decoder.Decode(&agencyResponse)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 
@@ -54,8 +60,9 @@ func SearchAgency(c context.Context, search string) (interface{}, error) {
 
 	agencyHits := agencyResponse.Hits.Hits
 	for i := 0; i < len(agencyHits); i++ {
-		agencyHits = append(agencyHits, agencyHits[i].Source.Data)
+		agencyHits[i].Source.Data.Type = "agencies"
+		agencies = append(agencies, agencyHits[i].Source.Data)
 	}
 
-	return agencyHits, nil
+	return agencies, nil
 }

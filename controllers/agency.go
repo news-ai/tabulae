@@ -10,10 +10,11 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
-	// "github.com/news-ai/tabulae/search"
+	"github.com/news-ai/tabulae/search"
 	"github.com/news-ai/tabulae/utils"
 )
 
@@ -86,14 +87,23 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
 
 // Gets every single agency
 func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface{}, int, error) {
-	user, err := GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.Agency{}, nil, 0, err
-	}
+	// user, err := GetCurrentUser(c, r)
+	// if err != nil {
+	// 	log.Errorf(c, "%v", err)
+	// 	return []models.Agency{}, nil, 0, err
+	// }
 
-	if !user.IsAdmin {
-		return []models.Agency{}, nil, 0, errors.New("Forbidden")
+	// if !user.IsAdmin {
+	// 	return []models.Agency{}, nil, 0, errors.New("Forbidden")
+	// }
+
+	queryField := gcontext.Get(r, "query").(string)
+	if queryField != "" {
+		agencies, err := search.SearchAgency(c, queryField)
+		if err != nil {
+			return []models.Agency{}, nil, 0, err
+		}
+		return agencies, nil, len(agencies), nil
 	}
 
 	query := datastore.NewQuery("Agency")
