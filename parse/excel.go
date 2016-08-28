@@ -19,6 +19,9 @@ func FileToExcelHeader(r *http.Request, file []byte, contentType string) ([]goex
 	if contentType == "application/vnd.ms-excel" {
 		log.Infof(c, "%v", contentType)
 		return goexcel.XlsFileToExcelHeader(r, file)
+	} else if contentType == "text/csv" {
+		log.Infof(c, "%v", contentType)
+		return goexcel.CsvFileToExcelHeader(r, file)
 	}
 	return goexcel.XlsxFileToExcelHeader(r, file)
 }
@@ -32,12 +35,18 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 
 	if contentType == "application/vnd.ms-excel" {
 		log.Infof(c, "%v", contentType)
-		contacts, customFields, err = goexcel.XlsToContactList(r, file, headers, mediaListid)
+		contacts, customFields, err = goexcel.XlsToContactList(r, file, headers)
+		if err != nil {
+			return models.MediaList{}, err
+		}
+	} else if contentType == "text/csv" {
+		log.Infof(c, "%v", contentType)
+		contacts, customFields, err = goexcel.CsvToContactList(r, file, headers)
 		if err != nil {
 			return models.MediaList{}, err
 		}
 	} else {
-		contacts, customFields, err = goexcel.XlsxToContactList(r, file, headers, mediaListid)
+		contacts, customFields, err = goexcel.XlsxToContactList(r, file, headers)
 		if err != nil {
 			return models.MediaList{}, err
 		}
