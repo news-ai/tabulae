@@ -2,9 +2,12 @@ package search
 
 import (
 	"encoding/json"
+	"net/http"
 	"net/url"
 
 	"golang.org/x/net/context"
+
+	gcontext "github.com/gorilla/context"
 
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
@@ -35,11 +38,14 @@ type AgencyResponse struct {
 	} `json:"hits"`
 }
 
-func SearchAgency(c context.Context, search string) ([]models.Agency, error) {
+func SearchAgency(c context.Context, r *http.Request, search string) ([]models.Agency, error) {
 	search = url.QueryEscape(search)
 
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
 	client := urlfetch.Client(c)
-	resp, err := client.Get("https://search.newsai.org/agencies/_search?q=data.Name:" + search)
+	resp, err := client.Get("https://search.newsai.org/agencies/_search?size=" + strconv.Itoa(limit) + "&from=" + strconv.Itoa(offset) + "&q=data.Name:" + search)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err

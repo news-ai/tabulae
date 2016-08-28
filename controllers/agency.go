@@ -90,7 +90,7 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface
 	// If user is querying then it is not denied by the server
 	queryField := gcontext.Get(r, "query").(string)
 	if queryField != "" {
-		agencies, err := search.SearchAgency(c, queryField)
+		agencies, err := search.SearchAgency(c, r, queryField)
 		if err != nil {
 			return []models.Agency{}, nil, 0, err
 		}
