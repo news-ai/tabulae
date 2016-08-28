@@ -87,16 +87,7 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
 
 // Gets every single agency
 func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface{}, int, error) {
-	// user, err := GetCurrentUser(c, r)
-	// if err != nil {
-	// 	log.Errorf(c, "%v", err)
-	// 	return []models.Agency{}, nil, 0, err
-	// }
-
-	// if !user.IsAdmin {
-	// 	return []models.Agency{}, nil, 0, errors.New("Forbidden")
-	// }
-
+	// If user is querying then it is not denied by the server
 	queryField := gcontext.Get(r, "query").(string)
 	if queryField != "" {
 		agencies, err := search.SearchAgency(c, queryField)
@@ -104,6 +95,17 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface
 			return []models.Agency{}, nil, 0, err
 		}
 		return agencies, nil, len(agencies), nil
+	}
+
+	// Now if user is not querying then check
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Agency{}, nil, 0, err
+	}
+
+	if !user.IsAdmin {
+		return []models.Agency{}, nil, 0, errors.New("Forbidden")
 	}
 
 	query := datastore.NewQuery("Agency")
