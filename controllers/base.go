@@ -39,14 +39,22 @@ var normalized = map[string]string{
 }
 
 func normalizeOrderQuery(order string) string {
-	order = strings.ToLower(order)
-
-	if normalizedOrder, ok := normalized[order]; ok {
-		return normalizedOrder
+	operator := ""
+	if string(order[0]) == "-" {
+		operator = string(order[0])
+		order = order[1:]
 	}
 
+	order = strings.ToLower(order)
+
+	// If it is inside the abnormal cases above
+	if normalizedOrder, ok := normalized[order]; ok {
+		return operator + normalizedOrder
+	}
+
+	// Else return the titled version of it
 	order = strings.Title(order)
-	return order
+	return operator + order
 }
 
 func constructQuery(query *datastore.Query, r *http.Request) *datastore.Query {
