@@ -210,6 +210,16 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 
 		newEmails := []models.Email{}
 		for i := 0; i < len(emails); i++ {
+
+			templateId := emails[i].TemplateId
+			if templateId != 0 {
+				singleTemplate, err := getTemplate(c, templateId)
+				if err == nil {
+					emails[i].Body = singleTemplate.Body
+					emails[i].Subject = singleTemplate.Subject
+				}
+			}
+
 			_, err = emails[i].Create(c, r, currentUser)
 			if err != nil {
 				log.Errorf(c, "%v", err)
@@ -224,6 +234,14 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 	}
 
 	// Create email
+	templateId := email.TemplateId
+	if templateId != 0 {
+		singleTemplate, err := getTemplate(c, templateId)
+		if err == nil {
+			email.Body = singleTemplate.Body
+			email.Subject = singleTemplate.Subject
+		}
+	}
 	_, err = email.Create(c, r, currentUser)
 	if err != nil {
 		log.Errorf(c, "%v", err)
