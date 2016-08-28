@@ -40,12 +40,12 @@ var normalized = map[string]string{
 
 func normalizeOrderQuery(order string) string {
 	order = strings.ToLower(order)
-	order = strings.Title(order)
 
 	if normalizedOrder, ok := normalized[order]; ok {
 		return normalizedOrder
 	}
 
+	order = strings.Title(order)
 	return order
 }
 
