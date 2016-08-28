@@ -3,3 +3,7 @@ cron:
   url: /tasks/removeExpiredSessions
   schedule: every 1 minutes
   target: default
+# - description: My Daily Backup
+#   url: /_ah/datastore_admin/backup.create?app_id=newsai-1166&kind=Agency&kind=Contact&kind=File&kind=MediaList&kind=Notification&kind=NotificationChange&kind=NotificationObject&kind=Publication&kind=Session&kind=Template&kind=User&filesystem=gs&gs_bucket_name=tabulae_backups
+#   schedule: every 12 hours
+#   target: default
