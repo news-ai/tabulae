@@ -79,8 +79,47 @@ func PasswordLoginHandler() http.HandlerFunc {
 
 func ForgetPasswordHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		c := appengine.NewContext(r)
 		// Forget password
-		// email := r.FormValue("email")
+		email := r.FormValue("email")
+
+		// Validate email
+		validEmail, err := mail.ParseAddress(email)
+		if err != nil {
+			invalidEmailAlert := url.QueryEscape("The email you entered is not valid!")
+			http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
+		}
+
+		user, err := controllers.GetUserByEmail(c, email)
+		if err != nil {
+			noUserErr := url.QueryEscape("There is no user with this email!")
+			http.Redirect(w, r, "/api/auth?success=false&message="+noUserErr, 302)
+		}
+
+		if user.GoogleId != "" {
+			googleAuthErr := url.QueryEscape("You signed up with Google Authentication!")
+			http.Redirect(w, r, "/api/auth?success=false&message="+googleAuthErr, 302)
+		}
+
+		user.ResetPasswordCode = utils.RandToken()
+		user.Save(c)
+
+		emailReset, _ := controllers.CreateEmailInternal(r, validEmail.Address, user.FirstName, user.LastName)
+		emailSent, emailId, err := emails.SendResetEmail(r, emailReset, user.ResetPasswordCode)
+		if !emailSent || err != nil {
+			// Redirect user back to login page
+			log.Errorf(c, "%v", "Reset email was not sent for "+email)
+			log.Errorf(c, "%v", err)
+			emailResetErr := url.QueryEscape("Could not send a reset email. We'll fix this soon!")
+			http.Redirect(w, r, "/api/auth?success=false&message="+emailResetErr, 302)
+			return
+		}
+
+		emailReset.MarkSent(c, emailId)
+
+		// Redirect user back to login page
+		resetMessage := url.QueryEscape("We sent you a password reset email!")
+		http.Redirect(w, r, "/api/auth?success=true&message="+resetMessage, 302)
 	}
 }
 
