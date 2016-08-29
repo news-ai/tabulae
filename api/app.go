@@ -63,7 +63,7 @@ func init() {
 	router.Handler("POST", "/api/auth/userlogin", CSRF(auth.PasswordLoginHandler()))
 	router.Handler("POST", "/api/auth/userregister", CSRF(auth.PasswordRegisterHandler()))
 	router.Handler("POST", "/api/auth/userforget", CSRF(auth.ForgetPasswordHandler()))
-	// router.Handler("POST", "/api/auth/resetpassword", CSRF(auth.ForgetPasswordHandler()))
+	router.Handler("POST", "/api/auth/resetpassword", CSRF(auth.ResetPasswordHandler()))
 
 	router.GET("/api/auth/google", auth.GoogleLoginHandler)
 	router.GET("/api/auth/googlecallback", auth.GoogleCallbackHandler)
