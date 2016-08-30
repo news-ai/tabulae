@@ -161,6 +161,7 @@ func UpdateTemplate(c context.Context, r *http.Request, id string) (models.Templ
 		return models.Template{}, nil, err
 	}
 
+	utils.UpdateIfNotBlank(&template.Name, updatedTemplate.Name)
 	utils.UpdateIfNotBlank(&template.Subject, updatedTemplate.Subject)
 	utils.UpdateIfNotBlank(&template.Body, updatedTemplate.Body)
 
