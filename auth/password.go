@@ -308,7 +308,37 @@ func ForgetPasswordPageHandler() http.HandlerFunc {
 
 func ResetPasswordHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		c := appengine.NewContext(r)
+		// Setup to authenticate the user into the API
+		password := r.FormValue("password")
+		code := r.FormValue("code")
 
+		user, err := controllers.GetUserByResetCode(c, code)
+		if err != nil {
+			userNotFound := url.QueryEscape("We could not find your user!")
+			log.Infof(c, "%v", code)
+			log.Infof(c, "%v", err)
+			http.Redirect(w, r, "/api/auth?success=false&message="+userNotFound, 302)
+			return
+		}
+
+		// Hash the password and save it into the datastore
+		hashedPassword, _ := utils.HashPassword(password)
+		user.Password = hashedPassword
+		user.ResetPasswordCode = ""
+
+		_, err = user.Save(c)
+		if err != nil {
+			passwordNotReset := url.QueryEscape("Could not reset your password!")
+			log.Infof(c, "%v", code)
+			log.Infof(c, "%v", err)
+			http.Redirect(w, r, "/api/auth?success=false&message="+passwordNotReset, 302)
+			return
+		}
+
+		validReset := "Your password has been changed!"
+		http.Redirect(w, r, "/api/auth?success=true&message="+validReset, 302)
+		return
 	}
 }
 
