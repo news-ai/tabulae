@@ -49,3 +49,13 @@ func (a *Agency) Save(c context.Context) (*Agency, error) {
 	a.Id = k.IntID()
 	return a, nil
 }
+
+func (a *Agency) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := SetField(a, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

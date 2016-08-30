@@ -1,20 +1,21 @@
 package search
 
 import (
-	"errors"
-
-	"gopkg.in/olivere/elastic.v3"
+	elastic "github.com/news-ai/elastic-appengine"
 )
 
 var (
-	elasticClient *elastic.Client
+	baseURL = "https://search.newsai.org"
 )
 
-func InitializeElasticSearch() error {
-	err := errors.New("")
-	elasticClient, err = elastic.NewClient(elastic.SetURL("https://search.newsai.org"))
-	if err != nil {
-		return err
-	}
-	return nil
+func InitializeElasticSearch() {
+	agencyElastic := elastic.Elastic{}
+	agencyElastic.BaseURL = baseURL
+	agencyElastic.ResourceType = "agencies"
+	elasticAgency = &agencyElastic
+
+	publicationElastic := elastic.Elastic{}
+	publicationElastic.BaseURL = baseURL
+	publicationElastic.ResourceType = "publications"
+	elasticPublication = &publicationElastic
 }

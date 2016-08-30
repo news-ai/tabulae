@@ -78,3 +78,13 @@ func (p *Publication) Validate(c context.Context) (*Publication, error) {
 	}
 	return p, nil
 }
+
+func (p *Publication) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := SetField(p, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
