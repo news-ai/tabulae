@@ -48,7 +48,7 @@ func init() {
 	// Initialize router
 	router := httprouter.New()
 
-	router.NotFound = routes.NotFoundHandler
+	router.NotFound = http.HandlerFunc(routes.NotFound)
 
 	// Not found Handler
 	router.GET("/", routes.NotFoundHandler)

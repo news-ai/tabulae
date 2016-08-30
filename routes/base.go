@@ -30,6 +30,12 @@ func baseSingleResponseHandler(val interface{}, included interface{}, err error)
 	return response, err
 }
 
+func NotFound(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	permissions.ReturnError(w, http.StatusNotFound, "An unknown error occurred while trying to process this request.", "Not Found")
+	return
+}
+
 // Handler for when there is a key present after /users/<id> route.
 func NotFoundHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
