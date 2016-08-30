@@ -58,7 +58,7 @@ func init() {
 
 	router.Handler("GET", "/api/auth", CSRF(auth.PasswordLoginPageHandler()))
 	router.Handler("GET", "/api/auth/forget", CSRF(auth.ForgetPasswordPageHandler()))
-	router.Handler("POST", "/api/auth/resetpassword", CSRF(auth.ResetPasswordPageHandler()))
+	router.Handler("GET", "/api/auth/resetpassword", CSRF(auth.ResetPasswordPageHandler()))
 	router.Handler("GET", "/api/auth/confirmation", CSRF(auth.EmailConfirmationHandler()))
 	router.Handler("GET", "/api/auth/registration", CSRF(auth.PasswordRegisterPageHandler()))
 	router.Handler("POST", "/api/auth/userlogin", CSRF(auth.PasswordLoginHandler()))
