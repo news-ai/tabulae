@@ -293,6 +293,61 @@ func ForgetPasswordPageHandler() http.HandlerFunc {
 	}
 }
 
+func ResetPasswordHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c := appengine.NewContext(r)
+		_, err := controllers.GetCurrentUser(c, r)
+
+		// Invalid confirmation message
+		invalidResetCode := url.QueryEscape("Your reset code is invalid!")
+
+		if r.URL.Query().Get("next") != "" {
+			session, _ := Store.Get(r, "sess")
+			session.Values["next"] = r.URL.Query().Get("next")
+			session.Save(r, w)
+
+			// If there is a next and the user has been logged in
+			if err == nil {
+				http.Redirect(w, r, r.URL.Query().Get("next"), 302)
+				return
+			}
+		}
+
+		// If there is no next and the user is logged in
+		if err == nil {
+			http.Redirect(w, r, "/", 302)
+			return
+		}
+
+		// Validate token
+		if val, ok := r.URL.Query()["code"]; ok {
+			code := val[0]
+			codeUnscape, err := url.QueryUnescape(code)
+			if err != nil {
+				log.Infof(c, "%v", codeUnscape)
+				log.Infof(c, "%v", err)
+				http.Redirect(w, r, "/api/auth?success=false&message="+invalidResetCode, 302)
+				return
+			}
+			user, err := controllers.GetUserByResetCode(c, codeUnscape)
+			if err != nil {
+				log.Infof(c, "%v", codeUnscape)
+				log.Infof(c, "%v", err)
+				http.Redirect(w, r, "/api/auth?success=false&message="+invalidResetCode, 302)
+				return
+			}
+		}
+
+		data := map[string]interface{}{
+			csrf.TemplateTag: csrf.TemplateField(r),
+		}
+
+		t := template.New("reset.html")
+		t, _ = t.ParseFiles("auth/reset.html")
+		t.Execute(w, data)
+	}
+}
+
 func EmailConfirmationHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)

@@ -198,6 +198,16 @@ func GetUserByConfirmationCode(c context.Context, confirmationCode string) (mode
 	return user, nil
 }
 
+func GetUserByResetCode(c context.Context, resetCode string) (models.User, error) {
+	// Get the current user
+	user, err := filterUser(c, "ResetPasswordCode", resetCode)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, err
+	}
+	return user, nil
+}
+
 func GetCurrentUser(c context.Context, r *http.Request) (models.User, error) {
 	// Get the current user
 	_, ok := gcontext.GetOk(r, "user")
