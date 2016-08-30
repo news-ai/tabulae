@@ -92,6 +92,16 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 		contact.PastEmployers = updatedContact.PastEmployers
 	}
 
+	// Special case when you want to remove all the employers
+	if len(contact.Employers) > 0 && len(updatedContact.Employers) == 0 {
+		contact.Employers = updatedContact.Employers
+	}
+
+	// Special case when you want to remove all the past employers
+	if len(contact.PastEmployers) > 0 && len(updatedContact.PastEmployers) == 0 {
+		contact.PastEmployers = updatedContact.PastEmployers
+	}
+
 	_, err := Save(c, r, contact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
