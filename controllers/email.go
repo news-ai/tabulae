@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +11,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
+	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/emails"
@@ -183,7 +182,6 @@ func GetEmail(c context.Context, r *http.Request, id string) (models.Email, inte
 
 func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
-	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
@@ -191,17 +189,16 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 		return []models.Email{}, nil, err
 	}
 
-	decoder := json.NewDecoder(rdr1)
+	decoder := ffjson.NewDecoder()
 	var email models.Email
-	err = decoder.Decode(&email)
+	err = decoder.Decode(buf, &email)
 
 	// If it is an array and you need to do BATCH processing
 	if err != nil {
 		var emails []models.Email
 
-		rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
-		arrayDecoder := json.NewDecoder(rdr2)
-		err = arrayDecoder.Decode(&emails)
+		arrayDecoder := ffjson.NewDecoder()
+		err = arrayDecoder.Decode(buf, &emails)
 
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -328,9 +325,10 @@ func UpdateSingleEmail(c context.Context, r *http.Request, id string) (models.Em
 		return models.Email{}, nil, errors.New("Forbidden")
 	}
 
-	decoder := json.NewDecoder(r.Body)
+	decoder := ffjson.NewDecoder()
 	var updatedEmail models.Email
-	err = decoder.Decode(&updatedEmail)
+	buf, _ := ioutil.ReadAll(r.Body)
+	err = decoder.Decode(buf, &updatedEmail)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Email{}, nil, err
@@ -340,9 +338,10 @@ func UpdateSingleEmail(c context.Context, r *http.Request, id string) (models.Em
 }
 
 func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, error) {
-	decoder := json.NewDecoder(r.Body)
+	decoder := ffjson.NewDecoder()
 	var updatedEmails []models.Email
-	err := decoder.Decode(&updatedEmails)
+	buf, _ := ioutil.ReadAll(r.Body)
+	err := decoder.Decode(buf, &updatedEmails)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, err

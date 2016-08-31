@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -15,6 +13,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
+	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -463,19 +462,17 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 
 func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
-	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
 
-	decoder := json.NewDecoder(rdr1)
+	decoder := ffjson.NewDecoder()
 	var contact models.Contact
-	err := decoder.Decode(&contact)
+	err := decoder.Decode(buf, &contact)
 
 	// If it is an array and you need to do BATCH processing
 	if err != nil {
 		var contacts []models.Contact
 
-		rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
-		arrayDecoder := json.NewDecoder(rdr2)
-		err = arrayDecoder.Decode(&contacts)
+		arrayDecoder := ffjson.NewDecoder()
+		err = arrayDecoder.Decode(buf, &contacts)
 
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -591,9 +588,10 @@ func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.
 		return models.Contact{}, nil, errors.New("You don't have permissions to edit these objects")
 	}
 
-	decoder := json.NewDecoder(r.Body)
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
 	var updatedContact models.Contact
-	err = decoder.Decode(&updatedContact)
+	err = decoder.Decode(buf, &updatedContact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Contact{}, nil, err
@@ -603,9 +601,10 @@ func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.
 }
 
 func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, error) {
-	decoder := json.NewDecoder(r.Body)
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
 	var updatedContacts []models.Contact
-	err := decoder.Decode(&updatedContacts)
+	err := decoder.Decode(buf, &updatedContacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, err

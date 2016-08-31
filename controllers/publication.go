@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -14,6 +12,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	gcontext "github.com/gorilla/context"
+	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -153,11 +152,10 @@ func GetPublication(c context.Context, id string) (models.Publication, interface
 func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, interface{}, int, error) {
 	// Parse JSON
 	buf, _ := ioutil.ReadAll(r.Body)
-	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
 
-	decoder := json.NewDecoder(rdr1)
+	decoder := ffjson.NewDecoder()
 	var publication models.Publication
-	err := decoder.Decode(&publication)
+	err := decoder.Decode(buf, &publication)
 
 	if err != nil {
 		currentUser, err := GetCurrentUser(c, r)
@@ -167,9 +165,8 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 		}
 
 		var publications []models.Publication
-		rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
-		arrayDecoder := json.NewDecoder(rdr2)
-		err = arrayDecoder.Decode(&publications)
+		arrayDecoder := ffjson.NewDecoder()
+		err = arrayDecoder.Decode(buf, &publications)
 
 		if err != nil {
 			log.Errorf(c, "%v", err)

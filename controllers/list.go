@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -12,6 +12,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	gcontext "github.com/gorilla/context"
+	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -140,9 +141,10 @@ func GetMediaList(c context.Context, r *http.Request, id string) (models.MediaLi
  */
 
 func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) (models.MediaList, interface{}, error) {
-	decoder := json.NewDecoder(r.Body)
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
 	var medialist models.MediaList
-	err := decoder.Decode(&medialist)
+	err := decoder.Decode(buf, &medialist)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
@@ -223,9 +225,10 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 		return models.MediaList{}, nil, errors.New("Forbidden")
 	}
 
-	decoder := json.NewDecoder(r.Body)
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
 	var updatedMediaList models.MediaList
-	err = decoder.Decode(&updatedMediaList)
+	err = decoder.Decode(buf, &updatedMediaList)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err

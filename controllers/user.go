@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -13,6 +13,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	gcontext "github.com/gorilla/context"
+	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -301,9 +302,10 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 		return models.User{}, nil, err
 	}
 
-	decoder := json.NewDecoder(r.Body)
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
 	var updatedUser models.User
-	err = decoder.Decode(&updatedUser)
+	err = decoder.Decode(buf, &updatedUser)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.User{}, nil, err

@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 
 	"golang.org/x/net/context"
@@ -10,6 +10,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
+	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
@@ -107,9 +108,10 @@ func GetTemplates(c context.Context, r *http.Request) ([]models.Template, interf
  */
 
 func CreateTemplate(c context.Context, r *http.Request) (models.Template, interface{}, error) {
-	decoder := json.NewDecoder(r.Body)
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
 	var template models.Template
-	err := decoder.Decode(&template)
+	err := decoder.Decode(buf, &template)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Template{}, nil, err
@@ -153,9 +155,10 @@ func UpdateTemplate(c context.Context, r *http.Request, id string) (models.Templ
 		return models.Template{}, nil, errors.New("Forbidden")
 	}
 
-	decoder := json.NewDecoder(r.Body)
+	decoder := ffjson.NewDecoder()
+	buf, _ := ioutil.ReadAll(r.Body)
 	var updatedTemplate models.Template
-	err = decoder.Decode(&updatedTemplate)
+	err = decoder.Decode(buf, &updatedTemplate)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Template{}, nil, err
