@@ -139,9 +139,9 @@ func init() {
 	})
 
 	// HTTP router
+	app.Use(negroni.HandlerFunc(commonMiddleware.AppEngineCheck))
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 	app.Use(negroni.HandlerFunc(commonMiddleware.AttachParameters))
-	app.Use(negroni.HandlerFunc(commonMiddleware.AppEngineCheck))
 	app.Use(negroni.HandlerFunc(secureMiddleware.HandlerFuncWithNext))
 	app.Use(sentroni.NewRecovery(os.Getenv("SENTRY_DSN")))
 	app.UseHandler(router)
