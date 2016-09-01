@@ -50,6 +50,10 @@ func (a *Agency) Save(c context.Context) (*Agency, error) {
 	return a, nil
 }
 
+/*
+* Action methods
+ */
+
 func (a *Agency) FillStruct(m map[string]interface{}) error {
 	for k, v := range m {
 		err := SetField(a, k, v)

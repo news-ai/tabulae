@@ -17,7 +17,7 @@ func RemoveImportedFilesHandler(w http.ResponseWriter, r *http.Request) {
 	files, err := controllers.FilterFileByImported(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		errors.ReturnError(w, http.StatusInternalServerError, "Could not get files", err)
+		errors.ReturnError(w, http.StatusInternalServerError, "Could not get files", "Problem getting all imported files")
 		return
 	}
 
