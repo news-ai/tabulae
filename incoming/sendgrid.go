@@ -13,7 +13,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/permissions"
+
+	"github.com/news-ai/web/errors"
 )
 
 type SendGridEvent struct {
@@ -37,7 +38,7 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	// If there is an error
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		permissions.ReturnError(w, http.StatusInternalServerError, "SendGrid issue", err.Error())
+		errors.ReturnError(w, http.StatusInternalServerError, "SendGrid issue", err.Error())
 		return
 	}
 
@@ -90,7 +91,7 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	}
 
 	if hasErrors {
-		permissions.ReturnError(w, http.StatusInternalServerError, "SendGrid handling error", "Problem parsing data")
+		errors.ReturnError(w, http.StatusInternalServerError, "SendGrid handling error", "Problem parsing data")
 		return
 	}
 	w.WriteHeader(200)

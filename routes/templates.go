@@ -12,16 +12,17 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
-	// "github.com/news-ai/tabulae/models"
-	"github.com/news-ai/tabulae/permissions"
+
+	"github.com/news-ai/web/api"
+	nError "github.com/news-ai/web/errors"
 )
 
 func handleTemplate(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return baseSingleResponseHandler(controllers.GetTemplate(c, r, id))
+		return api.BaseSingleResponseHandler(controllers.GetTemplate(c, r, id))
 	case "PATCH":
-		return baseSingleResponseHandler(controllers.UpdateTemplate(c, r, id))
+		return api.BaseSingleResponseHandler(controllers.UpdateTemplate(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -30,9 +31,9 @@ func handleTemplates(c context.Context, w http.ResponseWriter, r *http.Request) 
 	switch r.Method {
 	case "GET":
 		val, included, count, err := controllers.GetTemplates(c, r)
-		return baseResponseHandler(val, included, count, err, r)
+		return api.BaseResponseHandler(val, included, count, err, r)
 	case "POST":
-		return baseSingleResponseHandler(controllers.CreateTemplate(c, r))
+		return api.BaseSingleResponseHandler(controllers.CreateTemplate(c, r))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -48,7 +49,7 @@ func TemplatesHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Param
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "Template handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "Template handling error", err.Error())
 	}
 	return
 }
@@ -65,7 +66,7 @@ func TemplateHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Param
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "Template handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "Template handling error", err.Error())
 	}
 	return
 }

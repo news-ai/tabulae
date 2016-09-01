@@ -12,7 +12,9 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/permissions"
+
+	"github.com/news-ai/web/api"
+	nError "github.com/news-ai/web/errors"
 )
 
 func handleContactAction(c context.Context, r *http.Request, id string, action string) (interface{}, error) {
@@ -20,11 +22,11 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 	case "GET":
 		switch action {
 		case "diff":
-			return baseSingleResponseHandler(controllers.GetDiff(c, r, id))
+			return api.BaseSingleResponseHandler(controllers.GetDiff(c, r, id))
 		case "update":
-			return baseSingleResponseHandler(controllers.UpdateContactToParent(c, r, id))
+			return api.BaseSingleResponseHandler(controllers.UpdateContactToParent(c, r, id))
 		case "sync":
-			return baseSingleResponseHandler(controllers.SocialSync(c, r, id))
+			return api.BaseSingleResponseHandler(controllers.SocialSync(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")
@@ -33,9 +35,9 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 func handleContact(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return baseSingleResponseHandler(controllers.GetContact(c, r, id))
+		return api.BaseSingleResponseHandler(controllers.GetContact(c, r, id))
 	case "PATCH":
-		return baseSingleResponseHandler(controllers.UpdateSingleContact(c, r, id))
+		return api.BaseSingleResponseHandler(controllers.UpdateSingleContact(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -44,13 +46,13 @@ func handleContacts(c context.Context, w http.ResponseWriter, r *http.Request) (
 	switch r.Method {
 	case "GET":
 		val, included, count, err := controllers.GetContacts(c, r)
-		return baseResponseHandler(val, included, count, err, r)
+		return api.BaseResponseHandler(val, included, count, err, r)
 	case "POST":
 		val, included, count, err := controllers.CreateContact(c, r)
-		return baseResponseHandler(val, included, count, err, r)
+		return api.BaseResponseHandler(val, included, count, err, r)
 	case "PATCH":
 		val, included, count, err := controllers.UpdateBatchContact(c, r)
-		return baseResponseHandler(val, included, count, err, r)
+		return api.BaseResponseHandler(val, included, count, err, r)
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -66,7 +68,7 @@ func ContactsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
 	}
 	return
 }
@@ -83,7 +85,7 @@ func ContactHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
 	}
 	return
 }
@@ -100,7 +102,7 @@ func ContactActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "Contact handling error", err.Error())
 	}
 	return
 }

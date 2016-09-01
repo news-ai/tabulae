@@ -17,7 +17,12 @@ import (
 	"github.com/news-ai/web/utilities"
 )
 
-func HandleMediaListActionUpload(c context.Context, r *http.Request, id string, user models.User) (interface{}, interface{}, error) {
+func HandleMediaListActionUpload(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	user, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	userId := strconv.FormatInt(user.Id, 10)
 
 	file, handler, err := r.FormFile("file")

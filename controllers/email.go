@@ -16,8 +16,8 @@ import (
 
 	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
-	"github.com/news-ai/tabulae/permissions"
 
+	"github.com/news-ai/web/permissions"
 	"github.com/news-ai/web/utilities"
 )
 

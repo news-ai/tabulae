@@ -12,15 +12,17 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/permissions"
+
+	"github.com/news-ai/web/api"
+	nError "github.com/news-ai/web/errors"
 )
 
 func handleUser(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return baseSingleResponseHandler(controllers.GetUser(c, r, id))
+		return api.BaseSingleResponseHandler(controllers.GetUser(c, r, id))
 	case "PATCH":
-		return baseSingleResponseHandler(controllers.UpdateUser(c, r, id))
+		return api.BaseSingleResponseHandler(controllers.UpdateUser(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -29,7 +31,7 @@ func handleUsers(c context.Context, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		val, included, count, err := controllers.GetUsers(c, r)
-		return baseResponseHandler(val, included, count, err, r)
+		return api.BaseResponseHandler(val, included, count, err, r)
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -45,7 +47,7 @@ func UsersHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
 	}
 	return
 }
@@ -62,7 +64,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
 	}
 	return
 }

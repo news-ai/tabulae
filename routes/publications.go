@@ -12,13 +12,15 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/permissions"
+
+	"github.com/news-ai/web/api"
+	nError "github.com/news-ai/web/errors"
 )
 
 func handlePublication(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return baseSingleResponseHandler(controllers.GetPublication(c, id))
+		return api.BaseSingleResponseHandler(controllers.GetPublication(c, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -28,17 +30,17 @@ func handlePublications(c context.Context, w http.ResponseWriter, r *http.Reques
 	case "GET":
 		if len(r.URL.Query()) > 0 {
 			if val, ok := r.URL.Query()["name"]; ok && len(val) > 0 {
-				return baseSingleResponseHandler(controllers.FilterPublicationByName(c, val[0]))
+				return api.BaseSingleResponseHandler(controllers.FilterPublicationByName(c, val[0]))
 			}
 		}
 		val, included, count, err := controllers.GetPublications(c, r)
-		return baseResponseHandler(val, included, count, err, r)
+		return api.BaseResponseHandler(val, included, count, err, r)
 	case "POST":
 		val, included, count, err := controllers.CreatePublication(c, w, r)
 		if count == 1 {
-			return baseSingleResponseHandler(val, included, err)
+			return api.BaseSingleResponseHandler(val, included, err)
 		}
-		return baseResponseHandler(val, included, count, err, r)
+		return api.BaseResponseHandler(val, included, count, err, r)
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -54,7 +56,7 @@ func PublicationsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())
 	}
 	return
 }
@@ -71,7 +73,7 @@ func PublicationHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "Publication handling error", err.Error())
 	}
 	return
 }

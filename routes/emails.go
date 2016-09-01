@@ -12,7 +12,9 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/permissions"
+
+	"github.com/news-ai/web/api"
+	nError "github.com/news-ai/web/errors"
 )
 
 func handleEmailAction(c context.Context, r *http.Request, id string, action string) (interface{}, error) {
@@ -20,7 +22,7 @@ func handleEmailAction(c context.Context, r *http.Request, id string, action str
 	case "GET":
 		switch action {
 		case "send":
-			return baseSingleResponseHandler(controllers.SendEmail(c, r, id))
+			return api.BaseSingleResponseHandler(controllers.SendEmail(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")
@@ -29,9 +31,9 @@ func handleEmailAction(c context.Context, r *http.Request, id string, action str
 func handleEmail(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return baseSingleResponseHandler(controllers.GetEmail(c, r, id))
+		return api.BaseSingleResponseHandler(controllers.GetEmail(c, r, id))
 	case "PATCH":
-		return baseSingleResponseHandler(controllers.UpdateSingleEmail(c, r, id))
+		return api.BaseSingleResponseHandler(controllers.UpdateSingleEmail(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -40,11 +42,11 @@ func handleEmails(c context.Context, w http.ResponseWriter, r *http.Request) (in
 	switch r.Method {
 	case "GET":
 		val, included, count, err := controllers.GetEmails(c, r)
-		return baseResponseHandler(val, included, count, err, r)
+		return api.BaseResponseHandler(val, included, count, err, r)
 	case "POST":
-		return baseSingleResponseHandler(controllers.CreateEmail(c, r))
+		return api.BaseSingleResponseHandler(controllers.CreateEmail(c, r))
 	case "PATCH":
-		return baseSingleResponseHandler(controllers.UpdateBatchEmail(c, r))
+		return api.BaseSingleResponseHandler(controllers.UpdateBatchEmail(c, r))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -60,7 +62,7 @@ func EmailsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
 	}
 	return
 }
@@ -77,7 +79,7 @@ func EmailHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
 	}
 	return
 }
@@ -94,7 +96,7 @@ func EmailActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "Email handling error", err.Error())
 	}
 	return
 }

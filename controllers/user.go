@@ -17,8 +17,8 @@ import (
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
-	"github.com/news-ai/tabulae/permissions"
 
+	"github.com/news-ai/web/permissions"
 	"github.com/news-ai/web/utilities"
 )
 

@@ -12,13 +12,15 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/permissions"
+
+	"github.com/news-ai/web/api"
+	nError "github.com/news-ai/web/errors"
 )
 
 func handleAgency(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return baseSingleResponseHandler(controllers.GetAgency(c, id))
+		return api.BaseSingleResponseHandler(controllers.GetAgency(c, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -27,7 +29,7 @@ func handleAgencies(c context.Context, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
 		val, included, count, err := controllers.GetAgencies(c, r)
-		return baseResponseHandler(val, included, count, err, r)
+		return api.BaseResponseHandler(val, included, count, err, r)
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -43,7 +45,7 @@ func AgenciesHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "Agency handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "Agency handling error", err.Error())
 	}
 	return
 }
@@ -60,7 +62,7 @@ func AgencyHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "Agency handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "Agency handling error", err.Error())
 	}
 	return
 }

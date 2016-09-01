@@ -13,7 +13,9 @@ import (
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/files"
-	"github.com/news-ai/tabulae/permissions"
+
+	"github.com/news-ai/web/api"
+	nError "github.com/news-ai/web/errors"
 )
 
 func handleFileAction(c context.Context, r *http.Request, id string, action string) (interface{}, error) {
@@ -21,12 +23,12 @@ func handleFileAction(c context.Context, r *http.Request, id string, action stri
 	case "GET":
 		switch action {
 		case "headers":
-			return baseSingleResponseHandler(files.HandleFileGetHeaders(c, r, id))
+			return api.BaseSingleResponseHandler(files.HandleFileGetHeaders(c, r, id))
 		}
 	case "POST":
 		switch action {
 		case "headers":
-			return baseSingleResponseHandler(files.HandleFileUploadHeaders(c, r, id))
+			return api.BaseSingleResponseHandler(files.HandleFileUploadHeaders(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")
@@ -35,7 +37,7 @@ func handleFileAction(c context.Context, r *http.Request, id string, action stri
 func handleFile(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return baseSingleResponseHandler(controllers.GetFile(c, r, id))
+		return api.BaseSingleResponseHandler(controllers.GetFile(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -44,7 +46,7 @@ func handleFiles(c context.Context, w http.ResponseWriter, r *http.Request) (int
 	switch r.Method {
 	case "GET":
 		val, included, count, err := controllers.GetFiles(c, r)
-		return baseResponseHandler(val, included, count, err, r)
+		return api.BaseResponseHandler(val, included, count, err, r)
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -60,7 +62,7 @@ func FilesHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "Files handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "Files handling error", err.Error())
 		return
 	}
 }
@@ -77,7 +79,7 @@ func FileHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
 	}
 	return
 }
@@ -94,7 +96,7 @@ func FileActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, "File handling error", err.Error())
 	}
 	return
 }

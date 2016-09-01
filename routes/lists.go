@@ -13,7 +13,9 @@ import (
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/files"
-	"github.com/news-ai/tabulae/permissions"
+
+	"github.com/news-ai/web/api"
+	nError "github.com/news-ai/web/errors"
 )
 
 var (
@@ -26,19 +28,15 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 		switch action {
 		case "contacts":
 			val, included, count, err := controllers.GetContactsForList(c, r, id)
-			return baseResponseHandler(val, included, count, err, r)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		case "emails":
 			val, included, count, err := controllers.GetEmailsForList(c, r, id)
-			return baseResponseHandler(val, included, count, err, r)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		}
 	case "POST":
 		switch action {
 		case "upload":
-			user, err := GetUser(r)
-			if err != nil {
-				return nil, err
-			}
-			return baseSingleResponseHandler(files.HandleMediaListActionUpload(c, r, id, user))
+			return api.BaseSingleResponseHandler(files.HandleMediaListActionUpload(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")
@@ -47,9 +45,9 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 func handleMediaList(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return baseSingleResponseHandler(controllers.GetMediaList(c, r, id))
+		return api.BaseSingleResponseHandler(controllers.GetMediaList(c, r, id))
 	case "PATCH":
-		return baseSingleResponseHandler(controllers.UpdateMediaList(c, r, id))
+		return api.BaseSingleResponseHandler(controllers.UpdateMediaList(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -58,9 +56,9 @@ func handleMediaLists(c context.Context, w http.ResponseWriter, r *http.Request)
 	switch r.Method {
 	case "GET":
 		val, included, count, err := controllers.GetMediaLists(c, r)
-		return baseResponseHandler(val, included, count, err, r)
+		return api.BaseResponseHandler(val, included, count, err, r)
 	case "POST":
-		return baseSingleResponseHandler(controllers.CreateMediaList(c, w, r))
+		return api.BaseSingleResponseHandler(controllers.CreateMediaList(c, w, r))
 	}
 	return nil, errors.New("method not implemented")
 }
@@ -76,7 +74,7 @@ func MediaListsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
 	}
 	return
 }
@@ -93,7 +91,7 @@ func MediaListHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
 	}
 	return
 }
@@ -111,7 +109,7 @@ func MediaListActionHandler(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 
 	if err != nil {
-		permissions.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
+		nError.ReturnError(w, http.StatusInternalServerError, errMediaListHandling, err.Error())
 	}
 	return
 }

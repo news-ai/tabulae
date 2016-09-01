@@ -20,6 +20,9 @@ import (
 	"github.com/news-ai/tabulae/routes"
 	"github.com/news-ai/tabulae/search"
 	"github.com/news-ai/tabulae/utils"
+
+	"github.com/news-ai/web/api"
+	commonMiddleware "github.com/news-ai/web/middleware"
 )
 
 func init() {
@@ -49,11 +52,11 @@ func init() {
 	// Initialize router
 	router := httprouter.New()
 
-	router.NotFound = http.HandlerFunc(routes.NotFound)
+	router.NotFound = http.HandlerFunc(api.NotFound)
 
 	// Not found Handler
-	router.GET("/", routes.NotFoundHandler)
-	router.GET("/api", routes.NotFoundHandler)
+	router.GET("/", api.NotFoundHandler)
+	router.GET("/api", api.NotFoundHandler)
 
 	/*
 	* Authentication Handler
@@ -137,8 +140,8 @@ func init() {
 
 	// HTTP router
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
-	app.Use(negroni.HandlerFunc(middleware.AttachParameters))
-	app.Use(negroni.HandlerFunc(middleware.AppEngineCheck))
+	app.Use(negroni.HandlerFunc(commonMiddleware.AttachParameters))
+	app.Use(negroni.HandlerFunc(commonMiddleware.AppEngineCheck))
 	app.Use(negroni.HandlerFunc(secureMiddleware.HandlerFuncWithNext))
 	app.Use(sentroni.NewRecovery(os.Getenv("SENTRY_DSN")))
 	app.UseHandler(router)
