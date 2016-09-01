@@ -14,6 +14,7 @@ type File struct {
 
 	FileName string `json:"filename"`
 	ListId   int64  `json:"listid"`
+	EmailId  int64  `json:"emailid"`
 
 	Order []string `json:"order" datastore:",noindex"`
 
