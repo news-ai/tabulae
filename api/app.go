@@ -19,6 +19,7 @@ import (
 	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/routes"
 	"github.com/news-ai/tabulae/search"
+	"github.com/news-ai/tabulae/tasks"
 	"github.com/news-ai/tabulae/utils"
 
 	"github.com/news-ai/web/api"
@@ -151,6 +152,7 @@ func init() {
 	 */
 
 	http.HandleFunc("/tasks/removeExpiredSessions", gaeTasks.RemoveExpiredSessionsHandler)
+	http.HandleFunc("/tasks/removeImportedFiles", tasks.RemoveImportedFilesHandler)
 
 	// Register the app router
 	http.Handle("/", context.ClearHandler(app))

@@ -108,6 +108,32 @@ func GetFile(c context.Context, r *http.Request, id string) (models.File, interf
 	return file, nil, nil
 }
 
+func FilterFileByImported(c context.Context, r *http.Request) ([]models.File, error) {
+	// Get a publication by the URL
+	ks, err := datastore.NewQuery("File").Filter("Imported", true).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.File{}, err
+	}
+
+	if len(ks) == 0 {
+		return []models.File{}, errors.New("No files by the field Imported")
+	}
+
+	var files []models.File
+	files = make([]models.File, len(ks))
+	err = nds.GetMulti(c, ks, files)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.File{}, err
+	}
+
+	for i := 0; i < len(files); i++ {
+		files[i].Format(ks[i], "files")
+	}
+	return files, nil
+}
+
 /*
 * Create methods
  */

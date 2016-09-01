@@ -27,6 +27,8 @@ type Email struct {
 
 	SendGridId string `json:"-"`
 
+	Attachments []int64 `json:"attachments" datastore:",noindex"`
+
 	Delievered    bool   `json:"delievered"`
 	BouncedReason string `json:"bouncedreason"`
 	Bounced       bool   `json:"bounced"`
