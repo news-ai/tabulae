@@ -42,7 +42,7 @@ func getUser(c context.Context, r *http.Request, id int64) (models.User, error) 
 	}
 
 	if user.Email != "" {
-		user.Id = userId.IntID()
+		user.Format(userId, "users")
 		currentUser, err := GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -89,7 +89,7 @@ func getUsers(c context.Context, r *http.Request) ([]models.User, error) {
 	}
 
 	for i := 0; i < len(users); i++ {
-		users[i].Id = ks[i].IntID()
+		users[i].Format(ks[i], "users")
 	}
 	return users, nil
 }
@@ -120,7 +120,7 @@ func filterUser(c context.Context, queryType, query string) (models.User, error)
 	}
 
 	if !user.Created.IsZero() {
-		user.Id = userId.IntID()
+		user.Format(userId, "users")
 		return user, nil
 	}
 	return models.User{}, errors.New("No user by this " + queryType)

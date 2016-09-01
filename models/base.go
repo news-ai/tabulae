@@ -30,3 +30,8 @@ func (b *Base) key(c context.Context, collection string) *datastore.Key {
 	}
 	return datastore.NewKey(c, collection, "", b.Id, nil)
 }
+
+func (b *Base) Format(key *datastore.Key, modelType string) {
+	b.Type = modelType
+	b.Id = key.IntID()
+}

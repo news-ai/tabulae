@@ -41,8 +41,7 @@ func getAgency(c context.Context, id int64) (models.Agency, error) {
 	}
 
 	if !agency.Created.IsZero() {
-		agency.Id = agencyId.IntID()
-		agency.Type = "agencies"
+		agency.Format(agencyId, "agencies")
 		return agency, nil
 	}
 	return models.Agency{}, errors.New("No agency by this id")
@@ -72,7 +71,7 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
 	}
 
 	if len(agencies) > 0 {
-		agencies[0].Id = ks[0].IntID()
+		agencies[0].Format(ks[0], "agencies")
 		return agencies[0], nil
 	}
 	return models.Agency{}, errors.New("No agency by the field " + queryType)
@@ -127,7 +126,7 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface
 	}
 
 	for i := 0; i < len(agencies); i++ {
-		agencies[i].Id = ks[i].IntID()
+		agencies[i].Format(ks[i], "agencies")
 	}
 
 	return agencies, nil, len(agencies), nil

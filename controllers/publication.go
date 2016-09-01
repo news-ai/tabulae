@@ -45,7 +45,7 @@ func getPublication(c context.Context, id int64) (models.Publication, error) {
 	}
 
 	if !publication.Created.IsZero() {
-		publication.Id = publicationId.IntID()
+		publication.Format(publicationId, "publications")
 		return publication, nil
 	}
 	return models.Publication{}, errors.New("No publication by this id")
@@ -72,7 +72,7 @@ func filterPublication(c context.Context, queryType, query string) (models.Publi
 	}
 
 	if len(publications) > 0 {
-		publications[0].Id = ks[0].IntID()
+		publications[0].Format(ks[0], "publications")
 		return publications[0], nil
 	}
 	return models.Publication{}, errors.New("No publication by this " + queryType)
@@ -125,7 +125,7 @@ func GetPublications(c context.Context, r *http.Request) ([]models.Publication, 
 	}
 
 	for i := 0; i < len(publications); i++ {
-		publications[i].Id = ks[i].IntID()
+		publications[i].Format(ks[i], "publications")
 	}
 	return publications, nil, len(publications), nil
 }

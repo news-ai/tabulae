@@ -37,7 +37,7 @@ func getFile(c context.Context, r *http.Request, id int64) (models.File, error) 
 	}
 
 	if !file.Created.IsZero() {
-		file.Id = fileId.IntID()
+		file.Format(fileId, "files")
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
@@ -87,7 +87,7 @@ func GetFiles(c context.Context, r *http.Request) ([]models.File, interface{}, i
 	}
 
 	for i := 0; i < len(files); i++ {
-		files[i].Id = ks[i].IntID()
+		files[i].Format(ks[i], "files")
 	}
 	return files, nil, len(files), nil
 }

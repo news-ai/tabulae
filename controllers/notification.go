@@ -45,7 +45,7 @@ func getUserNotification(c context.Context, r *http.Request) (models.Notificatio
 	}
 
 	for i := 0; i < len(notifications); i++ {
-		notifications[i].Id = ks[i].IntID()
+		notifications[i].Format(ks[i], "notifications")
 		return notifications[0], nil
 	}
 
@@ -75,7 +75,7 @@ func getUserNotificationObjects(c context.Context, r *http.Request) ([]models.No
 	}
 
 	for i := 0; i < len(notificationObjects); i++ {
-		notificationObjects[i].Id = ks[i].IntID()
+		notificationObjects[i].Format(ks[i], "notificationobjects")
 	}
 	return notificationObjects, nil
 }
@@ -121,7 +121,7 @@ func filterNotificationObject(c context.Context, r *http.Request, resourceName s
 		return models.NotificationObject{}, err
 	}
 	if len(notificationObjects) > 0 {
-		notificationObjects[0].Id = ks[0].IntID()
+		notificationObjects[0].Format(ks[0], "notificationobjects")
 		return notificationObjects[0], nil
 	}
 	return models.NotificationObject{}, errors.New("No notification object by this Object")

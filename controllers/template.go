@@ -42,7 +42,7 @@ func getTemplate(c context.Context, id int64) (models.Template, error) {
 	}
 
 	if !template.Created.IsZero() {
-		template.Id = templateId.IntID()
+		template.Format(templateId, "templates")
 		return template, nil
 	}
 	return models.Template{}, errors.New("No template by this id")
@@ -98,7 +98,7 @@ func GetTemplates(c context.Context, r *http.Request) ([]models.Template, interf
 	}
 
 	for i := 0; i < len(templates); i++ {
-		templates[i].Id = ks[i].IntID()
+		templates[i].Format(ks[i], "templates")
 	}
 
 	return templates, nil, len(templates), nil

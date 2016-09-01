@@ -50,7 +50,7 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 	}
 
 	if !mediaList.Created.IsZero() {
-		mediaList.Id = mediaListId.IntID()
+		mediaList.Format(mediaListId, "lists")
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
@@ -116,7 +116,7 @@ func GetMediaLists(c context.Context, r *http.Request) ([]models.MediaList, inte
 	}
 
 	for i := 0; i < len(mediaLists); i++ {
-		mediaLists[i].Id = ks[i].IntID()
+		mediaLists[i].Format(ks[i], "lists")
 	}
 	return mediaLists, nil, len(mediaLists), nil
 }

@@ -45,7 +45,7 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 	}
 
 	if !contact.Created.IsZero() {
-		contact.Id = contactId.IntID()
+		contact.Format(contactId, "contacts")
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
@@ -59,7 +59,6 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 			return models.Contact{}, err
 		}
 
-		contact.Type = "contact"
 		return contact, nil
 	}
 	return models.Contact{}, errors.New("No contact by this id")
@@ -165,8 +164,7 @@ func filterContact(c context.Context, r *http.Request, queryType, query string) 
 			log.Errorf(c, "%v", err)
 			return models.Contact{}, err
 		}
-
-		contacts[0].Id = ks[0].IntID()
+		contacts[0].Format(ks[0], "contacts")
 		return contacts[0], nil
 	}
 	return models.Contact{}, errors.New("No contact by this " + queryType)
@@ -264,7 +262,7 @@ func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact,
 			return models.Contact{}, err
 		}
 
-		contacts[0].Id = ks[0].IntID()
+		contacts[0].Format(ks[0], "contacts")
 		return contacts[0], nil
 	}
 	return models.Contact{}, errors.New("No contact by this " + queryType)
@@ -353,7 +351,7 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 	}
 
 	for i := 0; i < len(contacts); i++ {
-		contacts[i].Id = ks[i].IntID()
+		contacts[i].Format(ks[i], "contacts")
 	}
 
 	return contacts, nil, len(contacts), nil

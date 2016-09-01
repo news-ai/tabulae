@@ -43,7 +43,7 @@ func getEmail(c context.Context, r *http.Request, id int64) (models.Email, error
 	}
 
 	if !email.Created.IsZero() {
-		email.Id = emailId.IntID()
+		email.Format(emailId, "emails")
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
@@ -85,7 +85,7 @@ func filterEmail(c context.Context, queryType, query string) (models.Email, erro
 	}
 
 	if len(emails) > 0 {
-		emails[0].Id = ks[0].IntID()
+		emails[0].Format(ks[0], "emails")
 		return emails[0], nil
 	}
 	return models.Email{}, errors.New("No email by this " + queryType)
@@ -116,7 +116,7 @@ func filterEmailbyListId(c context.Context, r *http.Request, listId int64) ([]mo
 	}
 
 	for i := 0; i < len(emails); i++ {
-		emails[i].Id = ks[i].IntID()
+		emails[i].Format(ks[i], "emails")
 	}
 
 	return emails, len(emails), nil
@@ -155,7 +155,7 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 	}
 
 	for i := 0; i < len(emails); i++ {
-		emails[i].Id = ks[i].IntID()
+		emails[i].Format(ks[i], "emails")
 	}
 
 	return emails, nil, len(emails), nil
