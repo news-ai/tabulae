@@ -14,9 +14,9 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
-	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 
+	"github.com/news-ai/web/emails"
 	"github.com/news-ai/web/permissions"
 	"github.com/news-ai/web/utilities"
 )
