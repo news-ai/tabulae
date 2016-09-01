@@ -21,19 +21,21 @@ func FileToExcelHeader(r *http.Request, file []byte, contentType string) ([]goex
 func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, mediaListid int64, contentType string) (models.MediaList, error) {
 	c := appengine.NewContext(r)
 
-	// Batch create all the contacts
+	// Batch get all the contacts
 	contacts, customFields, err := goexcel.HeadersToListModel(c, r, file, headers, contentType)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, err
 	}
 
+	// Batch create all the contact
 	contactIds, err := controllers.BatchCreateContactsForExcelUpload(c, r, contacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, err
 	}
 
+	// Create a media list
 	mediaListId := utilities.IntIdToString(mediaListid)
 	mediaList, _, err := controllers.GetMediaList(c, r, mediaListId)
 	mediaList.Contacts = contactIds
@@ -48,6 +50,7 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 		}
 	}
 
+	// Save the media list
 	mediaList.Save(c)
 	return mediaList, nil
 }

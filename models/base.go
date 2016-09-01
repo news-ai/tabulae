@@ -8,11 +8,6 @@ import (
 	"google.golang.org/appengine/datastore"
 )
 
-type CustomContactField struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
 type Base struct {
 	Id int64 `json:"id" datastore:"-"`
 
