@@ -14,7 +14,8 @@ import (
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
-	"github.com/news-ai/tabulae/utils"
+
+	"github.com/news-ai/web/utilities"
 )
 
 /*
@@ -57,7 +58,7 @@ func getTemplate(c context.Context, id int64) (models.Template, error) {
 
 func GetTemplate(c context.Context, r *http.Request, id string) (models.Template, interface{}, error) {
 	// Get the details of the current user
-	currentId, err := utils.StringIdToInt(id)
+	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Template{}, nil, err
@@ -164,9 +165,9 @@ func UpdateTemplate(c context.Context, r *http.Request, id string) (models.Templ
 		return models.Template{}, nil, err
 	}
 
-	utils.UpdateIfNotBlank(&template.Name, updatedTemplate.Name)
-	utils.UpdateIfNotBlank(&template.Subject, updatedTemplate.Subject)
-	utils.UpdateIfNotBlank(&template.Body, updatedTemplate.Body)
+	utilities.UpdateIfNotBlank(&template.Name, updatedTemplate.Name)
+	utilities.UpdateIfNotBlank(&template.Subject, updatedTemplate.Subject)
+	utilities.UpdateIfNotBlank(&template.Body, updatedTemplate.Body)
 
 	template.Save(c)
 	return template, nil, nil

@@ -4,12 +4,12 @@ import (
 	"net/http"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/utils"
+	"github.com/news-ai/web/utilities"
 )
 
 func BasicAuthLogin(w http.ResponseWriter, r *http.Request, apiKey string) bool {
 	// Generate a random state that we identify the user with
-	state := utils.RandToken()
+	state := utilities.RandToken()
 
 	// Save the session for each of the users
 	session, _ := Store.Get(r, "sess")

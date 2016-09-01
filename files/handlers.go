@@ -13,7 +13,8 @@ import (
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/parse"
-	"github.com/news-ai/tabulae/utils"
+
+	"github.com/news-ai/web/utilities"
 )
 
 func HandleMediaListActionUpload(c context.Context, r *http.Request, id string, user models.User) (interface{}, interface{}, error) {
@@ -30,7 +31,7 @@ func HandleMediaListActionUpload(c context.Context, r *http.Request, id string, 
 		noSpaceFileName = strings.Replace(handler.Filename, " ", "", -1)
 	}
 
-	fileName := strings.Join([]string{userId, id, utils.RandToken(), noSpaceFileName}, "-")
+	fileName := strings.Join([]string{userId, id, utilities.RandToken(), noSpaceFileName}, "-")
 	val, err := UploadFile(r, fileName, file, userId, id, handler.Header.Get("Content-Type"))
 	if err != nil {
 		log.Errorf(c, "%v", err)

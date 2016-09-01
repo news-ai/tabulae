@@ -16,10 +16,11 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/web/utilities"
+
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/permissions"
 	"github.com/news-ai/tabulae/sync"
-	"github.com/news-ai/tabulae/utils"
 )
 
 /*
@@ -69,15 +70,15 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
  */
 
 func updateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, interface{}, error) {
-	utils.UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
-	utils.UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
-	utils.UpdateIfNotBlank(&contact.Email, updatedContact.Email)
-	utils.UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
-	utils.UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
-	utils.UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
-	utils.UpdateIfNotBlank(&contact.Website, updatedContact.Website)
-	utils.UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
-	utils.UpdateIfNotBlank(&contact.Notes, updatedContact.Notes)
+	utilities.UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
+	utilities.UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
+	utilities.UpdateIfNotBlank(&contact.Email, updatedContact.Email)
+	utilities.UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
+	utilities.UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
+	utilities.UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
+	utilities.UpdateIfNotBlank(&contact.Website, updatedContact.Website)
+	utilities.UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
+	utilities.UpdateIfNotBlank(&contact.Notes, updatedContact.Notes)
 
 	if len(updatedContact.CustomFields) > 0 {
 		contact.CustomFields = updatedContact.CustomFields
@@ -114,11 +115,11 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 }
 
 func updateSocial(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, interface{}, error) {
-	utils.UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
-	utils.UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
-	utils.UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
-	utils.UpdateIfNotBlank(&contact.Website, updatedContact.Website)
-	utils.UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
+	utilities.UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
+	utilities.UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
+	utilities.UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
+	utilities.UpdateIfNotBlank(&contact.Website, updatedContact.Website)
+	utilities.UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
 
 	_, err := Save(c, r, contact)
 	if err != nil {
@@ -360,7 +361,7 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 
 func GetContact(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
 	// Get the details of the current user
-	currentId, err := utils.StringIdToInt(id)
+	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Contact{}, nil, err

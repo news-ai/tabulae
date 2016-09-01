@@ -8,9 +8,9 @@ import (
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
-	"github.com/news-ai/tabulae/utils"
 
 	"github.com/news-ai/goexcel"
+	"github.com/news-ai/web/utilities"
 )
 
 func FileToExcelHeader(r *http.Request, file []byte, contentType string) ([]goexcel.Column, error) {
@@ -34,7 +34,7 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 		return models.MediaList{}, err
 	}
 
-	mediaListId := utils.IntIdToString(mediaListid)
+	mediaListId := utilities.IntIdToString(mediaListid)
 	mediaList, _, err := controllers.GetMediaList(c, r, mediaListId)
 	mediaList.Contacts = contactIds
 	for i := 0; i < len(headers); i++ {

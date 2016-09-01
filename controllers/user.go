@@ -18,7 +18,8 @@ import (
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/permissions"
-	"github.com/news-ai/tabulae/utils"
+
+	"github.com/news-ai/web/utilities"
 )
 
 /*
@@ -155,7 +156,7 @@ func GetUser(c context.Context, r *http.Request, id string) (models.User, interf
 		}
 		return user, nil, err
 	default:
-		userId, err := utils.StringIdToInt(id)
+		userId, err := utilities.StringIdToInt(id)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return models.User{}, nil, err
@@ -311,8 +312,8 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 		return models.User{}, nil, err
 	}
 
-	utils.UpdateIfNotBlank(&user.FirstName, updatedUser.FirstName)
-	utils.UpdateIfNotBlank(&user.LastName, updatedUser.LastName)
+	utilities.UpdateIfNotBlank(&user.FirstName, updatedUser.FirstName)
+	utilities.UpdateIfNotBlank(&user.LastName, updatedUser.LastName)
 
 	if len(updatedUser.Employers) > 0 {
 		user.Employers = updatedUser.Employers
@@ -330,7 +331,7 @@ func ValidateUserPassword(r *http.Request, email string, password string) (model
 	c := appengine.NewContext(r)
 	user, err := GetUserByEmail(c, email)
 	if err == nil {
-		err = utils.ValidatePassword(user.Password, password)
+		err = utilities.ValidatePassword(user.Password, password)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return models.User{}, false, nil

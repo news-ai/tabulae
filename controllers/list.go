@@ -16,7 +16,8 @@ import (
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
-	"github.com/news-ai/tabulae/utils"
+
+	"github.com/news-ai/web/utilities"
 )
 
 /*
@@ -122,7 +123,7 @@ func GetMediaLists(c context.Context, r *http.Request) ([]models.MediaList, inte
 
 func GetMediaList(c context.Context, r *http.Request, id string) (models.MediaList, interface{}, error) {
 	// Get the details of the current user
-	currentId, err := utils.StringIdToInt(id)
+	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
@@ -234,7 +235,7 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 		return models.MediaList{}, nil, err
 	}
 
-	utils.UpdateIfNotBlank(&mediaList.Name, updatedMediaList.Name)
+	utilities.UpdateIfNotBlank(&mediaList.Name, updatedMediaList.Name)
 
 	if len(updatedMediaList.Contacts) > 0 {
 		mediaList.Contacts = updatedMediaList.Contacts

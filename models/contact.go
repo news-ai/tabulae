@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/appengine/datastore"
 
-	"github.com/news-ai/tabulae/utils"
+	"github.com/news-ai/web/utilities"
 
 	"github.com/qedus/nds"
 )
@@ -92,12 +92,12 @@ func (ct *Contact) Save(c context.Context, r *http.Request) (*Contact, error) {
  */
 
 func (ct *Contact) Normalize() (*Contact, error) {
-	ct.LinkedIn = utils.StripQueryString(ct.LinkedIn)
-	ct.Twitter = utils.StripQueryString(ct.Twitter)
-	ct.Instagram = utils.StripQueryString(ct.Instagram)
-	ct.MuckRack = utils.StripQueryString(ct.MuckRack)
-	ct.Website = utils.StripQueryString(ct.Website)
-	ct.Blog = utils.StripQueryString(ct.Blog)
+	ct.LinkedIn = utilities.StripQueryString(ct.LinkedIn)
+	ct.Twitter = utilities.StripQueryString(ct.Twitter)
+	ct.Instagram = utilities.StripQueryString(ct.Instagram)
+	ct.MuckRack = utilities.StripQueryString(ct.MuckRack)
+	ct.Website = utilities.StripQueryString(ct.Website)
+	ct.Blog = utilities.StripQueryString(ct.Blog)
 
 	return ct, nil
 }

@@ -17,7 +17,8 @@ import (
 	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/permissions"
-	"github.com/news-ai/tabulae/utils"
+
+	"github.com/news-ai/web/utilities"
 )
 
 /*
@@ -162,7 +163,7 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 
 func GetEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
 	// Get the details of the current user
-	currentId, err := utils.StringIdToInt(id)
+	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Email{}, nil, err
@@ -287,9 +288,9 @@ func UpdateEmail(c context.Context, r *http.Request, currentUser models.User, em
 		return *email, nil, errors.New("You don't have permissions to edit this object")
 	}
 
-	utils.UpdateIfNotBlank(&email.Subject, updatedEmail.Subject)
-	utils.UpdateIfNotBlank(&email.Body, updatedEmail.Body)
-	utils.UpdateIfNotBlank(&email.To, updatedEmail.To)
+	utilities.UpdateIfNotBlank(&email.Subject, updatedEmail.Subject)
+	utilities.UpdateIfNotBlank(&email.Body, updatedEmail.Body)
+	utilities.UpdateIfNotBlank(&email.To, updatedEmail.To)
 
 	if updatedEmail.ListId != 0 {
 		email.ListId = updatedEmail.ListId
@@ -409,7 +410,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 	}
 
 	// Validate if HTML is valid
-	validHTML := utils.ValidateHTML(email.Body)
+	validHTML := utilities.ValidateHTML(email.Body)
 	if !validHTML {
 		return email, nil, errors.New("Invalid HTML")
 	}

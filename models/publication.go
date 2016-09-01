@@ -9,7 +9,7 @@ import (
 
 	"github.com/qedus/nds"
 
-	"github.com/news-ai/tabulae/utils"
+	"github.com/news-ai/web/utilities"
 )
 
 type Publication struct {
@@ -70,7 +70,7 @@ func (p *Publication) Validate(c context.Context) (*Publication, error) {
 
 	// Format URL properly
 	if p.Url != "" {
-		normalizedUrl, err := utils.NormalizeUrl(p.Url)
+		normalizedUrl, err := utilities.NormalizeUrl(p.Url)
 		if err != nil {
 			return p, err
 		}

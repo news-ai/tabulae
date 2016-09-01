@@ -17,7 +17,8 @@ import (
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/search"
-	"github.com/news-ai/tabulae/utils"
+
+	"github.com/news-ai/web/utilities"
 )
 
 /*
@@ -131,7 +132,7 @@ func GetPublications(c context.Context, r *http.Request) ([]models.Publication, 
 
 func GetPublication(c context.Context, id string) (models.Publication, interface{}, error) {
 	// Get a publication by id
-	currentId, err := utils.StringIdToInt(id)
+	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Publication{}, nil, err

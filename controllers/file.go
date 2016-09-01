@@ -13,7 +13,8 @@ import (
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
-	"github.com/news-ai/tabulae/utils"
+
+	"github.com/news-ai/web/utilities"
 )
 
 /*
@@ -93,7 +94,7 @@ func GetFiles(c context.Context, r *http.Request) ([]models.File, interface{}, i
 
 func GetFile(c context.Context, r *http.Request, id string) (models.File, interface{}, error) {
 	// Get the details of the current user
-	currentId, err := utils.StringIdToInt(id)
+	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.File{}, nil, err
@@ -116,12 +117,12 @@ func CreateFile(r *http.Request, fileName string, listid string, createdby strin
 	c := appengine.NewContext(r)
 
 	// Convert listId and createdById from string to int64
-	listId, err := utils.StringIdToInt(listid)
+	listId, err := utilities.StringIdToInt(listid)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.File{}, err
 	}
-	createdBy, err := utils.StringIdToInt(createdby)
+	createdBy, err := utilities.StringIdToInt(createdby)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.File{}, err

@@ -6,7 +6,7 @@ import (
 
 	gcontext "github.com/gorilla/context"
 
-	"github.com/news-ai/tabulae/utils"
+	"github.com/news-ai/web/utilities"
 )
 
 func GetPagination(r *http.Request) (int, int) {
@@ -36,7 +36,7 @@ func GetPagination(r *http.Request) (int, int) {
 }
 
 func GetParams(r *http.Request) (string, string, string) {
-	url := utils.StripQueryString(r.URL.String())
+	url := utilities.StripQueryString(r.URL.String())
 	searchQuery := r.URL.Query().Get("q")
 	order := r.URL.Query().Get("order")
 	return url, searchQuery, order

@@ -15,7 +15,8 @@ import (
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/utils"
+
+	"github.com/news-ai/web/utilities"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -41,7 +42,7 @@ func LinkedinLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.P
 	}
 
 	// Generate a random state that we identify the user with
-	state := utils.RandToken()
+	state := utilities.RandToken()
 
 	// Save the session for each of the users
 	session, err := Store.Get(r, "sess")

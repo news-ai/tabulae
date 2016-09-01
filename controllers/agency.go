@@ -13,9 +13,10 @@ import (
 	gcontext "github.com/gorilla/context"
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/web/utilities"
+
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/search"
-	"github.com/news-ai/tabulae/utils"
 )
 
 /*
@@ -134,7 +135,7 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface
 
 func GetAgency(c context.Context, id string) (models.Agency, interface{}, error) {
 	// Get the details of the current agency
-	currentId, err := utils.StringIdToInt(id)
+	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Agency{}, nil, err
@@ -153,7 +154,7 @@ func GetAgency(c context.Context, id string) (models.Agency, interface{}, error)
  */
 
 func CreateAgencyFromUser(c context.Context, r *http.Request, u *models.User) (models.Agency, error) {
-	agencyEmail, err := utils.ExtractAgencyEmail(u.Email)
+	agencyEmail, err := utilities.ExtractEmailExtension(u.Email)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Agency{}, err
@@ -161,7 +162,7 @@ func CreateAgencyFromUser(c context.Context, r *http.Request, u *models.User) (m
 		agency, err := FilterAgencyByEmail(c, agencyEmail)
 		if err != nil {
 			agency = models.Agency{}
-			agency.Name, err = utils.ExtractAgencyName(agencyEmail)
+			agency.Name, err = utilities.ExtractNameFromEmail(agencyEmail)
 			agency.Email = agencyEmail
 			agency.Created = time.Now()
 
