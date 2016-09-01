@@ -4,8 +4,8 @@ API for media list management.
 
 In the `/api/` folder:
 
-- Running: `goapp serve`
-- Deploying: `goapp deploy`
+- Running development: `goapp serve dev.yaml`
+- Deploying: `goapp deploy` (can be either `dev.yaml` or `prod.yaml`)
 - Rollback: `appcfg.py rollback -A newsai-1166 -V 1 api/`
 
 Indexes:
