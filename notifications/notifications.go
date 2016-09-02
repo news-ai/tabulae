@@ -6,6 +6,7 @@ import (
 
 	"golang.org/x/net/context"
 
+	"google.golang.org/appengine"
 	"google.golang.org/appengine/channel"
 	"google.golang.org/appengine/log"
 
@@ -17,11 +18,44 @@ type TokenResponse struct {
 }
 
 func UserConnect(w http.ResponseWriter, r *http.Request) {
-	// clientID := r.FormValue("from")
+	c := appengine.NewContext(r)
+
+	token := r.FormValue("from")
+	currentUser, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	currentUser.TokenIds = append(currentUser.TokenIds, token)
+	currentUser.Save(c)
+
+	w.WriteHeader(200)
+	return
 }
 
 func UserDisconnect(w http.ResponseWriter, r *http.Request) {
-	// clientID := r.FormValue("from")
+	c := appengine.NewContext(r)
+
+	token := r.FormValue("from")
+	currentUser, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	for i := 0; i < len(currentUser.TokenIds); i++ {
+		if currentUser.TokenIds[i] == token {
+			currentUser.TokenIds = append(currentUser.TokenIds[:i], currentUser.TokenIds[i+1:]...)
+		}
+	}
+
+	currentUser.Save(c)
+
+	w.WriteHeader(200)
+	return
 }
 
 func GetUserToken(c context.Context, r *http.Request) (interface{}, error) {

@@ -31,6 +31,8 @@ type User struct {
 	LinkedinId      string `json:"-"`
 	LinkedinAuthKey string `json:"-"`
 
+	TokenIds []string `json:"-" datastore:",noindex"`
+
 	AgreeTermsAndConditions bool `json:"-"`
 	EmailConfirmed          bool `json:"emailconfirmed"`
 	IsAdmin                 bool `json:"-"`
