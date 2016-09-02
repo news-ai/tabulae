@@ -23,7 +23,7 @@ func handleUserActions(c context.Context, r *http.Request, id string, action str
 	case "GET":
 		switch action {
 		case "token":
-			return GetUserToken(c, r)
+			return notifications.GetUserToken(c, r)
 		}
 	}
 	return nil, errors.New("method not implemented")

@@ -2,16 +2,14 @@ package notifications
 
 import (
 	"net/http"
+	"strconv"
 
-	"google.golang.org/appengine"
+	"golang.org/x/net/context"
+
 	"google.golang.org/appengine/channel"
 	"google.golang.org/appengine/log"
 
-	"github.com/pquerna/ffjson/ffjson"
-
 	"github.com/news-ai/tabulae/controllers"
-
-	"github.com/news-ai/web/errors"
 )
 
 type TokenResponse struct {
@@ -25,7 +23,7 @@ func GetUserToken(c context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	token, err := channel.Create(c, currentUser.Id)
+	token, err := channel.Create(c, strconv.FormatInt(currentUser.Id, 10))
 	if err != nil {
 		log.Errorf(c, "channel.Create: %v", err)
 		return nil, err
