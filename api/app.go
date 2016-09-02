@@ -17,6 +17,7 @@ import (
 	"github.com/news-ai/tabulae/auth"
 	"github.com/news-ai/tabulae/incoming"
 	"github.com/news-ai/tabulae/middleware"
+	"github.com/news-ai/tabulae/notifications"
 	"github.com/news-ai/tabulae/routes"
 	"github.com/news-ai/tabulae/search"
 	"github.com/news-ai/tabulae/tasks"
@@ -154,6 +155,13 @@ func init() {
 
 	http.HandleFunc("/tasks/removeExpiredSessions", gaeTasks.RemoveExpiredSessionsHandler)
 	http.HandleFunc("/tasks/removeImportedFiles", tasks.RemoveImportedFilesHandler)
+
+	/*
+	* Appengine Handler
+	 */
+
+	http.HandleFunc("/_ah/channel/connected/", notifications.UserConnect)
+	http.HandleFunc("/_ah/channel/disconnected/", notifications.UserDisconnect)
 
 	// Register the app router
 	http.Handle("/", context.ClearHandler(app))

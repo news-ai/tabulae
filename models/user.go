@@ -77,3 +77,12 @@ func (u *User) ConfirmEmail(c context.Context) (*User, error) {
 	}
 	return u, nil
 }
+
+func (u *User) ConfirmLoggedIn(c context.Context) (*User, error) {
+	u.LastLoggedIn = time.Now()
+	_, err := u.Save(c)
+	if err != nil {
+		return u, err
+	}
+	return u, nil
+}

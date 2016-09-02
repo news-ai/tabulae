@@ -70,6 +70,7 @@ func PasswordLoginHandler() http.HandlerFunc {
 					q := u.Query()
 					q.Set("firstTimeUser", "true")
 					u.RawQuery = q.Encode()
+					user.ConfirmLoggedIn(c)
 				}
 				http.Redirect(w, r, u.String(), 302)
 				return

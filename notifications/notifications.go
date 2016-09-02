@@ -16,6 +16,14 @@ type TokenResponse struct {
 	Token string `json:"token"`
 }
 
+func UserConnect(w http.ResponseWriter, r *http.Request) {
+	// clientID := r.FormValue("from")
+}
+
+func UserDisconnect(w http.ResponseWriter, r *http.Request) {
+	// clientID := r.FormValue("from")
+}
+
 func GetUserToken(c context.Context, r *http.Request) (interface{}, error) {
 	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
