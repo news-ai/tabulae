@@ -33,3 +33,4 @@ env_variables:
 
 inbound_services:
 - mail
+- channel_presence
