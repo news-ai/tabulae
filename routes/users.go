@@ -12,10 +12,22 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
+	"github.com/news-ai/tabulae/notifications"
 
 	"github.com/news-ai/web/api"
 	nError "github.com/news-ai/web/errors"
 )
+
+func handleUserActions(c context.Context, r *http.Request, id string, action string) (interface{}, error) {
+	switch r.Method {
+	case "GET":
+		switch action {
+		case "token":
+			return GetUserToken(c, r)
+		}
+	}
+	return nil, errors.New("method not implemented")
+}
 
 func handleUser(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
@@ -59,6 +71,23 @@ func UserHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	id := ps.ByName("id")
 	val, err := handleUser(c, r, id)
 
+	if err == nil {
+		err = ffjson.NewEncoder(w).Encode(val)
+	}
+
+	if err != nil {
+		nError.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
+	}
+	return
+}
+
+func UserActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	w.Header().Set("Content-Type", "application/json")
+	c := appengine.NewContext(r)
+	id := ps.ByName("id")
+	action := ps.ByName("action")
+
+	val, err := handleUserActions(c, r, id, action)
 	if err == nil {
 		err = ffjson.NewEncoder(w).Encode(val)
 	}

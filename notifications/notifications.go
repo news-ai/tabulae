@@ -7,32 +7,31 @@ import (
 	"google.golang.org/appengine/channel"
 	"google.golang.org/appengine/log"
 
+	"github.com/pquerna/ffjson/ffjson"
+
 	"github.com/news-ai/tabulae/controllers"
 
 	"github.com/news-ai/web/errors"
 )
 
-type ToeknResponse struct {
+type TokenResponse struct {
 	Token string `json:"token"`
 }
 
-func func_name(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	c := appengine.NewContext(r)
-
+func GetUserToken(c context.Context, r *http.Request) (interface{}, error) {
 	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		errors.ReturnError(w, http.StatusUnauthorized, "Authentication Required", "Could not generate token")
-        return
+		return nil, err
 	}
 
-	token, err := channel.Create(c, u.ID+key)
+	token, err := channel.Create(c, currentUser.Id)
 	if err != nil {
 		log.Errorf(c, "channel.Create: %v", err)
-        errors.ReturnError(w, http.StatusUnauthorized, "Token error", "Could not generate token")
-		return
+		return nil, err
 	}
 
-    currentUser.
-
+	tokenResponse := TokenResponse{}
+	tokenResponse.Token = token
+	return tokenResponse, nil
 }
