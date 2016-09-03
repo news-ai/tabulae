@@ -20,4 +20,10 @@ func InitializeElasticSearch() {
 	publicationElastic.Index = "publications"
 	publicationElastic.Type = "publication"
 	elasticPublication = &publicationElastic
+
+	contactElastic := elastic.Elastic{}
+	contactElastic.BaseURL = baseURL
+	contactElastic.Index = "contacts"
+	contactElastic.Type = "contact"
+	elasticContact = &contactElastic
 }

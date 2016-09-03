@@ -106,3 +106,17 @@ func (ct *Contact) Normalize() (*Contact, error) {
 
 	return ct, nil
 }
+
+/*
+* Action methods
+ */
+
+func (c *Contact) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := SetField(c, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

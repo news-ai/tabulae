@@ -13,6 +13,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/news-ai/web/utilities"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/search"
 	"github.com/news-ai/tabulae/sync"
 )
 
@@ -332,6 +334,15 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, err
+	}
+
+	queryField := gcontext.Get(r, "query").(string)
+	if queryField != "" {
+		contacts, err := search.SearchContact(c, r, queryField, user.Id, 0)
+		if err != nil {
+			return []models.Contact{}, nil, 0, err
+		}
+		return contacts, nil, len(contacts), nil
 	}
 
 	query := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", false)

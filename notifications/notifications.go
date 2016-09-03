@@ -24,7 +24,6 @@ type Notification struct {
 func SendNotification(r *http.Request, notification Notification) error {
 	c := appengine.NewContext(r)
 
-	token := r.FormValue("from")
 	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -32,7 +31,13 @@ func SendNotification(r *http.Request, notification Notification) error {
 	}
 
 	for i := 0; i < len(currentUser.TokenIds); i++ {
-		channel.SendJSON(c, currentUser.TokenIds[i], notification)
+		err = channel.SendJSON(c, currentUser.TokenIds[i], notification)
+
+		// Log the error but continue sending the notification to other clients
+		// Future: remove the connection from the array if it has multiple errors
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		}
 	}
 
 	return nil
