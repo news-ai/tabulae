@@ -12,6 +12,11 @@ func SetField(obj interface{}, name string, value interface{}) error {
 		name = "Id"
 	}
 
+	// Extra elasticsearch things to ignore
+	if name == "ListId" {
+		return nil
+	}
+
 	structValue := reflect.ValueOf(obj).Elem()
 	structFieldValue := structValue.FieldByName(name)
 
