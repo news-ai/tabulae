@@ -17,6 +17,27 @@ type TokenResponse struct {
 	Token string `json:"token"`
 }
 
+type Notification struct {
+	Message string `json:"message"`
+}
+
+func SendNotification(r *http.Request, notification Notification) error {
+	c := appengine.NewContext(r)
+
+	token := r.FormValue("from")
+	currentUser, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return err
+	}
+
+	for i := 0; i < len(currentUser.TokenIds); i++ {
+		channel.SendJSON(c, currentUser.TokenIds[i], notification)
+	}
+
+	return nil
+}
+
 func UserConnect(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
