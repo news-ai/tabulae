@@ -20,6 +20,8 @@ var (
 
 func SearchAgency(c context.Context, r *http.Request, search string) ([]models.Agency, error) {
 	search = url.QueryEscape(search)
+	search = "q=data.Name:" + search
+
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
