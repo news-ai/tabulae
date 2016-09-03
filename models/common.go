@@ -23,21 +23,27 @@ func SetField(obj interface{}, name string, value interface{}) error {
 		return errors.New("Cannot set" + name + " field value")
 	}
 
-	if name == "Created" || name == "Updated" {
+	if name == "Created" || name == "Updated" || name == "LinkedInUpdated" {
 		returnValue := cast.ToTime(value)
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)
 		return nil
 	}
 
-	if name == "Id" || name == "CreatedBy" {
+	if name == "CustomFields" {
+		val := reflect.ValueOf(value)
+		structFieldValue.Set(val)
+		return nil
+	}
+
+	if name == "Id" || name == "CreatedBy" || name == "ParentContact" {
 		returnValue := cast.ToInt64(value)
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)
 		return nil
 	}
 
-	if name == "Administrators" {
+	if name == "Administrators" || name == "Employers" || name == "PastEmployers" {
 		returnValue, err := cast.ToInt64SliceE(value)
 		if err != nil {
 			return err

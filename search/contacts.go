@@ -2,7 +2,8 @@ package search
 
 import (
 	"net/http"
-	"net/url"
+	// "net/url"
+	// "strconv"
 
 	"golang.org/x/net/context"
 
@@ -19,11 +20,18 @@ var (
 )
 
 func SearchContact(c context.Context, r *http.Request, search string, userId int64, listId int64) ([]models.Contact, error) {
-	search = url.QueryEscape(search)
+	// search = url.QueryEscape(search)
+	// search = "q=data.Name:" + search
+
+	// ListId := strconv.FormatInt(listId, 10)
+	// search = search + "&q=data.CreatedBy:" + ListId
+
+	elasticQuery := elastic.ElasticQuery{}
+
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	hits, err := elasticContact.Query(c, offset, limit, search)
+	hits, err := elasticContact.QueryStruct(c, offset, limit, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, err
