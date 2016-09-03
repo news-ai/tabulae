@@ -26,12 +26,14 @@ func SearchContact(c context.Context, r *http.Request, search string, userId int
 	// ListId := strconv.FormatInt(listId, 10)
 	// search = search + "&q=data.CreatedBy:" + ListId
 
-	elasticQuery := elastic.ElasticQuery{}
-
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	hits, err := elasticContact.QueryStruct(c, offset, limit, elasticQuery)
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	hits, err := elasticContact.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, err
