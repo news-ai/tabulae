@@ -88,7 +88,7 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
 // Gets every single agency
 func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface{}, int, error) {
 	// If user is querying then it is not denied by the server
-	queryField := gcontext.Get(r, "query").(string)
+	queryField := gcontext.Get(r, "q").(string)
 	if queryField != "" {
 		agencies, err := search.SearchAgency(c, r, queryField)
 		if err != nil {

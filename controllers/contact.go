@@ -336,7 +336,7 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 		return []models.Contact{}, nil, 0, err
 	}
 
-	queryField := gcontext.Get(r, "query").(string)
+	queryField := gcontext.Get(r, "q").(string)
 	if queryField != "" {
 		contacts, err := search.SearchContact(c, r, queryField, user.Id, 0)
 		if err != nil {

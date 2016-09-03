@@ -88,7 +88,7 @@ func filterPublication(c context.Context, queryType, query string) (models.Publi
 
 func GetPublications(c context.Context, r *http.Request) ([]models.Publication, interface{}, int, error) {
 	// If user is querying then it is not denied by the server
-	queryField := gcontext.Get(r, "query").(string)
+	queryField := gcontext.Get(r, "q").(string)
 	if queryField != "" {
 		publications, err := search.SearchPublication(c, r, queryField)
 		if err != nil {

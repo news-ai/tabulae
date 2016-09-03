@@ -30,8 +30,8 @@ func SearchContact(c context.Context, r *http.Request, search string, userId int
 	limit := gcontext.Get(r, "limit").(int)
 
 	elasticQuery := elastic.ElasticQuery{}
-	elasticQuery.Size = limit
-	elasticQuery.From = offset
+	elasticQuery.Query.Size = limit
+	elasticQuery.Query.From = offset
 
 	hits, err := elasticContact.QueryStruct(c, elasticQuery)
 	if err != nil {
