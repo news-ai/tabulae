@@ -29,7 +29,7 @@ type Email struct {
 
 	Attachments []int64 `json:"attachments" datastore:",noindex"`
 
-	Delievered    bool   `json:"delievered"`
+	Delievered    bool   `json:"delivered"`
 	BouncedReason string `json:"bouncedreason"`
 	Bounced       bool   `json:"bounced"`
 	Clicked       int    `json:"clicked"`
