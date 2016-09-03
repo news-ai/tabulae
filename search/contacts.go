@@ -20,18 +20,21 @@ var (
 )
 
 func SearchContact(c context.Context, r *http.Request, search string, userId int64, listId int64) ([]models.Contact, error) {
-	// search = url.QueryEscape(search)
-	// search = "q=data.Name:" + search
-
-	// ListId := strconv.FormatInt(listId, 10)
-	// search = search + "&q=data.CreatedBy:" + ListId
-
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
 	elasticQuery := elastic.ElasticQuery{}
-	elasticQuery.Query.Size = limit
-	elasticQuery.Query.From = offset
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticCreatedByQuery := elastic.ElasticCreatedByQuery{}
+	elasticCreatedByQuery.Term.CreatedBy = userId
+
+	elasticMatchQuery := elastic.ElasticMatchQuery{}
+	elasticMatchQuery.Match.All = search
+
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
 
 	hits, err := elasticContact.QueryStruct(c, elasticQuery)
 	if err != nil {
