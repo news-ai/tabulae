@@ -19,23 +19,7 @@ var (
 	elasticContact *elastic.Elastic
 )
 
-func SearchContact(c context.Context, r *http.Request, search string, userId int64, listId int64) ([]models.Contact, error) {
-	offset := gcontext.Get(r, "offset").(int)
-	limit := gcontext.Get(r, "limit").(int)
-
-	elasticQuery := elastic.ElasticQuery{}
-	elasticQuery.Size = limit
-	elasticQuery.From = offset
-
-	elasticCreatedByQuery := elastic.ElasticCreatedByQuery{}
-	elasticCreatedByQuery.Term.CreatedBy = userId
-
-	elasticMatchQuery := elastic.ElasticMatchQuery{}
-	elasticMatchQuery.Match.All = search
-
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
-
+func searchContact(c context.Context, r *http.Request, search string, userId int64, elasticQuery elastic.ElasticQuery) ([]models.Contact, error) {
 	hits, err := elasticContact.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -58,4 +42,48 @@ func SearchContact(c context.Context, r *http.Request, search string, userId int
 	}
 
 	return contacts, nil
+}
+
+func SearchContacts(c context.Context, r *http.Request, search string, userId int64) ([]models.Contact, error) {
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticCreatedByQuery := elastic.ElasticCreatedByQuery{}
+	elasticCreatedByQuery.Term.CreatedBy = userId
+
+	elasticMatchQuery := elastic.ElasticMatchQuery{}
+	elasticMatchQuery.Match.All = search
+
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
+
+	return searchContact(c, r, search, userId, elasticQuery)
+}
+
+func SearchContactsByList(c context.Context, r *http.Request, search string, userId int64, listId int64) ([]models.Contact, error) {
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticCreatedByQuery := elastic.ElasticCreatedByQuery{}
+	elasticCreatedByQuery.Term.CreatedBy = userId
+
+	elasticListIdQuery := elastic.ElasticListIdQuery{}
+	elasticListIdQuery.Term.ListId = listId
+
+	elasticMatchQuery := elastic.ElasticMatchQuery{}
+	elasticMatchQuery.Match.All = search
+
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticListIdQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
+
+	return searchContact(c, r, search, userId, elasticQuery)
 }
