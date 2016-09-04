@@ -16,6 +16,7 @@ import (
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/search"
 
 	"github.com/news-ai/web/utilities"
 )
@@ -268,6 +269,21 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, err
+	}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, nil, 0, err
+	}
+
+	queryField := gcontext.Get(r, "q").(string)
+	if queryField != "" {
+		contacts, err := search.SearchContactsByList(c, r, queryField, user.Id, mediaList.Id)
+		if err != nil {
+			return []models.Contact{}, nil, 0, err
+		}
+		return contacts, nil, len(contacts), nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
