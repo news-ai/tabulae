@@ -8,6 +8,18 @@ var (
 	baseURL = "https://search.newsai.org"
 )
 
+type ElasticCreatedByQuery struct {
+	Term struct {
+		CreatedBy int64 `json:"data.CreatedBy"`
+	} `json:"term"`
+}
+
+type ElasticListIdQuery struct {
+	Term struct {
+		ListId int64 `json:"data.ListId"`
+	} `json:"term"`
+}
+
 func InitializeElasticSearch() {
 	agencyElastic := elastic.Elastic{}
 	agencyElastic.BaseURL = baseURL

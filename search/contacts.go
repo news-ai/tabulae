@@ -52,10 +52,10 @@ func SearchContacts(c context.Context, r *http.Request, search string, userId in
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticCreatedByQuery := elastic.ElasticCreatedByQuery{}
+	elasticCreatedByQuery := ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = userId
 
-	elasticMatchQuery := elastic.ElasticMatchQuery{}
+	elasticMatchQuery := ElasticMatchQuery{}
 	elasticMatchQuery.Match.All = search
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
