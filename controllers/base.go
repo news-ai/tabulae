@@ -61,10 +61,22 @@ func constructQuery(query *datastore.Query, r *http.Request) *datastore.Query {
 	order := gcontext.Get(r, "order").(string)
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
+	after := gcontext.Get(r, "after").(string)
+
+	query = query.Limit(limit)
 
 	if order != "" {
 		query = query.Order(normalizeOrderQuery(order))
 	}
 
-	return query.Limit(limit).Offset(offset)
+	if after != "" {
+		cursor, err := datastore.DecodeCursor(after)
+		if err == nil {
+			query = query.Start(cursor)
+		}
+	} else {
+		query = query.Offset(offset)
+	}
+
+	return query
 }
