@@ -269,6 +269,29 @@ func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact,
 	return models.Contact{}, errors.New("No contact by this " + queryType)
 }
 
+func filterContactByEmail(c context.Context, email string) ([]models.Contact, error) {
+	// Get an contact by a query type
+	ks, err := datastore.NewQuery("Contact").Filter("Email =", email).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, err
+	}
+
+	var contacts []models.Contact
+	contacts = make([]models.Contact, len(ks))
+	err = nds.GetMulti(c, ks, contacts)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, err
+	}
+
+	for i := 0; i < len(contacts); i++ {
+		contacts[i].Format(ks[i], "contacts")
+	}
+
+	return contacts, nil
+}
+
 func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Request) (*models.Contact, error, bool) {
 	// Find master contact
 	// If there is no parent contact Id or if the Linkedin field is not empty

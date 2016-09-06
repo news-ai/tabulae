@@ -49,7 +49,8 @@ type Contact struct {
 	ParentContact   int64 `json:"parent"`
 
 	// Is information outdated
-	IsOutdated bool `json:"isoutdated"`
+	IsOutdated   bool `json:"isoutdated"`
+	EmailBounced bool `json:"emailbounced"`
 
 	LinkedInUpdated time.Time `json:"linkedinupdated"`
 }

@@ -422,12 +422,19 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 	return email, nil, errors.New("Email could not be sent")
 }
 
-func MarkSent(c context.Context, e *models.Email, emailId string) (*models.Email, error) {
-	return e.MarkSent(c, emailId)
-}
-
 func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason string) (*models.Email, error) {
 	LogNotificationForResource(c, r, "Email", e.Id, "BOUNCED", "")
+
+	contacts, err := filterContactByEmail(c, e.To)
+	if err != nil {
+		log.Infof(c, "%v", err)
+	}
+
+	for i := 0; i < len(contacts); i++ {
+		contacts[i].EmailBounced = true
+		contacts[i].Save(c, r)
+	}
+
 	return e.MarkBounced(c, reason)
 }
 
