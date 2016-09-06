@@ -56,7 +56,7 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 
 		// Add to appropriate Email model
 		switch singleEvent.Event {
-		case "bounce":
+		case "bounce", "dropped":
 			_, err = controllers.MarkBounced(c, r, &email, singleEvent.Reason)
 			if err != nil {
 				hasErrors = true
@@ -72,6 +72,13 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 			}
 		case "delivered":
 			_, err = controllers.MarkDelivered(c, &email)
+			if err != nil {
+				hasErrors = true
+				log.Errorf(c, "%v", singleEvent)
+				log.Errorf(c, "%v", err)
+			}
+		case "spamreport":
+			_, err = controllers.MarkSpam(c, &email)
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)

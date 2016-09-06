@@ -438,6 +438,11 @@ func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason str
 	return e.MarkBounced(c, reason)
 }
 
+func MarkSpam(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
+	LogNotificationForResource(c, r, "Email", e.Id, "SPAM", "")
+	return e.MarkSpam(c)
+}
+
 func MarkClicked(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
 	LogNotificationForResource(c, r, "Email", e.Id, "CLICKED", "")
 	return e.MarkClicked(c)

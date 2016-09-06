@@ -34,6 +34,7 @@ type Email struct {
 	Bounced       bool   `json:"bounced"`
 	Clicked       int    `json:"clicked"`
 	Opened        int    `json:"opened"`
+	Spam          bool   `json:"spam"`
 
 	IsSent bool `json:"issent"`
 }
@@ -103,6 +104,15 @@ func (e *Email) MarkClicked(c context.Context) (*Email, error) {
 
 func (e *Email) MarkDelivered(c context.Context) (*Email, error) {
 	e.Delievered = true
+	_, err := e.Save(c)
+	if err != nil {
+		return e, err
+	}
+	return e, nil
+}
+
+func (e *Email) MarkSpam(c context.Context) (*Email, error) {
+	e.Spam = true
 	_, err := e.Save(c)
 	if err != nil {
 		return e, err
