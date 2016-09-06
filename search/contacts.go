@@ -55,7 +55,7 @@ func SearchContacts(c context.Context, r *http.Request, search string, userId in
 	elasticCreatedByQuery := ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = userId
 
-	elasticMatchQuery := ElasticMatchQuery{}
+	elasticMatchQuery := elastic.ElasticMatchQuery{}
 	elasticMatchQuery.Match.All = search
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
@@ -72,10 +72,10 @@ func SearchContactsByList(c context.Context, r *http.Request, search string, use
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticCreatedByQuery := elastic.ElasticCreatedByQuery{}
+	elasticCreatedByQuery := ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = userId
 
-	elasticListIdQuery := elastic.ElasticListIdQuery{}
+	elasticListIdQuery := ElasticListIdQuery{}
 	elasticListIdQuery.Term.ListId = listId
 
 	elasticMatchQuery := elastic.ElasticMatchQuery{}

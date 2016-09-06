@@ -15,6 +15,8 @@ type Template struct {
 	Name    string `json:"name"`
 	Subject string `json:"subject" datastore:",noindex"`
 	Body    string `json:"body" datastore:",noindex"`
+
+	Archived bool `json:"archived"`
 }
 
 /*

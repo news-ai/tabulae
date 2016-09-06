@@ -169,6 +169,16 @@ func UpdateTemplate(c context.Context, r *http.Request, id string) (models.Templ
 	utilities.UpdateIfNotBlank(&template.Subject, updatedTemplate.Subject)
 	utilities.UpdateIfNotBlank(&template.Body, updatedTemplate.Body)
 
+	// If new template wants to be archived then archive it
+	if updatedTemplate.Archived == true {
+		template.Archived = true
+	}
+
+	// If they are already archived and you want to unarchive the media list
+	if template.Archived == true && updatedTemplate.Archived == false {
+		template.Archived = false
+	}
+
 	template.Save(c)
 	return template, nil, nil
 }
