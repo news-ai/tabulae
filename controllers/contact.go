@@ -186,6 +186,14 @@ func checkAgainstParent(c context.Context, r *http.Request, ct *models.Contact) 
 			return ct, err
 		}
 
+		// Legacy issue
+		// Small edge case where if all of them are empty
+		if len(ct.Employers) == 0 && len(ct.PastEmployers) == 0 && len(parentContact.Employers) == 0 && len(parentContact.PastEmployers) == 0 {
+			ct.IsOutdated = false
+			Save(c, r, ct)
+			return ct, nil
+		}
+
 		// See differences in parent and child contact
 		if !reflect.DeepEqual(ct.Employers, parentContact.Employers) || !reflect.DeepEqual(ct.PastEmployers, parentContact.PastEmployers) {
 			ct.IsOutdated = true
