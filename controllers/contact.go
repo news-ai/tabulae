@@ -285,6 +285,7 @@ func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Re
 			newMasterContact.LastName = ct.LastName
 			newMasterContact.Email = ct.Email
 			newMasterContact.Employers = ct.Employers
+			newMasterContact.PastEmployers = ct.PastEmployers
 			newMasterContact.LinkedIn = ct.LinkedIn
 			newMasterContact.Twitter = ct.Twitter
 			newMasterContact.Instagram = ct.Instagram
