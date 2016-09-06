@@ -109,9 +109,6 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 		return models.Contact{}, nil, err
 	}
 
-	// Logging the action happening
-	LogNotificationForResource(c, r, "Contact", contact.Id, "UPDATE", "")
-
 	return *contact, nil, nil
 }
 
@@ -127,9 +124,6 @@ func updateSocial(c context.Context, r *http.Request, contact *models.Contact, u
 		log.Errorf(c, "%v", err)
 		return models.Contact{}, nil, err
 	}
-
-	// Logging the action happening
-	LogNotificationForResource(c, r, "Contact", contact.Id, "UPDATE", "SOCIAL")
 
 	return *contact, nil, nil
 }
@@ -187,7 +181,7 @@ func checkAgainstParent(c context.Context, r *http.Request, ct *models.Contact) 
 		}
 
 		// Legacy issue
-		// Small edge case where if all of them are empty
+		// Small edge case where if all of them are empty & datastore stores each of them differently (for some reason!).
 		if len(ct.Employers) == 0 && len(ct.PastEmployers) == 0 && len(parentContact.Employers) == 0 && len(parentContact.PastEmployers) == 0 {
 			ct.IsOutdated = false
 			Save(c, r, ct)
@@ -227,9 +221,6 @@ func socialSync(c context.Context, r *http.Request, ct *models.Contact, justCrea
 			log.Errorf(c, "%v", err)
 			return ct, err
 		}
-
-		LogNotificationForResource(c, r, "Contact", ct.Id, "SYNC", "LINKEDIN")
-		LogNotificationForResource(c, r, "Contact", parentContact.Id, "SYNC", "LINKEDIN")
 
 		// Now that we have told the Influencer program that we are syncing Linkedin data
 		parentContact.LinkedInUpdated = time.Now()
@@ -312,9 +303,6 @@ func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Re
 			// Assign the Id of the parent contact to be the new master contact.
 			ct.ParentContact = newMasterContact.Id
 			ct.IsMasterContact = false
-
-			// Logging the action happening
-			LogNotificationForResource(c, r, "Contact", ct.Id, "CREATE", "PARENT")
 
 			return ct, nil, true
 		}
@@ -465,9 +453,6 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 	}
 
 	ct.Create(c, r, currentUser)
-
-	// Logging the action happening
-	LogNotificationForResource(c, r, "Contact", ct.Id, "CREATE", "")
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		_, _, justCreated := findOrCreateMasterContact(c, ct, r)
@@ -694,9 +679,6 @@ func UpdateContactToParent(c context.Context, r *http.Request, id string) (model
 	contact.IsOutdated = false
 	_, err = Save(c, r, &contact)
 
-	// Logging the action happening
-	LogNotificationForResource(c, r, "Contact", contact.Id, "UPDATE", "TO_PARENT")
-
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return contact, nil, err
@@ -733,10 +715,5 @@ func SocialSync(c context.Context, r *http.Request, id string) (models.Contact, 
 	// Now that we have told the Influencer program that we are syncing Linkedin data
 	parentContact.LinkedInUpdated = time.Now()
 	parentContact.Save(c, r)
-
-	// Logging the action happening
-	LogNotificationForResource(c, r, "Contact", contact.Id, "SYNC", "LINKEDIN")
-	LogNotificationForResource(c, r, "Contact", parentContact.Id, "SYNC", "LINKEDIN")
-
 	return contact, nil, nil
 }

@@ -223,8 +223,6 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 				log.Errorf(c, "%v", err)
 				return []models.Email{}, nil, err
 			}
-			// Logging the action happening
-			LogNotificationForResource(c, r, "Email", emails[i].Id, "CREATE", "")
 			newEmails = append(newEmails, emails[i])
 		}
 
@@ -245,9 +243,6 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, err
 	}
-
-	// Logging the action happening
-	LogNotificationForResource(c, r, "Email", email.Id, "CREATE", "")
 	return []models.Email{email}, nil, nil
 }
 
@@ -260,8 +255,6 @@ func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (model
 	email.LastName = lastName
 
 	_, err := email.Save(c)
-
-	LogNotificationForResource(c, r, "Email", email.Id, "CREATE", "INTERNAL")
 	return email, err
 }
 
@@ -301,9 +294,6 @@ func UpdateEmail(c context.Context, r *http.Request, currentUser models.User, em
 	}
 
 	email.Save(c)
-
-	// Logging the action happening
-	LogNotificationForResource(c, r, "Email", email.Id, "UPDATE", "")
 
 	return *email, nil, nil
 }
@@ -427,10 +417,6 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 			log.Errorf(c, "%v", err)
 			return *val, nil, err
 		}
-
-		// Logging the action happening
-		LogNotificationForResource(c, r, "Email", email.Id, "SENT", "")
-
 		return *val, nil, nil
 	}
 	return email, nil, errors.New("Email could not be sent")
