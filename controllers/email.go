@@ -421,3 +421,26 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 	}
 	return email, nil, errors.New("Email could not be sent")
 }
+
+func MarkSent(c context.Context, e *models.Email, emailId string) (*models.Email, error) {
+	return e.MarkSent(c, emailId)
+}
+
+func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason string) (*models.Email, error) {
+	LogNotificationForResource(c, r, "Email", e.Id, "BOUNCED", "")
+	return e.MarkBounced(c, reason)
+}
+
+func MarkClicked(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
+	LogNotificationForResource(c, r, "Email", e.Id, "CLICKED", "")
+	return e.MarkClicked(c)
+}
+
+func MarkDelivered(c context.Context, e *models.Email) (*models.Email, error) {
+	return e.MarkDelivered(c)
+}
+
+func MarkOpened(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
+	LogNotificationForResource(c, r, "Email", e.Id, "OPENED", "")
+	return e.MarkOpened(c)
+}

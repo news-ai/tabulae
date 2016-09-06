@@ -57,28 +57,28 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		// Add to appropriate Email model
 		switch singleEvent.Event {
 		case "bounce":
-			_, err = email.MarkBounced(c, singleEvent.Reason)
+			_, err = controllers.MarkBounced(c, r, &email, singleEvent.Reason)
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
 				log.Errorf(c, "%v", err)
 			}
 		case "click":
-			_, err = email.MarkClicked(c)
+			_, err = controllers.MarkClicked(c, r, &email)
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
 				log.Errorf(c, "%v", err)
 			}
 		case "delivered":
-			_, err = email.MarkDelivered(c)
+			_, err = controllers.MarkDelivered(c, &email)
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
 				log.Errorf(c, "%v", err)
 			}
 		case "open":
-			_, err = email.MarkOpened(c)
+			_, err = controllers.MarkOpened(c, r, &email)
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
