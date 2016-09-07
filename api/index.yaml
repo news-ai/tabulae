@@ -1,5 +1,31 @@
 indexes:
 
+- kind: Template
+  ancestor: no
+  properties:
+    - name: CreatedBy
+    - name: Created
+
+- kind: Template
+  ancestor: no
+  properties:
+    - name: CreatedBy
+    - name: Created
+      direction: desc
+
+- kind: Email
+  ancestor: no
+  properties:
+    - name: CreatedBy
+    - name: Created
+
+- kind: Email
+  ancestor: no
+  properties:
+    - name: CreatedBy
+    - name: Created
+      direction: desc
+
 - kind: MediaList
   ancestor: no
   properties:
