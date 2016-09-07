@@ -25,6 +25,8 @@ type Email struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 
+	SendAt time.Time `json:"sendat"`
+
 	SendGridId string `json:"-"`
 
 	Attachments []int64 `json:"attachments" datastore:",noindex"`

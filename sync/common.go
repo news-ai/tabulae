@@ -9,9 +9,10 @@ import (
 )
 
 var (
-	PubsubClient  *pubsub.Client
-	PubsubTopicID = "influencer"
-	projectID     = "newsai-1166"
+	PubsubClient      *pubsub.Client
+	InfluencerTopicID = "influencer"
+	ContactsTopicID   = "datastore-sync-contacts"
+	projectID         = "newsai-1166"
 )
 
 func configurePubsub(r *http.Request) (*pubsub.Client, error) {
@@ -25,12 +26,23 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		return nil, err
 	}
 
-	// Create the topic if it doesn't exist.
-	if exists, err := PubsubClient.Topic(PubsubTopicID).Exists(c); err != nil {
+	// Create the topic for influencers if it doesn't exist.
+	if exists, err := PubsubClient.Topic(InfluencerTopicID).Exists(c); err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	} else if !exists {
-		if _, err := PubsubClient.NewTopic(c, PubsubTopicID); err != nil {
+		if _, err := PubsubClient.NewTopic(c, InfluencerTopicID); err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, err
+		}
+	}
+
+	// Create the topic for contacts if it doesn't exist.
+	if exists, err := PubsubClient.Topic(ContactsTopicID).Exists(c); err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	} else if !exists {
+		if _, err := PubsubClient.NewTopic(c, ContactsTopicID); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}
