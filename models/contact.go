@@ -26,6 +26,8 @@ type Contact struct {
 	LastName  string `json:"lastname"`
 	Email     string `json:"email"`
 
+	ListId int64 `json:"listid"`
+
 	// Notes on a particular contact
 	Notes string `json:"notes"`
 

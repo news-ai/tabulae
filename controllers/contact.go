@@ -81,6 +81,10 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 	utilities.UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
 	utilities.UpdateIfNotBlank(&contact.Notes, updatedContact.Notes)
 
+	if updatedContact.ListId != 0 {
+		contact.ListId = updatedContact.ListId
+	}
+
 	if len(updatedContact.CustomFields) > 0 {
 		contact.CustomFields = updatedContact.CustomFields
 	}
