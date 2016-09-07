@@ -1,78 +1,14 @@
 indexes:
 
-- kind: Agency
+- kind: MediaList
   ancestor: no
   properties:
-    - name: name
-    - name: email
-    - name: createdby
-
-- kind: Contact
-  ancestor: no
-  properties:
-    - name: email
-    - name: linkedin
-    - name: parentcontact
-    - name: createdby
-
-- kind: Email
-  ancestor: no
-  properties:
-    - name: listid
-    - name: sendgridid
-    - name: to
-    - name: sender
-    - name: createdby
+    - name: CreatedBy
     - name: Created
-    - name: Updated
-
-- kind: File
-  ancestor: no
-  properties:
-    - name: listid
-    - name: createdby
 
 - kind: MediaList
   ancestor: no
   properties:
-    - name: name
-    - name: client
-    - name: fileupload
-    - name: createdby
-
-- kind: NotificationChange
-  ancestor: no
-  properties:
-    - name: verb
-    - name: notificationobjectid
-    - name: createdby
-
-- kind: NotificationObject
-  ancestor: no
-  properties:
-    - name: object
-    - name: objectid
-    - name: notificationid
-    - name: createdby
-
-- kind: Publication
-  ancestor: no
-  properties:
-    - name: name
-    - name: url
-    - name: createdby
-
-- kind: Session
-  ancestor: no
-  properties:
-    - name: date
-    - name: expirationdate
-    - name: value
-
-- kind: User
-  ancestor: no
-  properties:
-    - name: apikey
-    - name: confirmationcode
-    - name: email
-    - name: password
+    - name: CreatedBy
+    - name: Created
+      direction: desc

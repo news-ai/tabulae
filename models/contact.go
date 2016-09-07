@@ -42,7 +42,7 @@ type Contact struct {
 	Blog      string `json:"blog"`
 
 	// Custom fields
-	CustomFields []CustomContactField `json:"customfields"`
+	CustomFields []CustomContactField `json:"customfields" datastore:",noindex"`
 
 	// Parent contact
 	IsMasterContact bool  `json:"ismastercontact"`
