@@ -78,7 +78,7 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 				log.Errorf(c, "%v", err)
 			}
 		case "spamreport":
-			_, err = controllers.MarkSpam(c, &email)
+			_, err = controllers.MarkSpam(c, r, &email)
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
