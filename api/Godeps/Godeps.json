@@ -431,6 +431,18 @@
 		{
 			"ImportPath": "gopkg.in/unrolled/render.v1",
 			"Rev": "198ad4d8b8a4612176b804ca10555b222a086b40"
+		},
+		{
+			"ImportPath": "github.com/news-ai/web/utilities",
+			"Rev": "ec02e3c89bd2cabb424ccc11d068a6bfa1e70be2"
+		},
+		{
+			"ImportPath": "github.com/news-ai/web/emails",
+			"Rev": "ec02e3c89bd2cabb424ccc11d068a6bfa1e70be2"
+		},
+		{
+			"ImportPath": "github.com/news-ai/web/permissions",
+			"Rev": "ec02e3c89bd2cabb424ccc11d068a6bfa1e70be2"
 		}
 	]
 }
