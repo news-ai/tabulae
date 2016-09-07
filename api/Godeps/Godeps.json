@@ -60,7 +60,7 @@
 		},
 		{
 			"ImportPath": "github.com/news-ai/gaesessions",
-			"Rev": "691da2b539e93652294c60e7a146b902af258b69"
+			"Rev": "10efccee288526ea5e848a7f676a93ef9b33c528"
 		},
 		{
 			"ImportPath": "github.com/news-ai/goexcel",
