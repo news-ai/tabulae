@@ -12,3 +12,18 @@ indexes:
     - name: CreatedBy
     - name: Created
       direction: desc
+
+- kind: Contact
+  ancestor: no
+  properties:
+    - name: CreatedBy
+    - name: IsMasterContact
+    - name: Created
+
+- kind: Contact
+  ancestor: no
+  properties:
+    - name: CreatedBy
+    - name: IsMasterContact
+    - name: Created
+      direction: desc
