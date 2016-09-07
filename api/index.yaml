@@ -23,6 +23,8 @@ indexes:
     - name: to
     - name: sender
     - name: createdby
+    - name: Created
+    - name: Updated
 
 - kind: File
   ancestor: no
