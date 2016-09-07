@@ -66,5 +66,4 @@ func ContactSync(r *http.Request, contactId int64) error {
 		return err
 	}
 	return nil
-
 }

@@ -484,6 +484,7 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 	}
 
 	_, err = Save(c, r, ct)
+	sync.ContactSync(r, ct.Id)
 	return ct, err
 }
 
@@ -593,7 +594,7 @@ func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Conta
 	}
 
 	ct.Save(c, r)
-
+	sync.ContactSync(r, ct.Id)
 	return ct, nil
 }
 
