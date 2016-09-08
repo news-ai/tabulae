@@ -11,7 +11,7 @@ import (
 var (
 	PubsubClient      *pubsub.Client
 	InfluencerTopicID = "influencer"
-	ContactsTopicID   = "datastore-sync-contacts"
+	ContactsTopicID   = "datastore-sync-contacts-functions"
 	projectID         = "newsai-1166"
 )
 
