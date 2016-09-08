@@ -9,10 +9,11 @@ import (
 )
 
 var (
-	PubsubClient      *pubsub.Client
-	InfluencerTopicID = "influencer"
-	ContactsTopicID   = "datastore-sync-contacts-functions"
-	projectID         = "newsai-1166"
+	PubsubClient        *pubsub.Client
+	InfluencerTopicID   = "influencer"
+	ContactsTopicID     = "datastore-sync-contacts-functions"
+	PublicationsTopicID = "datastore-sync-publications-functions"
+	projectID           = "newsai-1166"
 )
 
 func configurePubsub(r *http.Request) (*pubsub.Client, error) {
@@ -47,5 +48,17 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 			return nil, err
 		}
 	}
+
+	// Create the topic for publications if it doesn't exist.
+	if exists, err := PubsubClient.Topic(PublicationsTopicID).Exists(c); err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	} else if !exists {
+		if _, err := PubsubClient.NewTopic(c, PublicationsTopicID); err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, err
+		}
+	}
+
 	return PubsubClient, nil
 }

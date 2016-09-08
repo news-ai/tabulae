@@ -17,6 +17,7 @@ import (
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/search"
+	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/utilities"
 )
@@ -189,6 +190,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 					log.Errorf(c, "%v", err)
 					return []models.Publication{}, nil, 0, err
 				}
+				sync.ResourceSync(r, publications[i].Id, "Publication")
 				newPublications = append(newPublications, publications[i])
 			} else {
 				newPublications = append(newPublications, presentPublication)
@@ -216,6 +218,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 			log.Errorf(c, "%v", err)
 			return models.Publication{}, nil, 0, err
 		}
+		sync.ResourceSync(r, publication.Id, "Publication")
 		return publication, nil, 1, nil
 	}
 	return presentPublication, nil, 1, nil
@@ -238,6 +241,8 @@ func FindOrCreatePublication(c context.Context, r *http.Request, name string) (m
 			log.Errorf(c, "%v", err)
 			return models.Publication{}, err
 		}
+
+		sync.ResourceSync(r, newPublication.Id, "Publication")
 		return newPublication, nil
 	}
 
