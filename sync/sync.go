@@ -48,7 +48,6 @@ func ResourceSync(r *http.Request, resourceId int64, resource string) error {
 		return err
 	}
 
-	// Create an map with linkedinUrl and Id of the corresponding contact
 	data := map[string]string{
 		"Id": strconv.FormatInt(resourceId, 10),
 	}

@@ -534,7 +534,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interf
 	return []models.Contact{contact}, nil, 0, nil
 }
 
-func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, contacts []models.Contact) ([]int64, error) {
+func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, contacts []models.Contact, mediaListId int64) ([]int64, error) {
 	var keys []*datastore.Key
 	var contactIds []int64
 
@@ -548,6 +548,7 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 		contacts[i].CreatedBy = currentUser.Id
 		contacts[i].Created = time.Now()
 		contacts[i].Updated = time.Now()
+		contacts[i].ListId = mediaListId
 		contacts[i].Normalize()
 		keys = append(keys, contacts[i].Key(c))
 
@@ -576,7 +577,6 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 	}
 
 	for i := 0; i < len(ks); i++ {
-		sync.ResourceSync(r, ks[i].IntID(), "Contact")
 		contactIds = append(contactIds, ks[i].IntID())
 	}
 

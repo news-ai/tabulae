@@ -8,6 +8,7 @@ import (
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/goexcel"
 	"github.com/news-ai/web/utilities"
@@ -29,7 +30,7 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 	}
 
 	// Batch create all the contact
-	contactIds, err := controllers.BatchCreateContactsForExcelUpload(c, r, contacts)
+	contactIds, err := controllers.BatchCreateContactsForExcelUpload(c, r, contacts, mediaListid)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, err
@@ -52,5 +53,12 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 
 	// Save the media list
 	mediaList.Save(c)
+
+	// You have to create the list then process the articles so they
+	// belong to a list.
+	for i := 0; i < len(mediaList.Contacts); i++ {
+		sync.ResourceSync(r, mediaList.Contacts[i], "Contact")
+	}
+
 	return mediaList, nil
 }
