@@ -576,6 +576,7 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 	}
 
 	for i := 0; i < len(ks); i++ {
+		sync.ResourceSync(r, ks[i].IntID(), "Contact")
 		contactIds = append(contactIds, ks[i].IntID())
 	}
 
