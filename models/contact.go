@@ -26,14 +26,14 @@ type Contact struct {
 	LastName  string `json:"lastname"`
 	Email     string `json:"email"`
 
-	ListId int64 `json:"listid"`
+	ListId int64 `json:"listid" apiModel:"MediaList"`
 
 	// Notes on a particular contact
 	Notes string `json:"notes"`
 
 	// Publications this contact works for now and before
-	Employers     []int64 `json:"employers"`
-	PastEmployers []int64 `json:"pastemployers"`
+	Employers     []int64 `json:"employers" apiModel:"Publication"`
+	PastEmployers []int64 `json:"pastemployers" apiModel:"Publication"`
 
 	// Social information
 	LinkedIn  string `json:"linkedin"`
@@ -48,7 +48,7 @@ type Contact struct {
 
 	// Parent contact
 	IsMasterContact bool  `json:"ismastercontact"`
-	ParentContact   int64 `json:"parent"`
+	ParentContact   int64 `json:"parent" apiModel:"Contact"`
 
 	// Is information outdated
 	IsOutdated   bool `json:"isoutdated"`

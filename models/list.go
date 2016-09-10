@@ -22,14 +22,14 @@ type MediaList struct {
 	Name   string `json:"name"`
 	Client string `json:"client"`
 
-	Contacts []int64 `json:"contacts"`
+	Contacts []int64 `json:"contacts" apiModel:"Contact"`
 
 	FieldsMap []CustomFieldsMap `json:"fieldsmap" datastore:",noindex"`
 
 	CustomFields []string `json:"-" datastore:",noindex"`
 	Fields       []string `json:"-" datastore:",noindex"`
 
-	FileUpload int64 `json:"fileupload"`
+	FileUpload int64 `json:"fileupload" apiModel:"File"`
 
 	Archived bool `json:"archived"`
 }

@@ -13,8 +13,8 @@ type File struct {
 	Base
 
 	FileName string `json:"filename"`
-	ListId   int64  `json:"listid"`
-	EmailId  int64  `json:"emailid"`
+	ListId   int64  `json:"listid" apiModel:"MediaList"`
+	EmailId  int64  `json:"emailid" apiModel:"Email"`
 
 	Order []string `json:"order" datastore:",noindex"`
 

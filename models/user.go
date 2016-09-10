@@ -21,7 +21,7 @@ type User struct {
 	Password []byte `json:"-"`
 	ApiKey   string `json:"-"`
 
-	Employers []int64 `json:"employers"`
+	Employers []int64 `json:"employers" apiModel:"Agency"`
 
 	ResetPasswordCode string `json:"-"`
 	ConfirmationCode  string `json:"-"`

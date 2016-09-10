@@ -12,7 +12,7 @@ import (
 type Team struct {
 	Base
 
-	Members []int64 `json:"members"`
+	Members []int64 `json:"members" apiModel:"User"`
 }
 
 /*

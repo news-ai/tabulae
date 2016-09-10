@@ -13,8 +13,8 @@ type Email struct {
 	Base
 
 	// Which list it belongs to
-	ListId     int64 `json:"listid"`
-	TemplateId int64 `json:"templateid"`
+	ListId     int64 `json:"listid" apiModel:"List"`
+	TemplateId int64 `json:"templateid" apiModel:"Template"`
 
 	Sender  string `json:"sender"`
 	To      string `json:"to"`
@@ -29,7 +29,7 @@ type Email struct {
 
 	SendGridId string `json:"-"`
 
-	Attachments []int64 `json:"attachments" datastore:",noindex"`
+	Attachments []int64 `json:"attachments" datastore:",noindex" apiModel:"File"`
 
 	Delievered    bool   `json:"delivered"`
 	BouncedReason string `json:"bouncedreason"`
