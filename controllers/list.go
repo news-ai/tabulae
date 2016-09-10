@@ -58,7 +58,7 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 			log.Errorf(c, "%v", err)
 			return models.MediaList{}, errors.New("Could not get user")
 		}
-		if mediaList.CreatedBy != user.Id {
+		if mediaList.CreatedBy != user.Id && !user.IsAdmin {
 			return models.MediaList{}, errors.New("Forbidden")
 		}
 
@@ -279,7 +279,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 
 	queryField := gcontext.Get(r, "q").(string)
 	if queryField != "" {
-		contacts, err := search.SearchContactsByList(c, r, queryField, user.Id, mediaList.Id)
+		contacts, err := search.SearchContactsByList(c, r, queryField, user, mediaList.Id)
 		if err != nil {
 			return []models.Contact{}, nil, 0, err
 		}

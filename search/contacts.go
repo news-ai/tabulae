@@ -19,7 +19,7 @@ var (
 	elasticContact *elastic.Elastic
 )
 
-func searchContact(c context.Context, r *http.Request, search string, userId int64, elasticQuery elastic.ElasticQuery) ([]models.Contact, error) {
+func searchContact(c context.Context, elasticQuery elastic.ElasticQuery) ([]models.Contact, error) {
 	hits, err := elasticContact.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -61,10 +61,10 @@ func SearchContacts(c context.Context, r *http.Request, search string, userId in
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
 
-	return searchContact(c, r, search, userId, elasticQuery)
+	return searchContact(c, elasticQuery)
 }
 
-func SearchContactsByList(c context.Context, r *http.Request, search string, userId int64, listId int64) ([]models.Contact, error) {
+func SearchContactsByList(c context.Context, r *http.Request, search string, user models.User, listId int64) ([]models.Contact, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
@@ -72,8 +72,11 @@ func SearchContactsByList(c context.Context, r *http.Request, search string, use
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticCreatedByQuery := ElasticCreatedByQuery{}
-	elasticCreatedByQuery.Term.CreatedBy = userId
+	if !user.IsAdmin {
+		elasticCreatedByQuery := ElasticCreatedByQuery{}
+		elasticCreatedByQuery.Term.CreatedBy = user.Id
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
+	}
 
 	elasticListIdQuery := ElasticListIdQuery{}
 	elasticListIdQuery.Term.ListId = listId
@@ -81,9 +84,8 @@ func SearchContactsByList(c context.Context, r *http.Request, search string, use
 	elasticMatchQuery := elastic.ElasticMatchQuery{}
 	elasticMatchQuery.Match.All = search
 
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticListIdQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
 
-	return searchContact(c, r, search, userId, elasticQuery)
+	return searchContact(c, elasticQuery)
 }
