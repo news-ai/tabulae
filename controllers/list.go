@@ -283,7 +283,28 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 		if err != nil {
 			return []models.Contact{}, nil, 0, err
 		}
-		return contacts, nil, len(contacts), nil
+
+		publicationIds := []int64{}
+
+		for i := 0; i < len(contacts); i++ {
+			publicationIds = append(publicationIds, contacts[i].Employers...)
+			publicationIds = append(publicationIds, contacts[i].PastEmployers...)
+		}
+
+		// Work on includes
+		publications := []models.Publication{}
+		publicationExists := map[int64]bool{}
+		publicationExists = make(map[int64]bool)
+
+		for i := 0; i < len(publicationIds); i++ {
+			if _, ok := publicationExists[publicationIds[i]]; !ok {
+				publication, _ := getPublication(c, publicationIds[i])
+				publications = append(publications, publication)
+				publicationExists[publicationIds[i]] = true
+			}
+		}
+
+		return contacts, publications, len(contacts), nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)

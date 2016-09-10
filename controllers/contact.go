@@ -366,7 +366,28 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 		if err != nil {
 			return []models.Contact{}, nil, 0, err
 		}
-		return contacts, nil, len(contacts), nil
+
+		publicationIds := []int64{}
+
+		for i := 0; i < len(contacts); i++ {
+			publicationIds = append(publicationIds, contacts[i].Employers...)
+			publicationIds = append(publicationIds, contacts[i].PastEmployers...)
+		}
+
+		// Work on includes
+		publications := []models.Publication{}
+		publicationExists := map[int64]bool{}
+		publicationExists = make(map[int64]bool)
+
+		for i := 0; i < len(publicationIds); i++ {
+			if _, ok := publicationExists[publicationIds[i]]; !ok {
+				publication, _ := getPublication(c, publicationIds[i])
+				publications = append(publications, publication)
+				publicationExists[publicationIds[i]] = true
+			}
+		}
+
+		return contacts, publications, len(contacts), nil
 	}
 
 	query := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", false)
@@ -385,11 +406,28 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 		return contacts, nil, 0, err
 	}
 
+	publicationIds := []int64{}
+
 	for i := 0; i < len(contacts); i++ {
 		contacts[i].Format(ks[i], "contacts")
+		publicationIds = append(publicationIds, contacts[i].Employers...)
+		publicationIds = append(publicationIds, contacts[i].PastEmployers...)
 	}
 
-	return contacts, nil, len(contacts), nil
+	// Work on includes
+	publications := []models.Publication{}
+	publicationExists := map[int64]bool{}
+	publicationExists = make(map[int64]bool)
+
+	for i := 0; i < len(publicationIds); i++ {
+		if _, ok := publicationExists[publicationIds[i]]; !ok {
+			publication, _ := getPublication(c, publicationIds[i])
+			publications = append(publications, publication)
+			publicationExists[publicationIds[i]] = true
+		}
+	}
+
+	return contacts, publications, len(contacts), nil
 }
 
 func GetContact(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
