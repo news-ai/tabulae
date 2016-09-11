@@ -344,6 +344,58 @@ func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Re
 	return ct, nil, false
 }
 
+func contactsToPublications(c context.Context, contacts []models.Contact) []models.Publication {
+	publicationIds := []int64{}
+
+	for i := 0; i < len(contacts); i++ {
+		publicationIds = append(publicationIds, contacts[i].Employers...)
+		publicationIds = append(publicationIds, contacts[i].PastEmployers...)
+	}
+
+	// Work on includes
+	publications := []models.Publication{}
+	publicationExists := map[int64]bool{}
+	publicationExists = make(map[int64]bool)
+
+	for i := 0; i < len(publicationIds); i++ {
+		if _, ok := publicationExists[publicationIds[i]]; !ok {
+			publication, _ := getPublication(c, publicationIds[i])
+			publications = append(publications, publication)
+			publicationExists[publicationIds[i]] = true
+		}
+	}
+
+	return publications
+}
+
+func contactsToLists(c context.Context, r *http.Request, contacts []models.Contact) []models.MediaList {
+	mediaListIds := []int64{}
+
+	for i := 0; i < len(contacts); i++ {
+		mediaListIds = append(mediaListIds, contacts[i].ListId)
+	}
+
+	// Work on includes
+	mediaLists := []models.MediaList{}
+	mediaListExists := map[int64]bool{}
+	mediaListExists = make(map[int64]bool)
+
+	for i := 0; i < len(mediaListIds); i++ {
+		if _, ok := mediaListExists[mediaListIds[i]]; !ok {
+			mediaList, _ := getMediaList(c, r, mediaListIds[i])
+			mediaLists = append(mediaLists, mediaList)
+			mediaListExists[mediaListIds[i]] = true
+		}
+	}
+
+	return mediaLists
+}
+
+func getIncludes(c context.Context, r *http.Request, contacts []models.Contact) interface{} {
+	publications := contactsToPublications(c, contacts)
+	return publications
+}
+
 /*
 * Public methods
  */
@@ -366,28 +418,8 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 		if err != nil {
 			return []models.Contact{}, nil, 0, err
 		}
-
-		publicationIds := []int64{}
-
-		for i := 0; i < len(contacts); i++ {
-			publicationIds = append(publicationIds, contacts[i].Employers...)
-			publicationIds = append(publicationIds, contacts[i].PastEmployers...)
-		}
-
-		// Work on includes
-		publications := []models.Publication{}
-		publicationExists := map[int64]bool{}
-		publicationExists = make(map[int64]bool)
-
-		for i := 0; i < len(publicationIds); i++ {
-			if _, ok := publicationExists[publicationIds[i]]; !ok {
-				publication, _ := getPublication(c, publicationIds[i])
-				publications = append(publications, publication)
-				publicationExists[publicationIds[i]] = true
-			}
-		}
-
-		return contacts, publications, len(contacts), nil
+		includes := getIncludes(c, r, contacts)
+		return contacts, includes, len(contacts), nil
 	}
 
 	query := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", false)
