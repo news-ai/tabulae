@@ -392,8 +392,19 @@ func contactsToLists(c context.Context, r *http.Request, contacts []models.Conta
 }
 
 func getIncludes(c context.Context, r *http.Request, contacts []models.Contact) interface{} {
+	mediaLists := contactsToLists(c, r, contacts)
 	publications := contactsToPublications(c, contacts)
-	return publications
+
+	includes := make([]interface{}, len(mediaLists)+len(publications))
+	for i := 0; i < len(mediaLists); i++ {
+		includes[i] = mediaLists[i]
+	}
+
+	for i := 0; i < len(publications); i++ {
+		includes[i+len(mediaLists)] = publications[i]
+	}
+
+	return includes
 }
 
 /*
@@ -437,29 +448,8 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 		log.Errorf(c, "%v", err)
 		return contacts, nil, 0, err
 	}
-
-	publicationIds := []int64{}
-
-	for i := 0; i < len(contacts); i++ {
-		contacts[i].Format(ks[i], "contacts")
-		publicationIds = append(publicationIds, contacts[i].Employers...)
-		publicationIds = append(publicationIds, contacts[i].PastEmployers...)
-	}
-
-	// Work on includes
-	publications := []models.Publication{}
-	publicationExists := map[int64]bool{}
-	publicationExists = make(map[int64]bool)
-
-	for i := 0; i < len(publicationIds); i++ {
-		if _, ok := publicationExists[publicationIds[i]]; !ok {
-			publication, _ := getPublication(c, publicationIds[i])
-			publications = append(publications, publication)
-			publicationExists[publicationIds[i]] = true
-		}
-	}
-
-	return contacts, publications, len(contacts), nil
+	includes := getIncludes(c, r, contacts)
+	return contacts, includes, len(contacts), nil
 }
 
 func GetContact(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
