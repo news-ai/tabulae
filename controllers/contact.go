@@ -453,7 +453,6 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 		contacts[i].Format(ks[i], "contacts")
 	}
 
-	log.Infof(c, "%v", contacts)
 	includes := getIncludes(c, r, contacts)
 	return contacts, includes, len(contacts), nil
 }

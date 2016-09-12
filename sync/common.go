@@ -13,6 +13,7 @@ var (
 	InfluencerTopicID   = "influencer"
 	ContactsTopicID     = "datastore-sync-contacts-functions"
 	PublicationsTopicID = "datastore-sync-publications-functions"
+	ListsTopicID        = "datastore-sync-lists-functions"
 	projectID           = "newsai-1166"
 )
 
@@ -55,6 +56,17 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		return nil, err
 	} else if !exists {
 		if _, err := PubsubClient.NewTopic(c, PublicationsTopicID); err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, err
+		}
+	}
+
+	// Create the topic for publications if it doesn't exist.
+	if exists, err := PubsubClient.Topic(ListsTopicID).Exists(c); err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	} else if !exists {
+		if _, err := PubsubClient.NewTopic(c, ListsTopicID); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}
