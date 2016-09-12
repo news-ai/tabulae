@@ -178,6 +178,9 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user models.User)
 	mediaList.Name = "My first list!"
 	mediaList.Client = "Microsoft"
 	mediaList.FieldsMap = getFieldsMap()
+	mediaList.CreatedBy = user.Id
+	mediaList.Created = time.Now()
+	mediaList.Save(c)
 
 	// Create a new contact for this list
 	contacts := []int64{}
@@ -189,6 +192,7 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user models.User)
 	singleContact.Twitter = "https://twitter.com/ShereenBhan"
 	singleContact.CreatedBy = user.Id
 	singleContact.Created = time.Now()
+	singleContact.ListId = mediaList.Id
 	_, err := Create(c, r, &singleContact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -198,10 +202,6 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user models.User)
 	// Add a contact into the list
 	contacts = append(contacts, singleContact.Id)
 	mediaList.Contacts = contacts
-	mediaList.CreatedBy = user.Id
-	mediaList.Created = time.Now()
-
-	// Save and return a media list
 	mediaList.Save(c)
 	return mediaList, nil, nil
 }
