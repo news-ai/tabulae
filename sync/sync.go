@@ -62,9 +62,9 @@ func ResourceSync(r *http.Request, resourceId int64, resource string) error {
 
 	if resource == "Contact" {
 		topic = PubsubClient.Topic(ContactsTopicID)
-	} else if topic == "Publication" {
+	} else if resource == "Publication" {
 		topic = PubsubClient.Topic(PublicationsTopicID)
-	} else if topic == "List" {
+	} else if resource == "List" {
 		topic = PubsubClient.Topic(ListsTopicID)
 	}
 

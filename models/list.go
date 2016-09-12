@@ -63,6 +63,6 @@ func (ml *MediaList) Save(c context.Context) (*MediaList, error) {
 	if err != nil {
 		return nil, err
 	}
-	ml.Format(k.IntID(), "lists")
+	ml.Format(k, "lists")
 	return ml, nil
 }
