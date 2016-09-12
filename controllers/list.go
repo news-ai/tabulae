@@ -284,26 +284,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 			return []models.Contact{}, nil, 0, err
 		}
 
-		publicationIds := []int64{}
-
-		for i := 0; i < len(contacts); i++ {
-			publicationIds = append(publicationIds, contacts[i].Employers...)
-			publicationIds = append(publicationIds, contacts[i].PastEmployers...)
-		}
-
-		// Work on includes
-		publications := []models.Publication{}
-		publicationExists := map[int64]bool{}
-		publicationExists = make(map[int64]bool)
-
-		for i := 0; i < len(publicationIds); i++ {
-			if _, ok := publicationExists[publicationIds[i]]; !ok {
-				publication, _ := getPublication(c, publicationIds[i])
-				publications = append(publications, publication)
-				publicationExists[publicationIds[i]] = true
-			}
-		}
-
+		publications := contactsToPublications(c, contacts)
 		return contacts, publications, len(contacts), nil
 	}
 
@@ -336,35 +317,12 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 		return []models.Contact{}, nil, 0, err
 	}
 
-	publicationIds := []int64{}
-	// externalResourceIds := map[string][]int64{}
-	// externalResourceIds = make(map[string][]int64)
-
 	for i := 0; i < len(contacts); i++ {
-		if contacts[i].LinkedIn != "" {
-			findOrCreateMasterContact(c, &contacts[i], r)
-			socialSync(c, r, &contacts[i], false)
-			checkAgainstParent(c, r, &contacts[i])
-		}
-
-		contacts[i].Id = subsetKeyIds[i].IntID()
-		publicationIds = append(publicationIds, contacts[i].Employers...)
-		publicationIds = append(publicationIds, contacts[i].PastEmployers...)
+		contacts[i].Id = subsetIds[i]
+		contacts[i].Type = "contacts"
 	}
 
-	// Work on includes
-	publications := []models.Publication{}
-	publicationExists := map[int64]bool{}
-	publicationExists = make(map[int64]bool)
-
-	for i := 0; i < len(publicationIds); i++ {
-		if _, ok := publicationExists[publicationIds[i]]; !ok {
-			publication, _ := getPublication(c, publicationIds[i])
-			publications = append(publications, publication)
-			publicationExists[publicationIds[i]] = true
-		}
-	}
-
+	publications := contactsToPublications(c, contacts)
 	return contacts, publications, len(contacts), nil
 }
 
