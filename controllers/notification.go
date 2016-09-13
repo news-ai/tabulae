@@ -138,7 +138,7 @@ func filterNotificationObject(c context.Context, r *http.Request, resourceName s
 func GetUnreadNotificationsForUser(c context.Context, r *http.Request, userId int64) ([]models.NotificationChange, error) {
 	notificationChanges := []models.NotificationChange{}
 
-	ks, err := datastore.NewQuery("NotificationChange").Filter("CreatedBy =", userId).GetAll(c, &notificationChanges)
+	ks, err := datastore.NewQuery("NotificationChange").Filter("CreatedBy =", userId).Filter("Read =", false).GetAll(c, &notificationChanges)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.NotificationChange{}, err
