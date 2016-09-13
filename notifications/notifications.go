@@ -12,6 +12,7 @@ import (
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/web/utilities"
 )
 
 type TokenResponse struct {
@@ -44,15 +45,17 @@ func SendNotification(r *http.Request, notification Notification, userId int64) 
 }
 
 func UserConnect(w http.ResponseWriter, r *http.Request) {
-	// c := appengine.NewContext(r)
+	c := appengine.NewContext(r)
 	// When user connects send them notifications from the past
-	// token := r.FormValue("from")
-	// validToken, err := controllers.GetToken(c, r, token)
-	// if err != nil {
-	// 	log.Errorf(c, "%v", err)
-	// 	w.WriteHeader(500)
-	// 	return
-	// }
+	token := r.FormValue("from")
+	log.Infof(c, "%v", token)
+	validToken, err := controllers.GetToken(c, r, token)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		w.WriteHeader(500)
+		return
+	}
+	log.Infof(c, "%v", validToken)
 	w.WriteHeader(200)
 	return
 }
@@ -85,7 +88,10 @@ func GetUserToken(c context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	token, err := channel.Create(c, strconv.FormatInt(currentUser.Id, 10))
+	randomString := strconv.FormatInt(currentUser.Id, 10)
+	randomString = randomString + utilities.RandToken()
+
+	token, err := channel.Create(c, randomString)
 	if err != nil {
 		log.Errorf(c, "channel.Create: %v", err)
 		return nil, err
@@ -93,8 +99,10 @@ func GetUserToken(c context.Context, r *http.Request) (interface{}, error) {
 
 	userToken := models.UserToken{}
 	userToken.CreatedBy = currentUser.Id
-	userToken.Token = token
+	userToken.Token = randomString
 	userToken.Create(c, r)
 
-	return userToken, nil
+	tokenResponse := TokenResponse{}
+	tokenResponse.Token = token
+	return tokenResponse, nil
 }
