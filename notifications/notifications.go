@@ -11,6 +11,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/controllers"
+	"github.com/news-ai/tabulae/models"
 )
 
 type TokenResponse struct {
@@ -21,17 +22,16 @@ type Notification struct {
 	Message string `json:"message"`
 }
 
-func SendNotification(r *http.Request, notification Notification) error {
+func SendNotification(r *http.Request, notification Notification, userId int64) error {
 	c := appengine.NewContext(r)
-
-	currentUser, err := controllers.GetCurrentUser(c, r)
+	userTokens, err := controllers.GetTokensForUser(c, r, userId)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return err
 	}
 
-	for i := 0; i < len(currentUser.TokenIds); i++ {
-		err = channel.SendJSON(c, currentUser.TokenIds[i], notification)
+	for i := 0; i < len(userTokens); i++ {
+		err = channel.SendJSON(c, userTokens[i].Token, notification)
 
 		// Log the error but continue sending the notification to other clients
 		// Future: remove the connection from the array if it has multiple errors
@@ -40,23 +40,19 @@ func SendNotification(r *http.Request, notification Notification) error {
 		}
 	}
 
-	return nil
+	return err
 }
 
 func UserConnect(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
-
-	token := r.FormValue("from")
-	currentUser, err := controllers.GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		w.WriteHeader(500)
-		return
-	}
-
-	currentUser.TokenIds = append(currentUser.TokenIds, token)
-	currentUser.Save(c)
-
+	// c := appengine.NewContext(r)
+	// When user connects send them notifications from the past
+	// token := r.FormValue("from")
+	// validToken, err := controllers.GetToken(c, r, token)
+	// if err != nil {
+	// 	log.Errorf(c, "%v", err)
+	// 	w.WriteHeader(500)
+	// 	return
+	// }
 	w.WriteHeader(200)
 	return
 }
@@ -65,20 +61,18 @@ func UserDisconnect(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
 	token := r.FormValue("from")
-	currentUser, err := controllers.GetCurrentUser(c, r)
+	validToken, err := controllers.GetToken(c, r, token)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		w.WriteHeader(500)
 		return
 	}
-
-	for i := 0; i < len(currentUser.TokenIds); i++ {
-		if currentUser.TokenIds[i] == token {
-			currentUser.TokenIds = append(currentUser.TokenIds[:i], currentUser.TokenIds[i+1:]...)
-		}
+	_, err = validToken.Delete(c)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		w.WriteHeader(500)
+		return
 	}
-
-	currentUser.Save(c)
 
 	w.WriteHeader(200)
 	return
@@ -97,7 +91,10 @@ func GetUserToken(c context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	tokenResponse := TokenResponse{}
-	tokenResponse.Token = token
-	return tokenResponse, nil
+	userToken := models.UserToken{}
+	userToken.CreatedBy = currentUser.Id
+	userToken.Token = token
+	userToken.Create(c, r)
+
+	return userToken, nil
 }
