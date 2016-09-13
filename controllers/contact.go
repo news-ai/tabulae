@@ -203,36 +203,36 @@ func checkAgainstParent(c context.Context, r *http.Request, ct *models.Contact) 
 	return ct, nil
 }
 
-func socialSync(c context.Context, r *http.Request, ct *models.Contact, justCreated bool) (*models.Contact, error) {
-	if ct.ParentContact == 0 {
-		return ct, nil
-	}
+// func socialSync(c context.Context, r *http.Request, ct *models.Contact, justCreated bool) (*models.Contact, error) {
+// 	if ct.ParentContact == 0 {
+// 		return ct, nil
+// 	}
 
-	parentContact, err := getContact(c, r, ct.ParentContact)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return ct, err
-	}
+// 	parentContact, err := getContact(c, r, ct.ParentContact)
+// 	if err != nil {
+// 		log.Errorf(c, "%v", err)
+// 		return ct, err
+// 	}
 
-	hourFromUpdate := parentContact.LinkedInUpdated.Add(time.Hour * 1)
+// 	hourFromUpdate := parentContact.LinkedInUpdated.Add(time.Hour * 1)
 
-	// Update LinkedIn contact
-	if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (time.Now().After(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {
-		// Send a pub to Influencer
-		err = sync.SocialSync(r, "linkedinUrl", parentContact.LinkedIn, parentContact.Id, justCreated)
+// 	// Update LinkedIn contact
+// 	if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (time.Now().After(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {
+// 		// Send a pub to Influencer
+// 		err = sync.SocialSync(r, "linkedinUrl", parentContact.LinkedIn, parentContact.Id, justCreated)
 
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return ct, err
-		}
+// 		if err != nil {
+// 			log.Errorf(c, "%v", err)
+// 			return ct, err
+// 		}
 
-		// Now that we have told the Influencer program that we are syncing Linkedin data
-		parentContact.LinkedInUpdated = time.Now()
-		parentContact.Save(c, r)
-	}
+// 		// Now that we have told the Influencer program that we are syncing Linkedin data
+// 		parentContact.LinkedInUpdated = time.Now()
+// 		parentContact.Save(c, r)
+// 	}
 
-	return ct, nil
-}
+// 	return ct, nil
+// }
 
 func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact, queryType, query string) (models.Contact, error) {
 	// Get an contact by a query type
@@ -547,7 +547,7 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 	ct.Create(c, r, currentUser)
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
-		_, _, justCreated := findOrCreateMasterContact(c, ct, r)
+		findOrCreateMasterContact(c, ct, r)
 		// socialSync(c, r, ct, justCreated)
 		// checkAgainstParent(c, r, ct)
 	}
@@ -781,33 +781,33 @@ func UpdateContactToParent(c context.Context, r *http.Request, id string) (model
 	return contact, nil, nil
 }
 
-func SocialSync(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
-	contact, _, err := GetContact(c, r, id)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return contact, nil, err
-	}
+// func SocialSync(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
+// 	contact, _, err := GetContact(c, r, id)
+// 	if err != nil {
+// 		log.Errorf(c, "%v", err)
+// 		return contact, nil, err
+// 	}
 
-	if contact.ParentContact == 0 {
-		return contact, nil, nil
-	}
+// 	if contact.ParentContact == 0 {
+// 		return contact, nil, nil
+// 	}
 
-	parentContact, err := getContact(c, r, contact.ParentContact)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return contact, nil, err
-	}
+// 	parentContact, err := getContact(c, r, contact.ParentContact)
+// 	if err != nil {
+// 		log.Errorf(c, "%v", err)
+// 		return contact, nil, err
+// 	}
 
-	// Send a pub to Influencer
-	err = sync.SocialSync(r, "linkedinUrl", parentContact.LinkedIn, parentContact.Id, false)
+// 	// Send a pub to Influencer
+// 	err = sync.SocialSync(r, "linkedinUrl", parentContact.LinkedIn, parentContact.Id, false)
 
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return contact, nil, err
-	}
+// 	if err != nil {
+// 		log.Errorf(c, "%v", err)
+// 		return contact, nil, err
+// 	}
 
-	// Now that we have told the Influencer program that we are syncing Linkedin data
-	parentContact.LinkedInUpdated = time.Now()
-	parentContact.Save(c, r)
-	return contact, nil, nil
-}
+// 	// Now that we have told the Influencer program that we are syncing Linkedin data
+// 	parentContact.LinkedInUpdated = time.Now()
+// 	parentContact.Save(c, r)
+// 	return contact, nil, nil
+// }

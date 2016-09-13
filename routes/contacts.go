@@ -25,8 +25,8 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 			return api.BaseSingleResponseHandler(controllers.GetDiff(c, r, id))
 		case "update":
 			return api.BaseSingleResponseHandler(controllers.UpdateContactToParent(c, r, id))
-		case "sync":
-			return api.BaseSingleResponseHandler(controllers.SocialSync(c, r, id))
+			// case "sync":
+			// 	return api.BaseSingleResponseHandler(controllers.SocialSync(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")
