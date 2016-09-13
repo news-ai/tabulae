@@ -12,8 +12,9 @@ import (
 type UserToken struct {
 	Base
 
-	Token  string `json:"token"`
-	IsUsed bool   `json:"isused"`
+	Token        string `json:"token"`
+	ChannelToken string `json:"channeltoken"`
+	IsUsed       bool   `json:"isused"`
 }
 
 /*

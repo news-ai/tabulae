@@ -16,7 +16,7 @@ import (
 )
 
 type TokenResponse struct {
-	Token string `json:"token"`
+	ChannelToken string `json:"token"`
 }
 
 type Notification struct {
@@ -32,7 +32,7 @@ func SendNotification(r *http.Request, notification Notification, userId int64) 
 	}
 
 	for i := 0; i < len(userTokens); i++ {
-		err = channel.SendJSON(c, userTokens[i].Token, notification)
+		err = channel.SendJSON(c, userTokens[i].ChannelToken, notification)
 
 		// Log the error but continue sending the notification to other clients
 		// Future: remove the connection from the array if it has multiple errors
@@ -95,12 +95,12 @@ func GetUserToken(c context.Context, r *http.Request) (interface{}, error) {
 
 	if len(userTokens) > 0 {
 		singleToken := userTokens[0]
-		tokenResponse.Token = singleToken.Token
+		tokenResponse.ChannelToken = singleToken.ChannelToken
 	} else {
 		randomString := strconv.FormatInt(currentUser.Id, 10)
 		randomString = randomString + utilities.RandToken()
 
-		token, err := channel.Create(c, randomString)
+		channelToken, err := channel.Create(c, randomString)
 		if err != nil {
 			log.Errorf(c, "channel.Create: %v", err)
 			return nil, err
@@ -109,9 +109,10 @@ func GetUserToken(c context.Context, r *http.Request) (interface{}, error) {
 		userToken := models.UserToken{}
 		userToken.CreatedBy = currentUser.Id
 		userToken.Token = randomString
+		userToken.ChannelToken = channelToken
 		userToken.Create(c, r)
 
-		tokenResponse.Token = token
+		tokenResponse.ChannelToken = channelToken
 	}
 
 	return tokenResponse, nil
