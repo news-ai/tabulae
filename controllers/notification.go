@@ -132,6 +132,26 @@ func filterNotificationObject(c context.Context, r *http.Request, resourceName s
  */
 
 /*
+* Get methods
+ */
+
+func GetUnreadNotificationsForUser(c context.Context, r *http.Request, userId int64) ([]models.NotificationChange, error) {
+	notificationChanges := []models.NotificationChange{}
+
+	ks, err := datastore.NewQuery("NotificationChange").Filter("CreatedBy =", userId).GetAll(c, &notificationChanges)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.NotificationChange{}, err
+	}
+
+	for i := 0; i < len(notificationChanges); i++ {
+		notificationChanges[i].Format(ks[i], "notificationchanges")
+	}
+
+	return notificationChanges, nil
+}
+
+/*
 * Create methods
  */
 

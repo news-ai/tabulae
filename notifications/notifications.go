@@ -23,13 +23,16 @@ type Notification struct {
 	Message string `json:"message"`
 }
 
-func SendNotification(r *http.Request, notification Notification, userId int64) error {
+func SendNotification(r *http.Request, notificationChange models.NotificationChange, userId int64) error {
 	c := appengine.NewContext(r)
 	userTokens, err := controllers.GetTokensForUser(c, r, userId, true)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return err
 	}
+
+	notification := Notification{}
+	notification.Message = notificationChange.Verb
 
 	for i := 0; i < len(userTokens); i++ {
 		err = channel.SendJSON(c, userTokens[i].ChannelToken, notification)
@@ -57,6 +60,21 @@ func UserConnect(w http.ResponseWriter, r *http.Request) {
 
 	validToken.IsUsed = true
 	validToken.Save(c)
+
+	notifications, err := controllers.GetUnreadNotificationsForUser(c, r, validToken.CreatedBy)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		w.WriteHeader(500)
+		return
+	}
+	if len(notifications) > 0 {
+		err = SendNotification(r, notifications[0], validToken.CreatedBy)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			w.WriteHeader(500)
+			return
+		}
+	}
 
 	w.WriteHeader(200)
 	return
