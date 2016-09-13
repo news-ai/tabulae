@@ -46,8 +46,8 @@ func GetToken(c context.Context, r *http.Request, token string) (models.UserToke
 	return models.UserToken{}, errors.New("No usertoken by the field token")
 }
 
-func GetTokensForUser(c context.Context, r *http.Request, userId int64) ([]models.UserToken, error) {
-	query := datastore.NewQuery("UserToken").Filter("CreatedBy =", userId)
+func GetTokensForUser(c context.Context, r *http.Request, userId int64, isUsed bool) ([]models.UserToken, error) {
+	query := datastore.NewQuery("UserToken").Filter("CreatedBy =", userId).Filter("IsUsed =", isUsed)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -68,7 +68,3 @@ func GetTokensForUser(c context.Context, r *http.Request, userId int64) ([]model
 
 	return tokenIds, nil
 }
-
-/*
-* Delete methods
- */

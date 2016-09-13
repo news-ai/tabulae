@@ -12,7 +12,8 @@ import (
 type UserToken struct {
 	Base
 
-	Token string `json:"token"`
+	Token  string `json:"token"`
+	IsUsed bool   `json:"isused"`
 }
 
 /*
