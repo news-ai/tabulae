@@ -471,14 +471,14 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 		return models.Contact{}, nil, err
 	}
 
-	if contact.LinkedIn != "" {
-		_, err = socialSync(c, r, &contact, false)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-		}
+	// if contact.LinkedIn != "" {
+	// 	_, err = socialSync(c, r, &contact, false)
+	// 	if err != nil {
+	// 		log.Errorf(c, "%v", err)
+	// 	}
 
-		checkAgainstParent(c, r, &contact)
-	}
+	// 	checkAgainstParent(c, r, &contact)
+	// }
 
 	return contact, nil, nil
 }
@@ -548,8 +548,8 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		_, _, justCreated := findOrCreateMasterContact(c, ct, r)
-		socialSync(c, r, ct, justCreated)
-		checkAgainstParent(c, r, ct)
+		// socialSync(c, r, ct, justCreated)
+		// checkAgainstParent(c, r, ct)
 	}
 
 	_, err = Save(c, r, ct)
@@ -619,8 +619,8 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 
 		if contacts[i].ParentContact == 0 && !contacts[i].IsMasterContact && contacts[i].LinkedIn != "" {
 			findOrCreateMasterContact(c, &contacts[i], r)
-			socialSync(c, r, &contacts[i], false)
-			checkAgainstParent(c, r, &contacts[i])
+			// socialSync(c, r, &contacts[i], false)
+			// checkAgainstParent(c, r, &contacts[i])
 		}
 	}
 
@@ -659,8 +659,8 @@ func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Conta
 
 	if ct.ParentContact == 0 && !ct.IsMasterContact {
 		findOrCreateMasterContact(c, ct, r)
-		socialSync(c, r, ct, false)
-		checkAgainstParent(c, r, ct)
+		// socialSync(c, r, ct, false)
+		// checkAgainstParent(c, r, ct)
 	}
 
 	ct.Save(c, r)
