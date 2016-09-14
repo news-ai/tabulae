@@ -20,6 +20,9 @@ type TokenResponse struct {
 }
 
 type Notification struct {
+	ResourceId  int64  `json:"resourceid"`
+	ResouceName string `json:"resourcename"`
+
 	Message string `json:"message"`
 }
 
@@ -31,7 +34,15 @@ func SendNotification(r *http.Request, notificationChange models.NotificationCha
 		return err
 	}
 
+	objectNotification, err := controllers.GetNotificationObjectById(c, r, notificationChange.NoticationObjectId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return err
+	}
+
 	notification := Notification{}
+	notification.ResouceName = objectNotification.Object
+	notification.ResourceId = objectNotification.ObjectId
 	notification.Message = notificationChange.Verb
 
 	for i := 0; i < len(userTokens); i++ {

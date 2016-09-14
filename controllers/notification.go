@@ -151,6 +151,26 @@ func GetUnreadNotificationsForUser(c context.Context, r *http.Request, userId in
 	return notificationChanges, nil
 }
 
+func GetNotificationObjectById(c context.Context, r *http.Request, id int64) (models.NotificationObject, error) {
+	if id == 0 {
+		return models.NotificationObject{}, errors.New("datastore: no such entity")
+	}
+	// Get the agency by id
+	var notificationObject models.NotificationObject
+	notificationObjectId := datastore.NewKey(c, "NotificationObject", "", id, nil)
+	err := nds.Get(c, notificationObjectId, &notificationObject)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.NotificationObject{}, err
+	}
+
+	if !notificationObject.Created.IsZero() {
+		notificationObject.Format(notificationObjectId, "notificationobjects")
+		return notificationObject, nil
+	}
+	return models.NotificationObject{}, errors.New("No notificationObject by this id")
+}
+
 /*
 * Create methods
  */
