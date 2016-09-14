@@ -3,6 +3,7 @@ package notifications
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -107,6 +108,19 @@ func UserDisconnect(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func generateChannelToken(c context.Context, currentUser models.User) (string, string, error) {
+	randomString := strconv.FormatInt(currentUser.Id, 10)
+	randomString = randomString + utilities.RandToken()
+
+	channelToken, err := channel.Create(c, randomString)
+	if err != nil {
+		log.Errorf(c, "channel.Create: %v", err)
+		return "", "", err
+	}
+
+	return randomString, channelToken, nil
+}
+
 func GetUserToken(c context.Context, r *http.Request) (interface{}, error) {
 	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
@@ -124,17 +138,27 @@ func GetUserToken(c context.Context, r *http.Request) (interface{}, error) {
 
 	if len(userTokens) > 0 {
 		singleToken := userTokens[0]
-		tokenResponse.ChannelToken = singleToken.ChannelToken
-	} else {
-		randomString := strconv.FormatInt(currentUser.Id, 10)
-		randomString = randomString + utilities.RandToken()
 
-		channelToken, err := channel.Create(c, randomString)
-		if err != nil {
-			log.Errorf(c, "channel.Create: %v", err)
-			return nil, err
+		fiftenMinutes := singleToken.Updated.Add(time.Minute * 15)
+
+		if time.Now().After(fiftenMinutes) {
+			randomString, channelToken, err := generateChannelToken(c, currentUser)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return nil, err
+			}
+			singleToken.Token = randomString
+			singleToken.ChannelToken = channelToken
+			singleToken.Save(c)
 		}
 
+		tokenResponse.ChannelToken = singleToken.ChannelToken
+	} else {
+		randomString, channelToken, err := generateChannelToken(c, currentUser)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, err
+		}
 		userToken := models.UserToken{}
 		userToken.CreatedBy = currentUser.Id
 		userToken.Token = randomString
