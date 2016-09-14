@@ -423,6 +423,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 }
 
 func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason string) (*models.Email, error) {
+	SetUser(c, r, e.CreatedBy)
 	LogNotificationForResource(c, r, "Email", e.Id, "BOUNCED", "")
 
 	contacts, err := filterContactByEmail(c, e.To)
@@ -439,11 +440,13 @@ func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason str
 }
 
 func MarkSpam(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
+	SetUser(c, r, e.CreatedBy)
 	LogNotificationForResource(c, r, "Email", e.Id, "SPAM", "")
 	return e.MarkSpam(c)
 }
 
 func MarkClicked(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
+	SetUser(c, r, e.CreatedBy)
 	LogNotificationForResource(c, r, "Email", e.Id, "CLICKED", "")
 	return e.MarkClicked(c)
 }
@@ -453,6 +456,7 @@ func MarkDelivered(c context.Context, e *models.Email) (*models.Email, error) {
 }
 
 func MarkOpened(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
+	SetUser(c, r, e.CreatedBy)
 	LogNotificationForResource(c, r, "Email", e.Id, "OPENED", "")
 	return e.MarkOpened(c)
 }

@@ -335,3 +335,14 @@ func ValidateUserPassword(r *http.Request, email string, password string) (model
 	}
 	return models.User{}, false, errors.New("User does not exist")
 }
+
+/*
+* Action methods
+ */
+
+func SetUser(c context.Context, r *http.Request, userId int64) (*models.User, error) {
+	// Method dangerous since it can log into as any user. Be careful.
+	user, _ := getUser(c, r, userId)
+	gcontext.Set(r, "user", user)
+	return user, nil
+}
