@@ -42,12 +42,14 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 	mediaList.Contacts = contactIds
 	for i := 0; i < len(headers); i++ {
 		if _, ok := customFields[headers[i]]; ok {
-			customField := models.CustomFieldsMap{}
-			customField.Name = headers[i]
-			customField.Value = headers[i]
-			customField.CustomField = true
-			customField.Hidden = false
-			mediaList.FieldsMap = append(mediaList.FieldsMap, customField)
+			if headers[i] != "ignore_column" {
+				customField := models.CustomFieldsMap{}
+				customField.Name = headers[i]
+				customField.Value = headers[i]
+				customField.CustomField = true
+				customField.Hidden = false
+				mediaList.FieldsMap = append(mediaList.FieldsMap, customField)
+			}
 		}
 	}
 
