@@ -30,6 +30,8 @@ type NotificationChange struct {
 	Verb  string
 	Actor string
 
+	Message string `json:"message"`
+
 	Read bool
 }
 

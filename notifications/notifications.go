@@ -33,12 +33,17 @@ func (n *Notification) generateNotificationMessage(c context.Context, r *http.Re
 		email, err := controllers.GetEmailById(c, r, n.ResourceId)
 		if err != nil {
 			log.Infof(c, "%v", err)
-			n.Message = "One of your emails were opened!"
+			n.Message = "One of your emails was opened"
 			return
 		}
 		if n.Verb == "OPENED" {
-			n.Message = email.To + " opened your email!"
-			return
+			n.Message = email.To + " opened your email"
+		} else if n.Verb == "BOUNCED" {
+			n.Message = "Your email to " + email.To + " bounced"
+		} else if n.Verb == "CLICKED" {
+			n.Message = "A link was clicked on your email to " + email.To
+		} else if n.Verb == "SPAM" {
+			n.Message = "Your email to " + email.To + " was put into the spam folder"
 		}
 	}
 }
@@ -55,6 +60,10 @@ func SendNotification(r *http.Request, notificationChanges []models.Notification
 		return err
 	}
 
+	if len(userTokens) == 0 {
+		return nil
+	}
+
 	notifications := []Notification{}
 	for i := 0; i < len(notificationChanges); i++ {
 		objectNotification, err := controllers.GetNotificationObjectById(c, r, notificationChanges[i].NoticationObjectId)
@@ -69,6 +78,10 @@ func SendNotification(r *http.Request, notificationChanges []models.Notification
 		notification.Verb = notificationChanges[i].Verb
 		notification.generateNotificationMessage(c, r)
 		notifications = append(notifications, notification)
+
+		notificationChanges[i].Message = notification.Message
+		notificationChanges[i].Read = true
+		notificationChanges[i].Save(c)
 	}
 
 	for i := 0; i < len(userTokens); i++ {
