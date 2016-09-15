@@ -59,6 +59,24 @@ func getUser(c context.Context, r *http.Request, id int64) (models.User, error) 
 	return models.User{}, errors.New("No user by this id")
 }
 
+func getUserUnauthorized(c context.Context, r *http.Request, id int64) (models.User, error) {
+	// Get the current signed in user details by Id
+	var user models.User
+	userId := datastore.NewKey(c, "User", "", id, nil)
+	err := nds.Get(c, userId, &user)
+
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, err
+	}
+
+	if user.Email != "" {
+		user.Format(userId, "users")
+		return user, nil
+	}
+	return models.User{}, errors.New("No user by this id")
+}
+
 // Gets every single user
 func getUsers(c context.Context, r *http.Request) ([]models.User, error) {
 	user, err := GetCurrentUser(c, r)
@@ -340,9 +358,12 @@ func ValidateUserPassword(r *http.Request, email string, password string) (model
 * Action methods
  */
 
-func SetUser(c context.Context, r *http.Request, userId int64) (*models.User, error) {
+func SetUser(c context.Context, r *http.Request, userId int64) (models.User, error) {
 	// Method dangerous since it can log into as any user. Be careful.
-	user, _ := getUser(c, r, userId)
+	user, err := getUserUnauthorized(c, r, userId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+	}
 	gcontext.Set(r, "user", user)
 	return user, nil
 }

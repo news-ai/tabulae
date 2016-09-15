@@ -161,6 +161,15 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 	return emails, nil, len(emails), nil
 }
 
+func GetEmailById(c context.Context, r *http.Request, id int64) (models.Email, error) {
+	email, err := getEmail(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Email{}, err
+	}
+	return email, nil
+}
+
 func GetEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)

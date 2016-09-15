@@ -23,31 +23,56 @@ type TokenResponse struct {
 type Notification struct {
 	ResourceId  int64  `json:"resourceid"`
 	ResouceName string `json:"resourcename"`
+	Verb        string `json:"verb"`
 
 	Message string `json:"message"`
 }
 
-func SendNotification(r *http.Request, notificationChange models.NotificationChange, userId int64) error {
+func (n *Notification) generateNotificationMessage(c context.Context, r *http.Request) {
+	if n.ResouceName == "Email" {
+		email, err := controllers.GetEmailById(c, r, n.ResourceId)
+		if err != nil {
+			log.Infof(c, "%v", err)
+			n.Message = "One of your emails were opened!"
+			return
+		}
+		if n.Verb == "OPENED" {
+			n.Message = email.To + " opened your email!"
+			return
+		}
+	}
+}
+
+func SendNotification(r *http.Request, notificationChanges []models.NotificationChange, userId int64) error {
 	c := appengine.NewContext(r)
+	// Set the current user logged in
+	controllers.SetUser(c, r, userId)
+
+	// Grab the user's tokens
 	userTokens, err := controllers.GetTokensForUser(c, r, userId, true)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return err
 	}
 
-	objectNotification, err := controllers.GetNotificationObjectById(c, r, notificationChange.NoticationObjectId)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return err
+	notifications := []Notification{}
+	for i := 0; i < len(notificationChanges); i++ {
+		objectNotification, err := controllers.GetNotificationObjectById(c, r, notificationChanges[i].NoticationObjectId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return err
+		}
+
+		notification := Notification{}
+		notification.ResouceName = objectNotification.Object
+		notification.ResourceId = objectNotification.ObjectId
+		notification.Verb = notificationChanges[i].Verb
+		notification.generateNotificationMessage(c, r)
+		notifications = append(notifications, notification)
 	}
 
-	notification := Notification{}
-	notification.ResouceName = objectNotification.Object
-	notification.ResourceId = objectNotification.ObjectId
-	notification.Message = notificationChange.Verb
-
 	for i := 0; i < len(userTokens); i++ {
-		err = channel.SendJSON(c, userTokens[i].ChannelToken, notification)
+		err = channel.SendJSON(c, userTokens[i].ChannelToken, notifications)
 
 		// Log the error but continue sending the notification to other clients
 		// Future: remove the connection from the array if it has multiple errors
@@ -55,6 +80,8 @@ func SendNotification(r *http.Request, notificationChange models.NotificationCha
 			log.Errorf(c, "%v", err)
 		}
 	}
+
+	// After sending mark everything as read
 
 	return err
 }
@@ -80,7 +107,7 @@ func UserConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(notifications) > 0 {
-		err = SendNotification(r, notifications[0], validToken.CreatedBy)
+		err = SendNotification(r, notifications, validToken.CreatedBy)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			w.WriteHeader(500)
