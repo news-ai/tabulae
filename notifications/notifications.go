@@ -29,7 +29,7 @@ type Notification struct {
 }
 
 func (n *Notification) generateNotificationMessage(c context.Context, r *http.Request) {
-	if n.ResouceName == "Email" {
+	if n.ResouceName == "emails" {
 		email, err := controllers.GetEmailById(c, r, n.ResourceId)
 		if err != nil {
 			log.Infof(c, "%v", err)
