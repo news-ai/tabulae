@@ -60,10 +60,6 @@ func SendNotification(r *http.Request, notificationChanges []models.Notification
 		return err
 	}
 
-	if len(userTokens) == 0 {
-		return nil
-	}
-
 	notifications := []Notification{}
 	for i := 0; i < len(notificationChanges); i++ {
 		objectNotification, err := controllers.GetNotificationObjectById(c, r, notificationChanges[i].NoticationObjectId)
@@ -80,8 +76,11 @@ func SendNotification(r *http.Request, notificationChanges []models.Notification
 		notifications = append(notifications, notification)
 
 		notificationChanges[i].Message = notification.Message
-		notificationChanges[i].Read = true
 		notificationChanges[i].Save(c)
+	}
+
+	if len(userTokens) == 0 {
+		return nil
 	}
 
 	for i := 0; i < len(userTokens); i++ {
@@ -92,6 +91,11 @@ func SendNotification(r *http.Request, notificationChanges []models.Notification
 		if err != nil {
 			log.Errorf(c, "%v", err)
 		}
+	}
+
+	for i := 0; i < len(notificationChanges); i++ {
+		notificationChanges[i].Read = true
+		notificationChanges[i].Save(c)
 	}
 
 	// After sending mark everything as read

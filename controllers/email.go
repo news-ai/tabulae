@@ -431,9 +431,9 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 	return email, nil, errors.New("Email could not be sent")
 }
 
-func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason string) (*models.Email, error) {
+func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason string) (*models.Email, models.NotificationChange, error) {
 	SetUser(c, r, e.CreatedBy)
-	LogNotificationForResource(c, r, "emails", e.Id, "BOUNCED", "")
+	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "BOUNCED", "")
 
 	contacts, err := filterContactByEmail(c, e.To)
 	if err != nil {
@@ -445,27 +445,31 @@ func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason str
 		contacts[i].Save(c, r)
 	}
 
-	return e.MarkBounced(c, reason)
+	_, err = e.MarkBounced(c, reason)
+	return e, notification, err
 }
 
-func MarkSpam(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
+func MarkSpam(c context.Context, r *http.Request, e *models.Email) (*models.Email, models.NotificationChange, error) {
 	SetUser(c, r, e.CreatedBy)
-	LogNotificationForResource(c, r, "emails", e.Id, "SPAM", "")
-	return e.MarkSpam(c)
+	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "SPAM", "")
+	_, err := e.MarkSpam(c)
+	return e, notification, err
 }
 
-func MarkClicked(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
+func MarkClicked(c context.Context, r *http.Request, e *models.Email) (*models.Email, models.NotificationChange, error) {
 	SetUser(c, r, e.CreatedBy)
-	LogNotificationForResource(c, r, "emails", e.Id, "CLICKED", "")
-	return e.MarkClicked(c)
+	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "CLICKED", "")
+	_, err := e.MarkClicked(c)
+	return e, notification, err
 }
 
 func MarkDelivered(c context.Context, e *models.Email) (*models.Email, error) {
 	return e.MarkDelivered(c)
 }
 
-func MarkOpened(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
+func MarkOpened(c context.Context, r *http.Request, e *models.Email) (*models.Email, models.NotificationChange, error) {
 	SetUser(c, r, e.CreatedBy)
-	LogNotificationForResource(c, r, "emails", e.Id, "OPENED", "")
-	return e.MarkOpened(c)
+	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "OPENED", "")
+	_, err := e.MarkOpened(c)
+	return e, notification, err
 }

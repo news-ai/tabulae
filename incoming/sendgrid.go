@@ -13,6 +13,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/news-ai/tabulae/controllers"
+	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/notifications"
 
 	"github.com/news-ai/web/errors"
 )
@@ -48,6 +50,7 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		// Validate email exists with particular SendGridId
 		sendGridId := strings.Split(singleEvent.SgMessageID, ".")[0]
 		email, err := controllers.FilterEmailBySendGridID(c, sendGridId)
+		notification := models.NotificationChange{}
 		if err != nil {
 			hasErrors = true
 			log.Errorf(c, "%v", singleEvent)
@@ -57,14 +60,14 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		// Add to appropriate Email model
 		switch singleEvent.Event {
 		case "bounce", "dropped":
-			_, err = controllers.MarkBounced(c, r, &email, singleEvent.Reason)
+			_, notification, err = controllers.MarkBounced(c, r, &email, singleEvent.Reason)
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
 				log.Errorf(c, "%v", err)
 			}
 		case "click":
-			_, err = controllers.MarkClicked(c, r, &email)
+			_, notification, err = controllers.MarkClicked(c, r, &email)
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
@@ -78,14 +81,14 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 				log.Errorf(c, "%v", err)
 			}
 		case "spamreport":
-			_, err = controllers.MarkSpam(c, r, &email)
+			_, notification, err = controllers.MarkSpam(c, r, &email)
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
 				log.Errorf(c, "%v", err)
 			}
 		case "open":
-			_, err = controllers.MarkOpened(c, r, &email)
+			_, notification, err = controllers.MarkOpened(c, r, &email)
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
@@ -94,6 +97,21 @@ func SendGridHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		default:
 			hasErrors = true
 			log.Errorf(c, "%v", singleEvent)
+		}
+
+		// Send user notification
+		if notification.Verb != "" {
+			// Send the notification to the user if they have a socket open
+			currentUser, err := controllers.GetCurrentUser(c, r)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				w.WriteHeader(500)
+				return
+			}
+
+			notificationChanges := []models.NotificationChange{}
+			notificationChanges = append(notificationChanges, notification)
+			notifications.SendNotification(r, notificationChanges, currentUser.Id)
 		}
 	}
 
