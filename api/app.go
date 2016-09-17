@@ -135,6 +135,10 @@ func init() {
 	router.GET("/api/templates/:id", routes.TemplateHandler)
 	router.PATCH("/api/templates/:id", routes.TemplateHandler)
 
+	router.GET("/api/feeds", routes.FeedsHandler)
+	router.POST("/api/feeds", routes.FeedsHandler)
+	router.GET("/api/feeds/:id", routes.FeedHandler)
+
 	// Security fixes
 	secureMiddleware := secure.New(secure.Options{
 		FrameDeny:        true,

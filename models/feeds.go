@@ -7,6 +7,7 @@ type Feed struct {
 	ContactId int64  `json:"contactid"`
 
 	ValidFeed bool `json:"validfeed"`
+	Running   bool `json:"running"`
 }
 
 /*
@@ -18,9 +19,12 @@ type Feed struct {
  */
 
 func (f *Feed) Create(c context.Context, r *http.Request, currentUser User) (*Feed, error) {
-	f.IsSent = false
 	f.CreatedBy = currentUser.Id
 	f.Created = time.Now()
+
+	// Initially the feed is both running and valid
+	f.Running = true
+	f.ValidFeed = true
 
 	_, err := f.Save(c)
 	return f, err
