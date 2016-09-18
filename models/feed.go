@@ -12,9 +12,10 @@ import (
 type Feed struct {
 	Base
 
-	FeedURL   string `json:"feedurl"`
-	ContactId int64  `json:"contactid"`
-	ListId    int64  `json:"listid"`
+	FeedURL       string `json:"feedurl"`
+	ContactId     int64  `json:"contactid"`
+	ListId        int64  `json:"listid"`
+	PublicationId int64  `json:"publicationid"`
 
 	ValidFeed bool `json:"validfeed"`
 	Running   bool `json:"running"`

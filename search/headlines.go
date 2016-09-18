@@ -21,6 +21,8 @@ var (
 )
 
 type Headline struct {
+	Type string `json:"type"`
+
 	Title       string    `json:"title"`
 	Author      string    `json:"author"`
 	Url         string    `json:"url"`
@@ -53,8 +55,8 @@ func searchHeadline(c context.Context, elasticQuery elastic.ElasticQuery) ([]Hea
 	headlines := []Headline{}
 	for i := 0; i < len(headlineHits); i++ {
 		rawHeadline := headlineHits[i].Source.Data
-		rawMap := rawContact.(map[string]interface{})
-		headline := models.Contact{}
+		rawMap := rawHeadline.(map[string]interface{})
+		headline := Headline{}
 		err := headline.FillStruct(rawMap)
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -67,7 +69,7 @@ func searchHeadline(c context.Context, elasticQuery elastic.ElasticQuery) ([]Hea
 	return headlines, nil
 }
 
-func SearchHeadlines(c context.Context, r *http.Request, search string, userId int64, contactId int64) ([]models.Contact, error) {
+func SearchHeadlines(c context.Context, r *http.Request, contactId int64) ([]Headline, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
@@ -75,18 +77,10 @@ func SearchHeadlines(c context.Context, r *http.Request, search string, userId i
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticCreatedByQuery := ElasticCreatedByQuery{}
-	elasticCreatedByQuery.Term.CreatedBy = userId
-
 	elasticContactIdQuery := ElasticContactIdQuery{}
 	elasticContactIdQuery.Term.ContactId = contactId
 
-	elasticMatchQuery := elastic.ElasticMatchQuery{}
-	elasticMatchQuery.Match.All = search
-
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticContactIdQuery)
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
 
-	return searchHeadlines(c, elasticQuery)
+	return searchHeadline(c, elasticQuery)
 }

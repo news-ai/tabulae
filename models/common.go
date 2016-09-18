@@ -23,8 +23,16 @@ func SetField(obj interface{}, name string, value interface{}) error {
 		return errors.New("Cannot set" + name + " field value")
 	}
 
+	// Cast string array
+	if name == "Categories" {
+		returnValue := cast.ToStringSlice(value)
+		val := reflect.ValueOf(returnValue)
+		structFieldValue.Set(val)
+		return nil
+	}
+
 	// Cast time
-	if name == "Created" || name == "Updated" || name == "LinkedInUpdated" {
+	if name == "Created" || name == "Updated" || name == "LinkedInUpdated" || name == "PublishDate" {
 		returnValue := cast.ToTime(value)
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)
@@ -39,7 +47,7 @@ func SetField(obj interface{}, name string, value interface{}) error {
 	}
 
 	// Int64
-	if name == "Id" || name == "CreatedBy" || name == "ParentContact" || name == "ListId" {
+	if name == "Id" || name == "CreatedBy" || name == "ParentContact" || name == "ListId" || name == "ContactId" {
 		returnValue := cast.ToInt64(value)
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)
