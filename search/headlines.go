@@ -2,6 +2,7 @@ package search
 
 import (
 	"net/http"
+	"time"
 	// "net/url"
 	// "strconv"
 
@@ -20,6 +21,14 @@ var (
 )
 
 type Headline struct {
+	Title       string    `json:"title"`
+	Author      string    `json:"author"`
+	Url         string    `json:"url"`
+	Categories  []string  `json:"categories"`
+	PublishDate time.Time `json:"publishdate"`
+	Summary     string    `json:"summary"`
+	ContactId   int64     `json:"contactid"`
+	ListId      int64     `json:"listid"`
 }
 
 func searchHeadline(c context.Context, elasticQuery elastic.ElasticQuery) ([]Headline, error) {
