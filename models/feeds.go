@@ -14,6 +14,7 @@ type Feed struct {
 
 	FeedURL   string `json:"feedurl"`
 	ContactId int64  `json:"contactid"`
+	ListId    int64  `json:"listid"`
 
 	ValidFeed bool `json:"validfeed"`
 	Running   bool `json:"running"`
@@ -46,8 +47,6 @@ func (f *Feed) Create(c context.Context, r *http.Request, currentUser User) (*Fe
 // Function to save a new email into App Engine
 func (f *Feed) Save(c context.Context) (*Feed, error) {
 	// Update the Updated time
-	f.Updated = time.Now()
-
 	k, err := nds.Put(c, f.key(c, "Feed"), f)
 	if err != nil {
 		return nil, err
