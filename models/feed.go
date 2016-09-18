@@ -46,7 +46,6 @@ func (f *Feed) Create(c context.Context, r *http.Request, currentUser User) (*Fe
 
 // Function to save a new email into App Engine
 func (f *Feed) Save(c context.Context) (*Feed, error) {
-	// Update the Updated time
 	k, err := nds.Put(c, f.key(c, "Feed"), f)
 	if err != nil {
 		return nil, err

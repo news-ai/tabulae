@@ -38,4 +38,10 @@ func InitializeElasticSearch() {
 	contactElastic.Index = "contacts"
 	contactElastic.Type = "contact"
 	elasticContact = &contactElastic
+
+	headlineElastic := elastic.Elastic{}
+	headlineElastic.BaseURL = baseURL
+	headlineElastic.Index = "headlines"
+	headlineElastic.Type = "headline"
+	elasticHeadline = &headlineElastic
 }

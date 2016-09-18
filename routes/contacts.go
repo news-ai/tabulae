@@ -21,6 +21,8 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 	switch r.Method {
 	case "GET":
 		switch action {
+		// case "headlines":
+		// 	return api.BaseSingleResponseHandler(controllers.GetHeadlines(c, r, id))
 		case "diff":
 			return api.BaseSingleResponseHandler(controllers.GetDiff(c, r, id))
 		case "update":

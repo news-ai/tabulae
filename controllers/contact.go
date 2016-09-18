@@ -533,6 +533,10 @@ func GetDiff(c context.Context, r *http.Request, id string) (interface{}, interf
 	return data, nil, nil
 }
 
+// func GetHeadlines(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+
+// }
+
 /*
 * Create methods
  */
