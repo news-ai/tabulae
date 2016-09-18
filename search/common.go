@@ -20,6 +20,12 @@ type ElasticListIdQuery struct {
 	} `json:"term"`
 }
 
+type ElasticContactIdQuery struct {
+	Term struct {
+		ContactId int64 `json:"data.ContactId"`
+	} `json:"term"`
+}
+
 func InitializeElasticSearch() {
 	agencyElastic := elastic.Elastic{}
 	agencyElastic.BaseURL = baseURL
