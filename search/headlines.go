@@ -30,8 +30,9 @@ type Headline struct {
 	PublishDate time.Time `json:"publishdate"`
 	Summary     string    `json:"summary"`
 
-	ContactId int64 `json:"contactid"`
-	ListId    int64 `json:"listid"`
+	ContactId     int64 `json:"contactid"`
+	ListId        int64 `json:"listid"`
+	PublicationId int64 `json:"publicationid"`
 }
 
 func (h *Headline) FillStruct(m map[string]interface{}) error {
