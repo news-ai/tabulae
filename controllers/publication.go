@@ -147,6 +147,23 @@ func GetPublication(c context.Context, id string) (models.Publication, interface
 	return publication, nil, nil
 }
 
+func GetHeadlinesForPublication(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	headlines, err := search.SearchHeadlinesByPublicationId(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	return headlines, nil, len(headlines), nil
+}
+
 /*
 * Create methods
  */
