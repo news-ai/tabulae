@@ -124,6 +124,12 @@ func CreateFeed(c context.Context, r *http.Request) (models.Feed, interface{}, e
 		return feed, nil, err
 	}
 
+	baseDomain, err := utilities.NormalizeUrl(feed.FeedURL)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Feed{}, nil, err
+	}
+
 	// Create feed
 	_, err = feed.Create(c, r, currentUser)
 	if err != nil {
