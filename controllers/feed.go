@@ -130,6 +130,23 @@ func CreateFeed(c context.Context, r *http.Request) (models.Feed, interface{}, e
 		return models.Feed{}, nil, err
 	}
 
+	publicationName, err := utilities.GetTitleFromHTTPRequest(c, baseDomain)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Feed{}, nil, err
+	}
+
+	publication, err := FindOrCreatePublication(c, r, publicationName)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Feed{}, nil, err
+	}
+
+	publication.Url = baseDomain
+	publication.Save(c)
+
+	feed.PublicationId = publication.Id
+
 	// Create feed
 	_, err = feed.Create(c, r, currentUser)
 	if err != nil {
