@@ -345,6 +345,23 @@ func GetEmailsForList(c context.Context, r *http.Request, id string) ([]models.E
 	return emails, nil, count, nil
 }
 
+func GetHeadlinesForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	headlines, err := search.SearchHeadlinesByListId(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	return headlines, nil, len(headlines), nil
+}
+
 func DuplicateList(c context.Context, r *http.Request, id string) (models.MediaList, interface{}, error) {
 	// Get the details of the current media list
 	mediaList, _, err := GetMediaList(c, r, id)

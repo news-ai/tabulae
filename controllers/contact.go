@@ -533,7 +533,7 @@ func GetDiff(c context.Context, r *http.Request, id string) (interface{}, interf
 	return data, nil, nil
 }
 
-func GetHeadlines(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+func GetHeadlinesForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
@@ -541,7 +541,7 @@ func GetHeadlines(c context.Context, r *http.Request, id string) (interface{}, i
 		return nil, nil, 0, err
 	}
 
-	headlines, err := search.SearchHeadlines(c, r, currentId)
+	headlines, err := search.SearchHeadlinesByContactId(c, r, currentId)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, err

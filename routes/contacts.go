@@ -22,7 +22,7 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 	case "GET":
 		switch action {
 		case "headlines":
-			val, included, count, err := controllers.GetHeadlines(c, r, id)
+			val, included, count, err := controllers.GetHeadlinesForContact(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)
 		case "diff":
 			return api.BaseSingleResponseHandler(controllers.GetDiff(c, r, id))

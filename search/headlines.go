@@ -70,7 +70,7 @@ func searchHeadline(c context.Context, elasticQuery elastic.ElasticQuery) ([]Hea
 	return headlines, nil
 }
 
-func SearchHeadlines(c context.Context, r *http.Request, contactId int64) ([]Headline, error) {
+func SearchHeadlinesByContactId(c context.Context, r *http.Request, contactId int64) ([]Headline, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
@@ -82,6 +82,38 @@ func SearchHeadlines(c context.Context, r *http.Request, contactId int64) ([]Hea
 	elasticContactIdQuery.Term.ContactId = contactId
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticContactIdQuery)
+
+	return searchHeadline(c, elasticQuery)
+}
+
+func SearchHeadlinesByListId(c context.Context, r *http.Request, listId int64) ([]Headline, error) {
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticListIdQuery := ElasticListIdQuery{}
+	elasticListIdQuery.Term.ListId = listId
+
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticListIdQuery)
+
+	return searchHeadline(c, elasticQuery)
+}
+
+func SearchHeadlinesByPublicationId(c context.Context, r *http.Request, publicationId int64) ([]Headline, error) {
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticPublicationIdQuery := ElasticPublicationIdQuery{}
+	elasticPublicationIdQuery.Term.PublicationId = publicationId
+
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticPublicationIdQuery)
 
 	return searchHeadline(c, elasticQuery)
 }
