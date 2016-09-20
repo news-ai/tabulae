@@ -32,6 +32,13 @@ type ElasticPublicationIdQuery struct {
 	} `json:"term"`
 }
 
+type ElasticSortDataPublishDateQuery struct {
+	DataPublishDate struct {
+		Order string `json:"order"`
+		Mode  string `json:"mode"`
+	} `json:"data.PublishDate"`
+}
+
 func InitializeElasticSearch() {
 	agencyElastic := elastic.Elastic{}
 	agencyElastic.BaseURL = baseURL

@@ -45,8 +45,13 @@ func (h *Headline) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchHeadline(c context.Context, elasticQuery elastic.ElasticQuery) ([]Headline, error) {
-	hits, err := elasticHeadline.QueryStruct(c, elasticQuery)
+func searchHeadline(c context.Context, elasticQuery elastic.ElasticQueryWithSort) ([]Headline, error) {
+	elasticPublishDateQuery := ElasticSortDataPublishDateQuery{}
+	elasticPublishDateQuery.DataPublishDate.Order = "desc"
+	elasticPublishDateQuery.DataPublishDate.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticPublishDateQuery)
+
+	hits, err := elasticHeadline.QueryStructWithSort(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []Headline{}, err
@@ -74,7 +79,7 @@ func SearchHeadlinesByContactId(c context.Context, r *http.Request, contactId in
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery := elastic.ElasticQueryWithSort{}
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
@@ -90,7 +95,7 @@ func SearchHeadlinesByListId(c context.Context, r *http.Request, listId int64) (
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery := elastic.ElasticQueryWithSort{}
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
@@ -106,7 +111,7 @@ func SearchHeadlinesByPublicationId(c context.Context, r *http.Request, publicat
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery := elastic.ElasticQueryWithSort{}
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
