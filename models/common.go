@@ -23,6 +23,19 @@ func SetField(obj interface{}, name string, value interface{}) error {
 		return errors.New("Cannot set" + name + " field value")
 	}
 
+	if name == "CustomFields" {
+		// customFields := []CustomContactFieldElastic{}
+		// switch v := value.(type) {
+		// case []interface{}:
+		// 	for _, u := range v {
+		// 		customFields = append(customFields, u.(CustomContactFieldElastic))
+		// 	}
+		// }
+		// val := reflect.ValueOf(customFields)
+		// structFieldValue.Set(val)
+		return nil
+	}
+
 	// Cast string array
 	if name == "Categories" {
 		returnValue := cast.ToStringSlice(value)
