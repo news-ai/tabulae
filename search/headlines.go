@@ -29,6 +29,7 @@ type Headline struct {
 	Categories  []string  `json:"categories"`
 	PublishDate time.Time `json:"publishdate"`
 	Summary     string    `json:"summary"`
+	FeedURL     string    `json:"-"`
 
 	ContactId     int64 `json:"contactid"`
 	ListId        int64 `json:"listid"`

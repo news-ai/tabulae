@@ -65,7 +65,7 @@ func ResourceSync(r *http.Request, resourceId int64, resource string) error {
 	} else if resource == "Publication" {
 		topic = PubsubClient.Topic(PublicationsTopicID)
 	} else if resource == "List" {
-		topic = PubsubClient.Topic(ListsTopicID)
+		return nil
 	}
 
 	_, err = topic.Publish(c, &pubsub.Message{Data: jsonData})
