@@ -29,10 +29,8 @@ type Headline struct {
 	Categories  []string  `json:"categories"`
 	PublishDate time.Time `json:"publishdate"`
 	Summary     string    `json:"summary"`
-	FeedURL     string    `json:"-"`
+	FeedURL     string    `json:"feedurl"`
 
-	ContactId     int64 `json:"contactid"`
-	ListId        int64 `json:"listid"`
 	PublicationId int64 `json:"publicationid"`
 }
 
@@ -46,13 +44,8 @@ func (h *Headline) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchHeadline(c context.Context, elasticQuery elastic.ElasticQueryWithSort) ([]Headline, error) {
-	elasticPublishDateQuery := ElasticSortDataPublishDateQuery{}
-	elasticPublishDateQuery.DataPublishDate.Order = "desc"
-	elasticPublishDateQuery.DataPublishDate.Mode = "avg"
-	elasticQuery.Sort = append(elasticQuery.Sort, elasticPublishDateQuery)
-
-	hits, err := elasticHeadline.QueryStructWithSort(c, elasticQuery)
+func searchHeadline(c context.Context, elasticQuery interface{}) ([]Headline, error) {
+	hits, err := elasticHeadline.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []Headline{}, err
@@ -76,34 +69,27 @@ func searchHeadline(c context.Context, elasticQuery elastic.ElasticQueryWithSort
 	return headlines, nil
 }
 
-func SearchHeadlinesByContactId(c context.Context, r *http.Request, contactId int64) ([]Headline, error) {
+func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []models.Feed) ([]Headline, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	elasticQuery := elastic.ElasticQueryWithSort{}
+	elasticQuery := elastic.ElasticFilterWithSort{}
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticContactIdQuery := ElasticContactIdQuery{}
-	elasticContactIdQuery.Term.ContactId = contactId
+	for i := 0; i < len(feeds); i++ {
+		elasticFeedUrlQuery := ElasticFeedUrlQuery{}
+		elasticFeedUrlQuery.Match.FeedURL = feeds[i].FeedURL
+		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
+	}
 
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticContactIdQuery)
+	elasticQuery.Query.Bool.MinimumShouldMatch = "100%"
+	elasticQuery.MinScore = 1.0
 
-	return searchHeadline(c, elasticQuery)
-}
-
-func SearchHeadlinesByListId(c context.Context, r *http.Request, listId int64) ([]Headline, error) {
-	offset := gcontext.Get(r, "offset").(int)
-	limit := gcontext.Get(r, "limit").(int)
-
-	elasticQuery := elastic.ElasticQueryWithSort{}
-	elasticQuery.Size = limit
-	elasticQuery.From = offset
-
-	elasticListIdQuery := ElasticListIdQuery{}
-	elasticListIdQuery.Term.ListId = listId
-
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticListIdQuery)
+	elasticPublishDateQuery := ElasticSortDataPublishDateQuery{}
+	elasticPublishDateQuery.DataPublishDate.Order = "desc"
+	elasticPublishDateQuery.DataPublishDate.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticPublishDateQuery)
 
 	return searchHeadline(c, elasticQuery)
 }
@@ -120,6 +106,10 @@ func SearchHeadlinesByPublicationId(c context.Context, r *http.Request, publicat
 	elasticPublicationIdQuery.Term.PublicationId = publicationId
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticPublicationIdQuery)
+	elasticPublishDateQuery := ElasticSortDataPublishDateQuery{}
+	elasticPublishDateQuery.DataPublishDate.Order = "desc"
+	elasticPublishDateQuery.DataPublishDate.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticPublishDateQuery)
 
 	return searchHeadline(c, elasticQuery)
 }

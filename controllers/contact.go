@@ -541,7 +541,13 @@ func GetHeadlinesForContact(c context.Context, r *http.Request, id string) (inte
 		return nil, nil, 0, err
 	}
 
-	headlines, err := search.SearchHeadlinesByContactId(c, r, currentId)
+	feeds, err := GetFeedsByResourceId(c, r, "ContactId", currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	headlines, err := search.SearchHeadlinesByResourceId(c, r, feeds)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, err

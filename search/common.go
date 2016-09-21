@@ -32,6 +32,12 @@ type ElasticPublicationIdQuery struct {
 	} `json:"term"`
 }
 
+type ElasticFeedUrlQuery struct {
+	Match struct {
+		FeedURL string `json:"data.FeedURL"`
+	} `json:"match"`
+}
+
 type ElasticSortDataPublishDateQuery struct {
 	DataPublishDate struct {
 		Order string `json:"order"`

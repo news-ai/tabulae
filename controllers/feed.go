@@ -104,6 +104,31 @@ func GetFeeds(c context.Context, r *http.Request) ([]models.Feed, interface{}, i
 	return feeds, nil, len(feeds), nil
 }
 
+func GetFeedsByResourceId(c context.Context, r *http.Request, resouceName string, resourceId int64) ([]models.Feed, error) {
+	query := datastore.NewQuery("Feed").Filter(resouceName+" =", resourceId)
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Feed{}, err
+	}
+
+	var feeds []models.Feed
+	feeds = make([]models.Feed, len(ks))
+
+	err = nds.GetMulti(c, ks, feeds)
+	if err != nil {
+		log.Infof(c, "%v", err)
+		return []models.Feed{}, err
+	}
+
+	for i := 0; i < len(feeds); i++ {
+		feeds[i].Format(ks[i], "feeds")
+	}
+
+	return feeds, nil
+}
+
 /*
 * Create methods
  */
