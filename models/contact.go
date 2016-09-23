@@ -86,6 +86,7 @@ func (ct *Contact) Create(c context.Context, r *http.Request, currentUser User) 
 func (ct *Contact) Save(c context.Context, r *http.Request) (*Contact, error) {
 	// Update the Updated time
 	ct.Updated = time.Now()
+	ct.Normalize()
 
 	k, err := nds.Put(c, ct.key(c, "Contact"), ct)
 	if err != nil {
@@ -102,7 +103,9 @@ func (ct *Contact) Save(c context.Context, r *http.Request) (*Contact, error) {
 func (ct *Contact) Normalize() (*Contact, error) {
 	ct.LinkedIn = utilities.StripQueryString(ct.LinkedIn)
 	ct.Twitter = utilities.StripQueryString(ct.Twitter)
+	ct.Twitter = utilities.NormalizeUrlToUsername(ct.Twitter, "twitter.com")
 	ct.Instagram = utilities.StripQueryString(ct.Instagram)
+	ct.Instagram = utilities.NormalizeUrlToUsername(ct.Instagram, "instagram.com")
 	ct.MuckRack = utilities.StripQueryString(ct.MuckRack)
 	ct.Website = utilities.StripQueryString(ct.Website)
 	ct.Blog = utilities.StripQueryString(ct.Blog)

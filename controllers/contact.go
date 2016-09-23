@@ -296,49 +296,82 @@ func filterContactByEmail(c context.Context, email string) ([]models.Contact, er
 	return contacts, nil
 }
 
+func createMasterContact(c context.Context, ct *models.Contact, r *http.Request, masterContact models.Contact, err error) (*models.Contact, error, bool) {
+	// Master contact does not exist
+	if err != nil {
+		// Create master contact
+		newMasterContact := models.Contact{}
+
+		// Initialize with the same values
+		newMasterContact.FirstName = ct.FirstName
+		newMasterContact.LastName = ct.LastName
+		newMasterContact.Email = ct.Email
+		newMasterContact.Employers = ct.Employers
+		newMasterContact.PastEmployers = ct.PastEmployers
+		newMasterContact.LinkedIn = ct.LinkedIn
+		newMasterContact.Twitter = ct.Twitter
+		newMasterContact.Instagram = ct.Instagram
+		newMasterContact.MuckRack = ct.MuckRack
+		newMasterContact.Website = ct.Website
+		newMasterContact.Blog = ct.Blog
+
+		// Set this to be the new master contact
+		newMasterContact.IsMasterContact = true
+
+		// Create the new master contact
+		Create(c, r, &newMasterContact)
+
+		// Do a social sync task when new master contact is added
+
+		// Assign the Id of the parent contact to be the new master contact.
+		ct.ParentContact = newMasterContact.Id
+		ct.IsMasterContact = false
+
+		return ct, nil, true
+	}
+
+	// Update social information
+
+	// Don't create master contact
+	ct.ParentContact = masterContact.Id
+	return ct, nil, false
+}
+
 func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Request) (*models.Contact, error, bool) {
 	// Find master contact
 	// If there is no parent contact Id or if the Linkedin field is not empty
 	if ct.ParentContact == 0 && ct.LinkedIn != "" {
 		masterContact, err := filterMasterContact(c, r, ct, "LinkedIn", ct.LinkedIn)
-		// Master contact does not exist
-		if err != nil {
-			// Create master contact
-			newMasterContact := models.Contact{}
 
-			// Initialize with the same values
-			newMasterContact.FirstName = ct.FirstName
-			newMasterContact.LastName = ct.LastName
-			newMasterContact.Email = ct.Email
-			newMasterContact.Employers = ct.Employers
-			newMasterContact.PastEmployers = ct.PastEmployers
-			newMasterContact.LinkedIn = ct.LinkedIn
-			newMasterContact.Twitter = ct.Twitter
-			newMasterContact.Instagram = ct.Instagram
-			newMasterContact.MuckRack = ct.MuckRack
-			newMasterContact.Website = ct.Website
-			newMasterContact.Blog = ct.Blog
-
-			// Set this to be the new master contact
-			newMasterContact.IsMasterContact = true
-
-			// Create the new master contact
-			Create(c, r, &newMasterContact)
-
-			// Do a social sync task when new master contact is added
-
-			// Assign the Id of the parent contact to be the new master contact.
-			ct.ParentContact = newMasterContact.Id
-			ct.IsMasterContact = false
-
-			return ct, nil, true
+		// If there is a Linkedin then it'll add it as that parent contact
+		if err == nil {
+			return createMasterContact(c, ct, r, masterContact, nil)
 		}
+	}
 
-		// Update social information
+	// If there is no parent contact Id or if the Twitter field is not empty
+	if ct.ParentContact == 0 && ct.Twitter != "" {
+		masterContact, err := filterMasterContact(c, r, ct, "Twitter", ct.Twitter)
 
-		// Don't create master contact
-		ct.ParentContact = masterContact.Id
-		return ct, nil, false
+		// If there is a Twitter
+		if err == nil {
+			return createMasterContact(c, ct, r, masterContact, nil)
+		}
+	}
+
+	// If there is no parent contact Id or if the Instagram field is not empty
+	if ct.ParentContact == 0 && ct.Instagram != "" {
+		masterContact, err := filterMasterContact(c, r, ct, "Instagram", ct.Instagram)
+
+		// If there is a Instagram
+		if err == nil {
+			return createMasterContact(c, ct, r, masterContact, nil)
+		}
+	}
+
+	// If there is no parent contact
+	if ct.Instagram != "" || ct.Twitter != "" || ct.LinkedIn != "" {
+		return createMasterContact(c, ct, r, models.Contact{}, nil)
 	}
 
 	return ct, nil, false
