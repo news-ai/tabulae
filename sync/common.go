@@ -14,6 +14,7 @@ var (
 	ContactsTopicID     = "datastore-sync-contacts-functions"
 	PublicationsTopicID = "datastore-sync-publications-functions"
 	ListsTopicID        = "datastore-sync-lists-functions"
+	TwitterTopicID      = "process-twitter-feed"
 	projectID           = "newsai-1166"
 )
 
