@@ -10,18 +10,12 @@ import (
 	"google.golang.org/cloud/pubsub"
 )
 
-func TwitterSync(r *http.Request, socialField string, twitterUser string, contactId int64) error {
+func sync(r *http.Request, data map[string]string, topicName string) error {
 	c := appengine.NewContext(r)
 	PubsubClient, err := configurePubsub(r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return err
-	}
-
-	// Create an map with twitter username and parent Id of the corresponding contact
-	data := map[string]string{
-		"contactId": strconv.FormatInt(contactId, 10),
-		username:    twitterUser,
 	}
 
 	jsonData, err := json.Marshal(data)
@@ -30,23 +24,27 @@ func TwitterSync(r *http.Request, socialField string, twitterUser string, contac
 		return err
 	}
 
-	topic := PubsubClient.Topic(TwitterTopicID)
+	topic := PubsubClient.Topic(topicName)
 	_, err = topic.Publish(c, &pubsub.Message{Data: jsonData})
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return err
 	}
+
 	return nil
 }
 
-func SocialSync(r *http.Request, socialField string, url string, contactId int64, justCreated bool) error {
-	c := appengine.NewContext(r)
-	PubsubClient, err := configurePubsub(r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return err
+func TwitterSync(r *http.Request, socialField string, twitterUser string, contactId int64) error {
+	// Create an map with twitter username and parent Id of the corresponding contact
+	data := map[string]string{
+		"contactId": strconv.FormatInt(contactId, 10),
+		"username":  twitterUser,
 	}
 
+	return sync(r, data, TwitterTopicID)
+}
+
+func SocialSync(r *http.Request, socialField string, url string, contactId int64, justCreated bool) error {
 	// Create an map with linkedinUrl and Id of the corresponding contact
 	data := map[string]string{
 		"Id":          strconv.FormatInt(contactId, 10),
@@ -54,53 +52,23 @@ func SocialSync(r *http.Request, socialField string, url string, contactId int64
 		"justCreated": strconv.FormatBool(justCreated),
 	}
 
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return err
-	}
-
-	topic := PubsubClient.Topic(InfluencerTopicID)
-	_, err = topic.Publish(c, &pubsub.Message{Data: jsonData})
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return err
-	}
-	return nil
+	return sync(r, data, InfluencerTopicID)
 }
 
 func ResourceSync(r *http.Request, resourceId int64, resource string) error {
-	c := appengine.NewContext(r)
-	PubsubClient, err := configurePubsub(r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return err
-	}
-
 	data := map[string]string{
 		"Id": strconv.FormatInt(resourceId, 10),
 	}
 
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return err
-	}
-
-	topic := PubsubClient.Topic("")
+	topicName := ""
 
 	if resource == "Contact" {
-		topic = PubsubClient.Topic(ContactsTopicID)
+		topicName = ContactsTopicID
 	} else if resource == "Publication" {
-		topic = PubsubClient.Topic(PublicationsTopicID)
+		topicName = PublicationsTopicID
 	} else if resource == "List" {
 		return nil
 	}
 
-	_, err = topic.Publish(c, &pubsub.Message{Data: jsonData})
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return err
-	}
-	return nil
+	return sync(r, data, topicName)
 }

@@ -73,5 +73,16 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		}
 	}
 
+	// Create the topic for twitter if it doesn't exist.
+	if exists, err := PubsubClient.Topic(TwitterTopicID).Exists(c); err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	} else if !exists {
+		if _, err := PubsubClient.NewTopic(c, TwitterTopicID); err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, err
+		}
+	}
+
 	return PubsubClient, nil
 }
