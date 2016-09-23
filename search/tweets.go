@@ -21,6 +21,10 @@ var (
 
 type Tweet struct {
 	Type string `json:"type"`
+
+	Text      string `json:"text"`
+	Id        int64  `json:"id"`
+	ContactId string `json:"contactId"`
 }
 
 func (t *Tweet) FillStruct(m map[string]interface{}) error {
@@ -33,7 +37,7 @@ func (t *Tweet) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchTweet(c context.Context, elasticQuery elastic.ElasticQuery) ([]Tweet, error) {
+func searchTweet(c context.Context, elasticQuery interface{}) ([]Tweet, error) {
 	hits, err := elasticTweet.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -62,14 +66,21 @@ func SearchTweetsByContactId(c context.Context, r *http.Request, contactId int64
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery := elastic.ElasticFilterWithSort{}
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
 	elasticContactIdQuery := ElasticContactIdQuery{}
 	elasticContactIdQuery.Term.ContactId = contactId
 
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticContactIdQuery)
+	elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticContactIdQuery)
+
+	elasticQuery.Query.Bool.MinimumShouldMatch = "100%"
+
+	elasticCreatedAtQuery := ElasticSortDataCreatedAtQuery{}
+	elasticCreatedAtQuery.DataCreatedAt.Order = "desc"
+	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
 
 	return searchTweet(c, elasticQuery)
 }

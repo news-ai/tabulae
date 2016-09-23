@@ -533,6 +533,23 @@ func GetDiff(c context.Context, r *http.Request, id string) (interface{}, interf
 	return data, nil, nil
 }
 
+func GetTweetsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	tweets, err := search.SearchTweetsByContactId(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	return tweets, nil, len(tweets), nil
+}
+
 func GetHeadlinesForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
