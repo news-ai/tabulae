@@ -116,7 +116,7 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 	return *contact, nil, nil
 }
 
-func updateSocial(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, interface{}, error) {
+func updateSocial(c context.Context, r *http.Request, contact *models.Contact, updatedContact *models.Contact) (models.Contact, interface{}, error) {
 	utilities.UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
 	utilities.UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
 	utilities.UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
@@ -255,6 +255,39 @@ func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact,
 	}
 
 	if len(contacts) > 0 {
+		// If there are more than 1 contacts then merge them
+		if len(contacts) > 1 {
+			// This is the contactId we'll replace it with
+			// mainContactId := contacts[0].Id
+			idsToRemove := []*datastore.Key{}
+
+			// Start with i == 1
+			for i := 1; i < len(contacts); i++ {
+				// Add ids to remove
+				idsToRemove = append(idsToRemove, contacts[i].Key(c))
+
+				ksWithParentcontact, err := datastore.NewQuery("Contact").Filter("ParentContact = ", contacts[i].Id).KeysOnly().GetAll(c, nil)
+				var parentContacts []models.Contact
+				parentContacts = make([]models.Contact, len(ksWithParentcontact))
+				err = nds.GetMulti(c, ksWithParentcontact, parentContacts)
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					return models.Contact{}, err
+				}
+
+				for i := 0; i < len(parentContacts); i++ {
+					parentContacts[i].ParentContact = contacts[i].Id
+					parentContacts[i].Save(c, r)
+				}
+			}
+
+			// Remove extra Ids
+			err := nds.DeleteMulti(c, idsToRemove)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+			}
+		}
+
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -371,7 +404,7 @@ func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Re
 
 	// If there is no parent contact
 	if ct.Instagram != "" || ct.Twitter != "" || ct.LinkedIn != "" {
-		return createMasterContact(c, ct, r, models.Contact{}, nil)
+		return createMasterContact(c, ct, r, models.Contact{}, errors.New("No parent"))
 	}
 
 	return ct, nil, false
@@ -734,6 +767,12 @@ func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Conta
 		findOrCreateMasterContact(c, ct, r)
 		// socialSync(c, r, ct, false)
 		// checkAgainstParent(c, r, ct)
+	} else {
+		parentContact, err := getContact(c, r, ct.ParentContact)
+		if err == nil {
+			updateSocial(c, r, &parentContact, ct)
+			parentContact.Save(c, r)
+		}
 	}
 
 	ct.Save(c, r)
