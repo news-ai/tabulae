@@ -23,6 +23,10 @@ func SetField(obj interface{}, name string, value interface{}) error {
 		return errors.New("Cannot set" + name + " field value")
 	}
 
+	if name == "TwitterId" {
+		return nil
+	}
+
 	if name == "CustomFields" {
 		// customFields := []CustomContactFieldElastic{}
 		// switch v := value.(type) {
@@ -45,7 +49,7 @@ func SetField(obj interface{}, name string, value interface{}) error {
 	}
 
 	// Cast time
-	if name == "Created" || name == "Updated" || name == "LinkedInUpdated" || name == "PublishDate" {
+	if name == "Created" || name == "Updated" || name == "LinkedInUpdated" || name == "PublishDate" || name == "CreatedAt" {
 		returnValue := cast.ToTime(value)
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)
@@ -60,7 +64,7 @@ func SetField(obj interface{}, name string, value interface{}) error {
 	}
 
 	// Int64
-	if name == "Id" || name == "CreatedBy" || name == "ParentContact" || name == "ListId" || name == "ContactId" || name == "PublicationId" {
+	if name == "Id" || name == "CreatedBy" || name == "ParentContact" || name == "ListId" || name == "ContactId" || name == "PublicationId" || name == "TweetId" {
 		returnValue := cast.ToInt64(value)
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	// "net/url"
 	// "strconv"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -22,9 +23,10 @@ var (
 type Tweet struct {
 	Type string `json:"type"`
 
-	Text      string `json:"text"`
-	Id        int64  `json:"id"`
-	ContactId string `json:"contactId"`
+	Text      string    `json:"text"`
+	TweetId   int64     `json:"tweetid"`
+	ContactId int64     `json:"contactid"`
+	CreatedAt time.Time `json:"createdat"`
 }
 
 func (t *Tweet) FillStruct(m map[string]interface{}) error {
