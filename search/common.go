@@ -69,4 +69,10 @@ func InitializeElasticSearch() {
 	headlineElastic.Index = "headlines"
 	headlineElastic.Type = "headline"
 	elasticHeadline = &headlineElastic
+
+	tweetElastic := elastic.Elastic{}
+	tweetElastic.BaseURL = baseURL
+	tweetElastic.Index = "tweets"
+	tweetElastic.Type = "tweet"
+	elasticTweet = &tweetElastic
 }
