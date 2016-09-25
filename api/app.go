@@ -80,6 +80,9 @@ func init() {
 	router.GET("/api/internal_auth/linkedin", auth.LinkedinLoginHandler)
 	router.GET("/api/internal_auth/linkedincallback", auth.LinkedinCallbackHandler)
 
+	router.GET("/api/internal_auth/instagram", auth.InstagramLoginHandler)
+	router.GET("/api/internal_auth/instagramcallback", auth.InstagramCallbackHandler)
+
 	router.GET("/api/auth/logout", auth.LogoutHandler)
 
 	/*
