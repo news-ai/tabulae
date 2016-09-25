@@ -56,6 +56,7 @@ func searchHeadline(c context.Context, elasticQuery interface{}) ([]Headline, er
 	for i := 0; i < len(headlineHits); i++ {
 		rawHeadline := headlineHits[i].Source.Data
 		rawMap := rawHeadline.(map[string]interface{})
+		log.Infof(c, "%v", rawMap)
 		headline := Headline{}
 		err := headline.FillStruct(rawMap)
 		if err != nil {
@@ -76,6 +77,10 @@ func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []mod
 	elasticQuery := elastic.ElasticFilterWithSort{}
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
+
+	if len(feeds) == 0 {
+		return []Headline{}, nil
+	}
 
 	for i := 0; i < len(feeds); i++ {
 		elasticFeedUrlQuery := ElasticFeedUrlQuery{}

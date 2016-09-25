@@ -50,7 +50,10 @@ func SetField(obj interface{}, name string, value interface{}) error {
 
 	// Cast time
 	if name == "Created" || name == "Updated" || name == "LinkedInUpdated" || name == "PublishDate" || name == "CreatedAt" {
-		returnValue := cast.ToTime(value)
+		returnValue, err := cast.ToTime(value)
+		if err != nil {
+			return err
+		}
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)
 		return nil
