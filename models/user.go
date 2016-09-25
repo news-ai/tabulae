@@ -31,6 +31,9 @@ type User struct {
 	LinkedinId      string `json:"-"`
 	LinkedinAuthKey string `json:"-"`
 
+	InstagramId      string `json:"-"`
+	InstagramAuthKey string `json:"-"`
+
 	AgreeTermsAndConditions bool `json:"-"`
 	EmailConfirmed          bool `json:"emailconfirmed"`
 	IsAdmin                 bool `json:"-"`
