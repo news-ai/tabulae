@@ -73,6 +73,12 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 	// Check if the old Twitter is changed to a new one
 	// If both of them are not empty but also not the same
 	if contact.Twitter != "" && updatedContact.Twitter != "" && contact.Twitter != updatedContact.Twitter {
+		updatedContact.Normalize()
+		sync.TwitterSync(r, updatedContact.Twitter)
+	}
+
+	if contact.Twitter == "" && updatedContact.Twitter != "" {
+		updatedContact.Normalize()
 		sync.TwitterSync(r, updatedContact.Twitter)
 	}
 
