@@ -106,7 +106,6 @@ func GetFeeds(c context.Context, r *http.Request) ([]models.Feed, interface{}, i
 
 func GetFeedsByResourceId(c context.Context, r *http.Request, resouceName string, resourceId int64) ([]models.Feed, error) {
 	query := datastore.NewQuery("Feed").Filter(resouceName+" =", resourceId)
-	query = constructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
