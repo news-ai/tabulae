@@ -56,7 +56,6 @@ func searchHeadline(c context.Context, elasticQuery interface{}) ([]Headline, er
 	for i := 0; i < len(headlineHits); i++ {
 		rawHeadline := headlineHits[i].Source.Data
 		rawMap := rawHeadline.(map[string]interface{})
-		log.Infof(c, "%v", rawMap)
 		headline := Headline{}
 		err := headline.FillStruct(rawMap)
 		if err != nil {

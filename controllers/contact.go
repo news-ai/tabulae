@@ -117,11 +117,11 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 }
 
 func updateSocial(c context.Context, r *http.Request, contact *models.Contact, updatedContact *models.Contact) (models.Contact, interface{}, error) {
-	utilities.UpdateIfNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
-	utilities.UpdateIfNotBlank(&contact.Twitter, updatedContact.Twitter)
-	utilities.UpdateIfNotBlank(&contact.Instagram, updatedContact.Instagram)
-	utilities.UpdateIfNotBlank(&contact.Website, updatedContact.Website)
-	utilities.UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
+	utilities.UpdateIfBothNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
+	utilities.UpdateIfBothNotBlank(&contact.Twitter, updatedContact.Twitter)
+	utilities.UpdateIfBothNotBlank(&contact.Instagram, updatedContact.Instagram)
+	utilities.UpdateIfBothNotBlank(&contact.Website, updatedContact.Website)
+	utilities.UpdateIfBothNotBlank(&contact.Blog, updatedContact.Blog)
 
 	_, err := Save(c, r, contact)
 	if err != nil {
@@ -203,37 +203,6 @@ func checkAgainstParent(c context.Context, r *http.Request, ct *models.Contact) 
 	return ct, nil
 }
 
-// func socialSync(c context.Context, r *http.Request, ct *models.Contact, justCreated bool) (*models.Contact, error) {
-// 	if ct.ParentContact == 0 {
-// 		return ct, nil
-// 	}
-
-// 	parentContact, err := getContact(c, r, ct.ParentContact)
-// 	if err != nil {
-// 		log.Errorf(c, "%v", err)
-// 		return ct, err
-// 	}
-
-// 	hourFromUpdate := parentContact.LinkedInUpdated.Add(time.Hour * 1)
-
-// 	// Update LinkedIn contact
-// 	if parentContact.IsMasterContact && parentContact.LinkedIn != "" && (time.Now().After(hourFromUpdate) || parentContact.LinkedInUpdated.IsZero()) {
-// 		// Send a pub to Influencer
-// 		err = sync.SocialSync(r, "linkedinUrl", parentContact.LinkedIn, parentContact.Id, justCreated)
-
-// 		if err != nil {
-// 			log.Errorf(c, "%v", err)
-// 			return ct, err
-// 		}
-
-// 		// Now that we have told the Influencer program that we are syncing Linkedin data
-// 		parentContact.LinkedInUpdated = time.Now()
-// 		parentContact.Save(c, r)
-// 	}
-
-// 	return ct, nil
-// }
-
 func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact, queryType, query string) (models.Contact, error) {
 	// Get an contact by a query type
 	ks, err := datastore.NewQuery("Contact").Filter(queryType+" = ", query).Filter("IsMasterContact = ", true).KeysOnly().GetAll(c, nil)
@@ -255,39 +224,6 @@ func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact,
 	}
 
 	if len(contacts) > 0 {
-		// If there are more than 1 contacts then merge them
-		// if len(contacts) > 1 {
-		// 	// This is the contactId we'll replace it with
-		// 	// mainContactId := contacts[0].Id
-		// 	idsToRemove := []*datastore.Key{}
-
-		// 	// Start with i == 1
-		// 	for i := 1; i < len(contacts); i++ {
-		// 		// Add ids to remove
-		// 		idsToRemove = append(idsToRemove, contacts[i].Key(c))
-
-		// 		ksWithParentcontact, err := datastore.NewQuery("Contact").Filter("ParentContact = ", contacts[i].Id).KeysOnly().GetAll(c, nil)
-		// 		var parentContacts []models.Contact
-		// 		parentContacts = make([]models.Contact, len(ksWithParentcontact))
-		// 		err = nds.GetMulti(c, ksWithParentcontact, parentContacts)
-		// 		if err != nil {
-		// 			log.Errorf(c, "%v", err)
-		// 			return models.Contact{}, err
-		// 		}
-
-		// 		for i := 0; i < len(parentContacts); i++ {
-		// 			parentContacts[i].ParentContact = contacts[i].Id
-		// 			parentContacts[i].Save(c, r)
-		// 		}
-		// 	}
-
-		// 	// Remove extra Ids
-		// 	err := nds.DeleteMulti(c, idsToRemove)
-		// 	if err != nil {
-		// 		log.Errorf(c, "%v", err)
-		// 	}
-		// }
-
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -536,15 +472,6 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 		log.Errorf(c, "%v", err)
 		return models.Contact{}, nil, err
 	}
-
-	// if contact.LinkedIn != "" {
-	// 	_, err = socialSync(c, r, &contact, false)
-	// 	if err != nil {
-	// 		log.Errorf(c, "%v", err)
-	// 	}
-
-	// 	checkAgainstParent(c, r, &contact)
-	// }
 
 	return contact, nil, nil
 }
@@ -892,34 +819,3 @@ func UpdateContactToParent(c context.Context, r *http.Request, id string) (model
 
 	return contact, nil, nil
 }
-
-// func SocialSync(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
-// 	contact, _, err := GetContact(c, r, id)
-// 	if err != nil {
-// 		log.Errorf(c, "%v", err)
-// 		return contact, nil, err
-// 	}
-
-// 	if contact.ParentContact == 0 {
-// 		return contact, nil, nil
-// 	}
-
-// 	parentContact, err := getContact(c, r, contact.ParentContact)
-// 	if err != nil {
-// 		log.Errorf(c, "%v", err)
-// 		return contact, nil, err
-// 	}
-
-// 	// Send a pub to Influencer
-// 	err = sync.SocialSync(r, "linkedinUrl", parentContact.LinkedIn, parentContact.Id, false)
-
-// 	if err != nil {
-// 		log.Errorf(c, "%v", err)
-// 		return contact, nil, err
-// 	}
-
-// 	// Now that we have told the Influencer program that we are syncing Linkedin data
-// 	parentContact.LinkedInUpdated = time.Now()
-// 	parentContact.Save(c, r)
-// 	return contact, nil, nil
-// }
