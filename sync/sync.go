@@ -34,11 +34,10 @@ func sync(r *http.Request, data map[string]string, topicName string) error {
 	return nil
 }
 
-func TwitterSync(r *http.Request, socialField string, twitterUser string, contactId int64) error {
+func TwitterSync(r *http.Request, socialField string, twitterUser string) error {
 	// Create an map with twitter username and parent Id of the corresponding contact
 	data := map[string]string{
-		"contactId": strconv.FormatInt(contactId, 10),
-		"username":  twitterUser,
+		"username": twitterUser,
 	}
 
 	return sync(r, data, TwitterTopicID)
