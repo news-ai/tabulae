@@ -4,8 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"reflect"
-	"strconv"
 	"time"
 
 	"golang.org/x/net/context"
@@ -174,35 +172,6 @@ func filterContact(c context.Context, r *http.Request, queryType, query string) 
 * Normalization methods
  */
 
-func checkAgainstParent(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
-	// If there is a parent contact
-	if ct.ParentContact != 0 {
-		// Get parent contact
-		parentContact, err := getContact(c, r, ct.ParentContact)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return ct, err
-		}
-
-		// Legacy issue
-		// Small edge case where if all of them are empty & datastore stores each of them differently (for some reason!).
-		if len(ct.Employers) == 0 && len(ct.PastEmployers) == 0 && len(parentContact.Employers) == 0 && len(parentContact.PastEmployers) == 0 {
-			ct.IsOutdated = false
-			Save(c, r, ct)
-			return ct, nil
-		}
-
-		// See differences in parent and child contact
-		if !reflect.DeepEqual(ct.Employers, parentContact.Employers) || !reflect.DeepEqual(ct.PastEmployers, parentContact.PastEmployers) {
-			ct.IsOutdated = true
-			Save(c, r, ct)
-		}
-
-		return ct, nil
-	}
-	return ct, nil
-}
-
 func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact, queryType, query string) (models.Contact, error) {
 	// Get an contact by a query type
 	ks, err := datastore.NewQuery("Contact").Filter(queryType+" = ", query).Filter("IsMasterContact = ", true).KeysOnly().GetAll(c, nil)
@@ -263,87 +232,6 @@ func filterContactByEmail(c context.Context, email string) ([]models.Contact, er
 	}
 
 	return contacts, nil
-}
-
-func createMasterContact(c context.Context, ct *models.Contact, r *http.Request, masterContact models.Contact, err error) (*models.Contact, error, bool) {
-	// Master contact does not exist
-	if err != nil {
-		// Create master contact
-		newMasterContact := models.Contact{}
-
-		// Initialize with the same values
-		newMasterContact.FirstName = ct.FirstName
-		newMasterContact.LastName = ct.LastName
-		newMasterContact.Email = ct.Email
-		newMasterContact.Employers = ct.Employers
-		newMasterContact.PastEmployers = ct.PastEmployers
-		newMasterContact.LinkedIn = ct.LinkedIn
-		newMasterContact.Twitter = ct.Twitter
-		newMasterContact.Instagram = ct.Instagram
-		newMasterContact.MuckRack = ct.MuckRack
-		newMasterContact.Website = ct.Website
-		newMasterContact.Blog = ct.Blog
-
-		// Set this to be the new master contact
-		newMasterContact.IsMasterContact = true
-
-		// Create the new master contact
-		Create(c, r, &newMasterContact)
-
-		// Do a social sync task when new master contact is added
-
-		// Assign the Id of the parent contact to be the new master contact.
-		ct.ParentContact = newMasterContact.Id
-		ct.IsMasterContact = false
-
-		return ct, nil, true
-	}
-
-	// Update social information
-
-	// Don't create master contact
-	ct.ParentContact = masterContact.Id
-	return ct, nil, false
-}
-
-func findOrCreateMasterContact(c context.Context, ct *models.Contact, r *http.Request) (*models.Contact, error, bool) {
-	// Find master contact
-	// If there is no parent contact Id or if the Linkedin field is not empty
-	if ct.ParentContact == 0 && ct.LinkedIn != "" {
-		masterContact, err := filterMasterContact(c, r, ct, "LinkedIn", ct.LinkedIn)
-
-		// If there is a Linkedin then it'll add it as that parent contact
-		if err == nil {
-			return createMasterContact(c, ct, r, masterContact, nil)
-		}
-	}
-
-	// If there is no parent contact Id or if the Twitter field is not empty
-	if ct.ParentContact == 0 && ct.Twitter != "" {
-		masterContact, err := filterMasterContact(c, r, ct, "Twitter", ct.Twitter)
-
-		// If there is a Twitter
-		if err == nil {
-			return createMasterContact(c, ct, r, masterContact, nil)
-		}
-	}
-
-	// If there is no parent contact Id or if the Instagram field is not empty
-	if ct.ParentContact == 0 && ct.Instagram != "" {
-		masterContact, err := filterMasterContact(c, r, ct, "Instagram", ct.Instagram)
-
-		// If there is a Instagram
-		if err == nil {
-			return createMasterContact(c, ct, r, masterContact, nil)
-		}
-	}
-
-	// If there is no parent contact
-	if ct.Instagram != "" || ct.Twitter != "" || ct.LinkedIn != "" {
-		return createMasterContact(c, ct, r, models.Contact{}, errors.New("No parent"))
-	}
-
-	return ct, nil, false
 }
 
 func contactsToPublications(c context.Context, contacts []models.Contact) []models.Publication {
@@ -476,56 +364,6 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 	return contact, nil, nil
 }
 
-func GetDiff(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
-	contact, _, err := GetContact(c, r, id)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, err
-	}
-
-	// Get parent contact
-	parentContactId := strconv.FormatInt(contact.ParentContact, 10)
-	parentContact, _, err := GetContact(c, r, parentContactId)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, err
-	}
-
-	newEmployers := []string{}
-	newPastEmployers := []string{}
-	for i := 0; i < len(parentContact.Employers); i++ {
-		// Get each publication
-		currentPublication, err := getPublication(c, parentContact.Employers[i])
-		if err != nil {
-			err = errors.New("Only actions are diff and update")
-			log.Errorf(c, "%v", err)
-			return nil, nil, err
-		}
-		newEmployers = append(newEmployers, currentPublication.Name)
-	}
-
-	for i := 0; i < len(parentContact.PastEmployers); i++ {
-		// Get each publication
-		currentPublication, err := getPublication(c, parentContact.PastEmployers[i])
-		if err != nil {
-			err = errors.New("Only actions are diff and update")
-			log.Errorf(c, "%v", err)
-			return nil, nil, err
-		}
-		newPastEmployers = append(newPastEmployers, currentPublication.Name)
-	}
-
-	data := struct {
-		NewEmployers     []string `json:"employers"`
-		NewPastEmployers []string `json:"pastemployers"`
-	}{
-		newEmployers,
-		newPastEmployers,
-	}
-
-	return data, nil, nil
-}
-
 func GetTweetsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
@@ -578,12 +416,6 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 	}
 
 	ct.Create(c, r, currentUser)
-
-	if ct.ParentContact == 0 && !ct.IsMasterContact {
-		findOrCreateMasterContact(c, ct, r)
-		// socialSync(c, r, ct, justCreated)
-		// checkAgainstParent(c, r, ct)
-	}
 
 	_, err = Save(c, r, ct)
 	sync.ResourceSync(r, ct.Id, "Contact")
@@ -649,12 +481,6 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 		contacts[i].ListId = mediaListId
 		contacts[i].Normalize()
 		keys = append(keys, contacts[i].Key(c))
-
-		if contacts[i].ParentContact == 0 && !contacts[i].IsMasterContact && contacts[i].LinkedIn != "" {
-			findOrCreateMasterContact(c, &contacts[i], r)
-			// socialSync(c, r, &contacts[i], false)
-			// checkAgainstParent(c, r, &contacts[i])
-		}
 	}
 
 	ks := []*datastore.Key{}
@@ -689,18 +515,6 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	// Update the Updated time
 	ct.Normalize()
-
-	if ct.ParentContact == 0 && !ct.IsMasterContact {
-		findOrCreateMasterContact(c, ct, r)
-		// socialSync(c, r, ct, false)
-		// checkAgainstParent(c, r, ct)
-	} else {
-		parentContact, err := getContact(c, r, ct.ParentContact)
-		if err == nil {
-			updateSocial(c, r, &parentContact, ct)
-			parentContact.Save(c, r)
-		}
-	}
 
 	ct.Save(c, r)
 	sync.ResourceSync(r, ct.Id, "Contact")
@@ -783,39 +597,4 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, i
 	}
 
 	return newContacts, nil, len(newContacts), nil
-}
-
-/*
-* Normalization methods
- */
-
-func UpdateContactToParent(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
-	// Get current contact
-	contact, _, err := GetContact(c, r, id)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return contact, nil, err
-	}
-
-	if !contact.IsOutdated {
-		return contact, nil, nil
-	}
-
-	parentContact, err := getContact(c, r, contact.ParentContact)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return contact, nil, err
-	}
-
-	contact.Employers = parentContact.Employers
-	contact.PastEmployers = parentContact.PastEmployers
-	contact.IsOutdated = false
-	_, err = Save(c, r, &contact)
-
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return contact, nil, err
-	}
-
-	return contact, nil, nil
 }
