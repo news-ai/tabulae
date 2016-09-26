@@ -26,6 +26,12 @@ type ElasticContactIdQuery struct {
 	} `json:"term"`
 }
 
+type ElasticUsernameQuery struct {
+	Term struct {
+		Username string `json:"data.Username"`
+	} `json:"term"`
+}
+
 type ElasticPublicationIdQuery struct {
 	Term struct {
 		PublicationId int64 `json:"data.PublicationId"`

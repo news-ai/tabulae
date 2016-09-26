@@ -69,6 +69,13 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
  */
 
 func updateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, interface{}, error) {
+
+	// Check if the old Twitter is changed to a new one
+	// If both of them are not empty but also not the same
+	if contact.Twitter != "" && updatedContact.Twitter != "" && contact.Twitter != updatedContact.Twitter {
+		sync.TwitterSync(r, updatedContact.Twitter)
+	}
+
 	utilities.UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
 	utilities.UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
 	utilities.UpdateIfNotBlank(&contact.Email, updatedContact.Email)
@@ -104,22 +111,6 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 	if len(contact.PastEmployers) > 0 && len(updatedContact.PastEmployers) == 0 {
 		contact.PastEmployers = updatedContact.PastEmployers
 	}
-
-	_, err := Save(c, r, contact)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.Contact{}, nil, err
-	}
-
-	return *contact, nil, nil
-}
-
-func updateSocial(c context.Context, r *http.Request, contact *models.Contact, updatedContact *models.Contact) (models.Contact, interface{}, error) {
-	utilities.UpdateIfBothNotBlank(&contact.LinkedIn, updatedContact.LinkedIn)
-	utilities.UpdateIfBothNotBlank(&contact.Twitter, updatedContact.Twitter)
-	utilities.UpdateIfBothNotBlank(&contact.Instagram, updatedContact.Instagram)
-	utilities.UpdateIfBothNotBlank(&contact.Website, updatedContact.Website)
-	utilities.UpdateIfBothNotBlank(&contact.Blog, updatedContact.Blog)
 
 	_, err := Save(c, r, contact)
 	if err != nil {
@@ -372,7 +363,13 @@ func GetTweetsForContact(c context.Context, r *http.Request, id string) (interfa
 		return nil, nil, 0, err
 	}
 
-	tweets, err := search.SearchTweetsByContactId(c, r, currentId)
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	tweets, err := search.SearchTweetsByUsername(c, r, contact.Twitter)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, err
@@ -416,9 +413,15 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 	}
 
 	ct.Create(c, r, currentUser)
-
 	_, err = Save(c, r, ct)
+
+	// Sync with ES
 	sync.ResourceSync(r, ct.Id, "Contact")
+
+	// If user is just created
+	if ct.Twitter != "" {
+		sync.TwitterSync(r, ct.Twitter)
+	}
 	return ct, err
 }
 
@@ -464,6 +467,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interf
 	return []models.Contact{contact}, nil, 0, nil
 }
 
+// Does a ES sync in parse package & Twitter sync here
 func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, contacts []models.Contact, mediaListId int64) ([]int64, error) {
 	var keys []*datastore.Key
 	var contactIds []int64
@@ -481,6 +485,11 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 		contacts[i].ListId = mediaListId
 		contacts[i].Normalize()
 		keys = append(keys, contacts[i].Key(c))
+
+		// If there is a Twitter
+		if contacts[i].Twitter != "" {
+			sync.TwitterSync(r, contacts[i].Twitter)
+		}
 	}
 
 	ks := []*datastore.Key{}
@@ -515,7 +524,6 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
 	// Update the Updated time
 	ct.Normalize()
-
 	ct.Save(c, r)
 	sync.ResourceSync(r, ct.Id, "Contact")
 	return ct, nil

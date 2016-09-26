@@ -25,7 +25,7 @@ type Tweet struct {
 
 	Text      string    `json:"text"`
 	TweetId   int64     `json:"tweetid"`
-	ContactId int64     `json:"contactid"`
+	Username  string    `json:"username"`
 	CreatedAt time.Time `json:"createdat"`
 }
 
@@ -64,7 +64,7 @@ func searchTweet(c context.Context, elasticQuery interface{}) ([]Tweet, error) {
 	return tweets, nil
 }
 
-func SearchTweetsByContactId(c context.Context, r *http.Request, contactId int64) ([]Tweet, error) {
+func SearchTweetsByUsername(c context.Context, r *http.Request, username string) ([]Tweet, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
@@ -72,10 +72,10 @@ func SearchTweetsByContactId(c context.Context, r *http.Request, contactId int64
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticContactIdQuery := ElasticContactIdQuery{}
-	elasticContactIdQuery.Term.ContactId = contactId
+	elasticUsernameQuery := ElasticUsernameQuery{}
+	elasticUsernameQuery.Term.Username = username
 
-	elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticContactIdQuery)
+	elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
 
 	elasticQuery.Query.Bool.MinimumShouldMatch = "100%"
 
