@@ -27,6 +27,12 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 		case "tweets":
 			val, included, count, err := controllers.GetTweetsForContact(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)
+		case "similar":
+			val, included, count, err := controllers.GetSimilarContacts(c, r, id)
+			return api.BaseResponseHandler(val, included, count, err, r)
+		case "feeds":
+			val, included, count, err := controllers.GetFeedsForContact(c, r, id)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		}
 	}
 	return nil, errors.New("method not implemented")

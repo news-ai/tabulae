@@ -368,6 +368,23 @@ func GetHeadlinesForContact(c context.Context, r *http.Request, id string) (inte
 	return headlines, nil, len(headlines), nil
 }
 
+func GetFeedsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	feeds, err := GetFeedsByResourceId(c, r, "ContactId", currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	return feeds, nil, len(feeds), nil
+}
+
 func GetSimilarContacts(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
@@ -388,66 +405,76 @@ func GetSimilarContacts(c context.Context, r *http.Request, id string) (interfac
 		return nil, nil, 0, err
 	}
 
-	allKeys := []*datastore.Key{}
+	allKeysMap := map[*datastore.Key]bool{}
 
 	if contact.LinkedIn != "" {
 		query := datastore.NewQuery("Contact").Filter("LinkedIn =", contact.LinkedIn).Filter("CreatedBy = ", currentUser.Id)
-		query = constructQuery(query, r)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, nil, 0, err
 		}
 
-		allKeys = append(allKeys, ks...)
+		for i := 0; i < len(ks); i++ {
+			allKeysMap[ks[i]] = true
+		}
 	}
 
 	if contact.Twitter != "" {
 		query := datastore.NewQuery("Contact").Filter("Twitter =", contact.Twitter).Filter("CreatedBy = ", currentUser.Id)
-		query = constructQuery(query, r)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, nil, 0, err
 		}
 
-		allKeys = append(allKeys, ks...)
+		for i := 0; i < len(ks); i++ {
+			allKeysMap[ks[i]] = true
+		}
 	}
 
 	if contact.Instagram != "" {
 		query := datastore.NewQuery("Contact").Filter("Instagram =", contact.Instagram).Filter("CreatedBy = ", currentUser.Id)
-		query = constructQuery(query, r)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, nil, 0, err
 		}
 
-		allKeys = append(allKeys, ks...)
+		for i := 0; i < len(ks); i++ {
+			allKeysMap[ks[i]] = true
+		}
 	}
 
 	if contact.Website != "" {
 		query := datastore.NewQuery("Contact").Filter("Website =", contact.Website).Filter("CreatedBy = ", currentUser.Id)
-		query = constructQuery(query, r)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, nil, 0, err
 		}
 
-		allKeys = append(allKeys, ks...)
+		for i := 0; i < len(ks); i++ {
+			allKeysMap[ks[i]] = true
+		}
 	}
 
 	if contact.Blog != "" {
 		query := datastore.NewQuery("Contact").Filter("Blog =", contact.Blog).Filter("CreatedBy = ", currentUser.Id)
-		query = constructQuery(query, r)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, nil, 0, err
 		}
 
-		allKeys = append(allKeys, ks...)
+		for i := 0; i < len(ks); i++ {
+			allKeysMap[ks[i]] = true
+		}
+	}
+
+	allKeys := []*datastore.Key{}
+	for k := range allKeysMap {
+		allKeys = append(allKeys, k)
 	}
 
 	contacts := []models.Contact{}
