@@ -86,3 +86,26 @@ func SearchTweetsByUsername(c context.Context, r *http.Request, username string)
 
 	return searchTweet(c, elasticQuery)
 }
+
+func SearchTweetsByUsername(c context.Context, r *http.Request, usernames []string) ([]Tweet, error) {
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticFilterWithSort{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticUsernameQuery := ElasticUsernameQuery{}
+	elasticUsernameQuery.Term.Username = username
+
+	elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
+
+	elasticQuery.Query.Bool.MinimumShouldMatch = "100%"
+
+	elasticCreatedAtQuery := ElasticSortDataCreatedAtQuery{}
+	elasticCreatedAtQuery.DataCreatedAt.Order = "desc"
+	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
+
+	return searchTweet(c, elasticQuery)
+}

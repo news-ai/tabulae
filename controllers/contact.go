@@ -169,45 +169,6 @@ func filterContact(c context.Context, r *http.Request, queryType, query string) 
 * Normalization methods
  */
 
-func filterMasterContact(c context.Context, r *http.Request, ct *models.Contact, queryType, query string) (models.Contact, error) {
-	// Get an contact by a query type
-	ks, err := datastore.NewQuery("Contact").Filter(queryType+" = ", query).Filter("IsMasterContact = ", true).KeysOnly().GetAll(c, nil)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.Contact{}, err
-	}
-
-	if len(ks) == 0 {
-		return models.Contact{}, errors.New("No contact by the field " + queryType)
-	}
-
-	var contacts []models.Contact
-	contacts = make([]models.Contact, len(ks))
-	err = nds.GetMulti(c, ks, contacts)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.Contact{}, err
-	}
-
-	if len(contacts) > 0 {
-		user, err := GetCurrentUser(c, r)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return models.Contact{}, errors.New("Could not get user")
-		}
-
-		if !contacts[0].IsMasterContact && !permissions.AccessToObject(contacts[0].CreatedBy, user.Id) {
-			err = errors.New("Forbidden")
-			log.Errorf(c, "%v", err)
-			return models.Contact{}, err
-		}
-
-		contacts[0].Format(ks[0], "contacts")
-		return contacts[0], nil
-	}
-	return models.Contact{}, errors.New("No contact by this " + queryType)
-}
-
 func filterContactByEmail(c context.Context, email string) ([]models.Contact, error) {
 	// Get an contact by a query type
 	ks, err := datastore.NewQuery("Contact").Filter("Email =", email).KeysOnly().GetAll(c, nil)
