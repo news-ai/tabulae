@@ -32,6 +32,12 @@ type ElasticUsernameQuery struct {
 	} `json:"term"`
 }
 
+type ElasticUsernameMatchQuery struct {
+	Match struct {
+		Username string `json:"data.Username"`
+	} `json:"match"`
+}
+
 type ElasticPublicationIdQuery struct {
 	Term struct {
 		PublicationId int64 `json:"data.PublicationId"`

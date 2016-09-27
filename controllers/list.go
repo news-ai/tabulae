@@ -376,8 +376,7 @@ func GetTweetsForList(c context.Context, r *http.Request, id string) (interface{
 		return nil, nil, 0, err
 	}
 
-	list, err := getMediaList(c, r, currentId)
-
+	mediaList, err := getMediaList(c, r, currentId)
 	contactIds := []*datastore.Key{}
 	for i := 0; i < len(mediaList.Contacts); i++ {
 		contactIds = append(contactIds, datastore.NewKey(c, "Contact", "", mediaList.Contacts[i], nil))
@@ -392,12 +391,12 @@ func GetTweetsForList(c context.Context, r *http.Request, id string) (interface{
 		return []models.Contact{}, nil, 0, err
 	}
 
-	twitterUsernames := []string{}
+	usernames := []string{}
 	for i := 0; i < len(contacts); i++ {
-		twitterUsernames = append(twitterUsernames, contacts[i].Twitter)
+		usernames = append(usernames, contacts[i].Twitter)
 	}
 
-	tweets, err := search.SearchTweetsByUsernames(c, r, feeds)
+	tweets, err := search.SearchTweetsByUsernames(c, r, usernames)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, err
