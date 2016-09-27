@@ -368,6 +368,103 @@ func GetHeadlinesForContact(c context.Context, r *http.Request, id string) (inte
 	return headlines, nil, len(headlines), nil
 }
 
+func GetSimilarContacts(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	allKeys := []*datastore.Key{}
+
+	if contact.LinkedIn != "" {
+		query := datastore.NewQuery("Contact").Filter("LinkedIn =", contact.LinkedIn).Filter("CreatedBy = ", currentUser.Id)
+		query = constructQuery(query, r)
+		ks, err := query.KeysOnly().GetAll(c, nil)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, nil, 0, err
+		}
+
+		allKeys = append(allKeys, ks...)
+	}
+
+	if contact.Twitter != "" {
+		query := datastore.NewQuery("Contact").Filter("Twitter =", contact.Twitter).Filter("CreatedBy = ", currentUser.Id)
+		query = constructQuery(query, r)
+		ks, err := query.KeysOnly().GetAll(c, nil)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, nil, 0, err
+		}
+
+		allKeys = append(allKeys, ks...)
+	}
+
+	if contact.Instagram != "" {
+		query := datastore.NewQuery("Contact").Filter("Instagram =", contact.Instagram).Filter("CreatedBy = ", currentUser.Id)
+		query = constructQuery(query, r)
+		ks, err := query.KeysOnly().GetAll(c, nil)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, nil, 0, err
+		}
+
+		allKeys = append(allKeys, ks...)
+	}
+
+	if contact.Website != "" {
+		query := datastore.NewQuery("Contact").Filter("Website =", contact.Website).Filter("CreatedBy = ", currentUser.Id)
+		query = constructQuery(query, r)
+		ks, err := query.KeysOnly().GetAll(c, nil)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, nil, 0, err
+		}
+
+		allKeys = append(allKeys, ks...)
+	}
+
+	if contact.Blog != "" {
+		query := datastore.NewQuery("Contact").Filter("Blog =", contact.Blog).Filter("CreatedBy = ", currentUser.Id)
+		query = constructQuery(query, r)
+		ks, err := query.KeysOnly().GetAll(c, nil)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, nil, 0, err
+		}
+
+		allKeys = append(allKeys, ks...)
+	}
+
+	contacts := []models.Contact{}
+	contacts = make([]models.Contact, len(allKeys))
+	err = nds.GetMulti(c, allKeys, contacts)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return contacts, nil, 0, err
+	}
+
+	for i := 0; i < len(contacts); i++ {
+		contacts[i].Format(allKeys[i], "contacts")
+	}
+
+	return contacts, nil, len(contacts), nil
+}
+
 /*
 * Create methods
  */
