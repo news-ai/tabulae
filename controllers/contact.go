@@ -460,7 +460,7 @@ func GetSimilarContacts(c context.Context, r *http.Request, id string) (interfac
 	}
 
 	if contact.Blog != "" {
-		query := datastore.NewQuery("Contact").Filter("Blog =", contact.Blog).Filter("CreatedBy = ", currentUser.Id)
+		query := datastore.NewQuery("Contact").Filter("Blog =", contact.Blog).Filter("CreatedBy = ", currentUser.Id).Filter("IsMasterContact =", false)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -477,16 +477,31 @@ func GetSimilarContacts(c context.Context, r *http.Request, id string) (interfac
 		allKeys = append(allKeys, k)
 	}
 
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	startPosition := offset
+	endPosition := startPosition + limit
+
+	if len(allKeys) < startPosition {
+		return []models.Contact{}, nil, 0, err
+	}
+
+	if len(allKeys) < endPosition {
+		endPosition = len(allKeys)
+	}
+
+	subsetIds := allKeys[startPosition:endPosition]
 	contacts := []models.Contact{}
-	contacts = make([]models.Contact, len(allKeys))
-	err = nds.GetMulti(c, allKeys, contacts)
+	contacts = make([]models.Contact, len(subsetIds))
+	err = nds.GetMulti(c, subsetIds, contacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return contacts, nil, 0, err
 	}
 
 	for i := 0; i < len(contacts); i++ {
-		contacts[i].Format(allKeys[i], "contacts")
+		contacts[i].Format(subsetIds[i], "contacts")
 	}
 
 	return contacts, nil, len(contacts), nil
