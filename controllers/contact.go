@@ -408,7 +408,7 @@ func GetSimilarContacts(c context.Context, r *http.Request, id string) (interfac
 	allKeysMap := map[*datastore.Key]bool{}
 
 	if contact.LinkedIn != "" {
-		query := datastore.NewQuery("Contact").Filter("LinkedIn =", contact.LinkedIn).Filter("CreatedBy = ", currentUser.Id)
+		query := datastore.NewQuery("Contact").Filter("LinkedIn =", contact.LinkedIn).Filter("CreatedBy = ", currentUser.Id).Filter("IsMasterContact =", false)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -421,7 +421,7 @@ func GetSimilarContacts(c context.Context, r *http.Request, id string) (interfac
 	}
 
 	if contact.Twitter != "" {
-		query := datastore.NewQuery("Contact").Filter("Twitter =", contact.Twitter).Filter("CreatedBy = ", currentUser.Id)
+		query := datastore.NewQuery("Contact").Filter("Twitter =", contact.Twitter).Filter("CreatedBy = ", currentUser.Id).Filter("IsMasterContact =", false)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -434,7 +434,7 @@ func GetSimilarContacts(c context.Context, r *http.Request, id string) (interfac
 	}
 
 	if contact.Instagram != "" {
-		query := datastore.NewQuery("Contact").Filter("Instagram =", contact.Instagram).Filter("CreatedBy = ", currentUser.Id)
+		query := datastore.NewQuery("Contact").Filter("Instagram =", contact.Instagram).Filter("CreatedBy = ", currentUser.Id).Filter("IsMasterContact =", false)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -447,7 +447,7 @@ func GetSimilarContacts(c context.Context, r *http.Request, id string) (interfac
 	}
 
 	if contact.Website != "" {
-		query := datastore.NewQuery("Contact").Filter("Website =", contact.Website).Filter("CreatedBy = ", currentUser.Id)
+		query := datastore.NewQuery("Contact").Filter("Website =", contact.Website).Filter("CreatedBy = ", currentUser.Id).Filter("IsMasterContact =", false)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
 			log.Errorf(c, "%v", err)
