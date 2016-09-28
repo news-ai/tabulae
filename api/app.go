@@ -142,6 +142,7 @@ func init() {
 	router.GET("/api/feeds", routes.FeedsHandler)
 	router.POST("/api/feeds", routes.FeedsHandler)
 	router.GET("/api/feeds/:id", routes.FeedHandler)
+	router.DELETE("/api/feeds/:id", routes.FeedHandler)
 
 	// Security fixes
 	secureMiddleware := secure.New(secure.Options{
