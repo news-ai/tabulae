@@ -21,6 +21,8 @@ func handleFeed(c context.Context, r *http.Request, id string) (interface{}, err
 	switch r.Method {
 	case "GET":
 		return api.BaseSingleResponseHandler(controllers.GetFeed(c, r, id))
+	case "DELETE":
+		return api.BaseSingleResponseHandler(controllers.DeleteFeed(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }

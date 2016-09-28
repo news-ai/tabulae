@@ -6,6 +6,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	"google.golang.org/appengine/datastore"
+
 	"github.com/qedus/nds"
 )
 
@@ -25,6 +27,10 @@ type Feed struct {
 /*
 * Private methods
  */
+
+func (f *Feed) Key(c context.Context) *datastore.Key {
+	return f.key(c, "Feed")
+}
 
 /*
 * Create methods

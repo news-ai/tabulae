@@ -180,3 +180,25 @@ func CreateFeed(c context.Context, r *http.Request) (models.Feed, interface{}, e
 
 	return feed, nil, nil
 }
+
+/*
+* Delete methods
+ */
+
+func DeleteFeed(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Feed{}, nil, err
+	}
+
+	keyID := datastore.NewKey(c, "Feed", "", currentId, nil)
+	err = nds.Delete(c, keyID)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Feed{}, nil, err
+	}
+
+	return nil, nil, nil
+}
