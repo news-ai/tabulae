@@ -345,6 +345,11 @@ func GetTweetsForContact(c context.Context, r *http.Request, id string) (interfa
 	return tweets, nil, len(tweets), nil
 }
 
+func GetEmailsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+	emails := []models.Email{}
+	return emails, nil, len(emails), nil
+}
+
 func GetHeadlinesForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
@@ -366,6 +371,35 @@ func GetHeadlinesForContact(c context.Context, r *http.Request, id string) (inte
 	}
 
 	return headlines, nil, len(headlines), nil
+}
+
+func GetFeedForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	feeds, err := GetFeedsByResourceId(c, r, "ContactId", currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	feed, err := search.SearchFeedForContact(c, r, contact, feeds)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	return feed, nil, len(feed), nil
 }
 
 func GetFeedsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {

@@ -21,6 +21,9 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 	switch r.Method {
 	case "GET":
 		switch action {
+		case "feed":
+			val, included, count, err := controllers.GetFeedForContact(c, r, id)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		case "headlines":
 			val, included, count, err := controllers.GetHeadlinesForContact(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)
@@ -32,6 +35,9 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 			return api.BaseResponseHandler(val, included, count, err, r)
 		case "feeds":
 			val, included, count, err := controllers.GetFeedsForContact(c, r, id)
+			return api.BaseResponseHandler(val, included, count, err, r)
+		case "emails":
+			val, included, count, err := controllers.GetEmailsForContact(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)
 		}
 	}
