@@ -94,4 +94,10 @@ func InitializeElasticSearch() {
 	tweetElastic.Index = "tweets"
 	tweetElastic.Type = "tweet"
 	elasticTweet = &tweetElastic
+
+	feedElastic := elastic.Elastic{}
+	feedElastic.BaseURL = baseURL
+	feedElastic.Index = "feeds"
+	feedElastic.Type = "feed"
+	elasticFeed = &feedElastic
 }
