@@ -439,6 +439,16 @@ func EmailConfirmationHandler() http.HandlerFunc {
 				return
 			}
 
+			emailWelcome, _ := controllers.CreateEmailInternal(r, user.Email, user.FirstName, user.LastName)
+			emailSent, emailId, err := emails.SendWelcomeEmail(r, emailWelcome)
+			if !emailSent || err != nil {
+				// Redirect user back to login page
+				log.Errorf(c, "%v", "Welcome email was not sent for "+user.Email)
+				log.Errorf(c, "%v", err)
+			}
+
+			emailWelcome.MarkSent(c, emailId)
+
 			validConfirmation := "Your email has been confirmed. Please proceed to logging in!"
 			http.Redirect(w, r, "/api/auth?success=true&message="+validConfirmation, 302)
 			return
