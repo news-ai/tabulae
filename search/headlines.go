@@ -27,7 +27,7 @@ type Headline struct {
 	Author      string    `json:"author"`
 	Url         string    `json:"url"`
 	Categories  []string  `json:"categories"`
-	PublishDate time.Time `json:"publishdate"`
+	PublishDate time.Time `json:"createdat"`
 	Summary     string    `json:"summary"`
 	FeedURL     string    `json:"feedurl"`
 
