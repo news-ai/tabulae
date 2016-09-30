@@ -14,6 +14,7 @@ import (
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/utilities"
 )
@@ -177,6 +178,9 @@ func CreateFeed(c context.Context, r *http.Request) (models.Feed, interface{}, e
 		log.Errorf(c, "%v", err)
 		return models.Feed{}, nil, err
 	}
+
+	// Run new feed through pub/sub
+	sync.NewRSSFeedSync(r, feed.FeedURL, feed.PublicationId)
 
 	return feed, nil, nil
 }

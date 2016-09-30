@@ -34,6 +34,16 @@ func sync(r *http.Request, data map[string]string, topicName string) error {
 	return nil
 }
 
+func NewRSSFeedSync(r *http.Request, url string, publicationId int64) error {
+	// Create an map with twitter username and parent Id of the corresponding contact
+	data := map[string]string{
+		"url":           url,
+		"publicationId": strconv.FormatInt(publicationId, 10),
+	}
+
+	return sync(r, data, RSSFeedTopicID)
+}
+
 func TwitterSync(r *http.Request, twitterUser string) error {
 	// Create an map with twitter username and parent Id of the corresponding contact
 	data := map[string]string{
