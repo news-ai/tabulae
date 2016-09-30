@@ -393,7 +393,7 @@ func GetFeedForContact(c context.Context, r *http.Request, id string) (interface
 		return nil, nil, 0, err
 	}
 
-	feed, err := search.SearchFeedForContact(c, r, contact, feeds)
+	feed, err := search.SearchFeedForContacts(c, r, []models.Contact{contact}, feeds)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, err

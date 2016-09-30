@@ -45,7 +45,7 @@ func (f *Feed) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchFeed(c context.Context, elasticQuery interface{}, contact models.Contact, feedUrls []models.Feed) ([]Feed, error) {
+func searchFeed(c context.Context, elasticQuery interface{}, contacts []models.Contact, feedUrls []models.Feed) ([]Feed, error) {
 	hits, err := elasticFeed.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -55,6 +55,11 @@ func searchFeed(c context.Context, elasticQuery interface{}, contact models.Cont
 	feedsMap := map[string]bool{}
 	for i := 0; i < len(feedUrls); i++ {
 		feedsMap[feedUrls[i].FeedURL] = true
+	}
+
+	twitterUsernamesMap := map[string]bool{}
+	for i := 0; i < len(contacts); i++ {
+		twitterUsernamesMap[contacts[i].Twitter] = true
 	}
 
 	feedHits := hits.Hits
@@ -76,7 +81,7 @@ func searchFeed(c context.Context, elasticQuery interface{}, contact models.Cont
 				continue
 			}
 		} else {
-			if feed.Username != contact.Twitter {
+			if _, ok := twitterUsernamesMap[feed.Username]; !ok {
 				continue
 			}
 		}
@@ -87,9 +92,9 @@ func searchFeed(c context.Context, elasticQuery interface{}, contact models.Cont
 	return feeds, nil
 }
 
-func SearchFeedForContact(c context.Context, r *http.Request, contact models.Contact, feeds []models.Feed) ([]Feed, error) {
+func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models.Contact, feeds []models.Feed) ([]Feed, error) {
 	// If twitter username or feeds are empty return right away
-	if contact.Twitter == "" && len(feeds) == 0 {
+	if len(contacts) == 0 && len(feeds) == 0 {
 		return []Feed{}, nil
 	}
 
@@ -100,10 +105,12 @@ func SearchFeedForContact(c context.Context, r *http.Request, contact models.Con
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	if contact.Twitter != "" {
-		elasticUsernameQuery := ElasticUsernameQuery{}
-		elasticUsernameQuery.Term.Username = contact.Twitter
-		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
+	for i := 0; i < len(contacts); i++ {
+		if contacts[i].Twitter != "" {
+			elasticUsernameQuery := ElasticUsernameQuery{}
+			elasticUsernameQuery.Term.Username = contacts[i].Twitter
+			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
+		}
 	}
 
 	for i := 0; i < len(feeds); i++ {
@@ -120,5 +127,5 @@ func SearchFeedForContact(c context.Context, r *http.Request, contact models.Con
 	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
 
-	return searchFeed(c, elasticQuery, contact, feeds)
+	return searchFeed(c, elasticQuery, contacts, feeds)
 }

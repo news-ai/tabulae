@@ -378,6 +378,44 @@ func GetHeadlinesForList(c context.Context, r *http.Request, id string) (interfa
 	return headlines, nil, len(headlines), nil
 }
 
+func GetFeedForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	mediaList, err := getMediaList(c, r, currentId)
+	contactIds := []*datastore.Key{}
+	for i := 0; i < len(mediaList.Contacts); i++ {
+		contactIds = append(contactIds, datastore.NewKey(c, "Contact", "", mediaList.Contacts[i], nil))
+	}
+
+	var contacts []models.Contact
+	contacts = make([]models.Contact, len(mediaList.Contacts))
+
+	err = nds.GetMulti(c, contactIds, contacts)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, nil, 0, err
+	}
+
+	feeds, err := GetFeedsByResourceId(c, r, "ListId", currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	feed, err := search.SearchFeedForContacts(c, r, contacts, feeds)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	return feed, nil, len(feed), nil
+}
+
 func GetTweetsForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)

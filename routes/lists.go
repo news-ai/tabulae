@@ -35,6 +35,9 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 		case "tweets":
 			val, included, count, err := controllers.GetTweetsForList(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)
+		case "feed":
+			val, included, count, err := controllers.GetFeedForList(c, r, id)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		case "emails":
 			val, included, count, err := controllers.GetEmailsForList(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)
