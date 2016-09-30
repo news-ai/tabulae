@@ -14,6 +14,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/news-ai/tabulae/controllers"
+	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 
 	"github.com/news-ai/web/utilities"
@@ -132,6 +133,18 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 			q := u.Query()
 			q.Set("firstTimeUser", "true")
 			u.RawQuery = q.Encode()
+
+			emailWelcome, _ := controllers.CreateEmailInternal(r, user.Email, user.FirstName, user.LastName)
+			emailSent, emailId, err := emails.SendWelcomeEmail(r, emailWelcome)
+			if !emailSent || err != nil {
+				// Redirect user back to login page
+				log.Errorf(c, "%v", "Welcome email was not sent for "+user.Email)
+				log.Errorf(c, "%v", err)
+			}
+
+			emailWelcome.MarkSent(c, emailId)
+
+			user.ConfirmLoggedIn(c)
 		}
 		http.Redirect(w, r, u.String(), 302)
 		return
