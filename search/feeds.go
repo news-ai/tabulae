@@ -45,7 +45,7 @@ func (f *Feed) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchFeed(c context.Context, elasticQuery interface{}, feedUrls []models.Feed) ([]Feed, error) {
+func searchFeed(c context.Context, elasticQuery interface{}, contact models.Contact, feedUrls []models.Feed) ([]Feed, error) {
 	hits, err := elasticFeed.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -75,6 +75,10 @@ func searchFeed(c context.Context, elasticQuery interface{}, feedUrls []models.F
 			if _, ok := feedsMap[feed.FeedURL]; !ok {
 				continue
 			}
+		} else {
+			if feed.Username != contact.Twitter {
+				continue
+			}
 		}
 
 		feeds = append(feeds, feed)
@@ -84,6 +88,11 @@ func searchFeed(c context.Context, elasticQuery interface{}, feedUrls []models.F
 }
 
 func SearchFeedForContact(c context.Context, r *http.Request, contact models.Contact, feeds []models.Feed) ([]Feed, error) {
+	// If twitter username or feeds are empty return right away
+	if contact.Twitter == "" && len(feeds) == 0 {
+		return []Feed{}, nil
+	}
+
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
@@ -91,9 +100,11 @@ func SearchFeedForContact(c context.Context, r *http.Request, contact models.Con
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticUsernameQuery := ElasticUsernameQuery{}
-	elasticUsernameQuery.Term.Username = contact.Twitter
-	elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
+	if contact.Twitter != "" {
+		elasticUsernameQuery := ElasticUsernameQuery{}
+		elasticUsernameQuery.Term.Username = contact.Twitter
+		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
+	}
 
 	for i := 0; i < len(feeds); i++ {
 		elasticFeedUrlQuery := ElasticFeedUrlQuery{}
@@ -109,5 +120,5 @@ func SearchFeedForContact(c context.Context, r *http.Request, contact models.Con
 	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
 
-	return searchFeed(c, elasticQuery, feeds)
+	return searchFeed(c, elasticQuery, contact, feeds)
 }

@@ -39,11 +39,16 @@ func (t *Tweet) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchTweet(c context.Context, elasticQuery interface{}) ([]Tweet, error) {
+func searchTweet(c context.Context, elasticQuery interface{}, usernames []string) ([]Tweet, error) {
 	hits, err := elasticTweet.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []Tweet{}, err
+	}
+
+	usernamesMap := map[string]bool{}
+	for i := 0; i < len(usernames); i++ {
+		usernamesMap[usernames[i]] = true
 	}
 
 	tweetHits := hits.Hits
@@ -57,6 +62,10 @@ func searchTweet(c context.Context, elasticQuery interface{}) ([]Tweet, error) {
 			log.Errorf(c, "%v", err)
 		}
 
+		if _, ok := usernamesMap[tweet.Username]; !ok {
+			continue
+		}
+
 		tweet.Type = "tweets"
 		tweets = append(tweets, tweet)
 	}
@@ -65,6 +74,10 @@ func searchTweet(c context.Context, elasticQuery interface{}) ([]Tweet, error) {
 }
 
 func SearchTweetsByUsername(c context.Context, r *http.Request, username string) ([]Tweet, error) {
+	if username == "" {
+		return []Tweet{}, nil
+	}
+
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
@@ -84,10 +97,14 @@ func SearchTweetsByUsername(c context.Context, r *http.Request, username string)
 	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
 
-	return searchTweet(c, elasticQuery)
+	return searchTweet(c, elasticQuery, []string{username})
 }
 
 func SearchTweetsByUsernames(c context.Context, r *http.Request, usernames []string) ([]Tweet, error) {
+	if len(usernames) == 0 {
+		return []Tweet{}, nil
+	}
+
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
@@ -109,5 +126,5 @@ func SearchTweetsByUsernames(c context.Context, r *http.Request, usernames []str
 	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
 
-	return searchTweet(c, elasticQuery)
+	return searchTweet(c, elasticQuery, usernames)
 }
