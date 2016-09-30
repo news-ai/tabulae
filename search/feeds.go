@@ -45,11 +45,16 @@ func (f *Feed) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchFeed(c context.Context, elasticQuery interface{}) ([]Feed, error) {
+func searchFeed(c context.Context, elasticQuery interface{}, feedUrls []models.Feed) ([]Feed, error) {
 	hits, err := elasticFeed.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []Feed{}, err
+	}
+
+	feedsMap := map[string]bool{}
+	for i := 0; i < len(feedUrls); i++ {
+		feedsMap[feedUrls[i].FeedURL] = true
 	}
 
 	feedHits := hits.Hits
@@ -65,6 +70,12 @@ func searchFeed(c context.Context, elasticQuery interface{}) ([]Feed, error) {
 
 		feed.Type = strings.ToLower(feed.Type)
 		feed.Type += "s"
+
+		if feed.FeedURL != "" {
+			if _, ok := feedsMap[feed.FeedURL]; !ok {
+				continue
+			}
+		}
 
 		feeds = append(feeds, feed)
 	}
@@ -98,5 +109,5 @@ func SearchFeedForContact(c context.Context, r *http.Request, contact models.Con
 	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
 
-	return searchFeed(c, elasticQuery)
+	return searchFeed(c, elasticQuery, feeds)
 }
