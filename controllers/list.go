@@ -190,6 +190,7 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user models.User)
 	singleContact.Email = "shereen.bhan@network18online.com"
 	singleContact.LinkedIn = "https://www.linkedin.com/in/shereenbhan"
 	singleContact.Twitter = "https://twitter.com/ShereenBhan"
+	singleContact.Website = "http://www.moneycontrol.com/cnbctv18/"
 	singleContact.CreatedBy = user.Id
 	singleContact.Created = time.Now()
 	singleContact.ListId = mediaList.Id
@@ -203,6 +204,15 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user models.User)
 	contacts = append(contacts, singleContact.Id)
 	mediaList.Contacts = contacts
 	mediaList.Save(c)
+
+	// Create a fake feed
+	feed := models.Feed{}
+	feed.FeedURL = "http://www.firstpost.com/tag/shereen-bhan/feed"
+	feed.ContactId = singleContact.Id
+	feed.ListId = mediaList.Id
+	feed.PublicationId = 5594198795354112
+	feed.Create(c, r, user)
+
 	return mediaList, nil, nil
 }
 
