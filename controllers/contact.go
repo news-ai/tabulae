@@ -239,7 +239,7 @@ func contactsToLists(c context.Context, r *http.Request, contacts []models.Conta
 	return mediaLists
 }
 
-func getIncludes(c context.Context, r *http.Request, contacts []models.Contact) interface{} {
+func getIncludesForContact(c context.Context, r *http.Request, contacts []models.Contact) interface{} {
 	mediaLists := contactsToLists(c, r, contacts)
 	publications := contactsToPublications(c, contacts)
 
@@ -277,7 +277,7 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 		if err != nil {
 			return []models.Contact{}, nil, 0, err
 		}
-		includes := getIncludes(c, r, contacts)
+		includes := getIncludesForContact(c, r, contacts)
 		return contacts, includes, len(contacts), nil
 	}
 
@@ -301,7 +301,7 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 		contacts[i].Format(ks[i], "contacts")
 	}
 
-	includes := getIncludes(c, r, contacts)
+	includes := getIncludesForContact(c, r, contacts)
 	return contacts, includes, len(contacts), nil
 }
 
@@ -319,7 +319,7 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 		return models.Contact{}, nil, err
 	}
 
-	includes := getIncludes(c, r, []models.Contact{contact})
+	includes := getIncludesForContact(c, r, []models.Contact{contact})
 	return contact, includes, nil
 }
 
