@@ -54,12 +54,12 @@ func searchFeed(c context.Context, elasticQuery interface{}, contacts []models.C
 
 	feedsMap := map[string]bool{}
 	for i := 0; i < len(feedUrls); i++ {
-		feedsMap[feedUrls[i].FeedURL] = true
+		feedsMap[strings.ToLower(feedUrls[i].FeedURL)] = true
 	}
 
 	twitterUsernamesMap := map[string]bool{}
 	for i := 0; i < len(contacts); i++ {
-		twitterUsernamesMap[contacts[i].Twitter] = true
+		twitterUsernamesMap[strings.ToLower(contacts[i].Twitter)] = true
 	}
 
 	feedHits := hits.Hits
@@ -77,11 +77,11 @@ func searchFeed(c context.Context, elasticQuery interface{}, contacts []models.C
 		feed.Type += "s"
 
 		if feed.FeedURL != "" {
-			if _, ok := feedsMap[feed.FeedURL]; !ok {
+			if _, ok := feedsMap[strings.ToLower(feed.FeedURL)]; !ok {
 				continue
 			}
 		} else {
-			if _, ok := twitterUsernamesMap[feed.Username]; !ok {
+			if _, ok := twitterUsernamesMap[strings.ToLower(feed.Username)]; !ok {
 				continue
 			}
 		}

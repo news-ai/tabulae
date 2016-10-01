@@ -2,9 +2,8 @@ package search
 
 import (
 	"net/http"
+	"strings"
 	"time"
-	// "net/url"
-	// "strconv"
 
 	"golang.org/x/net/context"
 
@@ -53,7 +52,7 @@ func searchHeadline(c context.Context, elasticQuery interface{}, feedUrls []mode
 
 	feedsMap := map[string]bool{}
 	for i := 0; i < len(feedUrls); i++ {
-		feedsMap[feedUrls[i].FeedURL] = true
+		feedsMap[strings.ToLower(feedUrls[i].FeedURL)] = true
 	}
 
 	headlineHits := hits.Hits
@@ -70,7 +69,7 @@ func searchHeadline(c context.Context, elasticQuery interface{}, feedUrls []mode
 		headline.Type = "headlines"
 
 		if headline.FeedURL != "" {
-			if _, ok := feedsMap[headline.FeedURL]; !ok {
+			if _, ok := feedsMap[strings.ToLower(headline.FeedURL)]; !ok {
 				continue
 			}
 		}

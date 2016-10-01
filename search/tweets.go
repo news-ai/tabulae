@@ -2,8 +2,7 @@ package search
 
 import (
 	"net/http"
-	// "net/url"
-	// "strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -48,7 +47,7 @@ func searchTweet(c context.Context, elasticQuery interface{}, usernames []string
 
 	usernamesMap := map[string]bool{}
 	for i := 0; i < len(usernames); i++ {
-		usernamesMap[usernames[i]] = true
+		usernamesMap[strings.ToLower(usernames[i])] = true
 	}
 
 	tweetHits := hits.Hits
@@ -62,7 +61,7 @@ func searchTweet(c context.Context, elasticQuery interface{}, usernames []string
 			log.Errorf(c, "%v", err)
 		}
 
-		if _, ok := usernamesMap[tweet.Username]; !ok {
+		if _, ok := usernamesMap[strings.ToLower(tweet.Username)]; !ok {
 			continue
 		}
 
