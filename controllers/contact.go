@@ -319,7 +319,8 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 		return models.Contact{}, nil, err
 	}
 
-	return contact, nil, nil
+	includes := getIncludes(c, r, []models.Contact{contact})
+	return contact, includes, nil
 }
 
 func GetTweetsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
