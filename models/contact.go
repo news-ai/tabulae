@@ -2,6 +2,7 @@ package models
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -101,14 +102,14 @@ func (ct *Contact) Save(c context.Context, r *http.Request) (*Contact, error) {
  */
 
 func (ct *Contact) Normalize() (*Contact, error) {
-	ct.LinkedIn = utilities.StripQueryString(ct.LinkedIn)
+	ct.LinkedIn = strings.ToLower(utilities.StripQueryString(ct.LinkedIn))
 	ct.Twitter = utilities.StripQueryString(ct.Twitter)
-	ct.Twitter = utilities.NormalizeUrlToUsername(ct.Twitter, "twitter.com")
+	ct.Twitter = strings.ToLower(utilities.NormalizeUrlToUsername(ct.Twitter, "twitter.com"))
 	ct.Instagram = utilities.StripQueryString(ct.Instagram)
-	ct.Instagram = utilities.NormalizeUrlToUsername(ct.Instagram, "instagram.com")
-	ct.MuckRack = utilities.StripQueryString(ct.MuckRack)
-	ct.Website = utilities.StripQueryString(ct.Website)
-	ct.Blog = utilities.StripQueryString(ct.Blog)
+	ct.Instagram = strings.ToLower(utilities.NormalizeUrlToUsername(ct.Instagram, "instagram.com"))
+	ct.MuckRack = strings.ToLower(utilities.StripQueryString(ct.MuckRack))
+	ct.Website = strings.ToLower(utilities.StripQueryString(ct.Website))
+	ct.Blog = strings.ToLower(utilities.StripQueryString(ct.Blog))
 
 	return ct, nil
 }

@@ -108,14 +108,14 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 	for i := 0; i < len(contacts); i++ {
 		if contacts[i].Twitter != "" {
 			elasticUsernameQuery := ElasticUsernameQuery{}
-			elasticUsernameQuery.Term.Username = contacts[i].Twitter
+			elasticUsernameQuery.Term.Username = strings.ToLower(contacts[i].Twitter)
 			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
 		}
 	}
 
 	for i := 0; i < len(feeds); i++ {
 		elasticFeedUrlQuery := ElasticFeedUrlQuery{}
-		elasticFeedUrlQuery.Match.FeedURL = feeds[i].FeedURL
+		elasticFeedUrlQuery.Match.FeedURL = strings.ToLower(feeds[i].FeedURL)
 		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
 	}
 
