@@ -112,9 +112,15 @@ func SearchTweetsByUsernames(c context.Context, r *http.Request, usernames []str
 	elasticQuery.From = offset
 
 	for i := 0; i < len(usernames); i++ {
-		elasticUsernameQuery := ElasticUsernameMatchQuery{}
-		elasticUsernameQuery.Match.Username = strings.ToLower(usernames[i])
-		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
+		if usernames[i] != "" {
+			elasticUsernameQuery := ElasticUsernameMatchQuery{}
+			elasticUsernameQuery.Match.Username = strings.ToLower(usernames[i])
+			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
+		}
+	}
+
+	if len(elasticQuery.Query.Bool.Should) == 0 {
+		return []Tweet{}, nil
 	}
 
 	elasticQuery.Query.Bool.MinimumShouldMatch = "0"

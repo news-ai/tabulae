@@ -188,7 +188,6 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user models.User)
 	singleContact.FirstName = "Shereen"
 	singleContact.LastName = "Bhan"
 	singleContact.Email = "shereen.bhan@network18online.com"
-	singleContact.LinkedIn = "https://www.linkedin.com/in/shereenbhan"
 	singleContact.Twitter = "https://twitter.com/ShereenBhan"
 	singleContact.Website = "http://www.moneycontrol.com/cnbctv18/"
 	singleContact.CreatedBy = user.Id

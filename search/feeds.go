@@ -119,6 +119,10 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
 	}
 
+	if len(elasticQuery.Query.Bool.Should) == 0 {
+		return []Feed{}, nil
+	}
+
 	elasticQuery.Query.Bool.MinimumShouldMatch = "50%"
 	elasticQuery.MinScore = 0.5
 

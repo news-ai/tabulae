@@ -98,6 +98,10 @@ func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []mod
 		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
 	}
 
+	if len(elasticQuery.Query.Bool.Should) == 0 {
+		return []Headline{}, nil
+	}
+
 	elasticQuery.Query.Bool.MinimumShouldMatch = "100%"
 	elasticQuery.MinScore = 1.0
 
