@@ -81,16 +81,16 @@ func searchHeadline(c context.Context, elasticQuery interface{}, feedUrls []mode
 }
 
 func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []models.Feed) ([]Headline, error) {
+	if len(feeds) == 0 {
+		return []Headline{}, nil
+	}
+
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
 	elasticQuery := elastic.ElasticFilterWithSort{}
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
-
-	if len(feeds) == 0 {
-		return []Headline{}, nil
-	}
 
 	for i := 0; i < len(feeds); i++ {
 		elasticFeedUrlQuery := ElasticFeedUrlQuery{}
@@ -114,6 +114,10 @@ func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []mod
 }
 
 func SearchHeadlinesByPublicationId(c context.Context, r *http.Request, publicationId int64) ([]Headline, error) {
+	if publicationId == 0 {
+		return []Headline{}, nil
+	}
+
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 

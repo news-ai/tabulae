@@ -45,6 +45,10 @@ func searchContact(c context.Context, elasticQuery elastic.ElasticQuery) ([]mode
 }
 
 func SearchContacts(c context.Context, r *http.Request, search string, userId int64) ([]models.Contact, error) {
+	if userId == 0 || search == "" {
+		return []models.Contact{}, nil
+	}
+
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
@@ -65,6 +69,10 @@ func SearchContacts(c context.Context, r *http.Request, search string, userId in
 }
 
 func SearchContactsByList(c context.Context, r *http.Request, search string, user models.User, listId int64) ([]models.Contact, error) {
+	if listId == 0 || search == "" {
+		return []models.Contact{}, nil
+	}
+
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
