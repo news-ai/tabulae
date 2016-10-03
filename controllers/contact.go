@@ -575,7 +575,7 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 	_, err = Save(c, r, ct)
 
 	// Sync with ES
-	sync.ResourceSync(r, ct.Id, "Contact")
+	sync.ResourceSync(r, ct.Id, "Contact", "create")
 
 	// If user is just created
 	if ct.Twitter != "" {
@@ -684,7 +684,7 @@ func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Conta
 	// Update the Updated time
 	ct.Normalize()
 	ct.Save(c, r)
-	sync.ResourceSync(r, ct.Id, "Contact")
+	sync.ResourceSync(r, ct.Id, "Contact", "create")
 	return ct, nil
 }
 
@@ -764,4 +764,48 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, i
 	}
 
 	return newContacts, nil, len(newContacts), nil
+}
+
+/*
+* Delete methods
+ */
+
+func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	// Double check permissions. Admins should not be able to delete.
+	if !permissions.AccessToObject(contact.CreatedBy, user.Id) {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	keyID := datastore.NewKey(c, "Contact", "", contact.Id, nil)
+	err = nds.Delete(c, keyID)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	// Pubsub to remove ES contact
+	sync.ResourceSync(r, contact.Id, "Contact", "delete")
+
+	return nil, nil, nil
 }

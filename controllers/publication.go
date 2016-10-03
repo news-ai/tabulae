@@ -207,7 +207,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 					log.Errorf(c, "%v", err)
 					return []models.Publication{}, nil, 0, err
 				}
-				sync.ResourceSync(r, publications[i].Id, "Publication")
+				sync.ResourceSync(r, publications[i].Id, "Publication", "create")
 				newPublications = append(newPublications, publications[i])
 			} else {
 				newPublications = append(newPublications, presentPublication)
@@ -235,7 +235,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 			log.Errorf(c, "%v", err)
 			return models.Publication{}, nil, 0, err
 		}
-		sync.ResourceSync(r, publication.Id, "Publication")
+		sync.ResourceSync(r, publication.Id, "Publication", "create")
 		return publication, nil, 1, nil
 	}
 	return presentPublication, nil, 1, nil
@@ -259,7 +259,7 @@ func FindOrCreatePublication(c context.Context, r *http.Request, name string) (m
 			return models.Publication{}, err
 		}
 
-		sync.ResourceSync(r, newPublication.Id, "Publication")
+		sync.ResourceSync(r, newPublication.Id, "Publication", "create")
 		return newPublication, nil
 	}
 

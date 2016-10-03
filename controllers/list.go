@@ -266,7 +266,7 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	}
 
 	mediaList.Save(c)
-	sync.ResourceSync(r, mediaList.Id, "List")
+	sync.ResourceSync(r, mediaList.Id, "List", "update")
 	return mediaList, nil, nil
 }
 

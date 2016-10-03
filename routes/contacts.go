@@ -40,6 +40,8 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 			val, included, count, err := controllers.GetEmailsForContact(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)
 		}
+	case "DELETE":
+		return api.BaseSingleResponseHandler(controllers.DeleteContact(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }

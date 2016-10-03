@@ -64,9 +64,10 @@ func SocialSync(r *http.Request, socialField string, url string, contactId int64
 	return sync(r, data, InfluencerTopicID)
 }
 
-func ResourceSync(r *http.Request, resourceId int64, resource string) error {
+func ResourceSync(r *http.Request, resourceId int64, resource string, method string) error {
 	data := map[string]string{
-		"Id": strconv.FormatInt(resourceId, 10),
+		"Id":     strconv.FormatInt(resourceId, 10),
+		"Method": method,
 	}
 
 	topicName := ""

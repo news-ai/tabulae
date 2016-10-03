@@ -59,7 +59,7 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 	// You have to create the list then process the articles so they
 	// belong to a list.
 	for i := 0; i < len(mediaList.Contacts); i++ {
-		sync.ResourceSync(r, mediaList.Contacts[i], "Contact")
+		sync.ResourceSync(r, mediaList.Contacts[i], "Contact", "create")
 	}
 
 	return mediaList, nil
