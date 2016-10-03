@@ -108,8 +108,7 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 
 	for i := 0; i < len(contacts); i++ {
 		if contacts[i].Twitter != "" {
-			elasticUsernameQuery := ElasticFeedUsernameQuery{}
-			elasticUsernameQuery.Term.Type = "tweet"
+			elasticUsernameQuery := ElasticUsernameQuery{}
 			elasticUsernameQuery.Term.Username = strings.ToLower(contacts[i].Twitter)
 			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
 		}
