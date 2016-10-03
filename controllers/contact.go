@@ -347,7 +347,25 @@ func GetTweetsForContact(c context.Context, r *http.Request, id string) (interfa
 }
 
 func GetEmailsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
-	emails := []models.Email{}
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	// To check if the user can access it
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	emails, err := filterEmailbyContactId(c, r, contact.Id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
 	return emails, nil, len(emails), nil
 }
 

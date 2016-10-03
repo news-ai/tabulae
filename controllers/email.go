@@ -122,6 +122,37 @@ func filterEmailbyListId(c context.Context, r *http.Request, listId int64) ([]mo
 	return emails, len(emails), nil
 }
 
+func filterEmailbyContactId(c context.Context, r *http.Request, contactId int64) ([]models.Email, error) {
+	emails := []models.Email{}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, err
+	}
+
+	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("ContactId =", contactId)
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, err
+	}
+
+	emails = make([]models.Email, len(ks))
+	err = nds.GetMulti(c, ks, emails)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, err
+	}
+
+	for i := 0; i < len(emails); i++ {
+		emails[i].Format(ks[i], "emails")
+	}
+
+	return emails, nil
+}
+
 /*
 * Public methods
  */

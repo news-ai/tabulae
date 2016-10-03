@@ -125,7 +125,7 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 	}
 
 	elasticQuery.Query.Bool.MinimumShouldMatch = "50%"
-	elasticQuery.MinScore = 0.5
+	elasticQuery.MinScore = 0.2
 
 	elasticCreatedAtQuery := ElasticSortDataCreatedAtQuery{}
 	elasticCreatedAtQuery.DataCreatedAt.Order = "desc"
