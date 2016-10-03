@@ -39,6 +39,13 @@ indexes:
     - name: Created
       direction: desc
 
+- kind: MediaList
+  ancestor: no
+  properties:
+    - name: Archived
+    - name: Created
+      direction: desc
+
 - kind: Contact
   ancestor: no
   properties:
