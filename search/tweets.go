@@ -22,10 +22,11 @@ var (
 type Tweet struct {
 	Type string `json:"type"`
 
-	Text      string    `json:"text"`
-	TweetId   int64     `json:"tweetid"`
-	Username  string    `json:"username"`
-	CreatedAt time.Time `json:"createdat"`
+	Text       string    `json:"text"`
+	TweetId    int64     `json:"tweetid"`
+	TweetIdStr string    `json:"tweetidstr"`
+	Username   string    `json:"username"`
+	CreatedAt  time.Time `json:"createdat"`
 }
 
 func (t *Tweet) FillStruct(m map[string]interface{}) error {

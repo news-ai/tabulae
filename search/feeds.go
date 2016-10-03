@@ -30,9 +30,10 @@ type Feed struct {
 	FeedURL       string `json:"feedurl"`
 	PublicationId int64  `json:"publicationid"`
 
-	Text     string `json:"text"`
-	TweetId  int64  `json:"tweetid"`
-	Username string `json:"username"`
+	Text       string `json:"text"`
+	TweetId    int64  `json:"tweetid"`
+	TweetIdStr string `json:"tweetidstr"`
+	Username   string `json:"username"`
 }
 
 func (f *Feed) FillStruct(m map[string]interface{}) error {
