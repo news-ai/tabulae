@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
@@ -62,6 +63,46 @@ func SocialSync(r *http.Request, socialField string, url string, contactId int64
 	}
 
 	return sync(r, data, InfluencerTopicID)
+}
+
+func ResourceBulkSync(r *http.Request, resourceIds []int64, resource string, method string) error {
+	topicName := ""
+	if resource == "Contact" {
+		topicName = ContactsTopicID
+	} else {
+		return nil
+	}
+
+	tempStringResourceIds := []string{}
+	stringResourceIds := []string{}
+
+	for i := 0; i < len(resourceIds); i++ {
+		if i > 0 && i%75 == 0 {
+			stringResourceIds = append(stringResourceIds, strings.Join(tempStringResourceIds, ","))
+			tempStringResourceIds = []string{}
+		} else {
+			stringResouceId := strconv.FormatInt(resourceIds[i], 10)
+			tempStringResourceIds = append(tempStringResourceIds, stringResouceId)
+		}
+	}
+
+	// Leftover tempStringResourceIds
+	if len(tempStringResourceIds) > 0 {
+		stringResourceIds = append(stringResourceIds, strings.Join(tempStringResourceIds, ","))
+	}
+
+	for i := 0; i < len(stringResourceIds); i++ {
+		data := map[string]string{
+			"Id":     stringResourceIds[i],
+			"Method": method,
+		}
+		err := sync(r, data, topicName)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func ResourceSync(r *http.Request, resourceId int64, resource string, method string) error {
