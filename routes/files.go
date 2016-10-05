@@ -24,6 +24,8 @@ func handleFileAction(c context.Context, r *http.Request, id string, action stri
 		switch action {
 		case "headers":
 			return api.BaseSingleResponseHandler(files.HandleFileGetHeaders(c, r, id))
+		case "sheets":
+			return api.BaseSingleResponseHandler(files.HandleFileGetSheets(c, r, id))
 		}
 	case "POST":
 		switch action {

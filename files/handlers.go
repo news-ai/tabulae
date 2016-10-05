@@ -107,3 +107,18 @@ func HandleFileGetHeaders(c context.Context, r *http.Request, id string) (interf
 
 	return nil, nil, err
 }
+
+func HandleFileGetSheets(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	file, contentType, err := ReadFile(r, id)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Parse file headers and report to API
+	val, err := parse.FileToExcelSheets(r, file, contentType)
+	if err == nil {
+		return val, nil, nil
+	}
+
+	return nil, nil, err
+}

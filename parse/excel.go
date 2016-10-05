@@ -14,6 +14,11 @@ import (
 	"github.com/news-ai/web/utilities"
 )
 
+func FileToExcelSheets(r *http.Request, file []byte, contentType string) (goexcel.Sheet, error) {
+	c := appengine.NewContext(r)
+	return goexcel.FileToExcelSheets(c, r, file, contentType)
+}
+
 func FileToExcelHeader(r *http.Request, file []byte, contentType string) ([]goexcel.Column, error) {
 	c := appengine.NewContext(r)
 	return goexcel.FileToExcelHeader(c, r, file, contentType)
