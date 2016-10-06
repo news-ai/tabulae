@@ -248,3 +248,15 @@ func LogNotificationForResource(c context.Context, r *http.Request, resourceName
 	}
 	return createNotificationChange(c, r, notificationObject.Id, verb, actor)
 }
+
+func GetNotificationChangesForUser(c context.Context, r *http.Request) ([]models.NotificationChange, error) {
+	notificationChanges := []models.NotificationChange{}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.NotificationChange{}, err
+	}
+
+	return notificationChanges, nil
+}
