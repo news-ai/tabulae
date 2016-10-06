@@ -62,7 +62,7 @@ func InstagramLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	}
 
 	// Scope
-	instagramScope := oauth2.SetAuthURLParam("scope", "public_content")
+	instagramScope := oauth2.SetAuthURLParam("scope", "public_content relationships")
 
 	// Redirect the user to the login page
 	url := instagramOauthConfig.AuthCodeURL(state, instagramScope)
