@@ -40,7 +40,7 @@ func (uic *UserInviteCode) Create(c context.Context, r *http.Request) (*UserInvi
 func (uic *UserInviteCode) Save(c context.Context) (*UserInviteCode, error) {
 	uic.Updated = time.Now()
 
-	k, err := nds.Put(c, uic.key(c, "UserInviteCode"), ut)
+	k, err := nds.Put(c, uic.key(c, "UserInviteCode"), uic)
 	if err != nil {
 		return nil, err
 	}

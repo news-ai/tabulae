@@ -32,6 +32,12 @@ type ElasticUsernameQuery struct {
 	} `json:"term"`
 }
 
+type ElasticInstagramUsernameQuery struct {
+	Term struct {
+		InstagramUsername string `json:"data.InstagramUsername"`
+	} `json:"term"`
+}
+
 type ElasticFeedUsernameQuery struct {
 	Term struct {
 		Type     string `json:"data.Type"`
@@ -107,4 +113,10 @@ func InitializeElasticSearch() {
 	feedElastic.Index = "feeds"
 	feedElastic.Type = "feed"
 	elasticFeed = &feedElastic
+
+	instagramElastic := elastic.Elastic{}
+	instagramElastic.BaseURL = baseURL
+	instagramElastic.Index = "instagrams"
+	instagramElastic.Type = "instagram"
+	elasticInstagram = &instagramElastic
 }

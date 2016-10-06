@@ -30,7 +30,9 @@ type Feed struct {
 	FeedURL       string `json:"feedurl"`
 	PublicationId int64  `json:"publicationid"`
 
-	Text       string `json:"text"`
+	// Shared between tweet and instagram post
+	Text string `json:"text"`
+
 	TweetId    int64  `json:"tweetid"`
 	TweetIdStr string `json:"tweetidstr"`
 	Username   string `json:"username"`
@@ -39,6 +41,9 @@ type Feed struct {
 	InstagramId       string `json:"instagramid"`
 	InstagramImage    string `json:"instagramimage"`
 	InstagramVideo    string `json:"instagramvideo"`
+	InstagramLink     string `json:"instagramlink"`
+	InstagramLikes    int    `json:"instagramlikes"`
+	InstagramComments int    `json:"instagramcomments"`
 }
 
 func (f *Feed) FillStruct(m map[string]interface{}) error {
@@ -68,6 +73,11 @@ func searchFeed(c context.Context, elasticQuery interface{}, contacts []models.C
 		twitterUsernamesMap[strings.ToLower(contacts[i].Twitter)] = true
 	}
 
+	instagramUsernamesMap := map[string]bool{}
+	for i := 0; i < len(contacts); i++ {
+		instagramUsernamesMap[strings.ToLower(contacts[i].Instagram)] = true
+	}
+
 	feedHits := hits.Hits
 	feeds := []Feed{}
 	for i := 0; i < len(feedHits); i++ {
@@ -87,8 +97,14 @@ func searchFeed(c context.Context, elasticQuery interface{}, contacts []models.C
 				continue
 			}
 		} else {
-			if _, ok := twitterUsernamesMap[strings.ToLower(feed.Username)]; !ok {
-				continue
+			if feed.Type == "tweets" {
+				if _, ok := twitterUsernamesMap[strings.ToLower(feed.Username)]; !ok {
+					continue
+				}
+			} else if feed.Type == "instagrams" {
+				if _, ok := instagramUsernamesMap[strings.ToLower(feed.InstagramUsername)]; !ok {
+					continue
+				}
 			}
 		}
 
@@ -117,6 +133,12 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 			elasticUsernameQuery.Term.Username = strings.ToLower(contacts[i].Twitter)
 			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
 		}
+
+		if contacts[i].Instagram != "" {
+			elasticInstagramUsernameQuery := ElasticInstagramUsernameQuery{}
+			elasticInstagramUsernameQuery.Term.InstagramUsername = strings.ToLower(contacts[i].Instagram)
+			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticInstagramUsernameQuery)
+		}
 	}
 
 	for i := 0; i < len(feeds); i++ {
@@ -129,7 +151,12 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 		return []Feed{}, nil
 	}
 
-	elasticQuery.Query.Bool.MinimumShouldMatch = "50%"
+	minMatch := "50%"
+	if len(elasticQuery.Query.Bool.Should) > 3 {
+		minMatch = "33%"
+	}
+
+	elasticQuery.Query.Bool.MinimumShouldMatch = minMatch
 	elasticQuery.MinScore = 0.2
 
 	elasticCreatedAtQuery := ElasticSortDataCreatedAtQuery{}

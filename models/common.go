@@ -40,8 +40,16 @@ func SetField(obj interface{}, name string, value interface{}) error {
 		return nil
 	}
 
+	// Cast int
+	if name == "Comments" || name == "Likes" || name == "InstagramLikes" || name == "InstagramComments" {
+		returnValue := cast.ToInt(value)
+		val := reflect.ValueOf(returnValue)
+		structFieldValue.Set(val)
+		return nil
+	}
+
 	// Cast string array
-	if name == "Categories" {
+	if name == "Categories" || name == "Tags" {
 		returnValue := cast.ToStringSlice(value)
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)
