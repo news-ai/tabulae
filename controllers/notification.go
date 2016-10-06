@@ -135,6 +135,36 @@ func filterNotificationObject(c context.Context, r *http.Request, resourceName s
 * Get methods
  */
 
+func GetNotificationChangesForUser(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.NotificationChange{}, nil, 0, err
+	}
+
+	query := datastore.NewQuery("NotificationChange").Filter("CreatedBy =", currentUser.Id).Order("-Created")
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.NotificationChange{}, nil, 0, err
+	}
+
+	notificationChanges := []models.NotificationChange{}
+	notificationChanges = make([]models.NotificationChange, len(ks))
+	err = nds.GetMulti(c, ks, notificationChanges)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return notificationChanges, nil, 0, err
+	}
+
+	for i := 0; i < len(notificationChanges); i++ {
+		notificationChanges[i].Format(ks[i], "notificationchanges")
+	}
+
+	return notificationChanges, nil, len(notificationChanges), nil
+}
+
 func GetUnreadNotificationsForUser(c context.Context, r *http.Request, userId int64) ([]models.NotificationChange, error) {
 	notificationChanges := []models.NotificationChange{}
 
@@ -247,16 +277,4 @@ func LogNotificationForResource(c context.Context, r *http.Request, resourceName
 		notificationObject, err = CreateNotificationObjectForUser(c, r, resourceName, resourceId)
 	}
 	return createNotificationChange(c, r, notificationObject.Id, verb, actor)
-}
-
-func GetNotificationChangesForUser(c context.Context, r *http.Request) ([]models.NotificationChange, error) {
-	notificationChanges := []models.NotificationChange{}
-
-	currentUser, err := GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.NotificationChange{}, err
-	}
-
-	return notificationChanges, nil
 }

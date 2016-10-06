@@ -145,6 +145,8 @@ func init() {
 	router.GET("/api/feeds/:id", routes.FeedHandler)
 	router.DELETE("/api/feeds/:id", routes.FeedHandler)
 
+	router.GET("/api/notifications", routes.NotificationsHandler)
+
 	// Security fixes
 	secureMiddleware := secure.New(secure.Options{
 		FrameDeny:        true,
