@@ -34,6 +34,11 @@ type Feed struct {
 	TweetId    int64  `json:"tweetid"`
 	TweetIdStr string `json:"tweetidstr"`
 	Username   string `json:"username"`
+
+	InstagramUsername string `json:"instagramusername"`
+	InstagramId       string `json:"instagramid"`
+	InstagramImage    string `json:"instagramimage"`
+	InstagramVideo    string `json:"instagramvideo"`
 }
 
 func (f *Feed) FillStruct(m map[string]interface{}) error {
