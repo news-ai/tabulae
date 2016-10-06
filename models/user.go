@@ -2,6 +2,7 @@ package models
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -47,10 +48,20 @@ type User struct {
 * Create methods
  */
 
+func (u *User) Normalize() (*User, error) {
+	u.Email = strings.ToLower(u.Email)
+	u.FirstName = strings.Title(u.FirstName)
+	u.LastName = strings.Title(u.LastName)
+	return u, nil
+}
+
 func (u *User) Create(c context.Context, r *http.Request) (*User, error) {
 	// Create user
 	u.IsAdmin = false
 	u.Created = time.Now()
+
+	u.Normalize()
+
 	_, err := u.Save(c)
 	return u, err
 }
