@@ -44,6 +44,9 @@ type Contact struct {
 	Website   string `json:"website"`
 	Blog      string `json:"blog"`
 
+	Location    string `json:"location"`
+	PhoneNumber string `json:"phonenumber"`
+
 	// Custom fields
 	CustomFields []CustomContactField `json:"customfields" datastore:",noindex"`
 
