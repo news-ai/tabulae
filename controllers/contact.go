@@ -69,6 +69,11 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
  */
 
 func updateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, interface{}, error) {
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return contact, nil, err
+	}
 
 	// Check if the old Twitter is changed to a new one
 	// If both of them are not empty but also not the same
@@ -77,9 +82,20 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 		sync.TwitterSync(r, updatedContact.Twitter)
 	}
 
+	if contact.Instagram != "" && updatedContact.Instagram != "" && contact.Instagram != updatedContact.Instagram {
+		if currentUser.InstagramAuthKey != "" {
+			sync.InstagramSync(r, updatedContact.Instagram, currentUser.InstagramAuthKey)
+		}
+	}
+
 	if contact.Twitter == "" && updatedContact.Twitter != "" {
 		updatedContact.Normalize()
 		sync.TwitterSync(r, updatedContact.Twitter)
+	}
+
+	if contact.Instagram == "" && updatedContact.Instagram != "" {
+		updatedContact.Normalize()
+		sync.InstagramSync(r, updatedContact.Instagram, currentUser.InstagramAuthKey)
 	}
 
 	utilities.UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
@@ -118,7 +134,7 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 		contact.PastEmployers = updatedContact.PastEmployers
 	}
 
-	_, err := Save(c, r, contact)
+	_, err = Save(c, r, contact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Contact{}, nil, err
@@ -604,6 +620,10 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 	if ct.Twitter != "" {
 		sync.TwitterSync(r, ct.Twitter)
 	}
+	if ct.Instagram != "" && currentUser.InstagramAuthKey != "" {
+		sync.InstagramSync(r, ct.Twitter, currentUser.InstagramAuthKey)
+	}
+
 	return ct, err
 }
 
@@ -671,6 +691,9 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 		// If there is a Twitter
 		if contacts[i].Twitter != "" {
 			sync.TwitterSync(r, contacts[i].Twitter)
+		}
+		if contacts[i].Instagram != "" && currentUser.InstagramAuthKey != "" {
+			sync.InstagramSync(r, contacts[i].Twitter, currentUser.InstagramAuthKey)
 		}
 	}
 
