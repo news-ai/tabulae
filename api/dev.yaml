@@ -34,6 +34,8 @@ env_variables:
   SENTRY_DSN: 'https://eccfde5212974b1b9c284995885d0446:592890e0beac49a58d410f1e7061983e@app.getsentry.com/92935'
   ELASTIC_USER: 'newsai'
   ELASTIC_PASS: 'XkJRNRx2EGCd6'
+  STRIPE_PUBLISHABLE_KEY: 'pk_test_1OG5N9xYioPWBVf0cB4Yq9Sj'
+  STRIPE_SECRET_KEY: 'sk_test_628xQyC7fkB1RpA3a7PZNViY'
 
 inbound_services:
 - mail

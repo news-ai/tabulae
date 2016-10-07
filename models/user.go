@@ -35,6 +35,8 @@ type User struct {
 	InstagramId      string `json:"-"`
 	InstagramAuthKey string `json:"-"`
 
+	StripeId string `json:"-"`
+
 	AgreeTermsAndConditions bool `json:"-"`
 	EmailConfirmed          bool `json:"emailconfirmed"`
 	IsAdmin                 bool `json:"-"`
@@ -94,6 +96,15 @@ func (u *User) ConfirmEmail(c context.Context) (*User, error) {
 
 func (u *User) ConfirmLoggedIn(c context.Context) (*User, error) {
 	u.LastLoggedIn = time.Now()
+	_, err := u.Save(c)
+	if err != nil {
+		return u, err
+	}
+	return u, nil
+}
+
+func (u *User) SetStripeId(c context.Context, stripeId string) (*User, error) {
+	u.StripeId = stripeId
 	_, err := u.Save(c)
 	if err != nil {
 		return u, err
