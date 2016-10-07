@@ -72,7 +72,7 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return contact, nil, err
+		return *contact, nil, err
 	}
 
 	// Check if the old Twitter is changed to a new one
