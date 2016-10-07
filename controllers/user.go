@@ -15,6 +15,7 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/tabulae/billing"
 	"github.com/news-ai/tabulae/models"
 
 	"github.com/news-ai/web/permissions"
@@ -304,6 +305,9 @@ func AddUserToContext(c context.Context, r *http.Request, email string) {
 func Update(c context.Context, r *http.Request, u *models.User) (*models.User, error) {
 	if len(u.Employers) == 0 {
 		CreateAgencyFromUser(c, r, u)
+	}
+	if u.StripeId == "" {
+		billing.CreateCustomer(r, *u)
 	}
 	return u, nil
 }

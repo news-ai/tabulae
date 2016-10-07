@@ -1,7 +1,6 @@
 package billing
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 
@@ -15,7 +14,7 @@ import (
 )
 
 func CreateCustomer(r *http.Request, user models.User) error {
-	if user.StripeId != "" {
+	if user.StripeId == "" {
 		c := appengine.NewContext(r)
 		httpClient := urlfetch.Client(c)
 		sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
@@ -30,7 +29,7 @@ func CreateCustomer(r *http.Request, user models.User) error {
 			return err
 		}
 
-		user.SetStripeId(customer.ID)
+		user.SetStripeId(c, customer.ID)
 	}
 	return nil
 }
