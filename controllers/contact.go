@@ -82,10 +82,8 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 		sync.TwitterSync(r, updatedContact.Twitter)
 	}
 
-	if contact.Instagram != "" && updatedContact.Instagram != "" && contact.Instagram != updatedContact.Instagram {
-		if currentUser.InstagramAuthKey != "" {
-			sync.InstagramSync(r, updatedContact.Instagram, currentUser.InstagramAuthKey)
-		}
+	if contact.Instagram != "" && updatedContact.Instagram != "" && contact.Instagram != updatedContact.Instagram && currentUser.InstagramAuthKey != "" {
+		sync.InstagramSync(r, updatedContact.Instagram, currentUser.InstagramAuthKey)
 	}
 
 	if contact.Twitter == "" && updatedContact.Twitter != "" {
@@ -93,7 +91,7 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 		sync.TwitterSync(r, updatedContact.Twitter)
 	}
 
-	if contact.Instagram == "" && updatedContact.Instagram != "" {
+	if contact.Instagram == "" && updatedContact.Instagram != "" && currentUser.InstagramAuthKey != "" {
 		updatedContact.Normalize()
 		sync.InstagramSync(r, updatedContact.Instagram, currentUser.InstagramAuthKey)
 	}
