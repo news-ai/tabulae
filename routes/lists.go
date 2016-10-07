@@ -54,6 +54,10 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 func handleMediaList(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
+		if id == "archived" {
+			val, included, count, err := controllers.GetMediaLists(c, r, true)
+			return api.BaseResponseHandler(val, included, count, err, r)
+		}
 		return api.BaseSingleResponseHandler(controllers.GetMediaList(c, r, id))
 	case "PATCH":
 		return api.BaseSingleResponseHandler(controllers.UpdateMediaList(c, r, id))
@@ -64,7 +68,7 @@ func handleMediaList(c context.Context, r *http.Request, id string) (interface{}
 func handleMediaLists(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		val, included, count, err := controllers.GetMediaLists(c, r)
+		val, included, count, err := controllers.GetMediaLists(c, r, false)
 		return api.BaseResponseHandler(val, included, count, err, r)
 	case "POST":
 		return api.BaseSingleResponseHandler(controllers.CreateMediaList(c, w, r))

@@ -15,6 +15,7 @@ var (
 	PublicationsTopicID = "datastore-sync-publications-functions"
 	ListsTopicID        = "datastore-sync-lists-functions"
 	TwitterTopicID      = "process-twitter-feed"
+	InstagramTopicID    = "process-instagram-feed"
 	RSSFeedTopicID      = "process-rss-feed"
 	projectID           = "newsai-1166"
 )
@@ -85,12 +86,23 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		}
 	}
 
-	// Create the topic for twitter if it doesn't exist.
+	// Create the topic for rss if it doesn't exist.
 	if exists, err := PubsubClient.Topic(RSSFeedTopicID).Exists(c); err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	} else if !exists {
 		if _, err := PubsubClient.NewTopic(c, RSSFeedTopicID); err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, err
+		}
+	}
+
+	// Create the topic for instagram if it doesn't exist.
+	if exists, err := PubsubClient.Topic(InstagramTopicID).Exists(c); err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	} else if !exists {
+		if _, err := PubsubClient.NewTopic(c, InstagramTopicID); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}

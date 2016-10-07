@@ -93,7 +93,7 @@ func getFieldsMap() []models.CustomFieldsMap {
  */
 
 // Gets every single media list
-func GetMediaLists(c context.Context, r *http.Request) ([]models.MediaList, interface{}, int, error) {
+func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.MediaList, interface{}, int, error) {
 	mediaLists := []models.MediaList{}
 
 	user, err := GetCurrentUser(c, r)
@@ -102,7 +102,7 @@ func GetMediaLists(c context.Context, r *http.Request) ([]models.MediaList, inte
 		return []models.MediaList{}, nil, 0, err
 	}
 
-	query := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id)
+	query := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id).Filter("Archived =", archived)
 	query = constructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {

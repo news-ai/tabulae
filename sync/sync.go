@@ -2,6 +2,7 @@ package sync
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -36,7 +37,7 @@ func sync(r *http.Request, data map[string]string, topicName string) error {
 }
 
 func NewRSSFeedSync(r *http.Request, url string, publicationId int64) error {
-	// Create an map with twitter username and parent Id of the corresponding contact
+	// Create an map with RSS feed url and publicationId
 	data := map[string]string{
 		"url":           url,
 		"publicationId": strconv.FormatInt(publicationId, 10),
@@ -45,8 +46,21 @@ func NewRSSFeedSync(r *http.Request, url string, publicationId int64) error {
 	return sync(r, data, RSSFeedTopicID)
 }
 
+func InstagramSync(r *http.Request, instagramUser string, instagramAccessToken string) error {
+	// Create an map with instagram username and instagramAccessToken
+	if instagramAccessToken != "" {
+		data := map[string]string{
+			"username":     instagramUser,
+			"access_token": instagramAccessToken,
+		}
+
+		return sync(r, data, InstagramTopicID)
+	}
+	return errors.New("No instagram AccessToken present")
+}
+
 func TwitterSync(r *http.Request, twitterUser string) error {
-	// Create an map with twitter username and parent Id of the corresponding contact
+	// Create an map with twitter username
 	data := map[string]string{
 		"username": twitterUser,
 	}
