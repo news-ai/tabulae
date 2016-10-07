@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -307,7 +308,11 @@ func Update(c context.Context, r *http.Request, u *models.User) (*models.User, e
 		CreateAgencyFromUser(c, r, u)
 	}
 	if u.StripeId == "" {
-		billing.CreateBetaCustomer(r, *u)
+		if time.Now().Month().String() == "October" {
+			billing.CreateBetaCustomer(r, *u)
+		} else {
+			billing.CreateCustomer(r, *u)
+		}
 	}
 	return u, nil
 }
