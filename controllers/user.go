@@ -307,7 +307,7 @@ func Update(c context.Context, r *http.Request, u *models.User) (*models.User, e
 		CreateAgencyFromUser(c, r, u)
 	}
 	if u.StripeId == "" {
-		billing.CreateCustomer(r, *u)
+		billing.CreateBetaCustomer(r, *u)
 	}
 	return u, nil
 }
