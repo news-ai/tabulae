@@ -31,7 +31,7 @@ func CreateBetaCustomer(r *http.Request, user models.User) error {
 			return err
 		}
 
-		user.SetStripeId(c, customer.ID, "silver", true)
+		user.SetStripeId(c, customer.ID, "silver", true, true)
 	}
 	return nil
 }
