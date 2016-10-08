@@ -16,9 +16,9 @@ type Feed struct {
 
 	FeedURL string `json:"url"`
 
-	ContactId     int64 `json:"contactid"`
-	ListId        int64 `json:"listid"`
-	PublicationId int64 `json:"publicationid"`
+	ContactId     int64 `json:"contactid" apiModel:"Contact"`
+	ListId        int64 `json:"listid" apiModel:"MediaList"`
+	PublicationId int64 `json:"publicationid" apiModel:"Publication"`
 
 	ValidFeed bool `json:"validfeed"`
 	Running   bool `json:"running"`

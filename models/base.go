@@ -13,7 +13,7 @@ type Base struct {
 
 	Type string `json:"type" datastore:"-"`
 
-	CreatedBy int64 `json:"createdby"`
+	CreatedBy int64 `json:"createdby" apiModel:"User"`
 
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`

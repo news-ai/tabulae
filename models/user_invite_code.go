@@ -15,6 +15,8 @@ type UserInviteCode struct {
 	InviteCode string `json:"invitecode"`
 	Email      string `json:"email"`
 	IsUsed     bool   `json:"isused"`
+
+	ReferralUser int64 `json:"referraluser" apiModel:"User"`
 }
 
 /*
