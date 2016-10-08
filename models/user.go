@@ -40,6 +40,8 @@ type User struct {
 	IsBetaUser     bool   `json:"-"`
 	StripeIsActive bool   `json:"isactive"`
 
+	InvitedBy int64 `json:"-"`
+
 	AgreeTermsAndConditions bool `json:"-"`
 	EmailConfirmed          bool `json:"emailconfirmed"`
 	IsAdmin                 bool `json:"-"`
