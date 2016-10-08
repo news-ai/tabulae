@@ -19,16 +19,16 @@ func AddPlanToUser(r *http.Request, user models.User, plan string, months int, c
 		httpClient := urlfetch.Client(c)
 		sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
 
+		// https://stripe.com/docs/api
 		// Create new customer in Stripe
 		params := &stripe.CustomerParams{
 			Email:    user.Email,
 			Plan:     plan,
-			Quantity: 1 * months,
+			Quantity: uint64(1 * months),
 			Coupon:   coupon,
 		}
 
 		params.SetSource(sp)
-
 		customer, err := sc.Customers.New(params)
 		if err != nil {
 			return err
