@@ -9,6 +9,10 @@ import (
 	"github.com/qedus/nds"
 )
 
+type Invite struct {
+	Email string `json:"email"`
+}
+
 type UserInviteCode struct {
 	Base
 

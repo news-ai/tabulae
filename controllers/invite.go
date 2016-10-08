@@ -2,15 +2,14 @@ package controllers
 
 import (
 	"errors"
+	"io/ioutil"
 	"net/http"
 
 	"golang.org/x/net/context"
 
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/datastore"
-	"google.golang.org/appengine/log"
+	"github.com/pquerna/ffjson/ffjson"
 
-	"github.com/qedus/nds"
+	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/models"
 
@@ -21,7 +20,15 @@ func generateTokenAndEmail(c context.Context, r *http.Request, email string) (mo
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return *contact, nil, err
+		return models.UserInviteCode{}, err
+	}
+
+	// Check if the user is already a part of the platform
+	_, err = GetUserByEmail(c, email)
+	if err == nil {
+		userExistsError := errors.New("User already exists on the NewsAI platform")
+		log.Errorf(c, "%v", userExistsError)
+		return models.UserInviteCode{}, userExistsError
 	}
 
 	referralCode := models.UserInviteCode{}
@@ -30,6 +37,7 @@ func generateTokenAndEmail(c context.Context, r *http.Request, email string) (mo
 	referralCode.ReferralUser = currentUser.Id
 	_, err = referralCode.Create(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.UserInviteCode{}, err
 	}
 
@@ -37,4 +45,22 @@ func generateTokenAndEmail(c context.Context, r *http.Request, email string) (mo
 	// email
 
 	return referralCode, nil
+}
+
+func CreateInvite(c context.Context, r *http.Request) (models.UserInviteCode, interface{}, error) {
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var invite models.Invite
+	err := decoder.Decode(buf, &invite)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.UserInviteCode{}, nil, err
+	}
+
+	userInvite, err := generateTokenAndEmail(c, r, invite.Email)
+	if err != nil {
+		return models.UserInviteCode{}, nil, err
+	}
+
+	return userInvite, nil, nil
 }

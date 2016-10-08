@@ -147,6 +147,8 @@ func init() {
 
 	router.GET("/api/notifications", routes.NotificationsHandler)
 
+	router.POST("/api/invites", routes.InvitesHandler)
+
 	// Security fixes
 	secureMiddleware := secure.New(secure.Options{
 		FrameDeny:        true,
