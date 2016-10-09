@@ -44,7 +44,9 @@ type User struct {
 
 	AgreeTermsAndConditions bool `json:"-"`
 	EmailConfirmed          bool `json:"emailconfirmed"`
-	IsAdmin                 bool `json:"-"`
+
+	IsAdmin  bool `json:"-"`
+	IsActive bool `json:"isactive"`
 }
 
 /*
