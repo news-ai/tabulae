@@ -102,10 +102,35 @@ func PasswordLoginHandler() http.HandlerFunc {
 func ChangePasswordHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		// Change password
 		password := r.FormValue("password")
 
-		// Hash password and save
+		currentUser, err := controllers.GetCurrentUser(c, r)
+
+		// Hash the password and save it into the datastore
+		hashedPassword, _ := utilities.HashPassword(password)
+		currentUser.Password = hashedPassword
+
+		_, err = currentUser.Save(c)
+
+		// Remove session
+		session, _ := Store.Get(r, "sess")
+		delete(session.Values, "state")
+		delete(session.Values, "id")
+		delete(session.Values, "email")
+		session.Save(r, w)
+
+		// If saving the user had an error
+		if err != nil {
+			passwordNotChange := url.QueryEscape("Could not change your password!")
+			log.Infof(c, "%v", err)
+			http.Redirect(w, r, "/api/auth?success=false&message="+passwordNotChange, 302)
+			return
+		}
+
+		// If password is changed
+		validChange := "Your password has been changed! Please login with your new password."
+		http.Redirect(w, r, "/api/auth?success=true&message="+validChange, 302)
+		return
 	}
 }
 
@@ -320,7 +345,7 @@ func PasswordRegisterPageHandler() http.HandlerFunc {
 func ChangePasswordPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		_, err := controllers.GetCurrentUser(c, r)
+		currentUser, err := controllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -336,6 +361,12 @@ func ChangePasswordPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is not logged in
 		if err != nil {
+			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			return
+		}
+
+		// If uses Google authentication and there is no password
+		if currentUser.GoogleId != "" && len(currentUser.Password) == 0 {
 			http.Redirect(w, r, "https://site.newsai.org/", 302)
 			return
 		}
