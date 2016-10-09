@@ -76,7 +76,21 @@ func PasswordLoginHandler() http.HandlerFunc {
 				return
 			}
 
-			http.Redirect(w, r, "/", 302)
+			returnURL := "https://site.newsai.org/"
+			u, err := url.Parse(returnURL)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				http.Redirect(w, r, returnURL, 302)
+				return
+			}
+			if user.LastLoggedIn.IsZero() {
+				q := u.Query()
+				q.Set("firstTimeUser", "true")
+				u.RawQuery = q.Encode()
+				user.ConfirmLoggedIn(c)
+			}
+
+			http.Redirect(w, r, u.String(), 302)
 			return
 		}
 		wrongPasswordMessage := url.QueryEscape("You entered the wrong password!")
@@ -159,6 +173,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 
 		// At some point we can make the invitationCode required
 		if invitationCode != "" {
+			log.Infof(c, "%v", invitationCode)
 			userInviteCode, err := controllers.GetInviteFromInvitationCode(c, r, invitationCode)
 			if err != nil {
 				invalidEmailAlert := url.QueryEscape("Your user invitation code is incorrect!")
@@ -235,7 +250,7 @@ func PasswordLoginPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is logged in
 		if err == nil {
-			http.Redirect(w, r, "/", 302)
+			http.Redirect(w, r, "https://site.newsai.org/", 302)
 			return
 		}
 
@@ -276,7 +291,7 @@ func PasswordRegisterPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is logged in
 		if err == nil {
-			http.Redirect(w, r, "/", 302)
+			http.Redirect(w, r, "https://site.newsai.org/", 302)
 			return
 		}
 
@@ -309,7 +324,7 @@ func ForgetPasswordPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is logged in
 		if err == nil {
-			http.Redirect(w, r, "/", 302)
+			http.Redirect(w, r, "https://site.newsai.org/", 302)
 			return
 		}
 
@@ -382,7 +397,7 @@ func ResetPasswordPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is logged in
 		if err == nil {
-			http.Redirect(w, r, "/", 302)
+			http.Redirect(w, r, "https://site.newsai.org/", 302)
 			return
 		}
 

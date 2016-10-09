@@ -72,22 +72,30 @@ func generateTokenAndEmail(c context.Context, r *http.Request, email string) (mo
 }
 
 func GetInviteFromInvitationCode(c context.Context, r *http.Request, invitationCode string) (models.UserInviteCode, error) {
-	currentId, err := utilities.StringIdToInt(invitationCode)
+	ks, err := datastore.NewQuery("UserInviteCode").Filter("InviteCode =", invitationCode).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.UserInviteCode{}, err
 	}
 
-	// Get the agency by id
-	var userInviteCode models.UserInviteCode
-	userInviteCodeId := datastore.NewKey(c, "UserInviteCode", "", currentId, nil)
-	err = nds.Get(c, userInviteCodeId, &userInviteCode)
+	if len(ks) == 0 {
+		return models.UserInviteCode{}, errors.New("Wrong invitation code")
+	}
+
+	var userInviteCodes []models.UserInviteCode
+	userInviteCodes = make([]models.UserInviteCode, len(ks))
+	err = nds.GetMulti(c, ks, userInviteCodes)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.UserInviteCode{}, err
 	}
 
-	return userInviteCode, nil
+	if len(userInviteCodes) > 0 {
+		userInviteCodes[0].Format(ks[0], "invites")
+		return userInviteCodes[0], nil
+	}
+
+	return models.UserInviteCode{}, errors.New("No invitation by that code")
 }
 
 func CreateInvite(c context.Context, r *http.Request) (models.UserInviteCode, interface{}, error) {
