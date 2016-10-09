@@ -1,3 +1,8 @@
+var codeParameter = $.urlParam('code');
+if (codeParameter) {
+    document.getElementById("invitation_code").value = codeParameter;
+}
+
 $(function () {
     $('.button-checkbox').each(function () {
 

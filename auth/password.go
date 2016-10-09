@@ -145,6 +145,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		lastName := r.FormValue("lastname")
 		email := r.FormValue("email")
 		password := r.FormValue("password")
+		invitationCode := r.FormValue("invitationcode")
 
 		// Validate email
 		validEmail, err := mail.ParseAddress(email)
@@ -152,6 +153,19 @@ func PasswordRegisterHandler() http.HandlerFunc {
 			invalidEmailAlert := url.QueryEscape("Validation failed on registration. Sorry about that!")
 			http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
 			return
+		}
+
+		invitedBy := int64(0)
+
+		// At some point we can make the invitationCode required
+		if invitationCode != "" {
+			userInviteCode, err := controllers.GetInviteFromInvitationCode(c, r, invitationCode)
+			if err != nil {
+				invalidEmailAlert := url.QueryEscape("Your user invitation code is incorrect!")
+				http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
+				return
+			}
+			invitedBy = userInviteCode.CreatedBy
 		}
 
 		// Hash the password and save it into the datastore
@@ -165,6 +179,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		user.EmailConfirmed = false
 		user.AgreeTermsAndConditions = true
 		user.ConfirmationCode = utilities.RandToken()
+		user.InvitedBy = invitedBy // Potentially also email the person who invited them
 
 		// Register user
 		_, isOk, err := controllers.RegisterUser(r, user)

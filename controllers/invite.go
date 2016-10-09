@@ -9,6 +9,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/pquerna/ffjson/ffjson"
+	"github.com/qedus/nds"
 
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
@@ -68,6 +69,25 @@ func generateTokenAndEmail(c context.Context, r *http.Request, email string) (mo
 	emails.SendInvitationEmail(r, emailInvitaiton, referralCode.InviteCode)
 
 	return referralCode, nil
+}
+
+func GetInviteFromInvitationCode(c context.Context, r *http.Request, invitationCode string) (models.UserInviteCode, error) {
+	currentId, err := utilities.StringIdToInt(invitationCode)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.UserInviteCode{}, err
+	}
+
+	// Get the agency by id
+	var userInviteCode models.UserInviteCode
+	userInviteCodeId := datastore.NewKey(c, "UserInviteCode", "", currentId, nil)
+	err = nds.Get(c, userInviteCodeId, &userInviteCode)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.UserInviteCode{}, err
+	}
+
+	return userInviteCode, nil
 }
 
 func CreateInvite(c context.Context, r *http.Request) (models.UserInviteCode, interface{}, error) {
