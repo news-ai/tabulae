@@ -318,11 +318,27 @@ func Update(c context.Context, r *http.Request, u *models.User) (*models.User, e
 }
 
 func UpdateUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
-	// Get the details of the current user
-	user, _, err := GetUser(c, r, id)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.User{}, nil, err
+	user := models.User{}
+	err := errors.New("")
+
+	switch id {
+	case "me":
+		user, err = GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(c, r, userId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
 	}
 
 	currentUser, err := GetCurrentUser(c, r)
