@@ -19,8 +19,6 @@ type UserInviteCode struct {
 	InviteCode string `json:"invitecode"`
 	Email      string `json:"email"`
 	IsUsed     bool   `json:"isused"`
-
-	ReferralUser int64 `json:"referraluser" apiModel:"User"`
 }
 
 /*
@@ -31,8 +29,9 @@ type UserInviteCode struct {
 * Create methods
  */
 
-func (uic *UserInviteCode) Create(c context.Context, r *http.Request) (*UserInviteCode, error) {
+func (uic *UserInviteCode) Create(c context.Context, r *http.Request, currentUser User) (*UserInviteCode, error) {
 	// Create user
+	uic.CreatedBy = currentUser.Id
 	uic.Created = time.Now()
 	_, err := uic.Save(c)
 	return uic, err

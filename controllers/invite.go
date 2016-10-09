@@ -10,6 +10,7 @@ import (
 
 	"github.com/pquerna/ffjson/ffjson"
 
+	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/emails"
@@ -25,14 +26,6 @@ func generateTokenAndEmail(c context.Context, r *http.Request, email string) (mo
 		return models.UserInviteCode{}, err
 	}
 
-	// Check if the user is already a part of the platform
-	_, err = GetUserByEmail(c, email)
-	if err == nil {
-		userExistsError := errors.New("User already exists on the NewsAI platform")
-		log.Errorf(c, "%v", userExistsError)
-		return models.UserInviteCode{}, userExistsError
-	}
-
 	validEmail, err := mail.ParseAddress(email)
 	if err != nil {
 		invalidEmailError := errors.New("Email user has entered is incorrect")
@@ -40,11 +33,31 @@ func generateTokenAndEmail(c context.Context, r *http.Request, email string) (mo
 		return models.UserInviteCode{}, invalidEmailError
 	}
 
+	// Get the Contact by id
+	ks, err := datastore.NewQuery("UserInviteCode").Filter("Email =", validEmail.Address).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.UserInviteCode{}, err
+	}
+
+	if len(ks) > 0 {
+		invitedAlreadyError := errors.New("User has already been invited to the NewsAI platform")
+		log.Errorf(c, "%v", invitedAlreadyError)
+		return models.UserInviteCode{}, invitedAlreadyError
+	}
+
+	// Check if the user is already a part of the platform
+	_, err = GetUserByEmail(c, validEmail.Address)
+	if err == nil {
+		userExistsError := errors.New("User already exists on the NewsAI platform")
+		log.Errorf(c, "%v", userExistsError)
+		return models.UserInviteCode{}, userExistsError
+	}
+
 	referralCode := models.UserInviteCode{}
 	referralCode.Email = email
 	referralCode.InviteCode = utilities.RandToken()
-	referralCode.ReferralUser = currentUser.Id
-	_, err = referralCode.Create(c, r)
+	_, err = referralCode.Create(c, r, currentUser)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.UserInviteCode{}, err
@@ -71,6 +84,8 @@ func CreateInvite(c context.Context, r *http.Request) (models.UserInviteCode, in
 	if err != nil {
 		return models.UserInviteCode{}, nil, err
 	}
+
+	userInvite.Type = "invites"
 
 	return userInvite, nil, nil
 }
