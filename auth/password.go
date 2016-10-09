@@ -181,6 +181,8 @@ func PasswordRegisterHandler() http.HandlerFunc {
 				return
 			}
 			invitedBy = userInviteCode.CreatedBy
+			userInviteCode.IsUsed = true
+			userInviteCode.Save(c)
 		}
 
 		// Hash the password and save it into the datastore

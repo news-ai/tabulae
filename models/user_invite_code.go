@@ -33,6 +33,8 @@ func (uic *UserInviteCode) Create(c context.Context, r *http.Request, currentUse
 	// Create user
 	uic.CreatedBy = currentUser.Id
 	uic.Created = time.Now()
+	uic.IsUsed = false
+
 	_, err := uic.Save(c)
 	return uic, err
 }
@@ -44,8 +46,6 @@ func (uic *UserInviteCode) Create(c context.Context, r *http.Request, currentUse
 // Function to save a new user into App Engine
 func (uic *UserInviteCode) Save(c context.Context) (*UserInviteCode, error) {
 	uic.Updated = time.Now()
-	uic.IsUsed = false
-
 	k, err := nds.Put(c, uic.key(c, "UserInviteCode"), uic)
 	if err != nil {
 		return nil, err
