@@ -56,7 +56,7 @@ func generateTokenAndEmail(c context.Context, r *http.Request, email string) (mo
 	}
 
 	referralCode := models.UserInviteCode{}
-	referralCode.Email = email
+	referralCode.Email = validEmail.Address
 	referralCode.InviteCode = utilities.RandToken()
 	_, err = referralCode.Create(c, r, currentUser)
 	if err != nil {
@@ -66,8 +66,16 @@ func generateTokenAndEmail(c context.Context, r *http.Request, email string) (mo
 
 	// Email this person with the referral code
 	emailInvitaiton, _ := CreateEmailInternal(r, validEmail.Address, "", "")
-	emails.SendInvitationEmail(r, emailInvitaiton, referralCode.InviteCode)
+	emailSent, emailId, err := emails.SendInvitationEmail(r, emailInvitaiton, referralCode.InviteCode)
+	if !emailSent || err != nil {
+		// Redirect user back to login page
+		log.Errorf(c, "%v", "Invite email was not sent for "+validEmail.Address)
+		log.Errorf(c, "%v", err)
+		inviteEmailError := errors.New("Could not send invite email. We'll fix this soon!")
+		return models.UserInviteCode{}, inviteEmailError
+	}
 
+	emailInvitaiton.MarkSent(c, emailId)
 	return referralCode, nil
 }
 
