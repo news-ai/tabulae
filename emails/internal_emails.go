@@ -27,6 +27,13 @@ func SendResetEmail(r *http.Request, email models.Email, resetPasswordCode strin
 	return emails.SendInternalEmail(r, email, "434520df-7773-424a-8e4a-8a6bf1e24441", "Reset your NewsAI password!", "{RESET_CODE}", encodedResetCode)
 }
 
+func SendInvitationEmail(r *http.Request, email models.Email, invitationCode string) (bool, string, error) {
+	// Adding the confirmation code for emails
+	t := &url.URL{Path: invitationCode}
+	encodedInvitationCode := t.String()
+	return emails.SendInternalEmail(r, email, "47644933-3501-4f4c-a710-1c993c9925b8", "You've been invited to NewsAI Tabulae!", "{INVITATION_CODE}", encodedInvitationCode)
+}
+
 func SendListUploadedEmail(r *http.Request, email models.Email, listId string) (bool, string, error) {
 	// Adding the confirmation code for emails
 	t := &url.URL{Path: listId}

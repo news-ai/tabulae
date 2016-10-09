@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"net/mail"
 
 	"golang.org/x/net/context"
 
@@ -11,6 +12,7 @@ import (
 
 	"google.golang.org/appengine/log"
 
+	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 
 	"github.com/news-ai/web/utilities"
@@ -31,6 +33,13 @@ func generateTokenAndEmail(c context.Context, r *http.Request, email string) (mo
 		return models.UserInviteCode{}, userExistsError
 	}
 
+	validEmail, err := mail.ParseAddress(email)
+	if err != nil {
+		invalidEmailError := errors.New("Email user has entered is incorrect")
+		log.Errorf(c, "%v", invalidEmailError)
+		return models.UserInviteCode{}, invalidEmailError
+	}
+
 	referralCode := models.UserInviteCode{}
 	referralCode.Email = email
 	referralCode.InviteCode = utilities.RandToken()
@@ -42,7 +51,8 @@ func generateTokenAndEmail(c context.Context, r *http.Request, email string) (mo
 	}
 
 	// Email this person with the referral code
-	// email
+	emailInvitaiton, _ := CreateEmailInternal(r, validEmail.Address, "", "")
+	emails.SendInvitationEmail(r, emailInvitaiton, referralCode.InviteCode)
 
 	return referralCode, nil
 }
