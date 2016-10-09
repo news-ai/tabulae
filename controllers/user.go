@@ -325,6 +325,18 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 		return models.User{}, nil, err
 	}
 
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
 	buf, _ := ioutil.ReadAll(r.Body)
 	decoder := ffjson.NewDecoder()
 	var updatedUser models.User
