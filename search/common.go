@@ -80,7 +80,7 @@ type ElasticSortDataCreatedAtQuery struct {
 
 func InitializeElasticSearch() {
 	agencyElastic := elastic.Elastic{}
-	agencyElastic.BaseURL = baseURL
+	agencyElastic.BaseURL = newBaseURL
 	agencyElastic.Index = "agencies"
 	agencyElastic.Type = "agency"
 	elasticAgency = &agencyElastic
@@ -92,31 +92,31 @@ func InitializeElasticSearch() {
 	elasticPublication = &publicationElastic
 
 	contactElastic := elastic.Elastic{}
-	contactElastic.BaseURL = baseURL
+	contactElastic.BaseURL = newBaseURL
 	contactElastic.Index = "contacts"
 	contactElastic.Type = "contact"
 	elasticContact = &contactElastic
 
 	headlineElastic := elastic.Elastic{}
-	headlineElastic.BaseURL = baseURL
+	headlineElastic.BaseURL = newBaseURL
 	headlineElastic.Index = "headlines"
 	headlineElastic.Type = "headline"
 	elasticHeadline = &headlineElastic
 
 	tweetElastic := elastic.Elastic{}
-	tweetElastic.BaseURL = baseURL
+	tweetElastic.BaseURL = newBaseURL
 	tweetElastic.Index = "tweets"
 	tweetElastic.Type = "tweet"
 	elasticTweet = &tweetElastic
 
 	feedElastic := elastic.Elastic{}
-	feedElastic.BaseURL = baseURL
+	feedElastic.BaseURL = newBaseURL
 	feedElastic.Index = "feeds"
 	feedElastic.Type = "feed"
 	elasticFeed = &feedElastic
 
 	instagramElastic := elastic.Elastic{}
-	instagramElastic.BaseURL = baseURL
+	instagramElastic.BaseURL = newBaseURL
 	instagramElastic.Index = "instagrams"
 	instagramElastic.Type = "instagram"
 	elasticInstagram = &instagramElastic
