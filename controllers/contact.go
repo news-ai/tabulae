@@ -105,6 +105,8 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 	utilities.UpdateIfNotBlank(&contact.Website, updatedContact.Website)
 	utilities.UpdateIfNotBlank(&contact.Blog, updatedContact.Blog)
 	utilities.UpdateIfNotBlank(&contact.Notes, updatedContact.Notes)
+	utilities.UpdateIfNotBlank(&contact.Location, updatedContact.Location)
+	utilities.UpdateIfNotBlank(&contact.PhoneNumber, updatedContact.PhoneNumber)
 
 	if updatedContact.ListId != 0 {
 		contact.ListId = updatedContact.ListId
