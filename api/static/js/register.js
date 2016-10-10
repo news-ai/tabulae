@@ -3,6 +3,11 @@ if (codeParameter) {
     document.getElementById("invitation_code").value = codeParameter;
 }
 
+var emailParameter = $.urlParam('email');
+if (emailParameter) {
+    document.getElementById("email").value = emailParameter;
+}
+
 $(function () {
     $('.button-checkbox').each(function () {
 

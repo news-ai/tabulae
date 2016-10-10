@@ -20,14 +20,14 @@ import (
 	"github.com/news-ai/web/utilities"
 )
 
-func generateTokenAndEmail(c context.Context, r *http.Request, email string) (models.UserInviteCode, error) {
+func generateTokenAndEmail(c context.Context, r *http.Request, invite models.Invite) (models.UserInviteCode, error) {
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.UserInviteCode{}, err
 	}
 
-	validEmail, err := mail.ParseAddress(email)
+	validEmail, err := mail.ParseAddress(invite.Email)
 	if err != nil {
 		invalidEmailError := errors.New("Email user has entered is incorrect")
 		log.Errorf(c, "%v", invalidEmailError)
@@ -66,7 +66,7 @@ func generateTokenAndEmail(c context.Context, r *http.Request, email string) (mo
 
 	// Email this person with the referral code
 	emailInvitaiton, _ := CreateEmailInternal(r, validEmail.Address, "", "")
-	emailSent, emailId, err := emails.SendInvitationEmail(r, emailInvitaiton, referralCode.InviteCode)
+	emailSent, emailId, err := emails.SendInvitationEmail(r, emailInvitaiton, currentUser, referralCode.InviteCode, invite.PersonalNote)
 	if !emailSent || err != nil {
 		// Redirect user back to login page
 		log.Errorf(c, "%v", "Invite email was not sent for "+validEmail.Address)
@@ -116,7 +116,7 @@ func CreateInvite(c context.Context, r *http.Request) (models.UserInviteCode, in
 		return models.UserInviteCode{}, nil, err
 	}
 
-	userInvite, err := generateTokenAndEmail(c, r, invite.Email)
+	userInvite, err := generateTokenAndEmail(c, r, invite)
 	if err != nil {
 		return models.UserInviteCode{}, nil, err
 	}

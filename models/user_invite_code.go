@@ -10,7 +10,8 @@ import (
 )
 
 type Invite struct {
-	Email string `json:"email"`
+	Email        string `json:"email"`
+	PersonalNote string `json:"personalnote"`
 }
 
 type UserInviteCode struct {
