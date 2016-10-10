@@ -149,6 +149,18 @@ func CreateFeed(c context.Context, r *http.Request) (models.Feed, interface{}, e
 		return feed, nil, err
 	}
 
+	// Check if the feed already exists for a particular contact by the same user
+	query := datastore.NewQuery("Feed").Filter("FeedURL =", feed.FeedURL).Filter("CreatedBy =", currentUser.Id).Filter("ContactId =", feed.ContactId)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Feed{}, nil, err
+	}
+
+	if len(ks) > 0 {
+		return models.Feed{}, nil, errors.New("Feed already exits for the contact")
+	}
+
 	baseDomain, err := utilities.NormalizeUrl(feed.FeedURL)
 	if err != nil {
 		log.Errorf(c, "%v", err)

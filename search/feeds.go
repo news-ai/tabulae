@@ -116,7 +116,7 @@ func searchFeed(c context.Context, elasticQuery interface{}, contacts []models.C
 }
 
 func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models.Contact, feeds []models.Feed) ([]Feed, error) {
-	// If twitter username or feeds are empty return right away
+	// If contacts or feeds are empty return right away
 	if len(contacts) == 0 && len(feeds) == 0 {
 		return []Feed{}, nil
 	}
@@ -143,9 +143,11 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 	}
 
 	for i := 0; i < len(feeds); i++ {
-		elasticFeedUrlQuery := ElasticFeedUrlQuery{}
-		elasticFeedUrlQuery.Match.FeedURL = strings.ToLower(feeds[i].FeedURL)
-		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
+		if feeds[i].FeedURL != "" {
+			elasticFeedUrlQuery := ElasticFeedUrlQuery{}
+			elasticFeedUrlQuery.Match.FeedURL = strings.ToLower(feeds[i].FeedURL)
+			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
+		}
 	}
 
 	if len(elasticQuery.Query.Bool.Should) == 0 {
