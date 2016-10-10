@@ -488,7 +488,9 @@ func GetTweetsForList(c context.Context, r *http.Request, id string) (interface{
 
 	usernames := []string{}
 	for i := 0; i < len(contacts); i++ {
-		usernames = append(usernames, contacts[i].Twitter)
+		if contacts[i].Twitter != "" {
+			usernames = append(usernames, contacts[i].Twitter)
+		}
 	}
 
 	tweets, err := search.SearchTweetsByUsernames(c, r, usernames)

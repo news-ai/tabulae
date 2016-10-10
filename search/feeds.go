@@ -1,6 +1,7 @@
 package search
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -152,8 +153,9 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 	}
 
 	minMatch := "50%"
-	if len(elasticQuery.Query.Bool.Should) > 3 {
-		minMatch = "33%"
+	if len(elasticQuery.Query.Bool.Should) > 2 {
+		approxMatch := float64(100 / len(elasticQuery.Query.Bool.Should))
+		minMatch = fmt.Sprint(approxMatch) + "%"
 	}
 
 	elasticQuery.Query.Bool.MinimumShouldMatch = minMatch
