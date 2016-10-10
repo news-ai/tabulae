@@ -1,6 +1,7 @@
 package search
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -102,8 +103,14 @@ func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []mod
 		return []Headline{}, nil
 	}
 
-	elasticQuery.Query.Bool.MinimumShouldMatch = "100%"
-	elasticQuery.MinScore = 1.0
+	minMatch := "100%"
+	if len(elasticQuery.Query.Bool.Should) > 1 {
+		approxMatch := float64(100 / len(elasticQuery.Query.Bool.Should))
+		minMatch = fmt.Sprint(approxMatch) + "%"
+	}
+
+	elasticQuery.Query.Bool.MinimumShouldMatch = minMatch
+	elasticQuery.MinScore = 0.6
 
 	elasticPublishDateQuery := ElasticSortDataPublishDateQuery{}
 	elasticPublishDateQuery.DataPublishDate.Order = "desc"

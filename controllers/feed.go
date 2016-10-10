@@ -154,7 +154,7 @@ func CreateFeed(c context.Context, r *http.Request) (models.Feed, interface{}, e
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Feed{}, nil, err
+		return models.Feed{}, nil, err
 	}
 
 	if len(ks) > 0 {
