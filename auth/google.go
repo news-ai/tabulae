@@ -116,6 +116,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	newUser.FirstName = googleUser.GivenName
 	newUser.LastName = googleUser.FamilyName
 	newUser.EmailConfirmed = true
+	newUser.IsActive = true
 	user, _, _ := controllers.RegisterUser(r, newUser)
 
 	session.Values["email"] = googleUser.Email
