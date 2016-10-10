@@ -5,7 +5,8 @@ import (
 )
 
 var (
-	baseURL = "https://search.newsai.org"
+	baseURL    = "https://search.newsai.org"
+	newBaseURL = "https://search1.newsai.org"
 )
 
 type ElasticCreatedByQuery struct {
@@ -85,7 +86,7 @@ func InitializeElasticSearch() {
 	elasticAgency = &agencyElastic
 
 	publicationElastic := elastic.Elastic{}
-	publicationElastic.BaseURL = baseURL
+	publicationElastic.BaseURL = newBaseURL
 	publicationElastic.Index = "publications"
 	publicationElastic.Type = "publication"
 	elasticPublication = &publicationElastic
