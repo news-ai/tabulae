@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -275,6 +276,8 @@ func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (model
 	email.To = to
 	email.FirstName = firstName
 	email.LastName = lastName
+	email.Created = time.Now()
+	email.CreatedBy = int64(5749563331706880)
 
 	_, err := email.Save(c)
 	return email, err
