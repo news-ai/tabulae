@@ -2,7 +2,6 @@ package sync
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -50,7 +49,7 @@ func InstagramSync(r *http.Request, instagramUser string, instagramAccessToken s
 	// Create an map with instagram username and instagramAccessToken
 	data := map[string]string{
 		"username":     instagramUser,
-		"access_token": instagramAccessToken,
+		"access_token": "",
 	}
 
 	return sync(r, data, InstagramTopicID)
