@@ -24,6 +24,7 @@ type File struct {
 
 type FileOrder struct {
 	Order []string `json:"order"`
+	Sheet string   `json:"string"`
 }
 
 /*
