@@ -32,7 +32,7 @@ type User struct {
 	LinkedinId      string `json:"-"`
 	LinkedinAuthKey string `json:"-"`
 
-	InstagramId      string `json:"-"`
+	InstagramId      string `json:"instagramid"`
 	InstagramAuthKey string `json:"-"`
 
 	StripeId       string `json:"-"`

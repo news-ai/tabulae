@@ -843,7 +843,7 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 		return nil, nil, err
 	}
 
-	contact.IsIsDeleted = true
+	contact.IsDeleted = true
 	contact.Save(c, r)
 
 	// Pubsub to remove ES contact
