@@ -1,18 +1,13 @@
 package files
 
 import (
-	"io"
-	"io/ioutil"
 	"net/http"
 
 	"google.golang.org/appengine"
 	"google.golang.org/cloud/storage"
-
-	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/models"
 )
 
-func DeleteFile(r *http.Request, fileName string) errore {
+func DeleteFile(r *http.Request, fileName string) error {
 	c := appengine.NewContext(r)
 
 	bucket, err := getStorageBucket(r, "")
@@ -28,8 +23,8 @@ func DeleteFile(r *http.Request, fileName string) errore {
 
 	// Setup the bucket to upload the file
 	clientBucket := client.Bucket(bucket)
-	wc := clientBucket.Object(fileName).Delete(c)
-	if err := wc.Close(); err != nil {
+	err = clientBucket.Object(fileName).Delete(c)
+	if err != nil {
 		return err
 	}
 

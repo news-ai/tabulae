@@ -110,7 +110,7 @@ func GetFile(c context.Context, r *http.Request, id string) (models.File, interf
 
 func FilterFileByImported(c context.Context, r *http.Request) ([]models.File, error) {
 	// Get a publication by the URL
-	ks, err := datastore.NewQuery("File").Filter("Imported", true).KeysOnly().GetAll(c, nil)
+	ks, err := datastore.NewQuery("File").Filter("Imported =", true).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.File{}, err
