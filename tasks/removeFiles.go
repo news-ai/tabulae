@@ -7,6 +7,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/controllers"
+	"github.com/news-ai/tabulae/files"
 
 	"github.com/news-ai/web/errors"
 )
@@ -22,7 +23,14 @@ func RemoveImportedFilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for i := 0; i < len(files); i++ {
-		log.Infof(c, "%v", files[i].FileName)
+		err = files.DeleteFile(r, files[i].FileName)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			errors.ReturnError(w, http.StatusInternalServerError, "Could not delete files", err.Error())
+			return
+		}
+		files[i].FileExists = false
+		files[i].Save(c)
 	}
 
 	// If successful
