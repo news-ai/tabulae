@@ -22,12 +22,10 @@ func RemoveImportedFilesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Infof(c, "%v", importedFiles)
-
 	for i := 0; i < len(importedFiles); i++ {
-		log.Infof(c, "%v", importedFiles[i].FileName)
 		err = files.DeleteFile(r, importedFiles[i].FileName)
 		if err != nil {
+			log.Errorf(c, "%v", importedFiles[i].FileName)
 			log.Errorf(c, "%v", err)
 		} else {
 			importedFiles[i].FileExists = false
