@@ -843,12 +843,8 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 		return nil, nil, err
 	}
 
-	keyID := datastore.NewKey(c, "Contact", "", contact.Id, nil)
-	err = nds.Delete(c, keyID)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, err
-	}
+	contact.IsIsDeleted = true
+	contact.Save(c, r)
 
 	// Pubsub to remove ES contact
 	sync.ResourceSync(r, contact.Id, "Contact", "delete")

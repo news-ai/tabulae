@@ -58,6 +58,8 @@ type Contact struct {
 	IsOutdated   bool `json:"isoutdated"`
 	EmailBounced bool `json:"emailbounced"`
 
+	IsDeleted bool `json:"isdeleted"`
+
 	LinkedInUpdated time.Time `json:"linkedinupdated"`
 }
 
