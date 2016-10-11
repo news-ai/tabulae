@@ -48,15 +48,12 @@ func NewRSSFeedSync(r *http.Request, url string, publicationId int64) error {
 
 func InstagramSync(r *http.Request, instagramUser string, instagramAccessToken string) error {
 	// Create an map with instagram username and instagramAccessToken
-	if instagramAccessToken != "" {
-		data := map[string]string{
-			"username":     instagramUser,
-			"access_token": instagramAccessToken,
-		}
-
-		return sync(r, data, InstagramTopicID)
+	data := map[string]string{
+		"username":     instagramUser,
+		"access_token": instagramAccessToken,
 	}
-	return errors.New("No instagram AccessToken present")
+
+	return sync(r, data, InstagramTopicID)
 }
 
 func TwitterSync(r *http.Request, twitterUser string) error {

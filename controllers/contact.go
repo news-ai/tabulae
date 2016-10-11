@@ -82,7 +82,7 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 		sync.TwitterSync(r, updatedContact.Twitter)
 	}
 
-	if contact.Instagram != "" && updatedContact.Instagram != "" && contact.Instagram != updatedContact.Instagram && currentUser.InstagramAuthKey != "" {
+	if contact.Instagram != "" && updatedContact.Instagram != "" && contact.Instagram != updatedContact.Instagram {
 		sync.InstagramSync(r, updatedContact.Instagram, currentUser.InstagramAuthKey)
 	}
 
@@ -91,7 +91,7 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 		sync.TwitterSync(r, updatedContact.Twitter)
 	}
 
-	if contact.Instagram == "" && updatedContact.Instagram != "" && currentUser.InstagramAuthKey != "" {
+	if contact.Instagram == "" && updatedContact.Instagram != "" {
 		updatedContact.Normalize()
 		sync.InstagramSync(r, updatedContact.Instagram, currentUser.InstagramAuthKey)
 	}
@@ -620,7 +620,7 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 	if ct.Twitter != "" {
 		sync.TwitterSync(r, ct.Twitter)
 	}
-	if ct.Instagram != "" && currentUser.InstagramAuthKey != "" {
+	if ct.Instagram != "" {
 		sync.InstagramSync(r, ct.Twitter, currentUser.InstagramAuthKey)
 	}
 
@@ -692,7 +692,7 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 		if contacts[i].Twitter != "" {
 			sync.TwitterSync(r, contacts[i].Twitter)
 		}
-		if contacts[i].Instagram != "" && currentUser.InstagramAuthKey != "" {
+		if contacts[i].Instagram != "" {
 			sync.InstagramSync(r, contacts[i].Twitter, currentUser.InstagramAuthKey)
 		}
 	}
