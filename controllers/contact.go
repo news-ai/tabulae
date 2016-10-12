@@ -621,7 +621,7 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 		sync.TwitterSync(r, ct.Twitter)
 	}
 	if ct.Instagram != "" {
-		sync.InstagramSync(r, ct.Twitter, currentUser.InstagramAuthKey)
+		sync.InstagramSync(r, ct.Instagram, currentUser.InstagramAuthKey)
 	}
 
 	return ct, err
@@ -693,7 +693,7 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 			sync.TwitterSync(r, contacts[i].Twitter)
 		}
 		if contacts[i].Instagram != "" {
-			sync.InstagramSync(r, contacts[i].Twitter, currentUser.InstagramAuthKey)
+			sync.InstagramSync(r, contacts[i].Instagram, currentUser.InstagramAuthKey)
 		}
 	}
 

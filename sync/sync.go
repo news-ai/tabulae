@@ -2,6 +2,7 @@ package sync
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -47,12 +48,15 @@ func NewRSSFeedSync(r *http.Request, url string, publicationId int64) error {
 
 func InstagramSync(r *http.Request, instagramUser string, instagramAccessToken string) error {
 	// Create an map with instagram username and instagramAccessToken
-	data := map[string]string{
-		"username":     instagramUser,
-		"access_token": "",
-	}
+	if instagramUser != "" {
+		data := map[string]string{
+			"username":     instagramUser,
+			"access_token": "",
+		}
 
-	return sync(r, data, InstagramTopicID)
+		return sync(r, data, InstagramTopicID)
+	}
+	return errors.New("Instagram username is not valid")
 }
 
 func TwitterSync(r *http.Request, twitterUser string) error {
