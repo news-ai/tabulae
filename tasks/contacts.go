@@ -14,8 +14,9 @@ import (
 )
 
 type Social struct {
-	Network  string `json:"network"`
-	Username string `json:"username"`
+	Network          string `json:"network"`
+	Username         string `json:"username"`
+	PrivateOrInvalid string `json:"privateorinvalid"`
 }
 
 func SocialUsernameInvalid(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -56,9 +57,19 @@ func SocialUsernameInvalid(w http.ResponseWriter, r *http.Request, _ httprouter.
 	for i := 0; i < len(contacts); i++ {
 		switch socialData.Network {
 		case "Twitter":
-			contacts[i].TwitterInvalid = true
+			switch socialData.Network {
+			case "Invalid":
+				contacts[i].TwitterInvalid = true
+			case "Private":
+				contacts[i].TwitterPrivate = true
+			}
 		case "Instagram":
-			contacts[i].InstagramInvalid = true
+			switch socialData.Network {
+			case "Invalid":
+				contacts[i].InstagramInvalid = true
+			case "Private":
+				contacts[i].InstagramPrivate = true
+			}
 		}
 		controllers.Save(c, r, &contacts[i])
 	}
