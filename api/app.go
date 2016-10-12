@@ -169,6 +169,10 @@ func init() {
 	* Tasks Handler
 	 */
 
+	// Tasks needing to have middleware
+	router.POST("/tasks/socialUsernameInvalid", tasks.SocialUsernameInvalid)
+
+	// Tasks needing to not have middleware
 	http.HandleFunc("/tasks/removeExpiredSessions", gaeTasks.RemoveExpiredSessionsHandler)
 	http.HandleFunc("/tasks/removeImportedFiles", tasks.RemoveImportedFilesHandler)
 

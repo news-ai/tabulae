@@ -599,6 +599,16 @@ func GetSimilarContacts(c context.Context, r *http.Request, id string) (interfac
 	return contacts, nil, len(contacts), nil
 }
 
+func FilterContact(c context.Context, r *http.Request, queryType, query string) (models.Contact, error) {
+	// User has to be logged in
+	_, err := GetCurrentUser(c, r)
+	if err != nil {
+		return models.Contact{}, err
+	}
+
+	return filterContact(c, r, queryType, query)
+}
+
 /*
 * Create methods
  */
