@@ -147,6 +147,33 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 * Filter methods
  */
 
+func filterContacts(c context.Context, r *http.Request, queryType, query string) ([]models.Contact, error) {
+	// Get an contact by a query type
+	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, err
+	}
+
+	var contacts []models.Contact
+	contacts = make([]models.Contact, len(ks))
+	err = nds.GetMulti(c, ks, contacts)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, err
+	}
+
+	if len(contacts) > 0 {
+		for i := 0; i < len(contacts); i++ {
+			contacts[i].Format(ks[i], "contacts")
+		}
+
+		return contacts, nil
+
+	}
+	return []models.Contact{}, errors.New("No contact by this " + queryType)
+}
+
 func filterContact(c context.Context, r *http.Request, queryType, query string) (models.Contact, error) {
 	// Get an contact by a query type
 	ks, err := datastore.NewQuery("Contact").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
@@ -599,14 +626,14 @@ func GetSimilarContacts(c context.Context, r *http.Request, id string) (interfac
 	return contacts, nil, len(contacts), nil
 }
 
-func FilterContact(c context.Context, r *http.Request, queryType, query string) (models.Contact, error) {
+func FilterContacts(c context.Context, r *http.Request, queryType, query string) ([]models.Contact, error) {
 	// User has to be logged in
 	_, err := GetCurrentUser(c, r)
 	if err != nil {
-		return models.Contact{}, err
+		return []models.Contact{}, err
 	}
 
-	return filterContact(c, r, queryType, query)
+	return filterContacts(c, r, queryType, query)
 }
 
 /*

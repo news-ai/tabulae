@@ -44,6 +44,9 @@ type Contact struct {
 	Website   string `json:"website"`
 	Blog      string `json:"blog"`
 
+	TwitterInvalid   bool `json:"twitterinvalid"`
+	InstagramInvalid bool `json:"instagraminvalid"`
+
 	Location    string `json:"location"`
 	PhoneNumber string `json:"phonenumber"`
 
