@@ -57,14 +57,14 @@ func SocialUsernameInvalid(w http.ResponseWriter, r *http.Request, _ httprouter.
 	for i := 0; i < len(contacts); i++ {
 		switch socialData.Network {
 		case "Twitter":
-			switch socialData.Network {
+			switch socialData.PrivateOrInvalid {
 			case "Invalid":
 				contacts[i].TwitterInvalid = true
 			case "Private":
 				contacts[i].TwitterPrivate = true
 			}
 		case "Instagram":
-			switch socialData.Network {
+			switch socialData.PrivateOrInvalid {
 			case "Invalid":
 				contacts[i].InstagramInvalid = true
 			case "Private":
