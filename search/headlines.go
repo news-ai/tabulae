@@ -44,7 +44,7 @@ func (h *Headline) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchHeadline(c context.Context, elasticQuery interface{}, feedUrls []models.Feed) ([]Headline, error) {
+func searchHeadline(c context.Context, elasticQuery interface{}, feedUrls []models.Feed, checkMap bool) ([]Headline, error) {
 	hits, err := elasticHeadline.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -69,9 +69,12 @@ func searchHeadline(c context.Context, elasticQuery interface{}, feedUrls []mode
 
 		headline.Type = "headlines"
 
-		if headline.FeedURL != "" {
-			if _, ok := feedsMap[strings.ToLower(headline.FeedURL)]; !ok {
-				continue
+		// We only check map if it is a ResourceId -> Headlines. Not PublicationId -> Headlines.
+		if checkMap {
+			if headline.FeedURL != "" {
+				if _, ok := feedsMap[strings.ToLower(headline.FeedURL)]; !ok {
+					continue
+				}
 			}
 		}
 
@@ -117,7 +120,7 @@ func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []mod
 	elasticPublishDateQuery.DataPublishDate.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticPublishDateQuery)
 
-	return searchHeadline(c, elasticQuery, feeds)
+	return searchHeadline(c, elasticQuery, feeds, true)
 }
 
 func SearchHeadlinesByPublicationId(c context.Context, r *http.Request, publicationId int64) ([]Headline, error) {
@@ -141,5 +144,5 @@ func SearchHeadlinesByPublicationId(c context.Context, r *http.Request, publicat
 	elasticPublishDateQuery.DataPublishDate.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticPublishDateQuery)
 
-	return searchHeadline(c, elasticQuery, []models.Feed{})
+	return searchHeadline(c, elasticQuery, []models.Feed{}, false)
 }
