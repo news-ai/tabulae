@@ -160,8 +160,13 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 		minMatch = fmt.Sprint(approxMatch) + "%"
 	}
 
+	minScore := float32(0.2)
+	if len(elasticQuery.Query.Bool.Should) == 1 {
+		minScore = float32(1.0)
+	}
+
 	elasticQuery.Query.Bool.MinimumShouldMatch = minMatch
-	elasticQuery.MinScore = 0.2
+	elasticQuery.MinScore = minScore
 
 	elasticCreatedAtQuery := ElasticSortDataCreatedAtQuery{}
 	elasticCreatedAtQuery.DataCreatedAt.Order = "desc"
