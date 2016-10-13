@@ -36,6 +36,8 @@ type InstagramPost struct {
 	InstagramId string `json:"instagramid"`
 	Username    string `json:"Username"`
 
+	IsDeleted bool
+
 	CreatedAt time.Time `json:"createdat"`
 }
 

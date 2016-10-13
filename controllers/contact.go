@@ -389,6 +389,29 @@ func GetTweetsForContact(c context.Context, r *http.Request, id string) (interfa
 	return tweets, nil, len(tweets), nil
 }
 
+func GetTwitterProfileForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	twitterProfile, err := search.SearchProfileByUsername(c, r, contact.Twitter)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	return twitterProfile, nil, nil
+}
+
 func GetInstagramPostsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)

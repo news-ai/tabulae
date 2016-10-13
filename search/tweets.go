@@ -1,6 +1,7 @@
 package search
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -16,7 +17,8 @@ import (
 )
 
 var (
-	elasticTweet *elastic.Elastic
+	elasticTweet       *elastic.Elastic
+	elasticTwitterUser *elastic.Elastic
 )
 
 type Tweet struct {
@@ -32,6 +34,67 @@ type Tweet struct {
 func (t *Tweet) FillStruct(m map[string]interface{}) error {
 	for k, v := range m {
 		err := models.SetField(t, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type TwitterProfile struct {
+	Type string `json:"type"`
+
+	ID          int    `json:"id"`
+	IDStr       string `json:"id_str"`
+	Name        string `json:"name"`
+	ScreenName  string `json:"screen_name"`
+	Location    string `json:"location"`
+	Description string `json:"description"`
+	URL         string `json:"url"`
+	Entities    struct {
+		Description struct {
+			Urls []interface{} `json:"urls"`
+		} `json:"description"`
+	} `json:"entities"`
+	Protected                      bool   `json:"protected"`
+	FollowersCount                 int    `json:"followers_count"`
+	FriendsCount                   int    `json:"friends_count"`
+	ListedCount                    int    `json:"listed_count"`
+	CreatedAt                      string `json:"created_at"`
+	FavouritesCount                int    `json:"favourites_count"`
+	UtcOffset                      int    `json:"utc_offset"`
+	TimeZone                       string `json:"time_zone"`
+	GeoEnabled                     bool   `json:"geo_enabled"`
+	Verified                       bool   `json:"verified"`
+	StatusesCount                  int    `json:"statuses_count"`
+	Lang                           string `json:"lang"`
+	ContributorsEnabled            bool   `json:"contributors_enabled"`
+	IsTranslator                   bool   `json:"is_translator"`
+	IsTranslationEnabled           bool   `json:"is_translation_enabled"`
+	ProfileBackgroundColor         string `json:"profile_background_color"`
+	ProfileBackgroundImageURL      string `json:"profile_background_image_url"`
+	ProfileBackgroundImageURLHTTPS string `json:"profile_background_image_url_https"`
+	ProfileBackgroundTile          bool   `json:"profile_background_tile"`
+	ProfileImageURL                string `json:"profile_image_url"`
+	ProfileImageURLHTTPS           string `json:"profile_image_url_https"`
+	ProfileBannerURL               string `json:"profile_banner_url"`
+	ProfileLinkColor               string `json:"profile_link_color"`
+	ProfileSidebarBorderColor      string `json:"profile_sidebar_border_color"`
+	ProfileSidebarFillColor        string `json:"profile_sidebar_fill_color"`
+	ProfileTextColor               string `json:"profile_text_color"`
+	ProfileUseBackgroundImage      bool   `json:"profile_use_background_image"`
+	HasExtendedProfile             bool   `json:"has_extended_profile"`
+	DefaultProfile                 bool   `json:"default_profile"`
+	DefaultProfileImage            bool   `json:"default_profile_image"`
+	Following                      bool   `json:"following"`
+	FollowRequestSent              bool   `json:"follow_request_sent"`
+	Notifications                  bool   `json:"notifications"`
+	Username                       string `json:"Username"`
+}
+
+func (tp *TwitterProfile) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := models.SetField(tp, k, v)
 		if err != nil {
 			return err
 		}
@@ -71,6 +134,55 @@ func searchTweet(c context.Context, elasticQuery interface{}, usernames []string
 	}
 
 	return tweets, nil
+}
+
+func searchTwitterProfile(c context.Context, elasticQuery interface{}, username string) (TwitterProfile, error) {
+	hits, err := elasticTwitterUser.QueryStruct(c, elasticQuery)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return TwitterProfile{}, err
+	}
+
+	twitterProfileHits := hits.Hits
+
+	if len(twitterProfileHits) == 0 {
+		return TwitterProfile{}, errors.New("No Twitter profile for this username")
+	}
+
+	rawTwitterProfile := twitterProfileHits[0].Source.Data
+	rawMap := rawTwitterProfile.(map[string]interface{})
+	twitterProfile := TwitterProfile{}
+	err = twitterProfile.FillStruct(rawMap)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+	}
+
+	if twitterProfile.Username != username {
+		return TwitterProfile{}, errors.New("No Twitter profile for this username")
+	}
+
+	twitterProfile.Type = "twitterprofiles"
+
+	return twitterProfile, nil
+}
+
+func SearchProfileByUsername(c context.Context, r *http.Request, username string) (TwitterProfile, error) {
+	if username == "" {
+		return TwitterProfile{}, nil
+	}
+
+	offset := 0
+	limit := 1
+
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticUsernameQuery := ElasticUsernameQuery{}
+	elasticUsernameQuery.Term.Username = strings.ToLower(username)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticUsernameQuery)
+
+	return searchTwitterProfile(c, elasticQuery, username)
 }
 
 func SearchTweetsByUsername(c context.Context, r *http.Request, username string) ([]Tweet, error) {

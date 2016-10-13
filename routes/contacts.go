@@ -30,6 +30,8 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 		case "tweets":
 			val, included, count, err := controllers.GetTweetsForContact(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)
+		case "twitterprofile":
+			return api.BaseSingleResponseHandler(controllers.GetTwitterProfileForContact(c, r, id))
 		case "instagrams":
 			val, included, count, err := controllers.GetInstagramPostsForContact(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)
