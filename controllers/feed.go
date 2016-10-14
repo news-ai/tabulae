@@ -49,6 +49,33 @@ func getFeed(c context.Context, id int64) (models.Feed, error) {
 	return models.Feed{}, errors.New("No feed by this id")
 }
 
+func filterFeeds(c context.Context, r *http.Request, queryType, query string) ([]models.Feed, error) {
+	// Get an contact by a query type
+	ks, err := datastore.NewQuery("File").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Feed{}, err
+	}
+
+	var feeds []models.Feed
+	feeds = make([]models.Feed, len(ks))
+	err = nds.GetMulti(c, ks, feeds)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Feed{}, err
+	}
+
+	if len(feeds) > 0 {
+		for i := 0; i < len(feeds); i++ {
+			feeds[i].Format(ks[i], "feeds")
+		}
+
+		return feeds, nil
+
+	}
+	return []models.Feed{}, errors.New("No feed by this " + queryType)
+}
+
 /*
 * Public methods
  */
@@ -127,6 +154,16 @@ func GetFeedsByResourceId(c context.Context, r *http.Request, resouceName string
 	}
 
 	return feeds, nil
+}
+
+func FilterFeeds(c context.Context, r *http.Request, queryType, query string) ([]models.Feed, error) {
+	// User has to be logged in
+	_, err := GetCurrentUser(c, r)
+	if err != nil {
+		return []models.Feed{}, err
+	}
+
+	return filterFeeds(c, r, queryType, query)
 }
 
 /*
