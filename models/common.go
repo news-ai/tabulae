@@ -23,7 +23,7 @@ func SetField(obj interface{}, name string, value interface{}) error {
 		return errors.New("Cannot set" + name + " field value")
 	}
 
-	if name == "TwitterId" {
+	if name == "TwitterId" || name == "Entities" {
 		return nil
 	}
 
@@ -41,7 +41,7 @@ func SetField(obj interface{}, name string, value interface{}) error {
 	}
 
 	// Cast int
-	if name == "Comments" || name == "Likes" || name == "InstagramLikes" || name == "InstagramComments" {
+	if name == "Comments" || name == "Likes" || name == "InstagramLikes" || name == "InstagramComments" || name == "StatusesCount" || name == "UtcOffset" || name == "FavouritesCount" || name == "ListedCount" || name == "FriendsCount" || name == "FollowersCount" || name == "ID" {
 		returnValue := cast.ToInt(value)
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)
