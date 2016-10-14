@@ -79,14 +79,14 @@ func searchTwitterProfile(c context.Context, elasticQuery interface{}, username 
 	hits, err := elasticTwitterUser.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return TwitterProfile{}, err
+		return nil, err
 	}
 
 	twitterProfileHits := hits.Hits
 
 	if len(twitterProfileHits) == 0 {
 		log.Infof(c, "%v", twitterProfileHits)
-		return TwitterProfile{}, errors.New("No Twitter profile for this username")
+		return nil, errors.New("No Twitter profile for this username")
 	}
 
 	return twitterProfileHits[0].Source.Data, nil
@@ -94,7 +94,7 @@ func searchTwitterProfile(c context.Context, elasticQuery interface{}, username 
 
 func SearchProfileByUsername(c context.Context, r *http.Request, username string) (interface{}, error) {
 	if username == "" {
-		return TwitterProfile{}, nil
+		return nil, errors.New("Contact does not have a twitter username")
 	}
 
 	offset := 0
