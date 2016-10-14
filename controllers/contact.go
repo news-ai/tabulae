@@ -435,6 +435,29 @@ func GetInstagramPostsForContact(c context.Context, r *http.Request, id string) 
 	return instagramPosts, nil, len(instagramPosts), nil
 }
 
+func GetInstagramProfileForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	instagramProfile, err := search.SearchInstagramProfileByUsername(c, r, contact.Instagram)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	return instagramProfile, nil, nil
+}
+
 func GetEmailsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
 	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {

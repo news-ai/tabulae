@@ -1,6 +1,7 @@
 package search
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -16,7 +17,8 @@ import (
 )
 
 var (
-	elasticInstagram *elastic.Elastic
+	elasticInstagram     *elastic.Elastic
+	elasticInstagramUser *elastic.Elastic
 )
 
 type InstagramPost struct {
@@ -85,6 +87,23 @@ func searchInstagramPost(c context.Context, elasticQuery interface{}, usernames 
 	return instagramPosts, nil
 }
 
+func searchInstagramProfile(c context.Context, elasticQuery interface{}, username string) (interface{}, error) {
+	hits, err := elasticInstagramUser.QueryStruct(c, elasticQuery)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	}
+
+	instagramProfileHits := hits.Hits
+
+	if len(instagramProfileHits) == 0 {
+		log.Infof(c, "%v", instagramProfileHits)
+		return nil, errors.New("No Instagram profile for this username")
+	}
+
+	return instagramProfileHits[0].Source.Data, nil
+}
+
 func SearchInstagramPostsByUsername(c context.Context, r *http.Request, username string) ([]InstagramPost, error) {
 	if username == "" {
 		return []InstagramPost{}, nil
@@ -110,4 +129,23 @@ func SearchInstagramPostsByUsername(c context.Context, r *http.Request, username
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
 
 	return searchInstagramPost(c, elasticQuery, []string{username})
+}
+
+func SearchInstagramProfileByUsername(c context.Context, r *http.Request, username string) (interface{}, error) {
+	if username == "" {
+		return nil, errors.New("Contact does not have a instagram username")
+	}
+
+	offset := 0
+	limit := 1
+
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticUsernameQuery := ElasticUsernameQuery{}
+	elasticUsernameQuery.Term.Username = strings.ToLower(username)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticUsernameQuery)
+
+	return searchInstagramProfile(c, elasticQuery, username)
 }

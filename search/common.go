@@ -126,4 +126,10 @@ func InitializeElasticSearch() {
 	instagramElastic.Index = "instagrams"
 	instagramElastic.Type = "instagram"
 	elasticInstagram = &instagramElastic
+
+	instagramUserElastic := elastic.Elastic{}
+	instagramUserElastic.BaseURL = newBaseURL
+	instagramUserElastic.Index = "instagrams"
+	instagramUserElastic.Type = "user"
+	elasticInstagramUser = &instagramUserElastic
 }
