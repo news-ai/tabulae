@@ -97,7 +97,6 @@ func searchFeed(c context.Context, elasticQuery interface{}, contacts []models.C
 
 		if feed.FeedURL != "" {
 			// Reverse the #40 that we encoded it with
-			feed.FeedURL = strings.Replace(feed.FeedURL, "#40", "@", -1)
 			if _, ok := feedsMap[strings.ToLower(feed.FeedURL)]; !ok {
 				continue
 			}
@@ -149,12 +148,7 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 	for i := 0; i < len(feeds); i++ {
 		if feeds[i].FeedURL != "" {
 			elasticFeedUrlQuery := ElasticFeedUrlQuery{}
-
-			// Encode the feedurl
-			feedUrl := strings.ToLower(feeds[i].FeedURL)
-			feedUrl = strings.Replace(feedUrl, "@", "#40", -1)
-
-			elasticFeedUrlQuery.Match.FeedURL = feedUrl
+			elasticFeedUrlQuery.Match.FeedURL = strings.ToLower(feeds[i].FeedURL)
 			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
 		}
 	}
@@ -172,6 +166,10 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 	minScore := float32(0.2)
 	if len(elasticQuery.Query.Bool.Should) == 1 {
 		minScore = float32(1.0)
+	}
+
+	if len(elasticQuery.Query.Bool.Should) > 20 {
+		minScore = float32(0.0)
 	}
 
 	elasticQuery.Query.Bool.MinimumShouldMatch = minMatch
