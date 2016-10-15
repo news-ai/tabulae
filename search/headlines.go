@@ -98,11 +98,7 @@ func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []mod
 
 	for i := 0; i < len(feeds); i++ {
 		elasticFeedUrlQuery := ElasticFeedUrlQuery{}
-
-		// Encode the feedurl
 		feedUrl := strings.ToLower(feeds[i].FeedURL)
-		feedUrl = strings.Replace(feedUrl, "@", "#40", -1)
-
 		elasticFeedUrlQuery.Match.FeedURL = feedUrl
 		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
 	}
