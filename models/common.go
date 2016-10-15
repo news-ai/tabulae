@@ -41,7 +41,7 @@ func SetField(obj interface{}, name string, value interface{}) error {
 	}
 
 	// Cast int
-	if name == "Comments" || name == "Likes" || name == "InstagramLikes" || name == "InstagramComments" || name == "StatusesCount" || name == "UtcOffset" || name == "FavouritesCount" || name == "ListedCount" || name == "FriendsCount" || name == "FollowersCount" || name == "ID" {
+	if name == "Comments" || name == "Likes" || name == "InstagramLikes" || name == "InstagramComments" || name == "StatusesCount" || name == "UtcOffset" || name == "FavouritesCount" || name == "ListedCount" || name == "FriendsCount" || name == "FollowersCount" || name == "ID" || name == "InstagramWidth" || name == "InstagramHeight" {
 		returnValue := cast.ToInt(value)
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)

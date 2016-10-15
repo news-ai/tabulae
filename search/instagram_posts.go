@@ -31,6 +31,9 @@ type InstagramPost struct {
 	Comments    int      `json:"comments"`
 	Likes       int      `json:"likes"`
 
+	InstagramWidth  int `json:"instagramwidth"`
+	InstagramHeight int `json:"instagramheight"`
+
 	Link  string `json:"link"`
 	Image string `json:"image"`
 

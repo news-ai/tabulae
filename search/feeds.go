@@ -45,6 +45,8 @@ type Feed struct {
 	InstagramLink     string `json:"instagramlink"`
 	InstagramLikes    int    `json:"instagramlikes"`
 	InstagramComments int    `json:"instagramcomments"`
+	InstagramWidth    int    `json:"instagramwidth"`
+	InstagramHeight   int    `json:"instagramheight"`
 }
 
 func (f *Feed) FillStruct(m map[string]interface{}) error {
@@ -94,6 +96,8 @@ func searchFeed(c context.Context, elasticQuery interface{}, contacts []models.C
 		feed.Type += "s"
 
 		if feed.FeedURL != "" {
+			// Reverse the #40 that we encoded it with
+			feed.FeedURL = strings.Replace(feed.FeedURL, "#40", "@", -1)
 			if _, ok := feedsMap[strings.ToLower(feed.FeedURL)]; !ok {
 				continue
 			}
@@ -145,7 +149,12 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 	for i := 0; i < len(feeds); i++ {
 		if feeds[i].FeedURL != "" {
 			elasticFeedUrlQuery := ElasticFeedUrlQuery{}
-			elasticFeedUrlQuery.Match.FeedURL = strings.ToLower(feeds[i].FeedURL)
+
+			// Encode the feedurl
+			feedUrl := strings.ToLower(feeds[i].FeedURL)
+			feedUrl = strings.Replace(feedUrl, "@", "#40", -1)
+
+			elasticFeedUrlQuery.Match.FeedURL = feedUrl
 			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
 		}
 	}
