@@ -79,20 +79,30 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 	// If both of them are not empty but also not the same
 	if contact.Twitter != "" && updatedContact.Twitter != "" && contact.Twitter != updatedContact.Twitter {
 		updatedContact.Normalize()
+		contact.TwitterPrivate = false
+		contact.TwitterInvalid = false
 		sync.TwitterSync(r, updatedContact.Twitter)
 	}
 
+	// If you are changing Instagram usernames
 	if contact.Instagram != "" && updatedContact.Instagram != "" && contact.Instagram != updatedContact.Instagram {
+		contact.InstagramPrivate = false
+		contact.InstagramInvalid = false
 		sync.InstagramSync(r, updatedContact.Instagram, currentUser.InstagramAuthKey)
 	}
 
 	if contact.Twitter == "" && updatedContact.Twitter != "" {
 		updatedContact.Normalize()
+		contact.TwitterPrivate = false
+		contact.TwitterInvalid = false
 		sync.TwitterSync(r, updatedContact.Twitter)
 	}
 
+	// If they add a new Instagram
 	if contact.Instagram == "" && updatedContact.Instagram != "" {
 		updatedContact.Normalize()
+		contact.InstagramPrivate = false
+		contact.InstagramInvalid = false
 		sync.InstagramSync(r, updatedContact.Instagram, currentUser.InstagramAuthKey)
 	}
 
