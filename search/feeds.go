@@ -34,9 +34,11 @@ type Feed struct {
 	// Shared between tweet and instagram post
 	Text string `json:"text"`
 
-	TweetId    int64  `json:"tweetid"`
-	TweetIdStr string `json:"tweetidstr"`
-	Username   string `json:"username"`
+	TweetId         int64  `json:"tweetid"`
+	TweetIdStr      string `json:"tweetidstr"`
+	Username        string `json:"username"`
+	TwitterLikes    int    `json:"twitterlikes"`
+	TwitterRetweets int    `json:"twitterretweets"`
 
 	InstagramUsername string `json:"instagramusername"`
 	InstagramId       string `json:"instagramid"`

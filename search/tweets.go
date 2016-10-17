@@ -29,6 +29,12 @@ type Tweet struct {
 	TweetIdStr string    `json:"tweetidstr"`
 	Username   string    `json:"username"`
 	CreatedAt  time.Time `json:"createdat"`
+
+	Likes       int    `json:"likes"`
+	Retweets    int    `json:"retweets"`
+	Place       string `json:"place"`
+	Coordinates string `json:"coordinates"`
+	Retweeted   bool   `json:"retweeted"`
 }
 
 func (t *Tweet) FillStruct(m map[string]interface{}) error {

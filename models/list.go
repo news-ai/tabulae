@@ -34,6 +34,7 @@ type MediaList struct {
 	ReadOnly   bool `json:"readonly" datastore:"-"`
 	PublicList bool `json:"publiclist"`
 	Archived   bool `json:"archived"`
+	Subscribed bool `json:"subscribed"`
 }
 
 /*

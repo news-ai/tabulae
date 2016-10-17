@@ -21,12 +21,12 @@ func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode
 	emailSubstitute.Code = encodedConfirmationCode
 	emailSubstitutes = append(emailSubstitutes, emailSubstitute)
 
-	return emails.SendInternalEmail(r, email, "a64e454c-19d5-4bba-9cef-bd185e7c9b0b", "Thanks for signing up!", emailSubstitutes)
+	return emails.SendInternalEmail(r, email, "a64e454c-19d5-4bba-9cef-bd185e7c9b0b", "Thanks for signing up!", emailSubstitutes, 0)
 }
 
 func SendWelcomeEmail(r *http.Request, email models.Email) (bool, string, error) {
 	emailSubstitutes := []emails.EmailSubstitute{}
-	return emails.SendInternalEmail(r, email, "89d03e1c-6f9a-4820-8beb-db8b9856e7de", "Welcome To NewsAI Tabulae!", emailSubstitutes)
+	return emails.SendInternalEmail(r, email, "89d03e1c-6f9a-4820-8beb-db8b9856e7de", "Welcome To NewsAI Tabulae!", emailSubstitutes, 0)
 }
 
 func SendResetEmail(r *http.Request, email models.Email, resetPasswordCode string) (bool, string, error) {
@@ -40,7 +40,7 @@ func SendResetEmail(r *http.Request, email models.Email, resetPasswordCode strin
 	emailSubstitute.Code = encodedResetCode
 	emailSubstitutes = append(emailSubstitutes, emailSubstitute)
 
-	return emails.SendInternalEmail(r, email, "434520df-7773-424a-8e4a-8a6bf1e24441", "Reset your NewsAI password!", emailSubstitutes)
+	return emails.SendInternalEmail(r, email, "434520df-7773-424a-8e4a-8a6bf1e24441", "Reset your NewsAI password!", emailSubstitutes, 0)
 }
 
 func SendInvitationEmail(r *http.Request, email models.Email, currentUser models.User, invitationCode string, personalMessage string) (bool, string, error) {
@@ -79,7 +79,7 @@ func SendInvitationEmail(r *http.Request, email models.Email, currentUser models
 	emailSubstituteEmail.Code = currentUser.Email
 	emailSubstitutes = append(emailSubstitutes, emailSubstituteEmail)
 
-	return emails.SendInternalEmail(r, email, "47644933-3501-4f4c-a710-1c993c9925b8", "You've been invited to NewsAI Tabulae!", emailSubstitutes)
+	return emails.SendInternalEmail(r, email, "47644933-3501-4f4c-a710-1c993c9925b8", "You've been invited to NewsAI Tabulae!", emailSubstitutes, 0)
 }
 
 func SendListUploadedEmail(r *http.Request, email models.Email, listId string) (bool, string, error) {
@@ -93,5 +93,5 @@ func SendListUploadedEmail(r *http.Request, email models.Email, listId string) (
 	emailSubstitute.Code = encodedListId
 	emailSubstitutes = append(emailSubstitutes, emailSubstitute)
 
-	return emails.SendInternalEmail(r, email, "b55f71f4-8f0a-4540-a2b5-d74ee5249da1", "Your list has been uploaded!", emailSubstitutes)
+	return emails.SendInternalEmail(r, email, "b55f71f4-8f0a-4540-a2b5-d74ee5249da1", "Your list has been uploaded!", emailSubstitutes, 0)
 }
