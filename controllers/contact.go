@@ -468,6 +468,52 @@ func GetInstagramProfileForContact(c context.Context, r *http.Request, id string
 	return instagramProfile, nil, nil
 }
 
+func GetInstagramTimeseriesForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	instagramTimeseries, err := search.SearchInstagramTimeseriesByUsername(c, r, contact.Instagram)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	return instagramTimeseries, nil, nil
+}
+
+func GetTwitterTimeseriesForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	twitterTimeseries, err := search.SearchTwitterTimeseriesByUsername(c, r, contact.Instagram)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	return twitterTimeseries, nil, nil
+}
+
 func GetEmailsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
 	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {

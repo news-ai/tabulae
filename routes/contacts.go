@@ -32,11 +32,15 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 			return api.BaseResponseHandler(val, included, count, err, r)
 		case "twitterprofile":
 			return api.BaseSingleResponseHandler(controllers.GetTwitterProfileForContact(c, r, id))
+		case "twittertimeseries":
+			return api.BaseSingleResponseHandler(controllers.GetTwitterTimeseriesForContact(c, r, id))
 		case "instagrams":
 			val, included, count, err := controllers.GetInstagramPostsForContact(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)
 		case "instagramprofile":
 			return api.BaseSingleResponseHandler(controllers.GetInstagramProfileForContact(c, r, id))
+		case "instagramtimeseries":
+			return api.BaseSingleResponseHandler(controllers.GetInstagramTimeseriesForContact(c, r, id))
 		case "similar":
 			val, included, count, err := controllers.GetSimilarContacts(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)

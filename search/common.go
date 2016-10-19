@@ -132,4 +132,16 @@ func InitializeElasticSearch() {
 	instagramUserElastic.Index = "instagrams"
 	instagramUserElastic.Type = "user"
 	elasticInstagramUser = &instagramUserElastic
+
+	instagramTimeseriesElastic := elastic.Elastic{}
+	instagramTimeseriesElastic.BaseURL = newBaseURL
+	instagramTimeseriesElastic.Index = "timeseries"
+	instagramTimeseriesElastic.Type = "instagram"
+	elasticInstagramTimeseries = &instagramTimeseriesElastic
+
+	twitterTimeseriesElastic := elastic.Elastic{}
+	twitterTimeseriesElastic.BaseURL = newBaseURL
+	twitterTimeseriesElastic.Index = "timeseries"
+	twitterTimeseriesElastic.Type = "twitter"
+	elasticTwitterTimeseries = &twitterTimeseriesElastic
 }
