@@ -58,14 +58,24 @@ func PasswordLoginHandler() http.HandlerFunc {
 			session.Values["email"] = validEmail.Address
 			session.Save(r, w)
 
-			if session.Values["next"] != nil {
-				returnURL := session.Values["next"].(string)
+			if user.IsActive {
+				returnURL := "https://site.newsai.org/"
+				if session.Values["next"] != nil {
+					returnURL = session.Values["next"].(string)
+				}
 				u, err := url.Parse(returnURL)
+
+				// If there's an error in parsing the return value
+				// then returning it.
 				if err != nil {
 					log.Errorf(c, "%v", err)
 					http.Redirect(w, r, returnURL, 302)
 					return
 				}
+
+				// This would be a bug since they should not be here if they
+				// are a firstTimeUser. But we'll allow it to help make
+				// experience normal.
 				if user.LastLoggedIn.IsZero() {
 					q := u.Query()
 					q.Set("firstTimeUser", "true")
@@ -74,24 +84,10 @@ func PasswordLoginHandler() http.HandlerFunc {
 				}
 				http.Redirect(w, r, u.String(), 302)
 				return
-			}
-
-			returnURL := "https://site.newsai.org/"
-			u, err := url.Parse(returnURL)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				http.Redirect(w, r, returnURL, 302)
+			} else {
+				http.Redirect(w, r, "/api/billing/plans/trial", 302)
 				return
 			}
-			if user.LastLoggedIn.IsZero() {
-				q := u.Query()
-				q.Set("firstTimeUser", "true")
-				u.RawQuery = q.Encode()
-				user.ConfirmLoggedIn(c)
-			}
-
-			http.Redirect(w, r, u.String(), 302)
-			return
 		}
 		wrongPasswordMessage := url.QueryEscape("You entered the wrong password!")
 		http.Redirect(w, r, "/api/auth?success=false&message="+wrongPasswordMessage, 302)
