@@ -505,7 +505,7 @@ func GetTwitterTimeseriesForContact(c context.Context, r *http.Request, id strin
 		return nil, nil, err
 	}
 
-	twitterTimeseries, err := search.SearchTwitterTimeseriesByUsername(c, r, contact.Instagram)
+	twitterTimeseries, err := search.SearchTwitterTimeseriesByUsername(c, r, contact.Twitter)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
