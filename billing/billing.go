@@ -29,7 +29,7 @@ func CreateCustomer(r *http.Request, user models.User) error {
 			return err
 		}
 
-		user.SetStripeId(c, customer.ID, "", false, false)
+		user.SetStripeId(c, r, user, customer.ID, "", false)
 	}
 	return nil
 }

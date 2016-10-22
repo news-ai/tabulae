@@ -35,18 +35,13 @@ type User struct {
 	InstagramId      string `json:"instagramid"`
 	InstagramAuthKey string `json:"-"`
 
-	StripeId       string `json:"-"`
-	StripePlanId   string `json:"-"`
-	IsBetaUser     bool   `json:"-"`
-	StripeIsActive bool   `json:"isactive"`
-
 	InvitedBy int64 `json:"-"`
 
 	AgreeTermsAndConditions bool `json:"-"`
 	EmailConfirmed          bool `json:"emailconfirmed"`
 
 	IsAdmin  bool `json:"-"`
-	IsActive bool `json:"isactive"`
+	IsActive bool `json:"-"`
 }
 
 /*
@@ -110,11 +105,14 @@ func (u *User) ConfirmLoggedIn(c context.Context) (*User, error) {
 	return u, nil
 }
 
-func (u *User) SetStripeId(c context.Context, stripeId string, stripePlanId string, isBetaUser bool, isActive bool) (*User, error) {
-	u.StripeId = stripeId
-	u.StripePlanId = stripePlanId
-	u.IsBetaUser = isBetaUser
-	u.StripeIsActive = isActive
+func (u *User) SetStripeId(c context.Context, r *http.Request, currentUser User, stripeId string, stripePlanId string, isActive bool) (*User, error) {
+
+	billing := Billing{}
+	billing.StripeId = stripeId
+	billing.StripePlanId = stripePlanId
+	billing.Create(c, r, currentUser)
+
+	u.IsActive = isActive
 	_, err := u.Save(c)
 	if err != nil {
 		return u, err
