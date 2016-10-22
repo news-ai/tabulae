@@ -308,7 +308,7 @@ func Update(c context.Context, r *http.Request, u *models.User) (*models.User, e
 	}
 
 	// Check if their stripe has been integrated
-	_, err := getUserBilling(c, r, *u)
+	_, err := GetUserBilling(c, r, *u)
 	if err != nil {
 		billing.CreateCustomer(r, *u)
 	}

@@ -14,7 +14,7 @@ import (
 	"github.com/news-ai/tabulae/models"
 )
 
-func getUserBilling(c context.Context, r *http.Request, user models.User) (models.Billing, error) {
+func GetUserBilling(c context.Context, r *http.Request, user models.User) (models.Billing, error) {
 	ks, err := datastore.NewQuery("Billing").Filter("CreatedBy =", user.Id).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)

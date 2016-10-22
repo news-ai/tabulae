@@ -91,7 +91,10 @@ func init() {
 	* Billing Handler
 	 */
 
-	router.Handler("GET", "/api/billing/plans/trial", CSRF(auth.ChoosePlanHandler()))
+	router.Handler("GET", "/api/billing/plans/trial", CSRF(auth.TrialPlanPageHandler()))
+	router.Handler("POST", "/api/billing/plans/start-trial", CSRF(auth.ChooseTrialPlanHandler()))
+
+	router.Handler("GET", "/api/billing/plans", CSRF(auth.ChoosePlanPageHandler()))
 
 	/*
 	* Incoming Handler
