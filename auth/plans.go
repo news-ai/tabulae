@@ -32,25 +32,28 @@ func TrialPlanPageHandler() http.HandlerFunc {
 			}
 		}
 
+		// If there is no next and the user is not logged in
+		if err != nil {
+			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			return
+		}
+
 		if !user.IsActive {
 			userBilling, err := controllers.GetUserBilling(c, r, user)
 
-			// If the user has already had a trial and has expired
-			if userBilling.HasTrial && !userBilling.Expires.IsZero() && userBilling.Expires.Before(time.Now()) {
-				http.Redirect(w, r, "/api/billing/plans", 302)
-				return
-			}
+			// If the user has a user billing
+			if err == nil {
+				// If the user has already had a trial and has expired
+				if userBilling.HasTrial && !userBilling.Expires.IsZero() && userBilling.Expires.After(time.Now()) {
+					http.Redirect(w, r, "/api/billing/plans", 302)
+					return
+				}
 
-			// If the user has already had a trial but it has not expired
-			if userBilling.HasTrial && !userBilling.Expires.IsZero() && userBilling.Expires.Before(time.Now()) {
-				http.Redirect(w, r, "https://site.newsai.org/", 302)
-				return
-			}
-
-			// If there is no next and the user is not logged in
-			if err != nil {
-				http.Redirect(w, r, "https://site.newsai.org/", 302)
-				return
+				// If the user has already had a trial but it has not expired
+				if userBilling.HasTrial && !userBilling.Expires.IsZero() && userBilling.Expires.Before(time.Now()) {
+					http.Redirect(w, r, "https://site.newsai.org/", 302)
+					return
+				}
 			}
 
 			data := map[string]interface{}{
@@ -116,6 +119,7 @@ func ChooseTrialPlanHandler() http.HandlerFunc {
 
 			// If there is a next and the user has not been logged in
 			if err != nil {
+				log.Errorf(c, "%v", err)
 				http.Redirect(w, r, r.URL.Query().Get("next"), 302)
 				return
 			}
@@ -123,14 +127,19 @@ func ChooseTrialPlanHandler() http.HandlerFunc {
 
 		// If there is no next and the user is not logged in
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			http.Redirect(w, r, "https://site.newsai.org/", 302)
 			return
 		}
 
-		err = billing.AddFreeTrialToUser(r, user, plan)
+		billingId, err := billing.AddFreeTrialToUser(r, user, plan)
+		user.IsActive = true
+		user.BillingId = billingId
+		user.Save(c)
 
 		// If there was an error creating this person's trial
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			http.Redirect(w, r, "/api/billing/plans/trial", 302)
 			return
 		}

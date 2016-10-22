@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 
 	"github.com/stripe/stripe-go"
@@ -13,7 +14,7 @@ import (
 	"github.com/news-ai/tabulae/models"
 )
 
-func AddFreeTrialToUser(r *http.Request, user models.User, plan string) error {
+func AddFreeTrialToUser(r *http.Request, user models.User, plan string) (int64, error) {
 	c := appengine.NewContext(r)
 	httpClient := urlfetch.Client(c)
 	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
@@ -28,11 +29,16 @@ func AddFreeTrialToUser(r *http.Request, user models.User, plan string) error {
 
 	customer, err := sc.Customers.New(params)
 	if err != nil {
-		return err
+		log.Errorf(c, "%v", err)
+		return 0, err
 	}
 
-	user.SetStripeId(c, r, user, customer.ID, "", true, true)
-	return nil
+	_, billingId, err := user.SetStripeId(c, r, user, customer.ID, plan, true, true)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return billingId, err
+	}
+	return billingId, nil
 }
 
 func AddPlanToUser(r *http.Request, user models.User, plan string, months int, coupon string, sp string) error {

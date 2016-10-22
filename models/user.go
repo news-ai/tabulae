@@ -107,23 +107,27 @@ func (u *User) ConfirmLoggedIn(c context.Context) (*User, error) {
 	return u, nil
 }
 
-func (u *User) SetStripeId(c context.Context, r *http.Request, currentUser User, stripeId string, stripePlanId string, isActive bool, isTrial bool) (*User, error) {
+func (u *User) SetStripeId(c context.Context, r *http.Request, currentUser User, stripeId string, stripePlanId string, isActive bool, isTrial bool) (*User, int64, error) {
 	billing := Billing{}
 	billing.StripeId = stripeId
 	billing.StripePlanId = stripePlanId
 
 	if isTrial {
 		expires := time.Now().Add(time.Hour * 24 * 7 * time.Duration(1))
+		billing.HasTrial = true
 		billing.Expires = expires
 	}
 
-	billing.Create(c, r, currentUser)
+	_, err := billing.Create(c, r, currentUser)
+	if err != nil {
+		return u, 0, err
+	}
 
 	u.BillingId = billing.Id
 	u.IsActive = isActive
-	_, err := u.Save(c)
+	_, err = u.Save(c)
 	if err != nil {
-		return u, err
+		return u, 0, err
 	}
-	return u, nil
+	return u, billing.Id, nil
 }
