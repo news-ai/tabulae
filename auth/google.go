@@ -123,31 +123,36 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	session.Values["id"] = newUser.Id
 	session.Save(r, w)
 
-	if session.Values["next"] != nil {
-		returnURL := session.Values["next"].(string)
-		u, err := url.Parse(returnURL)
-		if err != nil {
-			http.Redirect(w, r, returnURL, 302)
-		}
-
-		if user.LastLoggedIn.IsZero() {
-			q := u.Query()
-			q.Set("firstTimeUser", "true")
-			u.RawQuery = q.Encode()
-
-			emailWelcome, _ := controllers.CreateEmailInternal(r, user.Email, user.FirstName, user.LastName)
-			emailSent, emailId, err := emails.SendWelcomeEmail(r, emailWelcome)
-			if !emailSent || err != nil {
-				// Redirect user back to login page
-				log.Errorf(c, "%v", "Welcome email was not sent for "+user.Email)
-				log.Errorf(c, "%v", err)
+	if user.IsActive {
+		if session.Values["next"] != nil {
+			returnURL := session.Values["next"].(string)
+			u, err := url.Parse(returnURL)
+			if err != nil {
+				http.Redirect(w, r, returnURL, 302)
 			}
 
-			emailWelcome.MarkSent(c, emailId)
+			if user.LastLoggedIn.IsZero() {
+				q := u.Query()
+				q.Set("firstTimeUser", "true")
+				u.RawQuery = q.Encode()
 
-			user.ConfirmLoggedIn(c)
+				emailWelcome, _ := controllers.CreateEmailInternal(r, user.Email, user.FirstName, user.LastName)
+				emailSent, emailId, err := emails.SendWelcomeEmail(r, emailWelcome)
+				if !emailSent || err != nil {
+					// Redirect user back to login page
+					log.Errorf(c, "%v", "Welcome email was not sent for "+user.Email)
+					log.Errorf(c, "%v", err)
+				}
+
+				emailWelcome.MarkSent(c, emailId)
+
+				user.ConfirmLoggedIn(c)
+			}
+			http.Redirect(w, r, u.String(), 302)
+			return
 		}
-		http.Redirect(w, r, u.String(), 302)
+	} else {
+		http.Redirect(w, r, "/api/billing/plans/trial", 302)
 		return
 	}
 

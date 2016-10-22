@@ -40,6 +40,8 @@ type User struct {
 	AgreeTermsAndConditions bool `json:"-"`
 	EmailConfirmed          bool `json:"emailconfirmed"`
 
+	BillingId int64 `json:"-"`
+
 	IsAdmin  bool `json:"-"`
 	IsActive bool `json:"isactive"`
 }
@@ -105,12 +107,19 @@ func (u *User) ConfirmLoggedIn(c context.Context) (*User, error) {
 	return u, nil
 }
 
-func (u *User) SetStripeId(c context.Context, r *http.Request, currentUser User, stripeId string, stripePlanId string, isActive bool) (*User, error) {
+func (u *User) SetStripeId(c context.Context, r *http.Request, currentUser User, stripeId string, stripePlanId string, isActive bool, isTrial bool) (*User, error) {
 	billing := Billing{}
 	billing.StripeId = stripeId
 	billing.StripePlanId = stripePlanId
+
+	if isTrial {
+		expires := time.Now().Add(time.Hour * 24 * 7 * time.Duration(1))
+		billing.Expires = expires
+	}
+
 	billing.Create(c, r, currentUser)
 
+	u.BillingId = billing.Id
 	u.IsActive = isActive
 	_, err := u.Save(c)
 	if err != nil {

@@ -15,23 +15,17 @@ import (
 )
 
 func GetUserBilling(c context.Context, r *http.Request, user models.User) (models.Billing, error) {
-	ks, err := datastore.NewQuery("Billing").Filter("CreatedBy =", user.Id).KeysOnly().GetAll(c, nil)
+	if user.BillingId == 0 {
+		return models.Billing{}, errors.New("No billing for this user")
+	}
+	// Get the billing by id
+	var billing models.Billing
+	billingId := datastore.NewKey(c, "Billing", "", user.BillingId, nil)
+	err := nds.Get(c, billingId, &billing)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Billing{}, err
 	}
 
-	var billing []models.Billing
-	billing = make([]models.Billing, len(ks))
-	err = nds.GetMulti(c, ks, billing)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.Billing{}, err
-	}
-
-	if len(billing) > 0 {
-		billing[0].Format(ks[0], "billing")
-		return billing[0], nil
-	}
-	return models.Billing{}, errors.New("No billing for this user")
+	return billing, nil
 }

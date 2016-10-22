@@ -28,6 +28,6 @@ func CreateCustomer(r *http.Request, user models.User) error {
 		return err
 	}
 
-	user.SetStripeId(c, r, user, customer.ID, "", false)
+	user.SetStripeId(c, r, user, customer.ID, "", false, false)
 	return nil
 }
