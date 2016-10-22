@@ -106,7 +106,6 @@ func (u *User) ConfirmLoggedIn(c context.Context) (*User, error) {
 }
 
 func (u *User) SetStripeId(c context.Context, r *http.Request, currentUser User, stripeId string, stripePlanId string, isActive bool) (*User, error) {
-
 	billing := Billing{}
 	billing.StripeId = stripeId
 	billing.StripePlanId = stripePlanId

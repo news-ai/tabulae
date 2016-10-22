@@ -14,22 +14,20 @@ import (
 )
 
 func CreateCustomer(r *http.Request, user models.User) error {
-	if user.StripeId == "" {
-		c := appengine.NewContext(r)
-		httpClient := urlfetch.Client(c)
-		sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
+	c := appengine.NewContext(r)
+	httpClient := urlfetch.Client(c)
+	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
 
-		params := &stripe.CustomerParams{
-			Balance: 0,
-			Email:   user.Email,
-		}
-
-		customer, err := sc.Customers.New(params)
-		if err != nil {
-			return err
-		}
-
-		user.SetStripeId(c, r, user, customer.ID, "", false)
+	params := &stripe.CustomerParams{
+		Balance: 0,
+		Email:   user.Email,
 	}
+
+	customer, err := sc.Customers.New(params)
+	if err != nil {
+		return err
+	}
+
+	user.SetStripeId(c, r, user, customer.ID, "", false)
 	return nil
 }

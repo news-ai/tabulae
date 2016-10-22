@@ -306,7 +306,10 @@ func Update(c context.Context, r *http.Request, u *models.User) (*models.User, e
 	if len(u.Employers) == 0 {
 		CreateAgencyFromUser(c, r, u)
 	}
-	if u.StripeId == "" {
+
+	// Check if their stripe has been integrated
+	_, err := getUserBilling(c, r, *u)
+	if err != nil {
 		billing.CreateCustomer(r, *u)
 	}
 	return u, nil
