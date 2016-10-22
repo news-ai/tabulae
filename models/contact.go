@@ -119,8 +119,9 @@ func (ct *Contact) Normalize() (*Contact, error) {
 	ct.Instagram = utilities.StripQueryString(ct.Instagram)
 	ct.Instagram = strings.ToLower(utilities.NormalizeUrlToUsername(ct.Instagram, "instagram.com"))
 	ct.MuckRack = strings.ToLower(utilities.StripQueryString(ct.MuckRack))
-	ct.Website = strings.ToLower(utilities.StripQueryString(ct.Website))
-	ct.Blog = strings.ToLower(utilities.StripQueryString(ct.Blog))
+
+	ct.Website = strings.ToLower(utilities.StripQueryStringForWebsite(ct.Website))
+	ct.Blog = strings.ToLower(utilities.StripQueryStringForWebsite(ct.Blog))
 
 	return ct, nil
 }
