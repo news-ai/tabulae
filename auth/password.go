@@ -232,7 +232,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		user.AgreeTermsAndConditions = true
 		user.ConfirmationCode = utilities.RandToken()
 		user.InvitedBy = invitedBy // Potentially also email the person who invited them
-		user.IsActive = true
+		user.IsActive = false
 
 		// Register user
 		_, isOk, err := controllers.RegisterUser(r, user)

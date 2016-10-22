@@ -41,7 +41,7 @@ type User struct {
 	EmailConfirmed          bool `json:"emailconfirmed"`
 
 	IsAdmin  bool `json:"-"`
-	IsActive bool `json:"-"`
+	IsActive bool `json:"isactive"`
 }
 
 /*
