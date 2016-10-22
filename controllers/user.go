@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	"golang.org/x/net/context"
 
