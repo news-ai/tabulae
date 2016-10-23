@@ -33,7 +33,18 @@
 </head>
 
 <body>
-    
+    <section class="app-brief grey-bg" id="brief1">
+        <div class="container">
+            <div class="row list" id="social-sync">
+                <div class="col-md-6 left-align">
+                    <h2 class="dark-text">Billing</h2>
+                    <div class="colored-line-left">
+                    </div>
+                    <p>You're currently on the {{.userBilling.StripePlanId}} plan. {{if .userBilling.IsOnTrial}}You are currently on a trial.{{end}}</p>
+                </div>
+            </div>
+        </div>
+    </section>
     <script src="https://www.newsai.org/js/bootstrap.min.js"></script>
     <script src="https://www.newsai.org/js/newsai.js"></script>
     <script>
@@ -52,6 +63,10 @@
             'HasTrial': '{{.userBilling.HasTrial}}',
             'IsOnTrial': '{{.userBilling.IsOnTrial}}'
         };
+        Intercom('boot', {  
+            app_id: 'ur8dbk9e',  
+            email: '{{.userEmail}}',
+        });
         console.log(userBilling);
     </script>
 </body>

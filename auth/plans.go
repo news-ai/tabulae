@@ -207,6 +207,7 @@ func BillingPageHandler() http.HandlerFunc {
 		if err == nil {
 			data := map[string]interface{}{
 				"userBilling":    userBilling,
+				"userEmail":      user.Email,
 				csrf.TemplateTag: csrf.TemplateField(r),
 			}
 
