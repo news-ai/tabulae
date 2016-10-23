@@ -27,5 +27,7 @@ func GetUserBilling(c context.Context, r *http.Request, user models.User) (model
 		return models.Billing{}, err
 	}
 
+	billing.Format(billingId, "billings")
+
 	return billing, nil
 }

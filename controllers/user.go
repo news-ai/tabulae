@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -305,6 +306,20 @@ func Update(c context.Context, r *http.Request, u *models.User) (*models.User, e
 	if len(u.Employers) == 0 {
 		CreateAgencyFromUser(c, r, u)
 	}
+
+	billing, err := GetUserBilling(c, r, *u)
+	if err != nil {
+		return u, err
+	}
+
+	if billing.Expires.Before(time.Now()) {
+		u.IsActive = false
+		u.Save(c)
+
+		billing.IsOnTrial = false
+		billing.Save(c)
+	}
+
 	return u, nil
 }
 

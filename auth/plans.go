@@ -262,7 +262,6 @@ func PaymentMethodsPageHandler() http.HandlerFunc {
 
 		// If the user has a billing profile
 		if err == nil {
-
 			data := map[string]interface{}{
 				"userEmail":      user.Email,
 				"cardsOnFile":    len(userBilling.CardsOnFile),
@@ -285,7 +284,7 @@ func PaymentMethodsPageHandler() http.HandlerFunc {
 func PaymentMethodsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		_, err := controllers.GetCurrentUser(c, r)
+		user, err := controllers.GetCurrentUser(c, r)
 
 		stripeToken := r.FormValue("stripeToken")
 
@@ -307,6 +306,23 @@ func PaymentMethodsHandler() http.HandlerFunc {
 			return
 		}
 
-		log.Infof(c, "%v", stripeToken)
+		userBilling, err := controllers.GetUserBilling(c, r, user)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			http.Redirect(w, r, "/api/billing/plans/trial", 302)
+			return
+		}
+
+		err = billing.AddPaymentsToCustomer(r, user, &userBilling, stripeToken)
+
+		// Throw error message to user
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			http.Redirect(w, r, "/api/billing/payment-methods", 302)
+			return
+		}
+
+		http.Redirect(w, r, "/api/billing/payment-methods", 302)
+		return
 	}
 }
