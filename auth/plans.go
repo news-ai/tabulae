@@ -43,16 +43,19 @@ func TrialPlanPageHandler() http.HandlerFunc {
 
 			// If the user has a user billing
 			if err == nil {
-				// If the user has already had a trial and has expired
-				if userBilling.HasTrial && !userBilling.Expires.IsZero() && userBilling.Expires.After(time.Now()) {
-					http.Redirect(w, r, "/api/billing/plans", 302)
-					return
-				}
+				if userBilling.HasTrial && !userBilling.Expires.IsZero() {
+					// If the user has already had a trial and has expired
+					// This means: If userBilling Expire date is before the current time
+					if userBilling.Expires.Before(time.Now()) {
+						http.Redirect(w, r, "/api/billing", 302)
+						return
+					}
 
-				// If the user has already had a trial but it has not expired
-				if userBilling.HasTrial && !userBilling.Expires.IsZero() && userBilling.Expires.Before(time.Now()) {
-					http.Redirect(w, r, "https://site.newsai.org/", 302)
-					return
+					// If the user has already had a trial but it has not expired
+					if userBilling.Expires.After(time.Now()) {
+						http.Redirect(w, r, "https://site.newsai.org/", 302)
+						return
+					}
 				}
 			}
 
@@ -169,6 +172,7 @@ func ChooseTrialPlanHandler() http.HandlerFunc {
 			u.RawQuery = q.Encode()
 			user.ConfirmLoggedIn(c)
 		}
+
 		http.Redirect(w, r, u.String(), 302)
 		return
 	}
@@ -177,7 +181,7 @@ func ChooseTrialPlanHandler() http.HandlerFunc {
 func BillingPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		_, err := controllers.GetCurrentUser(c, r)
+		user, err := controllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -197,12 +201,39 @@ func BillingPageHandler() http.HandlerFunc {
 			return
 		}
 
-		data := map[string]interface{}{
-			csrf.TemplateTag: csrf.TemplateField(r),
-		}
+		_, err = controllers.GetUserBilling(c, r, user)
 
-		t := template.New("billing.html")
-		t, _ = t.ParseFiles("billing/billing.html")
-		t.Execute(w, data)
+		// If the user has a billing profile
+		if err == nil {
+			// userBilling, err := controllers.GetUserBilling(c, r, user)
+
+			// // If the user has a user billing
+			// if err == nil {
+			// 	// If the user has already had a trial and has expired
+			// 	if userBilling.HasTrial && !userBilling.Expires.IsZero() && userBilling.Expires.After(time.Now()) {
+			// 		http.Redirect(w, r, "/api/billing/plans", 302)
+			// 		return
+			// 	}
+
+			// 	// If the user has already had a trial but it has not expired
+			// 	if userBilling.HasTrial && !userBilling.Expires.IsZero() && userBilling.Expires.Before(time.Now()) {
+			// 		http.Redirect(w, r, "https://site.newsai.org/", 302)
+			// 		return
+			// 	}
+			// }
+
+			data := map[string]interface{}{
+				csrf.TemplateTag: csrf.TemplateField(r),
+			}
+
+			t := template.New("billing.html")
+			t, _ = t.ParseFiles("billing/billing.html")
+			t.Execute(w, data)
+		} else {
+			// If the user does not have billing profile that means that they
+			// have not started their trial yet.
+			http.Redirect(w, r, "/api/billing/plans/trial", 302)
+			return
+		}
 	}
 }
