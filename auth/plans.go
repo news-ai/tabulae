@@ -205,9 +205,19 @@ func BillingPageHandler() http.HandlerFunc {
 
 		// If the user has a billing profile
 		if err == nil {
+			switch userBilling.StripePlanId {
+			case "bronze":
+				userBilling.StripePlanId = "Personal"
+			case "silver":
+				userBilling.StripePlanId = "Business"
+			case "gold":
+				userBilling.StripePlanId = "Ultimate"
+			}
+
 			data := map[string]interface{}{
 				"userBilling":    userBilling,
 				"userEmail":      user.Email,
+				"userActive":     user.IsActive,
 				csrf.TemplateTag: csrf.TemplateField(r),
 			}
 
@@ -220,5 +230,31 @@ func BillingPageHandler() http.HandlerFunc {
 			http.Redirect(w, r, "/api/billing/plans/trial", 302)
 			return
 		}
+	}
+}
+
+func PaymentMethodsPageHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c := appengine.NewContext(r)
+		user, err := controllers.GetCurrentUser(c, r)
+
+		if r.URL.Query().Get("next") != "" {
+			session, _ := Store.Get(r, "sess")
+			session.Values["next"] = r.URL.Query().Get("next")
+			session.Save(r, w)
+
+			// If there is a next and the user has not been logged in
+			if err != nil {
+				http.Redirect(w, r, r.URL.Query().Get("next"), 302)
+				return
+			}
+		}
+
+		// If there is no next and the user is not logged in
+		if err != nil {
+			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			return
+		}
+
 	}
 }

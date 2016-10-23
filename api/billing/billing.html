@@ -34,13 +34,31 @@
 
 <body>
     <section class="app-brief grey-bg" id="brief1">
+        <div class="col-md-12 text-center app-brief-pick">
+            <ul class="nav nav-pills center-pills">
+                <li role="presentation" id="social-sync-button"><a>Credit card</a></li>
+                <li role="presentation" id="social-sync-button"><a>Plans</a></li>
+            </ul>
+        </div>
         <div class="container">
             <div class="row list" id="social-sync">
                 <div class="col-md-6 left-align">
                     <h2 class="dark-text">Billing</h2>
                     <div class="colored-line-left">
                     </div>
-                    <p>You're currently on the {{.userBilling.StripePlanId}} plan. {{if .userBilling.IsOnTrial}}You are currently on a trial.{{end}}</p>
+                    {{if .userBilling.IsOnTrial}}
+                        <p>You are currently on trial. You are on the {{.userBilling.StripePlanId}} plan.</p>
+                    {{else}}
+                        {{if .userActive}}
+                            <p>You have an active plan! You are on the {{.userBilling.StripePlanId}} plan. Thanks for using our platform :)</p>
+                        {{else}}
+                            {{if .userBilling.HasTrial}}
+                                <p>Your subscription has ended. You were on the {{.userBilling.StripePlanId}} plan. Please click the "Plans" tab on the top of the page to begin a new plan.</p>
+                            {{end}}
+                        {{end}}
+                    {{end}}
+                </div>
+                <div class="col-md-6">
                 </div>
             </div>
         </div>
@@ -65,9 +83,8 @@
         };
         Intercom('boot', {  
             app_id: 'ur8dbk9e',  
-            email: '{{.userEmail}}',
+            email: '{{.userEmail}}'
         });
-        console.log(userBilling);
     </script>
 </body>
 </html>

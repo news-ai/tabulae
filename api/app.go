@@ -64,38 +64,57 @@ func init() {
 	* Authentication Handler
 	 */
 
+	// Login
 	router.Handler("GET", "/api/auth", CSRF(auth.PasswordLoginPageHandler()))
-	router.Handler("GET", "/api/auth/forget", CSRF(auth.ForgetPasswordPageHandler()))
-	router.Handler("GET", "/api/auth/changepassword", CSRF(auth.ChangePasswordPageHandler()))
-	router.Handler("GET", "/api/auth/resetpassword", CSRF(auth.ResetPasswordPageHandler()))
-	router.Handler("GET", "/api/auth/confirmation", CSRF(auth.EmailConfirmationHandler()))
-	router.Handler("GET", "/api/auth/registration", CSRF(auth.PasswordRegisterPageHandler()))
 	router.Handler("POST", "/api/auth/userlogin", CSRF(auth.PasswordLoginHandler()))
-	router.Handler("POST", "/api/auth/userregister", CSRF(auth.PasswordRegisterHandler()))
+
+	// Forget password
+	router.Handler("GET", "/api/auth/forget", CSRF(auth.ForgetPasswordPageHandler()))
 	router.Handler("POST", "/api/auth/userforget", CSRF(auth.ForgetPasswordHandler()))
+
+	// Change password
+	router.Handler("GET", "/api/auth/changepassword", CSRF(auth.ChangePasswordPageHandler()))
 	router.Handler("POST", "/api/auth/userchange", CSRF(auth.ChangePasswordHandler()))
+
+	// Reset password
+	router.Handler("GET", "/api/auth/resetpassword", CSRF(auth.ResetPasswordPageHandler()))
 	router.Handler("POST", "/api/auth/userreset", CSRF(auth.ResetPasswordHandler()))
 
+	// Register user
+	router.Handler("GET", "/api/auth/registration", CSRF(auth.PasswordRegisterPageHandler()))
+	router.Handler("POST", "/api/auth/userregister", CSRF(auth.PasswordRegisterHandler()))
+
+	// Email confirmation
+	router.Handler("GET", "/api/auth/confirmation", CSRF(auth.EmailConfirmationHandler()))
+
+	// Login with Google
 	router.GET("/api/auth/google", auth.GoogleLoginHandler)
 	router.GET("/api/auth/googlecallback", auth.GoogleCallbackHandler)
 
+	// Internal auth: Linkedin
 	router.GET("/api/internal_auth/linkedin", auth.LinkedinLoginHandler)
 	router.GET("/api/internal_auth/linkedincallback", auth.LinkedinCallbackHandler)
 
+	// Internal auth: Instagram
 	router.GET("/api/internal_auth/instagram", auth.InstagramLoginHandler)
 	router.GET("/api/internal_auth/instagramcallback", auth.InstagramCallbackHandler)
 
+	// Logout user
 	router.GET("/api/auth/logout", auth.LogoutHandler)
 
 	/*
 	* Billing Handler
 	 */
 
+	// Start a free trial
 	router.Handler("GET", "/api/billing/plans/trial", CSRF(auth.TrialPlanPageHandler()))
 	router.Handler("POST", "/api/billing/plans/start-trial", CSRF(auth.ChooseTrialPlanHandler()))
 
+	// Get all the plans
 	router.Handler("GET", "/api/billing/plans", CSRF(auth.ChoosePlanPageHandler()))
+	router.Handler("GET", "/api/billing/payment-methods", CSRF(auth.PaymentMethodsPageHandler()))
 
+	// Main billing page for a user
 	router.Handler("GET", "/api/billing", CSRF(auth.BillingPageHandler()))
 
 	/*
