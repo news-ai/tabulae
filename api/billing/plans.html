@@ -12,7 +12,7 @@
     <meta property="og:title" content="NewsAI" />
     <meta property="og:description" content="NewsAI is a news intelligence platform for public relations professionals to streamline the process of monitoring news, finding influencers, and building media lists for their clients. " />
 
-    <title>NewsAI - Free trial</title>
+    <title>NewsAI - Plans</title>
 
     <link rel="icon" href="https://www.newsai.org/images/favicon.ico">
     <link rel="apple-touch-icon" href="https://www.newsai.org/images/apple-touch-icon.png">
@@ -37,8 +37,8 @@
     <section class="packages grey-bg" id="pricing">
         <div class="container">
             <div class="pricing-section-header">
-                <h2 class="dark-text">Start your 7-day free trial</h2>
-                <p>No credit card required for the free trial. Your free trial will begin automatically.</p>
+                <h2 class="dark-text">Plans</h2>
+                <p>Save 20% off by signing up with our annual package!</p>
             </div>
             <div class="row">
                 <div class="col-md-4 col-sm-4">  
@@ -92,29 +92,29 @@
             <div class="row">
                 <div class="col-md-4 col-sm-4">  
                     <div class="single-package">
-                        <form role="form" method="post">
+                        <form role="form">
                             {{ .csrfField }}
                             <input type="hidden" id="code" name="code" />
-                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="bronze">
+                            <button type="button" class="btn btn-primary" name="plan" id="plan" value="bronze">
                               Subscribe
                             </button>
                         </form>
                     </div>
                 </div>
                 <div class="col-md-4 col-sm-4 single-service"">
-                    <form role="form" method="post">
+                    <form role="form">
                         {{ .csrfField }}
                         <input type="hidden" id="code" name="code" />
-                        <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver">
+                        <button type="button" class="btn btn-primary" name="plan" id="plan" value="silver">
                           Subscribe
                         </button>
                     </form>
                 </div>
                 <div class="col-md-4 col-sm-4 single-service">
-                    <form role="form" method="post">
+                    <form role="form">
                         {{ .csrfField }}
                         <input type="hidden" id="code" name="code" />
-                        <button type="submit" class="btn btn-primary" name="plan" id="plan" value="gold">
+                        <button type="button" class="btn btn-primary" name="plan" id="plan" value="gold">
                           Subscribe
                         </button>
                     </form>
@@ -124,6 +124,7 @@
     </section>
     <script src="https://www.newsai.org/js/bootstrap.min.js"></script>
     <script src="https://www.newsai.org/js/newsai.js"></script>
+    <script type="text/javascript" src="https://js.stripe.com/v2/"></script>
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -132,6 +133,9 @@
 
       ga('create', 'UA-77059806-1', 'auto');
       ga('send', 'pageview');
+    </script>
+    <script type="text/javascript">
+      Stripe.setPublishableKey('pk_live_BQgcXTDIgDIx8MllwCbQrASC');
     </script>
 </body>
 </html>
