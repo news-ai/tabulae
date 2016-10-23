@@ -45,5 +45,14 @@
       ga('create', 'UA-77059806-1', 'auto');
       ga('send', 'pageview');
     </script>
+    <script>
+        var userBilling = {
+            'StripePlanId': '{{.userBilling.StripePlanId}}',
+            'Expires': '{{.userBilling.Expires}}',
+            'HasTrial': '{{.userBilling.HasTrial}}',
+            'IsOnTrial': '{{.userBilling.IsOnTrial}}'
+        };
+        console.log(userBilling);
+    </script>
 </body>
 </html>

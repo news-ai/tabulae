@@ -201,28 +201,12 @@ func BillingPageHandler() http.HandlerFunc {
 			return
 		}
 
-		_, err = controllers.GetUserBilling(c, r, user)
+		userBilling, err := controllers.GetUserBilling(c, r, user)
 
 		// If the user has a billing profile
 		if err == nil {
-			// userBilling, err := controllers.GetUserBilling(c, r, user)
-
-			// // If the user has a user billing
-			// if err == nil {
-			// 	// If the user has already had a trial and has expired
-			// 	if userBilling.HasTrial && !userBilling.Expires.IsZero() && userBilling.Expires.After(time.Now()) {
-			// 		http.Redirect(w, r, "/api/billing/plans", 302)
-			// 		return
-			// 	}
-
-			// 	// If the user has already had a trial but it has not expired
-			// 	if userBilling.HasTrial && !userBilling.Expires.IsZero() && userBilling.Expires.Before(time.Now()) {
-			// 		http.Redirect(w, r, "https://site.newsai.org/", 302)
-			// 		return
-			// 	}
-			// }
-
 			data := map[string]interface{}{
+				"userBilling":    userBilling,
 				csrf.TemplateTag: csrf.TemplateField(r),
 			}
 
