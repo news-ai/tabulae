@@ -59,14 +59,15 @@
                     <div class="demo-container">
                         <h3>Add a new payment method</h3>
                         <div class="card-wrapper"></div>
+                        <div id="payment-errors" class="alert alert-danger" style="display: none;"></div>
                         <div class="form-container active">
-                            <form action="">
+                            <form id="payment-form" method="post" action="add-payment-method">
                                 {{ .csrfField }}
                                 <input type="hidden" id="code" name="code" />
-                                <input class="form-control" placeholder="Card number" type="text" name="number">
-                                <input class="form-control" placeholder="Full name" type="text" name="name">
-                                <input class="form-control" placeholder="MM/YY" type="text" name="expiry">
-                                <input class="form-control" placeholder="CVC" type="text" name="cvc">
+                                <input class="form-control" placeholder="Card number" type="text" name="number" id="number">
+                                <input class="form-control" placeholder="Full name" type="text" name="name" id="name">
+                                <input class="form-control" placeholder="MM/YY" type="text" name="expiry" id="expiry">
+                                <input class="form-control" placeholder="CVC" type="text" name="cvc" id="cvc">
                                 <button type="button" class="btn btn-primary" id="add-button">Add credit card</button>
                             </form>
                         </div>
@@ -96,6 +97,45 @@
         new Card({
             form: document.querySelector('form'),
             container: '.card-wrapper'
+        });
+
+        Stripe.setPublishableKey('pk_live_BQgcXTDIgDIx8MllwCbQrASC');
+        function stripeResponseHandler(status, response) {
+          if (response.error) { // Problem!
+            $('#payment-errors').text(response.error.message);
+            $('#payment-errors').show();
+            $('#payment-form').find('button').prop('disabled', false); // Re-enable submission
+          } else { // Token was created!
+            // Get the token ID:
+            var token = response.id;
+            console.log(token);
+
+            // Insert the token into the form so it gets submitted to the server:
+            $('#payment-form').append($('<input type="hidden" name="stripeToken" />').val(token));
+
+            // Submit the form:
+            $('#payment-form').get(0).submit();
+          }
+        }
+
+        $(document).ready(function() {
+            $("#add-button").click(function(){
+                // Hide error
+                $('#payment-errors').hide();
+                $('#payment-form').find('button').prop('disabled', true);
+
+                // Add stirpe credit card
+                var expiryDate = $('#expiry').val();
+                var expirySplit = expiryDate.split(" / ");
+
+                Stripe.card.createToken({
+                  name: $('#name').val(),
+                  number: $('#number').val(),
+                  cvc: $('#cvc').val(),
+                  exp_month: expirySplit[0],
+                  exp_year: expirySplit[1]
+                }, stripeResponseHandler);
+            }); 
         });
     </script>
 </body>
