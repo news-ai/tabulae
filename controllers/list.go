@@ -225,6 +225,15 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user models.User)
 	mediaList.Name = "My first list!"
 	mediaList.Client = "Microsoft"
 	mediaList.FieldsMap = getFieldsMap()
+
+	field := models.CustomFieldsMap{
+		Name:        "This is a custom column",
+		Value:       "This is a custom column",
+		CustomField: true,
+		Hidden:      false,
+	}
+	mediaList.FieldsMap = append(mediaList.FieldsMap, field)
+
 	mediaList.CreatedBy = user.Id
 	mediaList.Created = time.Now()
 	mediaList.Save(c)
@@ -249,6 +258,35 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user models.User)
 
 	// Add a contact into the list
 	contacts = append(contacts, singleContact.Id)
+
+	fashionContact := models.Contact{}
+	fashionContact.FirstName = "Chiara"
+	fashionContact.LastName = "Ferragni"
+	fashionContact.Email = "contact@tbscrew.com"
+	fashionContact.Twitter = "chiaraferragni"
+	fashionContact.Instagram = "chiaraferragni"
+	fashionContact.LinkedIn = "https://www.linkedin.com/in/chiara-ferragni-2b4262101"
+	fashionContact.Blog = "http://www.theblondesalad.com/"
+	fashionContact.Website = "http://www.theblondesalad.com/"
+	fashionContact.CreatedBy = user.Id
+	fashionContact.Employers = []int64{5308689770610688}
+	fashionContact.Created = time.Now()
+	fashionContact.ListId = mediaList.Id
+
+	customField := models.CustomContactField{}
+	customField.Name = "This is a custom column"
+	customField.Value = "This is a custom value"
+
+	fashionContact.CustomFields = append(fashionContact.CustomFields, customField)
+	_, err = Create(c, r, &fashionContact)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return mediaList, nil, err
+	}
+
+	// Add a contact into the list
+	contacts = append(contacts, fashionContact.Id)
+
 	mediaList.Contacts = contacts
 	mediaList.Save(c)
 
@@ -259,6 +297,14 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user models.User)
 	feed.ListId = mediaList.Id
 	feed.PublicationId = 5594198795354112
 	feed.Create(c, r, user)
+
+	// Create a fake feed
+	fashionFeed := models.Feed{}
+	fashionFeed.FeedURL = "http://www.theblondesalad.com/feed"
+	fashionFeed.ContactId = fashionContact.Id
+	fashionFeed.ListId = mediaList.Id
+	fashionFeed.PublicationId = 5308689770610688
+	fashionFeed.Create(c, r, user)
 
 	return mediaList, nil, nil
 }
