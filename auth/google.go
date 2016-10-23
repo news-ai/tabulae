@@ -161,7 +161,6 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 			}
 
 			emailWelcome.MarkSent(c, emailId)
-			user.ConfirmLoggedIn(c)
 		}
 		http.Redirect(w, r, "/api/billing/plans/trial", 302)
 		return

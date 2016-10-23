@@ -115,6 +115,7 @@ func (u *User) SetStripeId(c context.Context, r *http.Request, currentUser User,
 	if isTrial {
 		expires := time.Now().Add(time.Hour * 24 * 7 * time.Duration(1))
 		billing.HasTrial = true
+		billing.IsOnTrial = true
 		billing.Expires = expires
 	}
 

@@ -16,6 +16,7 @@ type Billing struct {
 	StripePlanId string    `json:"-"`
 	Expires      time.Time `json:"-"`
 	HasTrial     bool      `json:"-"`
+	IsOnTrial    bool      `json:"-"`
 }
 
 /*
