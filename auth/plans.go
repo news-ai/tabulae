@@ -262,8 +262,14 @@ func PaymentMethodsPageHandler() http.HandlerFunc {
 
 		// If the user has a billing profile
 		if err == nil {
+			cards, err := billing.GetUserCards(r, user, &userBilling)
+			if err != nil {
+				cards = []billing.Card{}
+			}
+
 			data := map[string]interface{}{
 				"userEmail":      user.Email,
+				"userCards":      cards,
 				"cardsOnFile":    len(userBilling.CardsOnFile),
 				csrf.TemplateTag: csrf.TemplateField(r),
 			}

@@ -54,6 +54,11 @@
                     <div class="colored-line-left">
                     </div>
                     <p>You currently have {{.cardsOnFile}} cards on file.</p>
+                    <ul>
+                    {{range .userCards}}
+                        <li>{{.LastFour}} - {{.Brand}} {{if .IsDefault}}(default card){{end}}</li>
+                    {{end}}
+                    </ul>
                 </div>
                 <div class="col-md-6">
                     <div class="demo-container">

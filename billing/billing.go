@@ -14,6 +14,12 @@ import (
 	"github.com/news-ai/tabulae/models"
 )
 
+type Card struct {
+	LastFour  string
+	IsDefault bool
+	Brand     stripe.CardBrand
+}
+
 func CreateCustomer(r *http.Request, user models.User) error {
 	c := appengine.NewContext(r)
 	httpClient := urlfetch.Client(c)
@@ -31,6 +37,29 @@ func CreateCustomer(r *http.Request, user models.User) error {
 
 	user.SetStripeId(c, r, user, customer.ID, "", false, false)
 	return nil
+}
+
+func GetUserCards(r *http.Request, user models.User, userBilling *models.Billing) ([]Card, error) {
+	c := appengine.NewContext(r)
+	httpClient := urlfetch.Client(c)
+	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
+
+	customer, err := sc.Customers.Get(userBilling.StripeId, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []Card{}, err
+	}
+
+	cards := []Card{}
+	for i := 0; i < len(customer.Sources.Values); i++ {
+		newCard := Card{}
+		newCard.IsDefault = customer.Sources.Values[i].Card.Default
+		newCard.LastFour = customer.Sources.Values[i].Card.LastFour
+		newCard.Brand = customer.Sources.Values[i].Card.Brand
+		cards = append(cards, newCard)
+	}
+
+	return cards, nil
 }
 
 func AddPaymentsToCustomer(r *http.Request, user models.User, userBilling *models.Billing, stripeToken string) error {
