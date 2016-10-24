@@ -48,7 +48,7 @@
                     <div class="colored-line-left">
                     </div>
                     {{if .userBilling.IsOnTrial}}
-                        <p>You are currently on a trial membership. You are on the {{.userBilling.StripePlanId}} plan.</p>
+                        <p>You are currently on a trial membership. You are on the {{.userBilling.StripePlanId}} plan. Your trial membership ends on the night of {{.userBillingTrialExpires}}.</p>
                     {{else}}
                         {{if .userActive}}
                             <p>You have an active plan! You are on the {{.userBilling.StripePlanId}} plan. Thanks for using our platform :)</p>
