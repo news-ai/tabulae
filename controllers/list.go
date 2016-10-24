@@ -108,24 +108,29 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 		return []models.MediaList{}, nil, 0, err
 	}
 
-	query := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id).Filter("Archived =", archived)
-	query = constructQuery(query, r)
-	ks, err := query.KeysOnly().GetAll(c, nil)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.MediaList{}, nil, 0, err
+	// If the user is active then we can return their media lists
+	if user.IsActive {
+		query := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id).Filter("Archived =", archived)
+		query = constructQuery(query, r)
+		ks, err := query.KeysOnly().GetAll(c, nil)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return []models.MediaList{}, nil, 0, err
+		}
+
+		mediaLists = make([]models.MediaList, len(ks))
+		err = nds.GetMulti(c, ks, mediaLists)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return []models.MediaList{}, nil, 0, err
+		}
+
+		for i := 0; i < len(mediaLists); i++ {
+			mediaLists[i].Format(ks[i], "lists")
+		}
 	}
 
-	mediaLists = make([]models.MediaList, len(ks))
-	err = nds.GetMulti(c, ks, mediaLists)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.MediaList{}, nil, 0, err
-	}
-
-	for i := 0; i < len(mediaLists); i++ {
-		mediaLists[i].Format(ks[i], "lists")
-	}
+	// If the user is not active then we block their media lists
 	return mediaLists, nil, len(mediaLists), nil
 }
 

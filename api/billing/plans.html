@@ -52,7 +52,9 @@
                         <h3 class="package-heading main-color">
                         Personal </h3>
                         <div class="price">
-                            <h2><span class="sign">$</span><span id="personalPrice">9.99</span> <span class="month">/month</span></h2>
+                            <div id="personalPackage">
+                                <h2><span class="sign">$</span><span id="personalPrice">9.99</span> <span class="month">/month</span></h2>
+                            </div>
                         </div>
                         <ul class="package-feature">
                             <li><span class="main-color icon_check_alt2"></span>Contact &amp; media list management</li>
@@ -70,7 +72,7 @@
                         <h3 class="package-heading main-color">
                         Business </h3>
                         <div class="price">
-                            <div class="color-bg">
+                            <div id="businessPackage">
                                 <h2><span class="sign">$</span><span id="businessPrice">49.99</span> <span class="month">/month</span></h2>
                             </div>
                         </div>
@@ -86,7 +88,9 @@
                         <h3 class="package-heading main-color">
                         Ultimate </h3>
                         <div class="price">
-                            <h2><span class="sign">$</span><span id="ultimatePrice">79.99</span> <span class="month">/month</span></h2>
+                            <div id="ultimatePackage">
+                                <h2><span class="sign">$</span><span id="ultimatePrice">79.99</span> <span class="month">/month</span></h2>
+                            </div>
                         </div>
                         <ul class="package-feature">
                             Everything in the business package, and
@@ -101,9 +105,9 @@
                         <form role="form">
                             {{ .csrfField }}
                             <input type="hidden" id="code" name="code" />
-                            <button type="button" class="btn btn-primary" name="plan" id="plan" value="bronze">
+<!--                             <button type="button" class="btn btn-primary" name="plan" id="plan" value="bronze">
                               Subscribe
-                            </button>
+                            </button> -->
                         </form>
                     </div>
                 </div>
@@ -111,18 +115,18 @@
                     <form role="form">
                         {{ .csrfField }}
                         <input type="hidden" id="code" name="code" />
-                        <button type="button" class="btn btn-primary" name="plan" id="plan" value="silver">
+ <!--                        <button type="button" class="btn btn-primary" name="plan" id="plan" value="silver">
                           Subscribe
-                        </button>
+                        </button> -->
                     </form>
                 </div>
                 <div class="col-md-4 col-sm-4 single-service">
                     <form role="form">
                         {{ .csrfField }}
                         <input type="hidden" id="code" name="code" />
-                        <button type="button" class="btn btn-primary" name="plan" id="plan" value="gold">
+<!--                         <button type="button" class="btn btn-primary" name="plan" id="plan" value="gold">
                           Subscribe
-                        </button>
+                        </button> -->
                     </form>
                 </div>
             </div>

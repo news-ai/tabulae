@@ -44,6 +44,13 @@
                     <div class="single-package">
                         <h3 class="package-heading main-color">
                         Personal </h3>
+                        <form role="form" method="post" action="start-trial">
+                            {{ .csrfField }}
+                            <input type="hidden" id="code" name="code" />
+                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="bronze">
+                              Try this plan
+                            </button>
+                        </form>
                         <div class="price">
                             <h2><span class="sign">$</span><span id="personalPrice">9.99</span> <span class="month">/month</span></h2>
                         </div>
@@ -62,6 +69,13 @@
                     <div class="single-package">
                         <h3 class="package-heading main-color">
                         Business </h3>
+                        <form role="form" method="post" action="start-trial">
+                            {{ .csrfField }}
+                            <input type="hidden" id="code" name="code" />
+                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver">
+                              Try this plan
+                            </button>
+                        </form>
                         <div class="price">
                             <div class="color-bg">
                                 <h2><span class="sign">$</span><span id="businessPrice">49.99</span> <span class="month">/month</span></h2>
@@ -78,6 +92,13 @@
                     <div class="single-package">
                         <h3 class="package-heading main-color">
                         Ultimate </h3>
+                        <form role="form" method="post" action="start-trial">
+                            {{ .csrfField }}
+                            <input type="hidden" id="code" name="code" />
+                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="gold">
+                              Try this plan
+                            </button>
+                        </form>
                         <div class="price">
                             <h2><span class="sign">$</span><span id="ultimatePrice">79.99</span> <span class="month">/month</span></h2>
                         </div>
@@ -86,37 +107,6 @@
                             <li><span class="main-color icon_check_alt2"></span>Unlimited contacts social media sync</li>
                         </ul>
                     </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4 col-sm-4">  
-                    <div class="single-package">
-                        <form role="form" method="post" action="start-trial">
-                            {{ .csrfField }}
-                            <input type="hidden" id="code" name="code" />
-                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="bronze">
-                              Try this plan
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                <div class="col-md-4 col-sm-4 single-service"">
-                    <form role="form" method="post" action="start-trial">
-                        {{ .csrfField }}
-                        <input type="hidden" id="code" name="code" />
-                        <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver">
-                          Try this plan
-                        </button>
-                    </form>
-                </div>
-                <div class="col-md-4 col-sm-4 single-service">
-                    <form role="form" method="post" action="start-trial">
-                        {{ .csrfField }}
-                        <input type="hidden" id="code" name="code" />
-                        <button type="submit" class="btn btn-primary" name="plan" id="plan" value="gold">
-                          Try this plan
-                        </button>
-                    </form>
                 </div>
             </div>
         </div>

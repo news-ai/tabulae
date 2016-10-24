@@ -324,38 +324,44 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 		return []models.Contact{}, nil, 0, err
 	}
 
-	queryField := gcontext.Get(r, "q").(string)
-	if queryField != "" {
-		contacts, err := search.SearchContacts(c, r, queryField, user.Id)
+	// If the user is currently active
+	if user.IsActive {
+		queryField := gcontext.Get(r, "q").(string)
+		if queryField != "" {
+			contacts, err := search.SearchContacts(c, r, queryField, user.Id)
+			if err != nil {
+				return []models.Contact{}, nil, 0, err
+			}
+			includes := getIncludesForContact(c, r, contacts)
+			return contacts, includes, len(contacts), nil
+		}
+
+		query := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", false)
+		query = constructQuery(query, r)
+		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return []models.Contact{}, nil, 0, err
 		}
+
+		contacts := []models.Contact{}
+		contacts = make([]models.Contact, len(ks))
+		err = nds.GetMulti(c, ks, contacts)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return contacts, nil, 0, err
+		}
+
+		for i := 0; i < len(contacts); i++ {
+			contacts[i].Format(ks[i], "contacts")
+		}
+
 		includes := getIncludesForContact(c, r, contacts)
 		return contacts, includes, len(contacts), nil
 	}
 
-	query := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", false)
-	query = constructQuery(query, r)
-	ks, err := query.KeysOnly().GetAll(c, nil)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.Contact{}, nil, 0, err
-	}
-
-	contacts := []models.Contact{}
-	contacts = make([]models.Contact, len(ks))
-	err = nds.GetMulti(c, ks, contacts)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return contacts, nil, 0, err
-	}
-
-	for i := 0; i < len(contacts); i++ {
-		contacts[i].Format(ks[i], "contacts")
-	}
-
-	includes := getIncludesForContact(c, r, contacts)
-	return contacts, includes, len(contacts), nil
+	// If user is not active then return empty lists
+	return []models.Contact{}, nil, 0, nil
 }
 
 func GetContact(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
