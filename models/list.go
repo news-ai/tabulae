@@ -6,6 +6,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	"google.golang.org/appengine/datastore"
+
 	"github.com/qedus/nds"
 )
 
@@ -15,6 +17,7 @@ type CustomFieldsMap struct {
 	CustomField bool   `json:"customfield"`
 	Hidden      bool   `json:"hidden"`
 	Internal    bool   `json:"internal" datastore:"-"`
+	ReadOnly    bool   `json:"readonly" datastore:"-"`
 }
 
 type MediaList struct {
@@ -75,9 +78,12 @@ func (ml *MediaList) Format(key *datastore.Key, modelType string) {
 	ml.Type = modelType
 	ml.Id = key.IntID()
 
-	for i := 0; i < ml.FieldsMap; i++ {
+	for i := 0; i < len(ml.FieldsMap); i++ {
 		if ml.FieldsMap[i].Name == "employers" || ml.FieldsMap[i].Name == "pastemployers" {
 			ml.FieldsMap[i].Internal = true
+		}
+		if ml.FieldsMap[i].Name == "instagramfollowers" {
+			ml.FieldsMap[i].ReadOnly = true
 		}
 	}
 }

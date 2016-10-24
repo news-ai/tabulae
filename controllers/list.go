@@ -28,6 +28,8 @@ import (
 
 var nonCustomHeaders = []string{"firstname", "lastname", "email", "employers", "pastemployers", "notes", "linkedin", "twitter", "instagram", "website", "blog"}
 
+var customHeaders = []string{"instagramfollowers"}
+
 /*
 * Private methods
  */
@@ -74,7 +76,7 @@ func getFieldsMap() []models.CustomFieldsMap {
 	for i := 0; i < len(nonCustomHeaders); i++ {
 		isHidden := false
 
-		if nonCustomHeaders[i] == "employers" || nonCustomHeaders[i] == "pastemployers" {
+		if nonCustomHeaders[i] == "employers" || nonCustomHeaders[i] == "pastemployers" || nonCustomHeaders[i] == "instagramfollowers" {
 			isHidden = true
 		}
 
@@ -83,6 +85,16 @@ func getFieldsMap() []models.CustomFieldsMap {
 			Value:       nonCustomHeaders[i],
 			CustomField: false,
 			Hidden:      isHidden,
+		}
+		fieldsmap = append(fieldsmap, field)
+	}
+
+	for i := 0; i < len(customHeaders); i++ {
+		field := models.CustomFieldsMap{
+			Name:        customHeaders[i],
+			Value:       customHeaders[i],
+			CustomField: true,
+			Hidden:      true,
 		}
 		fieldsmap = append(fieldsmap, field)
 	}
@@ -427,11 +439,32 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 		return []models.Contact{}, nil, 0, err
 	}
 
+	instagramUsers := []string{}
+	twitterUsers := []string{}
+
 	for i := 0; i < len(contacts); i++ {
 		contacts[i].Id = subsetIds[i]
 		contacts[i].Type = "contacts"
+
+		if contacts[i].Instagram != "" {
+			instagramUsers = append(instagramUsers, contacts[i].Instagram)
+		}
+
+		if contacts[i].Twitter != "" {
+			twitterUsers = append(twitterUsers, contacts[i].Twitter)
+		}
 	}
 
+	// Check if there are special fields we need to get data for
+	for i := 0; i < len(mediaList.FieldsMap); i++ {
+		if !mediaList.FieldsMap[i].Hidden && mediaList.FieldsMap[i].CustomField {
+			if mediaList.FieldsMap[i].Name == "instagramfollowers" {
+
+			}
+		}
+	}
+
+	// Add includes
 	publications := contactsToPublications(c, contacts)
 	return contacts, publications, len(contacts), nil
 }

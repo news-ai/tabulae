@@ -9,6 +9,10 @@ var (
 	newBaseURL = "https://search1.newsai.org"
 )
 
+type ElasticMGetQuery struct {
+	Ids []string `json:"ids"`
+}
+
 type ElasticCreatedByQuery struct {
 	Term struct {
 		CreatedBy int64 `json:"data.CreatedBy"`

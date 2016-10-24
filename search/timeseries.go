@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -61,6 +62,27 @@ func searchInstagramTimeseries(c context.Context, elasticQuery interface{}) (int
 	}
 
 	return interfaceSlice, nil
+}
+
+func searchInstagramTimeseriesByUsernames(c context.Context, elasticQuery interface{}) (interface{}, error) {
+
+}
+
+func SearchInstagramTimeseriesByUsernames(c context.Context, r *http.Request, usernames []string) (interface{}, error) {
+	if len(usernames) == 0 {
+		return nil, nil
+	}
+
+	elasticQuery := ElasticMGetQuery{}
+
+	for i := 0; i < len(usernames); i++ {
+		if usernames[i] != "" {
+			dateToday := time.Now().Format("2006-01-02")
+			elasticQuery = append(elasticQuery.Ids, usernames[i]+"-"+dateToday)
+		}
+	}
+
+	return searchInstagramTimeseriesByUsernames(c, elasticQuery)
 }
 
 func SearchInstagramTimeseriesByUsername(c context.Context, r *http.Request, username string) (interface{}, error) {
