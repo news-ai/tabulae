@@ -141,3 +141,10 @@ footer .social-icons li a:hover {
     display: inline-block;
     width: 50%;
 }
+
+#top {
+    text-align: left;
+    position: fixed;
+    padding-left: 15px;
+    padding-top: 15px;
+}

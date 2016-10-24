@@ -98,14 +98,24 @@ func ChoosePlanPageHandler() http.HandlerFunc {
 			return
 		}
 
-		data := map[string]interface{}{
-			"userEmail":      user.Email,
-			csrf.TemplateTag: csrf.TemplateField(r),
-		}
+		userBilling, err := controllers.GetUserBilling(c, r, user)
 
-		t := template.New("plans.html")
-		t, _ = t.ParseFiles("billing/plans.html")
-		t.Execute(w, data)
+		// If the user has a billing profile
+		if err == nil {
+			data := map[string]interface{}{
+				"userEmail":      user.Email,
+				csrf.TemplateTag: csrf.TemplateField(r),
+			}
+
+			t := template.New("plans.html")
+			t, _ = t.ParseFiles("billing/plans.html")
+			t.Execute(w, data)
+		} else {
+			// If the user does not have billing profile that means that they
+			// have not started their trial yet.
+			http.Redirect(w, r, "/api/billing/plans/trial", 302)
+			return
+		}
 	}
 }
 
