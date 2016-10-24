@@ -86,7 +86,7 @@ func AddPaymentsToCustomer(r *http.Request, user models.User, userBilling *model
 		return err
 	}
 
-	userBilling.CardsOnFile = append(userBilling.CardsOnFile)
+	userBilling.CardsOnFile = []string{}
 	for i := 0; i < len(newCustomer.Sources.Values); i++ {
 		userBilling.CardsOnFile = append(userBilling.CardsOnFile, newCustomer.Sources.Values[i].ID)
 	}

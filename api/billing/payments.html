@@ -44,6 +44,7 @@
         <div class="col-md-12 text-center app-brief-pick">
             <ul class="nav nav-pills center-pills">
                 <li role="presentation" id="social-sync-button"><a href="/api/billing">Billing home</a></li>
+                <li role="presentation" id="social-sync-button"><a href="/api/billing/payment-methods">Credit card</a></li>
                 <li role="presentation" id="social-sync-button"><a href="/api/billing/plans">Plans</a></li>
             </ul>
         </div>
@@ -53,7 +54,7 @@
                     <h2 class="dark-text">Payments</h2>
                     <div class="colored-line-left">
                     </div>
-                    <p>You currently have {{.cardsOnFile}} cards on file.</p>
+                    <p>You currently have {{.cardsOnFile}} card on file.</p>
                     <ul>
                     {{range .userCards}}
                         <li>{{.LastFour}} - {{.Brand}} {{if .IsDefault}}(default card){{end}}</li>

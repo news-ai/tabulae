@@ -33,7 +33,14 @@
 </head>
 
 <body>
-    <section class="packages grey-bg" id="pricing">
+    <section class="app-brief grey-bg" id="pricing">
+        <div class="col-md-12 text-center app-brief-pick">
+            <ul class="nav nav-pills center-pills">
+                <li role="presentation" id="social-sync-button"><a href="/api/billing">Billing home</a></li>
+                <li role="presentation" id="social-sync-button"><a href="/api/billing/payment-methods">Credit card</a></li>
+                <li role="presentation" id="social-sync-button"><a href="/api/billing/plans">Plans</a></li>
+            </ul>
+        </div>
         <div class="container">
             <div class="pricing-section-header">
                 <h2 class="dark-text">Plans</h2>
@@ -134,7 +141,10 @@
       ga('send', 'pageview');
     </script>
     <script type="text/javascript">
-        Intercom('hide');
+        Intercom('boot', {  
+            app_id: 'ur8dbk9e',  
+            email: '{{.userEmail}}'
+        });
         Stripe.setPublishableKey('pk_live_BQgcXTDIgDIx8MllwCbQrASC');
     </script>
 </body>

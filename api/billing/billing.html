@@ -36,6 +36,7 @@
     <section class="app-brief" id="brief1">
         <div class="col-md-12 text-center app-brief-pick">
             <ul class="nav nav-pills center-pills">
+                <li role="presentation" id="social-sync-button"><a href="/api/billing">Billing home</a></li>
                 <li role="presentation" id="social-sync-button"><a href="/api/billing/payment-methods">Credit card</a></li>
                 <li role="presentation" id="social-sync-button"><a href="/api/billing/plans">Plans</a></li>
             </ul>
@@ -47,7 +48,7 @@
                     <div class="colored-line-left">
                     </div>
                     {{if .userBilling.IsOnTrial}}
-                        <p>You are currently on trial. You are on the {{.userBilling.StripePlanId}} plan.</p>
+                        <p>You are currently on a trial membership. You are on the {{.userBilling.StripePlanId}} plan.</p>
                     {{else}}
                         {{if .userActive}}
                             <p>You have an active plan! You are on the {{.userBilling.StripePlanId}} plan. Thanks for using our platform :)</p>
