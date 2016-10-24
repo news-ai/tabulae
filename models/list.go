@@ -14,6 +14,7 @@ type CustomFieldsMap struct {
 	Value       string `json:"value"`
 	CustomField bool   `json:"customfield"`
 	Hidden      bool   `json:"hidden"`
+	Internal    bool   `json:"internal" datastore:"-"`
 }
 
 type MediaList struct {
@@ -68,4 +69,15 @@ func (ml *MediaList) Save(c context.Context) (*MediaList, error) {
 	}
 	ml.Format(k, "lists")
 	return ml, nil
+}
+
+func (ml *MediaList) Format(key *datastore.Key, modelType string) {
+	ml.Type = modelType
+	ml.Id = key.IntID()
+
+	for i := 0; i < ml.FieldsMap; i++ {
+		if ml.FieldsMap[i].Name == "employers" || ml.FieldsMap[i].Name == "pastemployers" {
+			ml.FieldsMap[i].Internal = true
+		}
+	}
 }

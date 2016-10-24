@@ -102,9 +102,19 @@ func ChoosePlanPageHandler() http.HandlerFunc {
 
 		// If the user has a billing profile
 		if err == nil {
+			switch userBilling.StripePlanId {
+			case "bronze":
+				userBilling.StripePlanId = "Personal"
+			case "silver":
+				userBilling.StripePlanId = "Business"
+			case "gold":
+				userBilling.StripePlanId = "Ultimate"
+			}
+
 			data := map[string]interface{}{
-				"userEmail":      user.Email,
-				csrf.TemplateTag: csrf.TemplateField(r),
+				"currentUserPlan": userBilling.StripePlanId,
+				"userEmail":       user.Email,
+				csrf.TemplateTag:  csrf.TemplateField(r),
 			}
 
 			t := template.New("plans.html")
