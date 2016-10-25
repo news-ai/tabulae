@@ -133,6 +133,7 @@ func (ml *MediaList) Format(key *datastore.Key, modelType string) {
 	for i := 0; i < len(ml.FieldsMap); i++ {
 		if ml.FieldsMap[i].Name == "employers" || ml.FieldsMap[i].Name == "pastemployers" {
 			ml.FieldsMap[i].Internal = true
+			ml.FieldsMap[i].Hidden = true
 		}
 
 		if ml.FieldsMap[i].Name != "twitter" && strings.Contains(ml.FieldsMap[i].Name, "twitter") {
