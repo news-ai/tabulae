@@ -459,18 +459,20 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 		}
 	}
 
+	instagramFollowersCustomField := false
 	instagramTimeseries := []search.InstagramTimeseries{}
 
 	// Check if there are special fields we need to get data for
 	for i := 0; i < len(mediaList.FieldsMap); i++ {
 		if !mediaList.FieldsMap[i].Hidden && mediaList.FieldsMap[i].CustomField {
 			if mediaList.FieldsMap[i].Name == "instagramfollowers" {
+				instagramFollowersCustomField = true
 				instagramTimeseries, _ = search.SearchInstagramTimeseriesByUsernames(c, r, instagramUsers)
 			}
 		}
 	}
 
-	if len(instagramTimeseries) > 0 {
+	if instagramFollowersCustomField {
 		customFieldNameToValue := map[string]search.InstagramTimeseries{}
 		for i := 0; i < len(instagramTimeseries); i++ {
 			lowerCaseUsername := strings.ToLower(instagramTimeseries[i].Username)
@@ -478,14 +480,14 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 		}
 
 		for i := 0; i < len(contacts); i++ {
-			customField := models.CustomContactField{}
-			customField.Name = "instagramfollowers"
-			customField.Value = strconv.Itoa(customFieldNameToValue[contacts[i].Instagram].Followers)
-			contacts[i].CustomFields = append(contacts[i].CustomFields, customField)
+			if _, ok := customFieldNameToValue[contacts[i].Instagram]; ok {
+				customField := models.CustomContactField{}
+				customField.Name = "instagramfollowers"
+				customField.Value = strconv.Itoa(customFieldNameToValue[contacts[i].Instagram].Followers)
+				contacts[i].CustomFields = append(contacts[i].CustomFields, customField)
+			}
 		}
 	}
-
-	log.Infof(c, "%v", instagramTimeseries)
 
 	// Add includes
 	publications := contactsToPublications(c, contacts)
