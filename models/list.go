@@ -73,10 +73,21 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		"instagramlikes":     true,
 		"instagramcomments":  true,
 		"instagramposts":     true,
+
+		"twitterfollowers": true,
+		"twitterfollowing": true,
+		"twitterlikes":     true,
+		"twitterretweets":  true,
+		"twitterposts":     true,
 	}
 
 	for i := 0; i < len(ml.FieldsMap); i++ {
 		if strings.Contains(ml.FieldsMap[i].Name, "instagram") {
+			if _, ok := newFieldsMap[ml.FieldsMap[i].Name]; ok {
+				newFieldsMap[ml.FieldsMap[i].Name] = false
+			}
+		}
+		if strings.Contains(ml.FieldsMap[i].Name, "twitter") {
 			if _, ok := newFieldsMap[ml.FieldsMap[i].Name]; ok {
 				newFieldsMap[ml.FieldsMap[i].Name] = false
 			}
@@ -124,7 +135,11 @@ func (ml *MediaList) Format(key *datastore.Key, modelType string) {
 			ml.FieldsMap[i].Internal = true
 		}
 
-		if ml.FieldsMap[i].Name == "instagramfollowers" || ml.FieldsMap[i].Name == "instagramfollowing" || ml.FieldsMap[i].Name == "instagramlikes" || ml.FieldsMap[i].Name == "instagramcomments" || ml.FieldsMap[i].Name == "instagramposts" {
+		if ml.FieldsMap[i].Name != "twitter" && strings.Contains(ml.FieldsMap[i].Name, "twitter") {
+			ml.FieldsMap[i].ReadOnly = true
+		}
+
+		if ml.FieldsMap[i].Name != "instagram" && strings.Contains(ml.FieldsMap[i].Name, "instagram") {
 			ml.FieldsMap[i].ReadOnly = true
 		}
 	}

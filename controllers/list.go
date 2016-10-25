@@ -30,7 +30,7 @@ import (
 
 var nonCustomHeaders = []string{"firstname", "lastname", "email", "employers", "pastemployers", "notes", "linkedin", "twitter", "instagram", "website", "blog"}
 
-var customHeaders = []string{"instagramfollowers", "instagramfollowing", "instagramlikes", "instagramcomments", "instagramposts"}
+var customHeaders = []string{"instagramfollowers", "instagramfollowing", "instagramlikes", "instagramcomments", "instagramposts", "twitterfollowers", "twitterfollowing", "twitterlikes", "twitterretweets", "twitterposts"}
 
 /*
 * Private methods
@@ -532,7 +532,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 							customField.Value = strconv.Itoa(twitterProfile.Following)
 						} else if customField.Name == "twitterlikes" {
 							customField.Value = strconv.Itoa(twitterProfile.Likes)
-						} else if customField.Name == "twittercomments" {
+						} else if customField.Name == "twitterretweets" {
 							customField.Value = strconv.Itoa(twitterProfile.Retweets)
 						} else if customField.Name == "twitterposts" {
 							customField.Value = strconv.Itoa(twitterProfile.Posts)
