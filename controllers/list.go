@@ -4,6 +4,8 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -469,14 +471,15 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 	if len(instagramTimeseries) > 0 {
 		customFieldNameToValue := map[string]search.InstagramTimeseries{}
 		for i := 0; i < len(instagramTimeseries); i++ {
-			customFieldNameToValue[instagramTimeseries[i].Username] = instagramTimeseries[i]
+			lowerCaseUsername := strings.ToLower(instagramTimeseries[i].Username)
+			customFieldNameToValue[lowerCaseUsername] = instagramTimeseries[i]
 		}
 
 		for i := 0; i < len(contacts); i++ {
-			// customField := models.CustomContactField{}
-			// customField.Name = "instagramfollowers"
-			// customField.Value =
-			// contacts[i].CustomFields
+			customField := models.CustomContactField{}
+			customField.Name = "instagramfollowers"
+			customField.Value = strconv.Itoa(customFieldNameToValue[contacts[i].Instagram].Followers)
+			contacts[i].CustomFields = append(contacts[i].CustomFields, customField)
 		}
 	}
 
