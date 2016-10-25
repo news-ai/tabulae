@@ -20,6 +20,18 @@ import (
 	"github.com/news-ai/web/utilities"
 )
 
+/*
+* Private
+ */
+
+/*
+* Private methods
+ */
+
+/*
+* Get methods
+ */
+
 func generateTokenAndEmail(c context.Context, r *http.Request, invite models.Invite) (models.UserInviteCode, error) {
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
@@ -79,6 +91,42 @@ func generateTokenAndEmail(c context.Context, r *http.Request, invite models.Inv
 	return referralCode, nil
 }
 
+/*
+* Public methods
+ */
+
+/*
+* Get methods
+ */
+
+func GetInvites(c context.Context, r *http.Request) ([]models.UserInviteCode, interface{}, int, error) {
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.UserInviteCode{}, nil, 0, err
+	}
+
+	ks, err := datastore.NewQuery("UserInviteCode").Filter("CreatedBy =", currentUser.Id).Filter("IsUsed =", true).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.UserInviteCode{}, nil, 0, err
+	}
+
+	var userInviteCodes []models.UserInviteCode
+	userInviteCodes = make([]models.UserInviteCode, len(ks))
+	err = nds.GetMulti(c, ks, userInviteCodes)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.UserInviteCode{}, nil, 0, err
+	}
+
+	for i := 0; i < len(userInviteCodes); i++ {
+		userInviteCodes[i].Format(ks[i], "invites")
+	}
+
+	return userInviteCodes, nil, len(userInviteCodes), nil
+}
+
 func GetInviteFromInvitationCode(c context.Context, r *http.Request, invitationCode string) (models.UserInviteCode, error) {
 	ks, err := datastore.NewQuery("UserInviteCode").Filter("InviteCode =", invitationCode).KeysOnly().GetAll(c, nil)
 	if err != nil {
@@ -105,6 +153,10 @@ func GetInviteFromInvitationCode(c context.Context, r *http.Request, invitationC
 
 	return models.UserInviteCode{}, errors.New("No invitation by that code")
 }
+
+/*
+* Create methods
+ */
 
 func CreateInvite(c context.Context, r *http.Request) (models.UserInviteCode, interface{}, error) {
 	buf, _ := ioutil.ReadAll(r.Body)

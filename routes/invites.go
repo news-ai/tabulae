@@ -23,6 +23,9 @@ func handleInvite(c context.Context, r *http.Request, id string) (interface{}, e
 
 func handleInvites(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
+	case "GET":
+		val, included, count, err := controllers.GetInvites(c, r)
+		return api.BaseResponseHandler(val, included, count, err, r)
 	case "POST":
 		return api.BaseSingleResponseHandler(controllers.CreateInvite(c, r))
 	}

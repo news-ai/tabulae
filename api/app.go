@@ -182,6 +182,7 @@ func init() {
 
 	router.GET("/api/notifications", routes.NotificationsHandler)
 
+	router.GET("/api/invites", routes.InvitesHandler)
 	router.POST("/api/invites", routes.InvitesHandler)
 
 	// Security fixes
