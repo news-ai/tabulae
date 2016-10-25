@@ -30,7 +30,7 @@ import (
 
 var nonCustomHeaders = []string{"firstname", "lastname", "email", "employers", "pastemployers", "notes", "linkedin", "twitter", "instagram", "website", "blog"}
 
-var customHeaders = []string{"instagramfollowers"}
+var customHeaders = []string{"instagramfollowers", "instagramfollowing", "instagramlikes", "instagramcomments", "instagramposts"}
 
 /*
 * Private methods
@@ -57,7 +57,7 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 
 	if !mediaList.Created.IsZero() {
 		mediaList.Format(mediaListId, "lists")
-		mediaList.AddNewFieldsMapToOldLists(c)
+		mediaList.AddNewCustomFieldsMapToOldLists(c)
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
@@ -79,7 +79,7 @@ func getFieldsMap() []models.CustomFieldsMap {
 	for i := 0; i < len(nonCustomHeaders); i++ {
 		isHidden := false
 
-		if nonCustomHeaders[i] == "employers" || nonCustomHeaders[i] == "pastemployers" || nonCustomHeaders[i] == "instagramfollowers" {
+		if nonCustomHeaders[i] == "employers" || nonCustomHeaders[i] == "pastemployers" {
 			isHidden = true
 		}
 
@@ -459,32 +459,63 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 		}
 	}
 
-	instagramFollowersCustomField := false
+	readOnlyPresent := []string{}
 	instagramTimeseries := []search.InstagramTimeseries{}
 
 	// Check if there are special fields we need to get data for
 	for i := 0; i < len(mediaList.FieldsMap); i++ {
-		if !mediaList.FieldsMap[i].Hidden && mediaList.FieldsMap[i].CustomField {
-			if mediaList.FieldsMap[i].Name == "instagramfollowers" {
-				instagramFollowersCustomField = true
-				instagramTimeseries, _ = search.SearchInstagramTimeseriesByUsernames(c, r, instagramUsers)
+		if mediaList.FieldsMap[i].ReadOnly {
+			readOnlyPresent = append(readOnlyPresent, mediaList.FieldsMap[i].Name)
+			if strings.Contains(mediaList.FieldsMap[i].Name, "instagram") {
+				if len(instagramTimeseries) == 0 {
+					instagramTimeseries, _ = search.SearchInstagramTimeseriesByUsernames(c, r, instagramUsers)
+				}
 			}
 		}
 	}
 
-	if instagramFollowersCustomField {
+	log.Infof(c, "%v", instagramTimeseries)
+
+	if len(readOnlyPresent) > 0 {
 		customFieldNameToValue := map[string]search.InstagramTimeseries{}
-		for i := 0; i < len(instagramTimeseries); i++ {
-			lowerCaseUsername := strings.ToLower(instagramTimeseries[i].Username)
-			customFieldNameToValue[lowerCaseUsername] = instagramTimeseries[i]
+		if len(instagramTimeseries) > 0 {
+			for i := 0; i < len(instagramTimeseries); i++ {
+				lowerCaseUsername := strings.ToLower(instagramTimeseries[i].Username)
+				customFieldNameToValue[lowerCaseUsername] = instagramTimeseries[i]
+			}
 		}
 
 		for i := 0; i < len(contacts); i++ {
-			if _, ok := customFieldNameToValue[contacts[i].Instagram]; ok {
-				customField := models.CustomContactField{}
-				customField.Name = "instagramfollowers"
-				customField.Value = strconv.Itoa(customFieldNameToValue[contacts[i].Instagram].Followers)
-				contacts[i].CustomFields = append(contacts[i].CustomFields, customField)
+			if contacts[i].Instagram != "" {
+				for x := 0; x < len(readOnlyPresent); x++ {
+					customField := models.CustomContactField{}
+					customField.Name = readOnlyPresent[x]
+
+					lowerCaseUsername := strings.ToLower(contacts[i].Instagram)
+
+					if _, ok := customFieldNameToValue[lowerCaseUsername]; ok {
+						instagramProfile := customFieldNameToValue[lowerCaseUsername]
+
+						log.Infof(c, "%v", instagramProfile)
+
+						if customField.Name == "instagramfollowers" {
+							log.Infof(c, "%v", instagramProfile.Followers)
+							customField.Value = strconv.Itoa(instagramProfile.Followers)
+						} else if customField.Name == "instagramfollowing" {
+							customField.Value = strconv.Itoa(instagramProfile.Following)
+						} else if customField.Name == "instagramlikes" {
+							customField.Value = strconv.Itoa(instagramProfile.Likes)
+						} else if customField.Name == "instagramcomments" {
+							customField.Value = strconv.Itoa(instagramProfile.Comments)
+						} else if customField.Name == "instagramposts" {
+							customField.Value = strconv.Itoa(instagramProfile.Posts)
+						}
+					}
+
+					if customField.Value != "" {
+						contacts[i].CustomFields = append(contacts[i].CustomFields, customField)
+					}
+				}
 			}
 		}
 	}

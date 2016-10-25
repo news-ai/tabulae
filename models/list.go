@@ -2,11 +2,13 @@ package models
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
 	"github.com/qedus/nds"
 )
@@ -65,25 +67,43 @@ func (ml *MediaList) Create(c context.Context, r *http.Request, currentUser User
 * Update methods
  */
 
-func (ml *MediaList) AddNewFieldsMapToOldLists(c context.Context) {
-	instagramFollowersInMap := false
+func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
+	newFieldsMap := map[string]bool{
+		"instagramfollowers": true,
+		"instagramfollowing": true,
+		"instagramlikes":     true,
+		"instagramcomments":  true,
+		"instagramposts":     true,
+	}
 
 	for i := 0; i < len(ml.FieldsMap); i++ {
-		if ml.FieldsMap[i].Value == "instagramfollowers" {
-			instagramFollowersInMap = true
+		if strings.Contains(ml.FieldsMap[i].Name, "instagram") {
+			if _, ok := newFieldsMap[ml.FieldsMap[i].Name]; ok {
+				newFieldsMap[ml.FieldsMap[i].Name] = false
+			}
 		}
 	}
 
-	if !instagramFollowersInMap {
-		field := CustomFieldsMap{
-			Name:        "instagramfollowers",
-			Value:       "instagramfollowers",
-			CustomField: true,
-			Hidden:      true,
+	isChanged := false
+
+	for key, v := range newFieldsMap {
+		if v {
+			field := CustomFieldsMap{
+				Name:        key,
+				Value:       key,
+				CustomField: true,
+				Hidden:      true,
+			}
+			ml.FieldsMap = append(ml.FieldsMap, field)
 		}
-		ml.FieldsMap = append(ml.FieldsMap, field)
-		ml.Save(c)
 	}
+
+	log.Infof(c, "%v", newFieldsMap)
+	log.Infof(c, "%v", ml.FieldsMap)
+
+	// if isChanged {
+	// 	ml.Save(c)
+	// }
 }
 
 // Function to save a new contact into App Engine
@@ -107,7 +127,8 @@ func (ml *MediaList) Format(key *datastore.Key, modelType string) {
 		if ml.FieldsMap[i].Name == "employers" || ml.FieldsMap[i].Name == "pastemployers" {
 			ml.FieldsMap[i].Internal = true
 		}
-		if ml.FieldsMap[i].Name == "instagramfollowers" {
+
+		if ml.FieldsMap[i].Name == "instagramfollowers" || ml.FieldsMap[i].Name == "instagramfollowing" || ml.FieldsMap[i].Name == "instagramlikes" || ml.FieldsMap[i].Name == "instagramcomments" || ml.FieldsMap[i].Name == "instagramposts" {
 			ml.FieldsMap[i].ReadOnly = true
 		}
 	}
