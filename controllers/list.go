@@ -461,6 +461,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 
 	readOnlyPresent := []string{}
 	instagramTimeseries := []search.InstagramTimeseries{}
+	twitterTimeseries := []search.TwitterTimeseries{}
 
 	// Check if there are special fields we need to get data for
 	for i := 0; i < len(mediaList.FieldsMap); i++ {
@@ -471,28 +472,43 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 					instagramTimeseries, _ = search.SearchInstagramTimeseriesByUsernames(c, r, instagramUsers)
 				}
 			}
+			if strings.Contains(mediaList.FieldsMap[i].Name, "twitter") {
+				if len(twitterTimeseries) == 0 {
+					twitterTimeseries, _ = search.SearchTwitterTimeseriesByUsernames(c, r, twitterUsers)
+				}
+			}
 		}
 	}
 
 	if len(readOnlyPresent) > 0 {
-		customFieldNameToValue := map[string]search.InstagramTimeseries{}
+		customFieldInstagramUsernameToValue := map[string]search.InstagramTimeseries{}
+		customFieldTwitterUsernameToValue := map[string]search.TwitterTimeseries{}
+
 		if len(instagramTimeseries) > 0 {
 			for i := 0; i < len(instagramTimeseries); i++ {
 				lowerCaseUsername := strings.ToLower(instagramTimeseries[i].Username)
-				customFieldNameToValue[lowerCaseUsername] = instagramTimeseries[i]
+				customFieldInstagramUsernameToValue[lowerCaseUsername] = instagramTimeseries[i]
+			}
+		}
+
+		if len(twitterTimeseries) > 0 {
+			for i := 0; i < len(twitterTimeseries); i++ {
+				lowerCaseUsername := strings.ToLower(twitterTimeseries[i].Username)
+				customFieldTwitterUsernameToValue[lowerCaseUsername] = twitterTimeseries[i]
 			}
 		}
 
 		for i := 0; i < len(contacts); i++ {
-			if contacts[i].Instagram != "" {
+			if contacts[i].Instagram != "" || contacts[i].Twitter != "" {
 				for x := 0; x < len(readOnlyPresent); x++ {
 					customField := models.CustomContactField{}
 					customField.Name = readOnlyPresent[x]
 
-					lowerCaseUsername := strings.ToLower(contacts[i].Instagram)
+					lowerCaseInstagramUsername := strings.ToLower(contacts[i].Instagram)
+					lowerCaseTwitterUsername := strings.ToLower(contacts[i].Twitter)
 
-					if _, ok := customFieldNameToValue[lowerCaseUsername]; ok {
-						instagramProfile := customFieldNameToValue[lowerCaseUsername]
+					if _, ok := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]; ok {
+						instagramProfile := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]
 
 						if customField.Name == "instagramfollowers" {
 							customField.Value = strconv.Itoa(instagramProfile.Followers)
@@ -504,6 +520,22 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 							customField.Value = strconv.Itoa(instagramProfile.Comments)
 						} else if customField.Name == "instagramposts" {
 							customField.Value = strconv.Itoa(instagramProfile.Posts)
+						}
+					}
+
+					if _, ok := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]; ok {
+						twitterProfile := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]
+
+						if customField.Name == "twitterfollowers" {
+							customField.Value = strconv.Itoa(twitterProfile.Followers)
+						} else if customField.Name == "twitterfollowing" {
+							customField.Value = strconv.Itoa(twitterProfile.Following)
+						} else if customField.Name == "twitterlikes" {
+							customField.Value = strconv.Itoa(twitterProfile.Likes)
+						} else if customField.Name == "twittercomments" {
+							customField.Value = strconv.Itoa(twitterProfile.Retweets)
+						} else if customField.Name == "twitterposts" {
+							customField.Value = strconv.Itoa(twitterProfile.Posts)
 						}
 					}
 
