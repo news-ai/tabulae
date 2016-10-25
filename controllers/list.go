@@ -57,6 +57,7 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 
 	if !mediaList.Created.IsZero() {
 		mediaList.Format(mediaListId, "lists")
+		mediaList.AddNewFieldsMapToOldLists(c)
 
 		user, err := GetCurrentUser(c, r)
 		if err != nil {
@@ -141,6 +142,7 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 
 		for i := 0; i < len(mediaLists); i++ {
 			mediaLists[i].Format(ks[i], "lists")
+			mediaLists[i].AddNewFieldsMapToOldLists(c)
 		}
 	}
 

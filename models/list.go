@@ -42,6 +42,10 @@ type MediaList struct {
 }
 
 /*
+* Private methods
+ */
+
+/*
 * Public methods
  */
 
@@ -60,6 +64,27 @@ func (ml *MediaList) Create(c context.Context, r *http.Request, currentUser User
 /*
 * Update methods
  */
+
+func (ml *MediaList) AddNewFieldsMapToOldLists(c context.Context) {
+	instagramFollowersInMap := false
+
+	for i := 0; i < len(ml.FieldsMap); i++ {
+		if ml.FieldsMap[i].Value == "instagramfollowers" {
+			instagramFollowersInMap = true
+		}
+	}
+
+	if !instagramFollowersInMap {
+		field := CustomFieldsMap{
+			Name:        "instagramfollowers",
+			Value:       "instagramfollowers",
+			CustomField: true,
+			Hidden:      true,
+		}
+		ml.FieldsMap = append(ml.FieldsMap, field)
+		ml.Save(c)
+	}
+}
 
 // Function to save a new contact into App Engine
 func (ml *MediaList) Save(c context.Context) (*MediaList, error) {

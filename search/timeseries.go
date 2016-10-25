@@ -94,15 +94,17 @@ func searchInstagramTimeseriesByUsernames(c context.Context, elasticQuery interf
 
 	instagramTimeseriesData := []InstagramTimeseries{}
 	for i := 0; i < len(hits); i++ {
-		rawInstagramTimeseries := hits[i].Source.Data
-		rawMap := rawInstagramTimeseries.(map[string]interface{})
-		instagramTimeseries := InstagramTimeseries{}
-		err := instagramTimeseries.FillStruct(rawMap)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-		}
+		if hits[i].Found {
+			rawInstagramTimeseries := hits[i].Source.Data
+			rawMap := rawInstagramTimeseries.(map[string]interface{})
+			instagramTimeseries := InstagramTimeseries{}
+			err := instagramTimeseries.FillStruct(rawMap)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+			}
 
-		instagramTimeseriesData = append(instagramTimeseriesData, instagramTimeseries)
+			instagramTimeseriesData = append(instagramTimeseriesData, instagramTimeseries)
+		}
 	}
 
 	return instagramTimeseriesData, nil
