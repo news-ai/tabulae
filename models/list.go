@@ -8,7 +8,6 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
-	"google.golang.org/appengine/log"
 
 	"github.com/qedus/nds"
 )
@@ -85,9 +84,9 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 	}
 
 	isChanged := false
-
 	for key, v := range newFieldsMap {
 		if v {
+			isChanged = true
 			field := CustomFieldsMap{
 				Name:        key,
 				Value:       key,
@@ -98,12 +97,9 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		}
 	}
 
-	log.Infof(c, "%v", newFieldsMap)
-	log.Infof(c, "%v", ml.FieldsMap)
-
-	// if isChanged {
-	// 	ml.Save(c)
-	// }
+	if isChanged {
+		ml.Save(c)
+	}
 }
 
 // Function to save a new contact into App Engine

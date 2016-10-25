@@ -142,7 +142,7 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 
 		for i := 0; i < len(mediaLists); i++ {
 			mediaLists[i].Format(ks[i], "lists")
-			mediaLists[i].AddNewFieldsMapToOldLists(c)
+			mediaLists[i].AddNewCustomFieldsMapToOldLists(c)
 		}
 	}
 
@@ -474,8 +474,6 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 		}
 	}
 
-	log.Infof(c, "%v", instagramTimeseries)
-
 	if len(readOnlyPresent) > 0 {
 		customFieldNameToValue := map[string]search.InstagramTimeseries{}
 		if len(instagramTimeseries) > 0 {
@@ -496,10 +494,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 					if _, ok := customFieldNameToValue[lowerCaseUsername]; ok {
 						instagramProfile := customFieldNameToValue[lowerCaseUsername]
 
-						log.Infof(c, "%v", instagramProfile)
-
 						if customField.Name == "instagramfollowers" {
-							log.Infof(c, "%v", instagramProfile.Followers)
 							customField.Value = strconv.Itoa(instagramProfile.Followers)
 						} else if customField.Name == "instagramfollowing" {
 							customField.Value = strconv.Itoa(instagramProfile.Following)
