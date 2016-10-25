@@ -11,12 +11,33 @@ import (
 	"google.golang.org/appengine/log"
 
 	elastic "github.com/news-ai/elastic-appengine"
+	"github.com/news-ai/tabulae/models"
 )
 
 var (
 	elasticInstagramTimeseries *elastic.Elastic
 	elasticTwitterTimeseries   *elastic.Elastic
 )
+
+type InstagramTimeseries struct {
+	Username  string    `json:"Username"`
+	CreatedAt time.Time `json:"CreatedAt"`
+	Followers int       `json:"Followers"`
+	Following int       `json:"Following"`
+	Likes     int       `json:"Likes"`
+	Comments  int       `json:"Comments"`
+	Posts     int       `json:"Posts"`
+}
+
+func (it *InstagramTimeseries) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := models.SetField(it, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func searchTwitterTimeseries(c context.Context, elasticQuery interface{}) (interface{}, error) {
 	hits, err := elasticTwitterTimeseries.QueryStruct(c, elasticQuery)
@@ -64,11 +85,30 @@ func searchInstagramTimeseries(c context.Context, elasticQuery interface{}) (int
 	return interfaceSlice, nil
 }
 
-func searchInstagramTimeseriesByUsernames(c context.Context, elasticQuery interface{}) (interface{}, error) {
+func searchInstagramTimeseriesByUsernames(c context.Context, elasticQuery interface{}) ([]InstagramTimeseries, error) {
+	hits, err := elasticInstagramTimeseries.QueryStructMGet(c, elasticQuery)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	}
 
+	instagramTimeseriesData := []InstagramTimeseries{}
+	for i := 0; i < len(hits); i++ {
+		rawInstagramTimeseries := hits[i].Source.Data
+		rawMap := rawInstagramTimeseries.(map[string]interface{})
+		instagramTimeseries := InstagramTimeseries{}
+		err := instagramTimeseries.FillStruct(rawMap)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		}
+
+		instagramTimeseriesData = append(instagramTimeseriesData, instagramTimeseries)
+	}
+
+	return instagramTimeseriesData, nil
 }
 
-func SearchInstagramTimeseriesByUsernames(c context.Context, r *http.Request, usernames []string) (interface{}, error) {
+func SearchInstagramTimeseriesByUsernames(c context.Context, r *http.Request, usernames []string) ([]InstagramTimeseries, error) {
 	if len(usernames) == 0 {
 		return nil, nil
 	}
@@ -78,7 +118,7 @@ func SearchInstagramTimeseriesByUsernames(c context.Context, r *http.Request, us
 	for i := 0; i < len(usernames); i++ {
 		if usernames[i] != "" {
 			dateToday := time.Now().Format("2006-01-02")
-			elasticQuery = append(elasticQuery.Ids, usernames[i]+"-"+dateToday)
+			elasticQuery.Ids = append(elasticQuery.Ids, usernames[i]+"-"+dateToday)
 		}
 	}
 
