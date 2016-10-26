@@ -87,6 +87,9 @@ func init() {
 	// Email confirmation
 	router.Handler("GET", "/api/auth/confirmation", CSRF(auth.EmailConfirmationHandler()))
 
+	// Invitation page
+	router.Handler("GET", "/api/auth/invitation", CSRF(auth.PasswordInvitationPageHandler()))
+
 	// Login with Google
 	router.GET("/api/auth/google", auth.GoogleLoginHandler)
 	router.GET("/api/auth/googlecallback", auth.GoogleCallbackHandler)

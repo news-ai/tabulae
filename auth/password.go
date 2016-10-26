@@ -339,6 +339,40 @@ func PasswordRegisterPageHandler() http.HandlerFunc {
 	}
 }
 
+// Invitation
+func PasswordInvitationPageHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c := appengine.NewContext(r)
+		_, err := controllers.GetCurrentUser(c, r)
+
+		if r.URL.Query().Get("next") != "" {
+			session, _ := Store.Get(r, "sess")
+			session.Values["next"] = r.URL.Query().Get("next")
+			session.Save(r, w)
+
+			// If there is a next and the user has been logged in
+			if err == nil {
+				http.Redirect(w, r, r.URL.Query().Get("next"), 302)
+				return
+			}
+		}
+
+		// If there is no next and the user is logged in
+		if err == nil {
+			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			return
+		}
+
+		data := map[string]interface{}{
+			csrf.TemplateTag: csrf.TemplateField(r),
+		}
+
+		t := template.New("invitation.html")
+		t, _ = t.ParseFiles("auth/invitation.html")
+		t.Execute(w, data)
+	}
+}
+
 func ChangePasswordPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
