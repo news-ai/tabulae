@@ -366,14 +366,18 @@ func PasswordInvitationPageHandler() http.HandlerFunc {
 		// Invitation code
 		if r.URL.Query().Get("code") != "" {
 			invitation, err := controllers.GetInviteFromInvitationCode(c, r, r.URL.Query().Get("code"))
+			if err != nil {
+				invalidEmailAlert := url.QueryEscape("Your user invitation code is incorrect!")
+				http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
+				return
+			}
+
 			invitorName := "Someone"
 
+			invitationUser, err := controllers.GetUserByIdUnauthorized(c, r, invitation.CreatedBy)
 			if err == nil {
-				invitationUser, err := controllers.GetUserByIdUnauthorized(c, r, invitation.CreatedBy)
-				if err == nil {
-					if invitationUser.FirstName != "" {
-						invitorName = invitationUser.FirstName
-					}
+				if invitationUser.FirstName != "" {
+					invitorName = invitationUser.FirstName
 				}
 			}
 
