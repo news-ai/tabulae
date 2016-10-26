@@ -63,7 +63,7 @@
                         <li>{{.LastFour}} - {{.Brand}} {{if .IsDefault}}(default card){{end}}</li>
                     {{end}}
                     </ul>
-                    <p>Our credit card gateway is powered by <a href="https://stripe.com/" target="_stripe">Stripe</a>. We do not save your credit card information on our servers. Stripe does store and protects this information. They are a major credit card processor who specializes in handling this information.</p>
+                    <p>Our credit card gateway is powered by <b><a href="https://stripe.com/" target="_stripe">Stripe</a></b>. We do not save your credit card information on our servers. Stripe does store and protects this information. They are a major credit card processor who specializes in handling this information.</p>
                 </div>
                 <div class="col-md-6">
                     <div class="demo-container">
@@ -75,7 +75,7 @@
                                 {{ .csrfField }}
                                 <input type="hidden" id="code" name="code" />
                                 <input class="form-control" placeholder="Card number" type="text" name="number" id="number">
-                                <input class="form-control" placeholder="Full name" type="text" name="name" id="name">
+                                <input class="form-control" placeholder="Full name" value="{{.userFullName}}" type="text" name="name" id="name">
                                 <input class="form-control" placeholder="MM/YY" type="text" name="expiry" id="expiry">
                                 <input class="form-control" placeholder="CVC" type="text" name="cvc" id="cvc">
                                 <button type="button" class="btn btn-primary" id="add-button">Add credit card</button>
@@ -88,6 +88,7 @@
     </section>
     <script src="https://www.newsai.org/js/bootstrap.min.js"></script>
     <script src="https://www.newsai.org/js/newsai.js"></script>
+    <script src="/static/js/common.js"></script>
     <script type="text/javascript" src="https://js.stripe.com/v2/"></script>
     <script src="/static/js/card.js"></script>
     <script>
@@ -129,6 +130,11 @@
         }
 
         $(document).ready(function() {
+            var errorParameter = $.urlParam('error');
+            if (errorParameter) {
+                $('#payment-errors').text(unescape(errorParameter));
+                $('#payment-errors').show();
+            }
             $("#add-button").click(function(){
                 // Hide error
                 $('#payment-errors').hide();

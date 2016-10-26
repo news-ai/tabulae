@@ -1,6 +1,8 @@
 package billing
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 
@@ -18,6 +20,11 @@ type Card struct {
 	LastFour  string
 	IsDefault bool
 	Brand     stripe.CardBrand
+}
+
+type StripeError struct {
+	Type    string `json:"type"`
+	Message string `json:"message"`
 }
 
 func CreateCustomer(r *http.Request, user models.User) error {
@@ -46,8 +53,14 @@ func GetUserCards(r *http.Request, user models.User, userBilling *models.Billing
 
 	customer, err := sc.Customers.Get(userBilling.StripeId, nil)
 	if err != nil {
+		var stripeError StripeError
+		err = json.Unmarshal([]byte(err.Error()), &stripeError)
+		if err != nil {
+			return []Card{}, errors.New("We had an error getting your user")
+		}
+
 		log.Errorf(c, "%v", err)
-		return []Card{}, err
+		return []Card{}, errors.New(stripeError.Message)
 	}
 
 	cards := []Card{}
@@ -76,8 +89,14 @@ func AddPaymentsToCustomer(r *http.Request, user models.User, userBilling *model
 	)
 
 	if err != nil {
+		var stripeError StripeError
+		err = json.Unmarshal([]byte(err.Error()), &stripeError)
+		if err != nil {
+			return errors.New("We had an error getting your user")
+		}
+
 		log.Errorf(c, "%v", err)
-		return err
+		return errors.New(stripeError.Message)
 	}
 
 	newCustomer, err := sc.Customers.Get(userBilling.StripeId, nil)

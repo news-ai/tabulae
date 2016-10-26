@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 	"net/url"
+	"strings"
 	"text/template"
 	"time"
 
@@ -290,9 +291,12 @@ func PaymentMethodsPageHandler() http.HandlerFunc {
 				cards = []billing.Card{}
 			}
 
+			userFullName := strings.Join([]string{user.FirstName, user.LastName}, " ")
+
 			data := map[string]interface{}{
 				"userEmail":      user.Email,
 				"userCards":      cards,
+				"userFullName":   userFullName,
 				"cardsOnFile":    len(userBilling.CardsOnFile),
 				csrf.TemplateTag: csrf.TemplateField(r),
 			}
@@ -347,7 +351,7 @@ func PaymentMethodsHandler() http.HandlerFunc {
 		// Throw error message to user
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			http.Redirect(w, r, "/api/billing/payment-methods", 302)
+			http.Redirect(w, r, "/api/billing/payment-methods?error="+err.Error(), 302)
 			return
 		}
 
