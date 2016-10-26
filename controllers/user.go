@@ -248,6 +248,15 @@ func GetUserFromApiKey(r *http.Request, ApiKey string) (models.User, error) {
 	return user, nil
 }
 
+func GetUserByIdUnauthorized(c context.Context, r *http.Request, userId int64) (models.User, error) {
+	// Method dangerous since it can log into as any user. Be careful.
+	user, err := getUserUnauthorized(c, r, userId)
+	if err != nil {
+		return models.User{}, nil
+	}
+	return user, nil
+}
+
 /*
 * Create methods
  */
@@ -396,10 +405,6 @@ func ValidateUserPassword(r *http.Request, email string, password string) (model
 	}
 	return models.User{}, false, errors.New("User does not exist")
 }
-
-/*
-* Action methods
- */
 
 func SetUser(c context.Context, r *http.Request, userId int64) (models.User, error) {
 	// Method dangerous since it can log into as any user. Be careful.

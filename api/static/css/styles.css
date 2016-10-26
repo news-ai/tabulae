@@ -689,3 +689,12 @@ footer .social-icons li a {
 .list {
     margin-top: 20px;
 }
+
+.description-brief {
+    padding-top: 35px;
+    padding-bottom: 95px;
+}
+
+.description-text {
+    text-align: left;
+}
