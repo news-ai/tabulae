@@ -93,7 +93,21 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		"twitterlikes":     "Twitter Likes",
 		"twitterretweets":  "Twitter Retweets",
 		"twitterposts":     "Twitter Posts",
+
+		"firstname":     "First Name",
+		"lastname":      "Last Name",
+		"email":         "Email",
+		"employers":     "Employers",
+		"pastemployers": "Past Employers",
+		"notes":         "Notes",
+		"linkedin":      "Linkedin",
+		"twitter":       "Twitter",
+		"instagram":     "Instagram",
+		"website":       "Website",
+		"blog":          "Blog",
 	}
+
+	isChanged := false
 
 	for i := 0; i < len(ml.FieldsMap); i++ {
 		if strings.Contains(ml.FieldsMap[i].Value, "instagram") {
@@ -106,9 +120,14 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 				newFieldsMap[ml.FieldsMap[i].Value] = false
 			}
 		}
+
+		// If this particular name exists in newFieldsMapNames
+		if _, ok := newFieldsMapNames[ml.FieldsMap[i].Name]; ok {
+			ml.FieldsMap[i].Name = newFieldsMapNames[ml.FieldsMap[i].Name]
+			isChanged = true
+		}
 	}
 
-	isChanged := false
 	for key, v := range newFieldsMap {
 		if v {
 			isChanged = true
