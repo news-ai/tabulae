@@ -55,7 +55,7 @@
                         <h3 class="package-heading main-color">
                         Personal </h3>
                         <div class="price">
-                            <div id="personalPackage">
+                            <div id="personalPackage" {{if eq .currentUserPlan "Personal" }} class="color-bg" {{end}}>
                                 <h2><span class="sign">$</span><span id="personalPrice">9.99</span> <span class="month">/month</span></h2>
                             </div>
                         </div>
@@ -75,7 +75,7 @@
                         <h3 class="package-heading main-color">
                         Business </h3>
                         <div class="price">
-                            <div id="businessPackage">
+                            <div id="businessPackage" {{if eq .currentUserPlan "Business" }} class="color-bg" {{end}}>
                                 <h2><span class="sign">$</span><span id="businessPrice">49.99</span> <span class="month">/month</span></h2>
                             </div>
                         </div>
@@ -91,7 +91,7 @@
                         <h3 class="package-heading main-color">
                         Ultimate </h3>
                         <div class="price">
-                            <div id="ultimatePackage">
+                            <div id="ultimatePackage" {{if eq .currentUserPlan "Ultimate" }} class="color-bg" {{end}}>
                                 <h2><span class="sign">$</span><span id="ultimatePrice">79.99</span> <span class="month">/month</span></h2>
                             </div>
                         </div>

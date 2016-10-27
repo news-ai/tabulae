@@ -29,8 +29,10 @@ import (
  */
 
 var nonCustomHeaders = []string{"firstname", "lastname", "email", "employers", "pastemployers", "notes", "linkedin", "twitter", "instagram", "website", "blog"}
+var nonCustomHeadersName = []string{"First Name", "Last Name", "Email", "Employers", "Past Employers", "Notes", "Linkedin", "Twitter", "Instagram", "Website", "Blog"}
 
 var customHeaders = []string{"instagramfollowers", "instagramfollowing", "instagramlikes", "instagramcomments", "instagramposts", "twitterfollowers", "twitterfollowing", "twitterlikes", "twitterretweets", "twitterposts"}
+var customHeadersName = []string{"Instagram Followers", "Instagram Following", "Instagram Likes", "Instagram Comments", "Instagram Posts", "Twitter Followers", "Twitter Following", "Twitter Likes", "Twitter Retweets", "Twitter Posts"}
 
 /*
 * Private methods
@@ -84,7 +86,7 @@ func getFieldsMap() []models.CustomFieldsMap {
 		}
 
 		field := models.CustomFieldsMap{
-			Name:        nonCustomHeaders[i],
+			Name:        nonCustomHeadersName[i],
 			Value:       nonCustomHeaders[i],
 			CustomField: false,
 			Hidden:      isHidden,
@@ -94,7 +96,7 @@ func getFieldsMap() []models.CustomFieldsMap {
 
 	for i := 0; i < len(customHeaders); i++ {
 		field := models.CustomFieldsMap{
-			Name:        customHeaders[i],
+			Name:        customHeadersName[i],
 			Value:       customHeaders[i],
 			CustomField: true,
 			Hidden:      true,
@@ -466,13 +468,13 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 	// Check if there are special fields we need to get data for
 	for i := 0; i < len(mediaList.FieldsMap); i++ {
 		if mediaList.FieldsMap[i].ReadOnly {
-			readOnlyPresent = append(readOnlyPresent, mediaList.FieldsMap[i].Name)
-			if strings.Contains(mediaList.FieldsMap[i].Name, "instagram") {
+			readOnlyPresent = append(readOnlyPresent, mediaList.FieldsMap[i].Value)
+			if strings.Contains(mediaList.FieldsMap[i].Value, "instagram") {
 				if len(instagramTimeseries) == 0 {
 					instagramTimeseries, _ = search.SearchInstagramTimeseriesByUsernames(c, r, instagramUsers)
 				}
 			}
-			if strings.Contains(mediaList.FieldsMap[i].Name, "twitter") {
+			if strings.Contains(mediaList.FieldsMap[i].Value, "twitter") {
 				if len(twitterTimeseries) == 0 {
 					twitterTimeseries, _ = search.SearchTwitterTimeseriesByUsernames(c, r, twitterUsers)
 				}

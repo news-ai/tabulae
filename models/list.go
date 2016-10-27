@@ -81,15 +81,29 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		"twitterposts":     true,
 	}
 
+	newFieldsMapNames := map[string]string{
+		"instagramfollowers": "Instagram Followers",
+		"instagramfollowing": "Instagram Following",
+		"instagramlikes":     "Instagram Likes",
+		"instagramcomments":  "Instagram Comments",
+		"instagramposts":     "Instagram Posts",
+
+		"twitterfollowers": "Twitter Followers",
+		"twitterfollowing": "Twitter Following",
+		"twitterlikes":     "Twitter Likes",
+		"twitterretweets":  "Twitter Retweets",
+		"twitterposts":     "Twitter Posts",
+	}
+
 	for i := 0; i < len(ml.FieldsMap); i++ {
-		if strings.Contains(ml.FieldsMap[i].Name, "instagram") {
-			if _, ok := newFieldsMap[ml.FieldsMap[i].Name]; ok {
-				newFieldsMap[ml.FieldsMap[i].Name] = false
+		if strings.Contains(ml.FieldsMap[i].Value, "instagram") {
+			if _, ok := newFieldsMap[ml.FieldsMap[i].Value]; ok {
+				newFieldsMap[ml.FieldsMap[i].Value] = false
 			}
 		}
-		if strings.Contains(ml.FieldsMap[i].Name, "twitter") {
-			if _, ok := newFieldsMap[ml.FieldsMap[i].Name]; ok {
-				newFieldsMap[ml.FieldsMap[i].Name] = false
+		if strings.Contains(ml.FieldsMap[i].Value, "twitter") {
+			if _, ok := newFieldsMap[ml.FieldsMap[i].Value]; ok {
+				newFieldsMap[ml.FieldsMap[i].Value] = false
 			}
 		}
 	}
@@ -99,7 +113,7 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		if v {
 			isChanged = true
 			field := CustomFieldsMap{
-				Name:        key,
+				Name:        newFieldsMapNames[key],
 				Value:       key,
 				CustomField: true,
 				Hidden:      true,
@@ -131,16 +145,16 @@ func (ml *MediaList) Format(key *datastore.Key, modelType string) {
 	ml.Id = key.IntID()
 
 	for i := 0; i < len(ml.FieldsMap); i++ {
-		if ml.FieldsMap[i].Name == "employers" || ml.FieldsMap[i].Name == "pastemployers" {
+		if ml.FieldsMap[i].Value == "employers" || ml.FieldsMap[i].Value == "pastemployers" {
 			ml.FieldsMap[i].Internal = true
 			ml.FieldsMap[i].Hidden = true
 		}
 
-		if ml.FieldsMap[i].Name != "twitter" && strings.Contains(ml.FieldsMap[i].Name, "twitter") {
+		if ml.FieldsMap[i].Value != "twitter" && strings.Contains(ml.FieldsMap[i].Value, "twitter") {
 			ml.FieldsMap[i].ReadOnly = true
 		}
 
-		if ml.FieldsMap[i].Name != "instagram" && strings.Contains(ml.FieldsMap[i].Name, "instagram") {
+		if ml.FieldsMap[i].Value != "instagram" && strings.Contains(ml.FieldsMap[i].Value, "instagram") {
 			ml.FieldsMap[i].ReadOnly = true
 		}
 	}
