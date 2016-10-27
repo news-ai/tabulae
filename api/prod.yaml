@@ -17,6 +17,9 @@ handlers:
   script: _go_app
   secure: always
 
+automatic_scaling:
+  min_idle_instances: 2
+
 env_variables:
   GOOGLEAUTHKEY: '66057093659-gdof2fgsc2j1e9v3ugkt5uvkek669ael.apps.googleusercontent.com'
   GOOGLEAUTHSECRET: 'JLJLL4sV8nse8AyW8qE5zxnu'
