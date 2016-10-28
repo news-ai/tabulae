@@ -170,6 +170,10 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 		minScore = float32(1.0)
 	}
 
+	if len(elasticQuery.Query.Bool.Should) > 14 {
+		minScore = float32(0.1)
+	}
+
 	if len(elasticQuery.Query.Bool.Should) > 20 {
 		minScore = float32(0.0)
 	}
