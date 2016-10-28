@@ -79,17 +79,11 @@ func getFieldsMap() []models.CustomFieldsMap {
 	fieldsmap := []models.CustomFieldsMap{}
 
 	for i := 0; i < len(nonCustomHeaders); i++ {
-		isHidden := false
-
-		if nonCustomHeaders[i] == "employers" || nonCustomHeaders[i] == "pastemployers" {
-			isHidden = true
-		}
-
 		field := models.CustomFieldsMap{
 			Name:        nonCustomHeadersName[i],
 			Value:       nonCustomHeaders[i],
 			CustomField: false,
-			Hidden:      isHidden,
+			Hidden:      false,
 		}
 		fieldsmap = append(fieldsmap, field)
 	}
