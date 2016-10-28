@@ -66,7 +66,7 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 			log.Errorf(c, "%v", err)
 			return models.MediaList{}, errors.New("Could not get user")
 		}
-		if mediaList.CreatedBy != user.Id && !user.IsAdmin {
+		if mediaList.CreatedBy != user.Id && !user.IsAdmin && !mediaList.PublicList {
 			return models.MediaList{}, errors.New("Forbidden")
 		}
 
@@ -344,7 +344,7 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
-	if mediaList.CreatedBy != user.Id {
+	if mediaList.CreatedBy != user.Id && !user.IsAdmin {
 		return models.MediaList{}, nil, errors.New("Forbidden")
 	}
 
@@ -358,6 +358,7 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	}
 
 	utilities.UpdateIfNotBlank(&mediaList.Name, updatedMediaList.Name)
+	utilities.UpdateIfNotBlank(&mediaList.Client, updatedMediaList.Client)
 
 	if len(updatedMediaList.Contacts) > 0 {
 		mediaList.Contacts = updatedMediaList.Contacts
@@ -375,6 +376,31 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	if mediaList.Archived == true && updatedMediaList.Archived == false {
 		mediaList.Archived = false
 	}
+
+	mediaList.Save(c)
+	sync.ResourceSync(r, mediaList.Id, "List", "update")
+	return mediaList, nil, nil
+}
+
+func UpdateMediaListToPublic(c context.Context, r *http.Request, id string) (models.MediaList, interface{}, error) {
+	// Get the details of the current media list
+	mediaList, _, err := GetMediaList(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.MediaList{}, nil, err
+	}
+
+	// Checking if the current user logged in can edit this particular id
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.MediaList{}, nil, err
+	}
+	if !user.IsAdmin {
+		return models.MediaList{}, nil, errors.New("Forbidden")
+	}
+
+	mediaList.PublicList = !mediaList.PublicList
 
 	mediaList.Save(c)
 	sync.ResourceSync(r, mediaList.Id, "List", "update")
@@ -401,7 +427,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 
 	queryField := gcontext.Get(r, "q").(string)
 	if queryField != "" {
-		contacts, err := search.SearchContactsByList(c, r, queryField, user, mediaList.Id)
+		contacts, err := search.SearchContactsByList(c, r, queryField, user, mediaList.CreatedBy, mediaList.Id)
 		if err != nil {
 			return []models.Contact{}, nil, 0, err
 		}

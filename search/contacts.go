@@ -68,7 +68,7 @@ func SearchContacts(c context.Context, r *http.Request, search string, userId in
 	return searchContact(c, elasticQuery)
 }
 
-func SearchContactsByList(c context.Context, r *http.Request, search string, user models.User, listId int64) ([]models.Contact, error) {
+func SearchContactsByList(c context.Context, r *http.Request, search string, user models.User, userId int64, listId int64) ([]models.Contact, error) {
 	if listId == 0 || search == "" {
 		return []models.Contact{}, nil
 	}
@@ -82,7 +82,7 @@ func SearchContactsByList(c context.Context, r *http.Request, search string, use
 
 	if !user.IsAdmin {
 		elasticCreatedByQuery := ElasticCreatedByQuery{}
-		elasticCreatedByQuery.Term.CreatedBy = user.Id
+		elasticCreatedByQuery.Term.CreatedBy = userId
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 	}
 

@@ -53,7 +53,14 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 			return models.Contact{}, err
 		}
 
-		if !contact.IsMasterContact && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
+		contactList, err := getMediaList(c, r, contact.ListId)
+		if err != nil && contact.ListId == 0 {
+			err = errors.New("Forbidden")
+			log.Errorf(c, "%v", err)
+			return models.Contact{}, err
+		}
+
+		if !contact.IsMasterContact && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin && !contactList.PublicList {
 			err = errors.New("Forbidden")
 			log.Errorf(c, "%v", err)
 			return models.Contact{}, err
