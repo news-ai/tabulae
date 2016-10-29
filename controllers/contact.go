@@ -55,23 +55,30 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 			return models.Contact{}, err
 		}
 
-		// contactList, err := getMediaList(c, r, contact.ListId)
-		// if err != nil && contact.ListId == 0 {
-		// 	err = errors.New("Forbidden")
-		// 	log.Errorf(c, "%v", err)
-		// 	return models.Contact{}, err
-		// }
+		if contact.ListId != 0 {
+			contactList, err := getMediaList(c, r, contact.ListId)
+			if err != nil {
+				err = errors.New("Forbidden")
+				log.Errorf(c, "%v", err)
+				return models.Contact{}, err
+			}
 
+			// If it is a public list
+			if contactList.PublicList {
+				// If it is a public list, and you don't own it or are an admin
+				if contactList.PublicList && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
+					contact.ReadOnly = true
+				}
+				return contact, nil
+			}
+		}
+
+		// This runs if it is not a public list
 		if !contact.IsMasterContact && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
 			err = errors.New("Forbidden")
 			log.Errorf(c, "%v", err)
 			return models.Contact{}, err
 		}
-
-		// // If it is a public list, and you don't own it or are an admin
-		// if contactList.PublicList && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
-		// 	contact.ReadOnly = true
-		// }
 
 		return contact, nil
 	}

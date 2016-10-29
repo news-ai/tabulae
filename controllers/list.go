@@ -61,14 +61,16 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 		mediaList.Format(mediaListId, "lists")
 		mediaList.AddNewCustomFieldsMapToOldLists(c)
 
-		user, err := GetCurrentUser(c, r)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return models.MediaList{}, errors.New("Could not get user")
-		}
+		if !mediaList.PublicList {
+			user, err := GetCurrentUser(c, r)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return models.MediaList{}, errors.New("Could not get user")
+			}
 
-		if mediaList.CreatedBy != user.Id && !user.IsAdmin {
-			return models.MediaList{}, errors.New("Forbidden")
+			if mediaList.CreatedBy != user.Id && !user.IsAdmin {
+				return models.MediaList{}, errors.New("Forbidden")
+			}
 		}
 
 		return mediaList, nil
@@ -345,6 +347,7 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
+
 	if mediaList.CreatedBy != user.Id && !user.IsAdmin {
 		return models.MediaList{}, nil, errors.New("Forbidden")
 	}
