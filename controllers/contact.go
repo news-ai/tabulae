@@ -4,8 +4,8 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	// "strconv"
-	// "strings"
+	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -165,96 +165,101 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 	}
 
 	// When editing a contact on the list view we need the timeseries data in it
-	// mediaList, err := getMediaList(c, r, contact.ListId)
-	// if err != nil {
-	// 	return *contact, nil, nil
-	// }
+	if contact.ListId == 0 {
+		return *contact, nil, nil
+	}
 
-	// if contact.Instagram != "" || contact.Twitter != "" {
-	// 	readOnlyPresent := []string{}
-	// 	instagramTimeseries := []search.InstagramTimeseries{}
-	// 	twitterTimeseries := []search.TwitterTimeseries{}
+	mediaList, err := getMediaList(c, r, contact.ListId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return *contact, nil, nil
+	}
 
-	// 	// Check if there are special fields we need to get data for
-	// 	for i := 0; i < len(mediaList.FieldsMap); i++ {
-	// 		if mediaList.FieldsMap[i].ReadOnly {
-	// 			readOnlyPresent = append(readOnlyPresent, mediaList.FieldsMap[i].Value)
-	// 			if strings.Contains(mediaList.FieldsMap[i].Value, "instagram") {
-	// 				if len(instagramTimeseries) == 0 {
-	// 					instagramTimeseries, _ = search.SearchInstagramTimeseriesByUsernames(c, r, []string{contact.Instagram})
-	// 				}
-	// 			}
-	// 			if strings.Contains(mediaList.FieldsMap[i].Value, "twitter") {
-	// 				if len(twitterTimeseries) == 0 {
-	// 					twitterTimeseries, _ = search.SearchTwitterTimeseriesByUsernames(c, r, []string{contact.Twitter})
-	// 				}
-	// 			}
-	// 		}
-	// 	}
+	if contact.Instagram != "" || contact.Twitter != "" {
+		readOnlyPresent := []string{}
+		instagramTimeseries := []search.InstagramTimeseries{}
+		twitterTimeseries := []search.TwitterTimeseries{}
 
-	// 	if len(readOnlyPresent) > 0 {
-	// 		customFieldInstagramUsernameToValue := map[string]search.InstagramTimeseries{}
-	// 		customFieldTwitterUsernameToValue := map[string]search.TwitterTimeseries{}
+		// Check if there are special fields we need to get data for
+		for i := 0; i < len(mediaList.FieldsMap); i++ {
+			if mediaList.FieldsMap[i].ReadOnly {
+				readOnlyPresent = append(readOnlyPresent, mediaList.FieldsMap[i].Value)
+				if strings.Contains(mediaList.FieldsMap[i].Value, "instagram") {
+					if len(instagramTimeseries) == 0 {
+						instagramTimeseries, _ = search.SearchInstagramTimeseriesByUsernames(c, r, []string{contact.Instagram})
+					}
+				}
+				if strings.Contains(mediaList.FieldsMap[i].Value, "twitter") {
+					if len(twitterTimeseries) == 0 {
+						twitterTimeseries, _ = search.SearchTwitterTimeseriesByUsernames(c, r, []string{contact.Twitter})
+					}
+				}
+			}
+		}
 
-	// 		if len(instagramTimeseries) > 0 {
-	// 			for i := 0; i < len(instagramTimeseries); i++ {
-	// 				lowerCaseUsername := strings.ToLower(instagramTimeseries[i].Username)
-	// 				customFieldInstagramUsernameToValue[lowerCaseUsername] = instagramTimeseries[i]
-	// 			}
-	// 		}
+		if len(readOnlyPresent) > 0 {
+			customFieldInstagramUsernameToValue := map[string]search.InstagramTimeseries{}
+			customFieldTwitterUsernameToValue := map[string]search.TwitterTimeseries{}
 
-	// 		if len(twitterTimeseries) > 0 {
-	// 			for i := 0; i < len(twitterTimeseries); i++ {
-	// 				lowerCaseUsername := strings.ToLower(twitterTimeseries[i].Username)
-	// 				customFieldTwitterUsernameToValue[lowerCaseUsername] = twitterTimeseries[i]
-	// 			}
-	// 		}
+			if len(instagramTimeseries) > 0 {
+				for i := 0; i < len(instagramTimeseries); i++ {
+					lowerCaseUsername := strings.ToLower(instagramTimeseries[i].Username)
+					customFieldInstagramUsernameToValue[lowerCaseUsername] = instagramTimeseries[i]
+				}
+			}
 
-	// 		for x := 0; x < len(readOnlyPresent); x++ {
-	// 			customField := models.CustomContactField{}
-	// 			customField.Name = readOnlyPresent[x]
+			if len(twitterTimeseries) > 0 {
+				for i := 0; i < len(twitterTimeseries); i++ {
+					lowerCaseUsername := strings.ToLower(twitterTimeseries[i].Username)
+					customFieldTwitterUsernameToValue[lowerCaseUsername] = twitterTimeseries[i]
+				}
+			}
 
-	// 			lowerCaseInstagramUsername := strings.ToLower(contact.Instagram)
-	// 			lowerCaseTwitterUsername := strings.ToLower(contact.Twitter)
+			for x := 0; x < len(readOnlyPresent); x++ {
+				customField := models.CustomContactField{}
+				customField.Name = readOnlyPresent[x]
 
-	// 			if _, ok := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]; ok {
-	// 				instagramProfile := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]
+				lowerCaseInstagramUsername := strings.ToLower(contact.Instagram)
+				lowerCaseTwitterUsername := strings.ToLower(contact.Twitter)
 
-	// 				if customField.Name == "instagramfollowers" {
-	// 					customField.Value = strconv.Itoa(instagramProfile.Followers)
-	// 				} else if customField.Name == "instagramfollowing" {
-	// 					customField.Value = strconv.Itoa(instagramProfile.Following)
-	// 				} else if customField.Name == "instagramlikes" {
-	// 					customField.Value = strconv.Itoa(instagramProfile.Likes)
-	// 				} else if customField.Name == "instagramcomments" {
-	// 					customField.Value = strconv.Itoa(instagramProfile.Comments)
-	// 				} else if customField.Name == "instagramposts" {
-	// 					customField.Value = strconv.Itoa(instagramProfile.Posts)
-	// 				}
-	// 			}
+				if _, ok := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]; ok {
+					instagramProfile := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]
 
-	// 			if _, ok := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]; ok {
-	// 				twitterProfile := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]
+					if customField.Name == "instagramfollowers" {
+						customField.Value = strconv.Itoa(instagramProfile.Followers)
+					} else if customField.Name == "instagramfollowing" {
+						customField.Value = strconv.Itoa(instagramProfile.Following)
+					} else if customField.Name == "instagramlikes" {
+						customField.Value = strconv.Itoa(instagramProfile.Likes)
+					} else if customField.Name == "instagramcomments" {
+						customField.Value = strconv.Itoa(instagramProfile.Comments)
+					} else if customField.Name == "instagramposts" {
+						customField.Value = strconv.Itoa(instagramProfile.Posts)
+					}
+				}
 
-	// 				if customField.Name == "twitterfollowers" {
-	// 					customField.Value = strconv.Itoa(twitterProfile.Followers)
-	// 				} else if customField.Name == "twitterfollowing" {
-	// 					customField.Value = strconv.Itoa(twitterProfile.Following)
-	// 				} else if customField.Name == "twitterlikes" {
-	// 					customField.Value = strconv.Itoa(twitterProfile.Likes)
-	// 				} else if customField.Name == "twitterretweets" {
-	// 					customField.Value = strconv.Itoa(twitterProfile.Retweets)
-	// 				} else if customField.Name == "twitterposts" {
-	// 					customField.Value = strconv.Itoa(twitterProfile.Posts)
-	// 				}
-	// 			}
+				if _, ok := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]; ok {
+					twitterProfile := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]
 
-	// 			if customField.Value != "" {
-	// 				contact.CustomFields = append(contact.CustomFields, customField)
-	// 			}
-	// 		}
-	// 	}
-	// }
+					if customField.Name == "twitterfollowers" {
+						customField.Value = strconv.Itoa(twitterProfile.Followers)
+					} else if customField.Name == "twitterfollowing" {
+						customField.Value = strconv.Itoa(twitterProfile.Following)
+					} else if customField.Name == "twitterlikes" {
+						customField.Value = strconv.Itoa(twitterProfile.Likes)
+					} else if customField.Name == "twitterretweets" {
+						customField.Value = strconv.Itoa(twitterProfile.Retweets)
+					} else if customField.Name == "twitterposts" {
+						customField.Value = strconv.Itoa(twitterProfile.Posts)
+					}
+				}
+
+				if customField.Value != "" {
+					contact.CustomFields = append(contact.CustomFields, customField)
+				}
+			}
+		}
+	}
 
 	return *contact, nil, nil
 }

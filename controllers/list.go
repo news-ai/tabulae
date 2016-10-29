@@ -480,6 +480,11 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 		if contacts[i].Twitter != "" {
 			twitterUsers = append(twitterUsers, contacts[i].Twitter)
 		}
+
+		if contacts[i].ListId == 0 {
+			contacts[i].ListId = mediaList.Id
+			contacts[i].Save(c, r)
+		}
 	}
 
 	readOnlyPresent := []string{}
