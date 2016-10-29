@@ -35,7 +35,7 @@ func TrialPlanPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is not logged in
 		if err != nil {
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 
@@ -54,7 +54,7 @@ func TrialPlanPageHandler() http.HandlerFunc {
 
 					// If the user has already had a trial but it has not expired
 					if userBilling.Expires.After(time.Now()) {
-						http.Redirect(w, r, "https://site.newsai.org/", 302)
+						http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 						return
 					}
 				}
@@ -70,7 +70,7 @@ func TrialPlanPageHandler() http.HandlerFunc {
 			t.Execute(w, data)
 		} else {
 			// If the user is active then they don't need to start a free trial
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 	}
@@ -95,7 +95,7 @@ func ChoosePlanPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is not logged in
 		if err != nil {
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 
@@ -154,7 +154,7 @@ func ChooseTrialPlanHandler() http.HandlerFunc {
 		// If there is no next and the user is not logged in
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 
@@ -171,7 +171,7 @@ func ChooseTrialPlanHandler() http.HandlerFunc {
 		}
 
 		// If not then their is now probably successful so we redirect them back
-		returnURL := "https://site.newsai.org/"
+		returnURL := "https://tabulae.newsai.co/"
 		session, _ := Store.Get(r, "sess")
 		if session.Values["next"] != nil {
 			returnURL = session.Values["next"].(string)
@@ -220,7 +220,7 @@ func BillingPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is not logged in
 		if err != nil {
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 
@@ -278,7 +278,7 @@ func PaymentMethodsPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is not logged in
 		if err != nil {
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 
@@ -335,7 +335,7 @@ func PaymentMethodsHandler() http.HandlerFunc {
 
 		// If there is no next and the user is not logged in
 		if err != nil {
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 

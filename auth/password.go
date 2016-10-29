@@ -59,7 +59,7 @@ func PasswordLoginHandler() http.HandlerFunc {
 			session.Save(r, w)
 
 			if user.IsActive {
-				returnURL := "https://site.newsai.org/"
+				returnURL := "https://tabulae.newsai.co/"
 				if session.Values["next"] != nil {
 					returnURL = session.Values["next"].(string)
 				}
@@ -284,7 +284,7 @@ func PasswordLoginPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is logged in
 		if err == nil {
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 
@@ -325,7 +325,7 @@ func PasswordRegisterPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is logged in
 		if err == nil {
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 
@@ -359,7 +359,7 @@ func PasswordInvitationPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is logged in
 		if err == nil {
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 
@@ -416,13 +416,13 @@ func ChangePasswordPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is not logged in
 		if err != nil {
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 
 		// If uses Google authentication and there is no password
 		if currentUser.GoogleId != "" && len(currentUser.Password) == 0 {
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 
@@ -455,7 +455,7 @@ func ForgetPasswordPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is logged in
 		if err == nil {
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 
@@ -528,7 +528,7 @@ func ResetPasswordPageHandler() http.HandlerFunc {
 
 		// If there is no next and the user is logged in
 		if err == nil {
-			http.Redirect(w, r, "https://site.newsai.org/", 302)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
 			return
 		}
 
