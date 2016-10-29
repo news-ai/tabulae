@@ -66,7 +66,8 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 			log.Errorf(c, "%v", err)
 			return models.MediaList{}, errors.New("Could not get user")
 		}
-		if mediaList.CreatedBy != user.Id && !user.IsAdmin && !mediaList.PublicList {
+
+		if mediaList.CreatedBy != user.Id && !user.IsAdmin {
 			return models.MediaList{}, errors.New("Forbidden")
 		}
 

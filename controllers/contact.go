@@ -4,6 +4,8 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	// "strconv"
+	// "strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -53,18 +55,23 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 			return models.Contact{}, err
 		}
 
-		contactList, err := getMediaList(c, r, contact.ListId)
-		if err != nil && contact.ListId == 0 {
+		// contactList, err := getMediaList(c, r, contact.ListId)
+		// if err != nil && contact.ListId == 0 {
+		// 	err = errors.New("Forbidden")
+		// 	log.Errorf(c, "%v", err)
+		// 	return models.Contact{}, err
+		// }
+
+		if !contact.IsMasterContact && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
 			err = errors.New("Forbidden")
 			log.Errorf(c, "%v", err)
 			return models.Contact{}, err
 		}
 
-		if !contact.IsMasterContact && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin && !contactList.PublicList {
-			err = errors.New("Forbidden")
-			log.Errorf(c, "%v", err)
-			return models.Contact{}, err
-		}
+		// // If it is a public list, and you don't own it or are an admin
+		// if contactList.PublicList && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
+		// 	contact.ReadOnly = true
+		// }
 
 		return contact, nil
 	}
@@ -156,6 +163,98 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 		log.Errorf(c, "%v", err)
 		return models.Contact{}, nil, err
 	}
+
+	// When editing a contact on the list view we need the timeseries data in it
+	// mediaList, err := getMediaList(c, r, contact.ListId)
+	// if err != nil {
+	// 	return *contact, nil, nil
+	// }
+
+	// if contact.Instagram != "" || contact.Twitter != "" {
+	// 	readOnlyPresent := []string{}
+	// 	instagramTimeseries := []search.InstagramTimeseries{}
+	// 	twitterTimeseries := []search.TwitterTimeseries{}
+
+	// 	// Check if there are special fields we need to get data for
+	// 	for i := 0; i < len(mediaList.FieldsMap); i++ {
+	// 		if mediaList.FieldsMap[i].ReadOnly {
+	// 			readOnlyPresent = append(readOnlyPresent, mediaList.FieldsMap[i].Value)
+	// 			if strings.Contains(mediaList.FieldsMap[i].Value, "instagram") {
+	// 				if len(instagramTimeseries) == 0 {
+	// 					instagramTimeseries, _ = search.SearchInstagramTimeseriesByUsernames(c, r, []string{contact.Instagram})
+	// 				}
+	// 			}
+	// 			if strings.Contains(mediaList.FieldsMap[i].Value, "twitter") {
+	// 				if len(twitterTimeseries) == 0 {
+	// 					twitterTimeseries, _ = search.SearchTwitterTimeseriesByUsernames(c, r, []string{contact.Twitter})
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+
+	// 	if len(readOnlyPresent) > 0 {
+	// 		customFieldInstagramUsernameToValue := map[string]search.InstagramTimeseries{}
+	// 		customFieldTwitterUsernameToValue := map[string]search.TwitterTimeseries{}
+
+	// 		if len(instagramTimeseries) > 0 {
+	// 			for i := 0; i < len(instagramTimeseries); i++ {
+	// 				lowerCaseUsername := strings.ToLower(instagramTimeseries[i].Username)
+	// 				customFieldInstagramUsernameToValue[lowerCaseUsername] = instagramTimeseries[i]
+	// 			}
+	// 		}
+
+	// 		if len(twitterTimeseries) > 0 {
+	// 			for i := 0; i < len(twitterTimeseries); i++ {
+	// 				lowerCaseUsername := strings.ToLower(twitterTimeseries[i].Username)
+	// 				customFieldTwitterUsernameToValue[lowerCaseUsername] = twitterTimeseries[i]
+	// 			}
+	// 		}
+
+	// 		for x := 0; x < len(readOnlyPresent); x++ {
+	// 			customField := models.CustomContactField{}
+	// 			customField.Name = readOnlyPresent[x]
+
+	// 			lowerCaseInstagramUsername := strings.ToLower(contact.Instagram)
+	// 			lowerCaseTwitterUsername := strings.ToLower(contact.Twitter)
+
+	// 			if _, ok := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]; ok {
+	// 				instagramProfile := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]
+
+	// 				if customField.Name == "instagramfollowers" {
+	// 					customField.Value = strconv.Itoa(instagramProfile.Followers)
+	// 				} else if customField.Name == "instagramfollowing" {
+	// 					customField.Value = strconv.Itoa(instagramProfile.Following)
+	// 				} else if customField.Name == "instagramlikes" {
+	// 					customField.Value = strconv.Itoa(instagramProfile.Likes)
+	// 				} else if customField.Name == "instagramcomments" {
+	// 					customField.Value = strconv.Itoa(instagramProfile.Comments)
+	// 				} else if customField.Name == "instagramposts" {
+	// 					customField.Value = strconv.Itoa(instagramProfile.Posts)
+	// 				}
+	// 			}
+
+	// 			if _, ok := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]; ok {
+	// 				twitterProfile := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]
+
+	// 				if customField.Name == "twitterfollowers" {
+	// 					customField.Value = strconv.Itoa(twitterProfile.Followers)
+	// 				} else if customField.Name == "twitterfollowing" {
+	// 					customField.Value = strconv.Itoa(twitterProfile.Following)
+	// 				} else if customField.Name == "twitterlikes" {
+	// 					customField.Value = strconv.Itoa(twitterProfile.Likes)
+	// 				} else if customField.Name == "twitterretweets" {
+	// 					customField.Value = strconv.Itoa(twitterProfile.Retweets)
+	// 				} else if customField.Name == "twitterposts" {
+	// 					customField.Value = strconv.Itoa(twitterProfile.Posts)
+	// 				}
+	// 			}
+
+	// 			if customField.Value != "" {
+	// 				contact.CustomFields = append(contact.CustomFields, customField)
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	return *contact, nil, nil
 }

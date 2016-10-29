@@ -65,6 +65,7 @@ type Contact struct {
 	EmailBounced bool `json:"emailbounced"`
 
 	IsDeleted bool `json:"isdeleted"`
+	ReadOnly  bool `json:"readonly" datastore:"-"`
 
 	LinkedInUpdated time.Time `json:"linkedinupdated"`
 }
