@@ -57,12 +57,17 @@
                     <h2 class="dark-text">Billing Summary</h2>
                     <div class="colored-line-left">
                     </div>
+                    {{if .missingCard }}
+                        <p>You have not added a credit card yet. Please visit the <a href="/api/billing/payment-methods">credit card</a> page and add one!</p>
+                    {{end}}
                     <p>You are purchasing the <b>{{.plan}}</b> plan. You are being charged for a <b>{{if eq .duration "monthly" }}month{{end}}{{if eq .duration "annually" }}year{{end}}</b>.</p>
                     <p>If you have a coupon please enter it below. It will be automatically applied to your checkout price.</p>
-                    <form id="coupon-form" method="post">
-                        <input class="form-control" placeholder="Coupon Code" type="text" name="coupon-apply" id="coupon-apply" style=" float: left; width: 25%;">
+                    <form id="coupon-form" method="post" action="check-coupon">
+                        <div id="coupon-valid" class="alert alert-success" style="display: none;"></div>
+                        <div id="coupon-errors" class="alert alert-danger" style="display: none;"></div>
+                        <input class="form-control" placeholder="Coupon Code" type="text" name="coupon" id="coupon" style=" float: left; width: 25%;">
                         <span class="input-group-btn">
-                            <button type="button" class="btn btn-primary" id="apply-button" disabled>Apply</button>
+                            <button type="submit" class="btn btn-primary" id="apply-button">Apply</button>
                         </span>
                     </form>
                     <p>Upon checkout an invoice will be sent to your email.</p>
@@ -78,7 +83,7 @@
 
                                 <p>Grand total: ${{.price}}</p>
 
-                                <button type="button" class="btn btn-primary" id="add-button" disabled>Check out</button>
+                                <button type="button" class="btn btn-primary" id="checkout-button">Check out</button>
                             </form>
                         </div>
                     </div>
@@ -106,6 +111,29 @@
         });
         Stripe.setPublishableKey('pk_live_BQgcXTDIgDIx8MllwCbQrASC');
         var price = "{{.price}}";
+        var missingCard = ("{{.missingCard}}" === 'true');
+        if (missingCard) {
+            // Disable both buttons
+            document.getElementById("apply-button").disabled = true;
+            document.getElementById("checkout-button").disabled = true;
+        }
+
+        $(document).ready(function() {
+            var $form = $('#coupon-form');
+            $form.submit(function(){
+                $('#coupon-valid').hide();
+                $('#coupon-errors').hide();
+                $.post($(this).attr('action'), $(this).serialize(), function(response){
+                    $('#coupon-valid').text("Coupon was applied");
+                    $('#coupon-valid').show();
+                    console.log(response);
+                },'json').fail(function(jqXHR, textStatus, errorThrown) {
+                    $('#coupon-errors').text("Coupon was invalid");
+                    $('#coupon-errors').show();
+                });
+                return false;
+            });
+        });
     </script>
 </body>
 </html>

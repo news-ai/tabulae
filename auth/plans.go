@@ -14,6 +14,9 @@ import (
 	"github.com/news-ai/tabulae/controllers"
 
 	"github.com/gorilla/csrf"
+	"github.com/pquerna/ffjson/ffjson"
+
+	nError "github.com/news-ai/web/errors"
 )
 
 func TrialPlanPageHandler() http.HandlerFunc {
@@ -230,9 +233,6 @@ func ChoosePlanHandler() http.HandlerFunc {
 			return
 		}
 
-		log.Infof(c, "%v", plan)
-		log.Infof(c, "%v", duration)
-
 		userBilling, err := controllers.GetUserBilling(c, r, user)
 
 		// If the user has a billing profile
@@ -246,15 +246,15 @@ func ChoosePlanHandler() http.HandlerFunc {
 				plan = "Ultimate"
 			}
 
-			hasCard := false
+			missingCard := true
 			if len(userBilling.CardsOnFile) > 0 {
-				hasCard = true
+				missingCard = false
 			}
 
 			price := billing.PlanAndDurationToPrice(plan, duration)
 
 			data := map[string]interface{}{
-				"hasCard":        hasCard,
+				"missingCard":    missingCard,
 				"price":          price,
 				"plan":           plan,
 				"duration":       duration,
@@ -271,7 +271,110 @@ func ChoosePlanHandler() http.HandlerFunc {
 			http.Redirect(w, r, "/api/billing/plans/trial", 302)
 			return
 		}
+	}
+}
 
+func CheckCouponValid() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		c := appengine.NewContext(r)
+		coupon := r.FormValue("coupon")
+
+		if coupon == "" {
+			nError.ReturnError(w, http.StatusInternalServerError, "Coupon error", "Please enter a coupon")
+			return
+		}
+
+		percentageOff, err := billing.GetCoupon(r, coupon)
+
+		if err == nil {
+			val := struct {
+				PercentageOff uint64
+			}{
+				PercentageOff: percentageOff,
+			}
+			err = ffjson.NewEncoder(w).Encode(val)
+		}
+
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			nError.ReturnError(w, http.StatusInternalServerError, "Coupon error", err.Error())
+		}
+
+		return
+	}
+}
+
+func ConfirmPlanHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c := appengine.NewContext(r)
+		plan := r.FormValue("plan")
+		duration := r.FormValue("duration")
+		// coupon := r.FormValue("coupon")
+
+		// To check if there is a user logged in
+		user, err := controllers.GetCurrentUser(c, r)
+
+		if r.URL.Query().Get("next") != "" {
+			session, _ := Store.Get(r, "sess")
+			session.Values["next"] = r.URL.Query().Get("next")
+			session.Save(r, w)
+
+			// If there is a next and the user has not been logged in
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				http.Redirect(w, r, r.URL.Query().Get("next"), 302)
+				return
+			}
+		}
+
+		// If there is no next and the user is not logged in
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
+			return
+		}
+
+		userBilling, err := controllers.GetUserBilling(c, r, user)
+
+		// If the user has a billing profile
+		if err == nil {
+			switch plan {
+			case "bronze":
+				plan = "Personal"
+			case "silver":
+				plan = "Business"
+			case "gold":
+				plan = "Ultimate"
+			}
+
+			missingCard := true
+			if len(userBilling.CardsOnFile) > 0 {
+				missingCard = false
+			}
+
+			// Recalculate the price so there's no alteration
+			price := billing.PlanAndDurationToPrice(plan, duration)
+
+			data := map[string]interface{}{
+				"missingCard":    missingCard,
+				"price":          price,
+				"plan":           plan,
+				"duration":       duration,
+				"userEmail":      user.Email,
+				csrf.TemplateTag: csrf.TemplateField(r),
+			}
+
+			t := template.New("receipt.html")
+			t, _ = t.ParseFiles("billing/receipt.html")
+			t.Execute(w, data)
+		} else {
+			// If the user does not have billing profile that means that they
+			// have not started their trial yet.
+			http.Redirect(w, r, "/api/billing/plans/trial", 302)
+			return
+		}
 	}
 }
 

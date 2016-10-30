@@ -27,6 +27,30 @@ type StripeError struct {
 	Message string `json:"message"`
 }
 
+func GetCoupon(r *http.Request, coupon string) (uint64, error) {
+	c := appengine.NewContext(r)
+	httpClient := urlfetch.Client(c)
+	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
+
+	stripeCoupon, err := sc.Coupons.Get(coupon, nil)
+	if err != nil {
+		var stripeError StripeError
+		err = json.Unmarshal([]byte(err.Error()), &stripeError)
+		if err != nil {
+			return uint64(0), errors.New("Your coupon was invalid")
+		}
+
+		log.Errorf(c, "%v", err)
+		return uint64(0), errors.New(stripeError.Message)
+	}
+
+	if stripeCoupon.Valid && stripeCoupon.Live {
+		return stripeCoupon.Percent, nil
+	}
+
+	return uint64(0), errors.New("Your coupon was invalid or has expired")
+}
+
 func GetUserCards(r *http.Request, user models.User, userBilling *models.Billing) ([]Card, error) {
 	c := appengine.NewContext(r)
 	httpClient := urlfetch.Client(c)
