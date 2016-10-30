@@ -58,7 +58,7 @@
                         <form role="form" method="post" action="confirmation">
                             {{ .csrfField }}
                             <input type="hidden" id="code" name="code" />
-                            <input type="hidden" id="duration" name="duration" />
+                            <input type="hidden" id="duration" name="duration" value="annually">
                             <button type="submit" class="btn btn-primary" name="plan" id="plan" value="bronze">
                               Try this plan
                             </button>
@@ -86,7 +86,7 @@
                         <form role="form" method="post" action="confirmation">
                             {{ .csrfField }}
                             <input type="hidden" id="code" name="code" />
-                            <input type="hidden" id="duration" name="duration" />
+                            <input type="hidden" id="duration" name="duration" value="annually">
                             <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver">
                               Try this plan
                             </button>
@@ -110,7 +110,7 @@
                         <form role="form" method="post" action="confirmation">
                             {{ .csrfField }}
                             <input type="hidden" id="code" name="code" />
-                            <input type="hidden" id="duration" name="duration" />
+                            <input type="hidden" id="duration" name="duration" value="annually">
                             <button type="submit" class="btn btn-primary" name="plan" id="plan" value="gold">
                               Try this plan
                             </button>

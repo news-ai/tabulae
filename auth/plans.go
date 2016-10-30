@@ -233,6 +233,39 @@ func ChoosePlanHandler() http.HandlerFunc {
 		log.Infof(c, "%v", plan)
 		log.Infof(c, "%v", duration)
 
+		_, err = controllers.GetUserBilling(c, r, user)
+
+		// If the user has a billing profile
+		if err == nil {
+			switch plan {
+			case "bronze":
+				plan = "Personal"
+			case "silver":
+				plan = "Business"
+			case "gold":
+				plan = "Ultimate"
+			}
+
+			price := billing.PlanAndDurationToPrice(plan, duration)
+
+			data := map[string]interface{}{
+				"price":          price,
+				"plan":           plan,
+				"duration":       duration,
+				"userEmail":      user.Email,
+				csrf.TemplateTag: csrf.TemplateField(r),
+			}
+
+			t := template.New("confirmation.html")
+			t, _ = t.ParseFiles("billing/confirmation.html")
+			t.Execute(w, data)
+		} else {
+			// If the user does not have billing profile that means that they
+			// have not started their trial yet.
+			http.Redirect(w, r, "/api/billing/plans/trial", 302)
+			return
+		}
+
 	}
 }
 
