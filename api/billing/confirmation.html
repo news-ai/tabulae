@@ -62,7 +62,7 @@
                     <form id="coupon-form" method="post">
                         <input class="form-control" placeholder="Coupon Code" type="text" name="coupon-apply" id="coupon-apply" style=" float: left; width: 25%;">
                         <span class="input-group-btn">
-                            <button type="button" class="btn btn-primary" id="apply-button">Apply</button>
+                            <button type="button" class="btn btn-primary" id="apply-button" disabled>Apply</button>
                         </span>
                     </form>
                     <p>Upon checkout an invoice will be sent to your email.</p>
@@ -78,7 +78,7 @@
 
                                 <p>Grand total: {{.price}}</p>
 
-                                <button type="button" class="btn btn-primary" id="add-button">Check out</button>
+                                <button type="button" class="btn btn-primary" id="add-button" disabled>Check out</button>
                             </form>
                         </div>
                     </div>

@@ -63,7 +63,7 @@ function changePricingClass() {
         document.getElementById("businessPrice").innerHTML = "49.99";
         document.getElementById("ultimatePrice").innerHTML = "79.99";
 
-        document.getElementById("duration").value = "monthly";
+        $('.duration').attr('value', 'monthly');
     } else {
         // Change label color & the button
         document.getElementById("pricingClass").className = "annually";
@@ -75,7 +75,7 @@ function changePricingClass() {
         document.getElementById("businessPrice").innerHTML = "39.99";
         document.getElementById("ultimatePrice").innerHTML = "63.99";
 
-        document.getElementById("duration").value = "annually";
+        $('.duration').attr('value', 'annually');
     }
 }
 
