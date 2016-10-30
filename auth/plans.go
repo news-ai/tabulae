@@ -233,7 +233,7 @@ func ChoosePlanHandler() http.HandlerFunc {
 		log.Infof(c, "%v", plan)
 		log.Infof(c, "%v", duration)
 
-		_, err = controllers.GetUserBilling(c, r, user)
+		userBilling, err := controllers.GetUserBilling(c, r, user)
 
 		// If the user has a billing profile
 		if err == nil {
@@ -246,9 +246,15 @@ func ChoosePlanHandler() http.HandlerFunc {
 				plan = "Ultimate"
 			}
 
+			hasCard := false
+			if len(userBilling.CardsOnFile) > 0 {
+				hasCard = true
+			}
+
 			price := billing.PlanAndDurationToPrice(plan, duration)
 
 			data := map[string]interface{}{
+				"hasCard":        hasCard,
 				"price":          price,
 				"plan":           plan,
 				"duration":       duration,

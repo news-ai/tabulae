@@ -1,6 +1,8 @@
 package billing
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 
@@ -41,26 +43,32 @@ func AddFreeTrialToUser(r *http.Request, user models.User, plan string) (int64, 
 	return billingId, nil
 }
 
-func AddPlanToUser(r *http.Request, user models.User, plan string, months int, coupon string, sp string) error {
+func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billing, plan string, duration string) error {
 	c := appengine.NewContext(r)
 	httpClient := urlfetch.Client(c)
 	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
 
-	// https://stripe.com/docs/api
-	// Create new customer in Stripe
-	params := &stripe.CustomerParams{
-		Email:    user.Email,
-		Plan:     plan,
-		Quantity: uint64(1 * months),
-		Coupon:   coupon,
-	}
-
-	params.SetSource(sp)
-	customer, err := sc.Customers.New(params)
+	customer, err := sc.Customers.Get(userBilling.StripeId, nil)
 	if err != nil {
-		return err
+		var stripeError StripeError
+		err = json.Unmarshal([]byte(err.Error()), &stripeError)
+		if err != nil {
+			return errors.New("We had an error getting your user")
+		}
+
+		log.Errorf(c, "%v", err)
+		return errors.New(stripeError.Message)
 	}
 
-	user.SetStripeId(c, r, user, customer.ID, "", false, false)
+	// Only considers plans currently that moving from trial. Not changing plans.
+	// Cancel all past subscriptions they had
+	for i := 0; i < len(customer.Subs.Values); i++ {
+		sc.Subs.Cancel(customer.Subs.Values[i].ID, nil)
+	}
+
+	// Start a new subscription without trial (they already went through the trial)
+
+	// Return if there are any errors
+
 	return nil
 }
