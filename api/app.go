@@ -120,6 +120,9 @@ func init() {
 	router.Handler("GET", "/api/billing/payment-methods", CSRF(auth.PaymentMethodsPageHandler()))
 	router.Handler("POST", "/api/billing/add-payment-method", CSRF(auth.PaymentMethodsHandler()))
 
+	// Add plan method
+	router.Handler("POST", "/api/billing/confirmation", CSRF(auth.ChoosePlanHandler()))
+
 	// Main billing page for a user
 	router.Handler("GET", "/api/billing", CSRF(auth.BillingPageHandler()))
 

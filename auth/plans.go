@@ -201,6 +201,41 @@ func ChooseTrialPlanHandler() http.HandlerFunc {
 	}
 }
 
+func ChoosePlanHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c := appengine.NewContext(r)
+		plan := r.FormValue("plan")
+		duration := r.FormValue("duration")
+
+		// To check if there is a user logged in
+		user, err := controllers.GetCurrentUser(c, r)
+
+		if r.URL.Query().Get("next") != "" {
+			session, _ := Store.Get(r, "sess")
+			session.Values["next"] = r.URL.Query().Get("next")
+			session.Save(r, w)
+
+			// If there is a next and the user has not been logged in
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				http.Redirect(w, r, r.URL.Query().Get("next"), 302)
+				return
+			}
+		}
+
+		// If there is no next and the user is not logged in
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
+			return
+		}
+
+		log.Infof(c, "%v", plan)
+		log.Infof(c, "%v", duration)
+
+	}
+}
+
 func BillingPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)

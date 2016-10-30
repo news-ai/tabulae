@@ -19,6 +19,7 @@ type CustomFieldsMap struct {
 	Hidden      bool   `json:"hidden"`
 	Internal    bool   `json:"internal" datastore:"-"`
 	ReadOnly    bool   `json:"readonly" datastore:"-"`
+	Description string `json:"description" datastore:"-"`
 }
 
 type MediaList struct {
@@ -43,8 +44,22 @@ type MediaList struct {
 }
 
 /*
-* Private methods
+* Private variables
  */
+
+var fieldsMapValueToDescription = map[string]string{
+	"instagramfollowers": "The number of followers this contact has - updated on a daily basis",
+	"instagramfollowing": "The number of accounts this contact is following - updated on a daily basis",
+	"instagramlikes":     "The number of likes all the posts this contact is getting - updated on a daily basis",
+	"instagramcomments":  "The number of comments",
+	"instagramposts":     "The number of instagram posts this contact has posted - updated on a daily basis",
+
+	"twitterfollowers": "Twitter Followers",
+	"twitterfollowing": "Twitter Following",
+	"twitterlikes":     "Twitter Likes",
+	"twitterretweets":  "Twitter Retweets",
+	"twitterposts":     "Twitter Posts",
+}
 
 /*
 * Public methods
@@ -163,6 +178,8 @@ func (ml *MediaList) Format(key *datastore.Key, modelType string) {
 	ml.Type = modelType
 	ml.Id = key.IntID()
 
+	// Add descriptions on runtime
+
 	for i := 0; i < len(ml.FieldsMap); i++ {
 		if ml.FieldsMap[i].Value == "employers" || ml.FieldsMap[i].Value == "pastemployers" {
 			ml.FieldsMap[i].Internal = true
@@ -175,5 +192,11 @@ func (ml *MediaList) Format(key *datastore.Key, modelType string) {
 		if ml.FieldsMap[i].Value != "instagram" && strings.Contains(ml.FieldsMap[i].Value, "instagram") {
 			ml.FieldsMap[i].ReadOnly = true
 		}
+
+		// If this particular value exists in fieldsMapValueToDescription then add description
+		if val, ok := fieldsMapValueToDescription[ml.FieldsMap[i].Value]; ok {
+			ml.FieldsMap[i].Description = val
+		}
+
 	}
 }

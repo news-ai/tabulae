@@ -47,6 +47,7 @@
         <div class="container">
             <div class="pricing-section-header">
                 <h2 class="dark-text">Plans</h2>
+                <div class="annually-monthly-switch" onclick="changePricingClass()"><label id="annuallyLabel" class="active">Annually</label><div id="pricingClass" class="annually"><span></span></div><label id="monthlyLabel">Monthly</label></div>
                 <p>Save 20% off by signing up with our annual package!</p>
             </div>
             <div class="row">
@@ -54,6 +55,14 @@
                     <div class="single-package">
                         <h3 class="package-heading main-color">
                         Personal </h3>
+                        <form role="form" method="post" action="confirmation">
+                            {{ .csrfField }}
+                            <input type="hidden" id="code" name="code" />
+                            <input type="hidden" id="duration" name="duration" />
+                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="bronze">
+                              Try this plan
+                            </button>
+                        </form>
                         <div class="price">
                             <div id="personalPackage" {{if eq .currentUserPlan "Personal" }} class="color-bg" {{end}}>
                                 <h2><span class="sign">$</span><span id="personalPrice">9.99</span> <span class="month">/month</span></h2>
@@ -74,6 +83,14 @@
                     <div class="single-package">
                         <h3 class="package-heading main-color">
                         Business </h3>
+                        <form role="form" method="post" action="confirmation">
+                            {{ .csrfField }}
+                            <input type="hidden" id="code" name="code" />
+                            <input type="hidden" id="duration" name="duration" />
+                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver">
+                              Try this plan
+                            </button>
+                        </form>
                         <div class="price">
                             <div id="businessPackage" {{if eq .currentUserPlan "Business" }} class="color-bg" {{end}}>
                                 <h2><span class="sign">$</span><span id="businessPrice">49.99</span> <span class="month">/month</span></h2>
@@ -90,6 +107,14 @@
                     <div class="single-package">
                         <h3 class="package-heading main-color">
                         Ultimate </h3>
+                        <form role="form" method="post" action="confirmation">
+                            {{ .csrfField }}
+                            <input type="hidden" id="code" name="code" />
+                            <input type="hidden" id="duration" name="duration" />
+                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="gold">
+                              Try this plan
+                            </button>
+                        </form>
                         <div class="price">
                             <div id="ultimatePackage" {{if eq .currentUserPlan "Ultimate" }} class="color-bg" {{end}}>
                                 <h2><span class="sign">$</span><span id="ultimatePrice">79.99</span> <span class="month">/month</span></h2>
@@ -102,41 +127,10 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-4 col-sm-4">  
-                    <div class="single-package">
-                        <form role="form">
-                            {{ .csrfField }}
-                            <input type="hidden" id="code" name="code" />
-<!--                             <button type="button" class="btn btn-primary" name="plan" id="plan" value="bronze">
-                              Subscribe
-                            </button> -->
-                        </form>
-                    </div>
-                </div>
-                <div class="col-md-4 col-sm-4 single-service"">
-                    <form role="form">
-                        {{ .csrfField }}
-                        <input type="hidden" id="code" name="code" />
- <!--                        <button type="button" class="btn btn-primary" name="plan" id="plan" value="silver">
-                          Subscribe
-                        </button> -->
-                    </form>
-                </div>
-                <div class="col-md-4 col-sm-4 single-service">
-                    <form role="form">
-                        {{ .csrfField }}
-                        <input type="hidden" id="code" name="code" />
-<!--                         <button type="button" class="btn btn-primary" name="plan" id="plan" value="gold">
-                          Subscribe
-                        </button> -->
-                    </form>
-                </div>
-            </div>
         </div>
     </section>
     <script src="https://www.newsai.co/js/bootstrap.min.js"></script>
-    <script src="https://www.newsai.co/js/newsai.js"></script>
+    <script src="/static/js/plans.js"></script>
     <script type="text/javascript" src="https://js.stripe.com/v2/"></script>
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
