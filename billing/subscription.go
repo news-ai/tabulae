@@ -14,6 +14,7 @@ import (
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/client"
 
+	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 )
 
@@ -44,7 +45,7 @@ func AddFreeTrialToUser(r *http.Request, user models.User, plan string) (int64, 
 	return billingId, nil
 }
 
-func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billing, plan string, duration string, coupon string) error {
+func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billing, plan string, duration string, coupon string, originalPlan string) error {
 	c := appengine.NewContext(r)
 	httpClient := urlfetch.Client(c)
 	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
@@ -107,6 +108,7 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 	user.Save(c)
 
 	// Email confirmation
+	emails.SendInvoiceEmail(r, email, originalPlan, duration, expiresAt, billAmount, paidAmount)
 
 	return nil
 }

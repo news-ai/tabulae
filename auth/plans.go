@@ -356,10 +356,7 @@ func ConfirmPlanHandler() http.HandlerFunc {
 				plan = "gold"
 			}
 
-			log.Infof(c, "%v", plan)
-			log.Infof(c, "%v", duration)
-			log.Infof(c, "%v", coupon)
-			err = billing.AddPlanToUser(r, user, &userBilling, plan, duration, coupon)
+			err = billing.AddPlanToUser(r, user, &userBilling, plan, duration, coupon, originalPlan)
 			hasError := false
 			errorMessage := ""
 			if err != nil {

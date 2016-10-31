@@ -95,3 +95,34 @@ func SendListUploadedEmail(r *http.Request, email models.Email, listId string) (
 
 	return emails.SendInternalEmail(r, email, "b55f71f4-8f0a-4540-a2b5-d74ee5249da1", "Your list has been uploaded!", emailSubstitutes, 0)
 }
+
+func SendInvoiceEmail(r *http.Request, email models.Email, plan string, duration string, billDate string, billAmount string, paidAmount string) (bool, string, error) {
+	emailSubstitutes := []emails.EmailSubstitute{}
+
+	planSubstitute := emails.EmailSubstitute{}
+	planSubstitute.Name = "{PLAN}"
+	planSubstitute.Code = plan
+	emailSubstitutes = append(emailSubstitutes, planSubstitute)
+
+	durationSubstitute := emails.EmailSubstitute{} // a monthly or an annual
+	durationSubstitute.Name = "{DURATION}"
+	durationSubstitute.Code = duration
+	emailSubstitutes = append(emailSubstitutes, durationSubstitute)
+
+	billDateSubstitute := emails.EmailSubstitute{}
+	billDateSubstitute.Name = "{BILLDATE}"
+	billDateSubstitute.Code = billDate
+	emailSubstitutes = append(emailSubstitutes, billDateSubstitute)
+
+	billAmountSubstitute := emails.EmailSubstitute{}
+	billAmountSubstitute.Name = "{BILLAMOUNT}"
+	billAmountSubstitute.Code = billAmount
+	emailSubstitutes = append(emailSubstitutes, billAmountSubstitute)
+
+	planAmountSubstitute := emails.EmailSubstitute{}
+	planAmountSubstitute.Name = "{PAIDAMOUNT}"
+	planAmountSubstitute.Code = paidAmount
+	emailSubstitutes = append(emailSubstitutes, planAmountSubstitute)
+
+	return emails.SendInternalEmail(r, email, "434520df-7773-424a-8e4a-8a6bf1e24441", "Welcome to NewsAI Premium!", emailSubstitutes, 0)
+}
