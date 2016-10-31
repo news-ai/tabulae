@@ -124,5 +124,5 @@ func SendInvoiceEmail(r *http.Request, email models.Email, plan string, duration
 	planAmountSubstitute.Code = paidAmount
 	emailSubstitutes = append(emailSubstitutes, planAmountSubstitute)
 
-	return emails.SendInternalEmail(r, email, "434520df-7773-424a-8e4a-8a6bf1e24441", "Welcome to NewsAI Premium!", emailSubstitutes, 0)
+	return emails.SendInternalEmail(r, email, "743f5023-b9df-4d08-be22-611e56c01191", "Welcome to NewsAI Premium!", emailSubstitutes, 0)
 }

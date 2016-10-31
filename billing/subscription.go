@@ -3,6 +3,7 @@ package billing
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/client"
 
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 )
@@ -107,8 +109,26 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 	user.IsActive = true
 	user.Save(c)
 
-	// Email confirmation
-	emails.SendInvoiceEmail(r, email, originalPlan, duration, expiresAt, billAmount, paidAmount)
+	currentPrice := PlanAndDurationToPrice(originalPlan, duration)
+	billAmount := "$" + fmt.Sprintf("%0.2f", currentPrice)
+	paidAmount := "$" + fmt.Sprintf("%0.2f", currentPrice)
 
+	ExpiresAt := expiresAt.Format("2006-01-02")
+
+	emailDuration := "a monthly"
+	if duration == "annually" {
+		emailDuration = "an annual"
+	}
+
+	// Email confirmation
+	emailReceipt, _ := controllers.CreateEmailInternal(r, user.Email, "", "")
+	emailSent, emailId, err := emails.SendInvoiceEmail(r, emailReceipt, originalPlan, emailDuration, ExpiresAt, billAmount, paidAmount)
+	if !emailSent || err != nil {
+		// Redirect user back to login page
+		log.Errorf(c, "%v", "Receipt email was not sent for "+user.Email)
+		log.Errorf(c, "%v", err)
+	}
+
+	emailReceipt.MarkSent(c, emailId)
 	return nil
 }
