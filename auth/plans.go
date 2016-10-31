@@ -340,6 +340,15 @@ func ConfirmPlanHandler() http.HandlerFunc {
 
 		// If the user has a billing profile
 		if err == nil {
+			switch plan {
+			case "Personal":
+				plan = "bronze"
+			case "Business":
+				plan = "silver"
+			case "Ultimate":
+				plan = "gold"
+			}
+
 			log.Infof(c, "%v", plan)
 			log.Infof(c, "%v", duration)
 			log.Infof(c, "%v", coupon)

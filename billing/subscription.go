@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"os"
-	// "time"
+	"time"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
@@ -78,15 +78,11 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 		params.Plan = plan + "-yearly"
 	}
 
-	if user.IsAdmin {
-		params.Plan = "team-yearly"
-	}
-
 	if coupon != "" {
 		params.Coupon = coupon
 	}
 
-	_, err = sc.Subs.New(params)
+	newSub, err := sc.Subs.New(params)
 	if err != nil {
 		var stripeError StripeError
 		err = json.Unmarshal([]byte(err.Error()), &stripeError)
@@ -99,15 +95,17 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 		return errors.New(stripeError.Message)
 	}
 
-	// // Return if there are any errors
-	// expiresAt := time.Unix(newSub.PeriodEnd, 0)
-	// userBilling.Expires = expiresAt
-	// userBilling.StripePlanId = plan
-	// userBilling.Save(c)
+	// Return if there are any errors
+	expiresAt := time.Unix(newSub.PeriodEnd, 0)
+	userBilling.Expires = expiresAt
+	userBilling.StripePlanId = plan
+	userBilling.Save(c)
 
-	// // Set the user to be an active being on the platform again
-	// user.IsActive = true
-	// user.Save(c)
+	// Set the user to be an active being on the platform again
+	user.IsActive = true
+	user.Save(c)
+
+	// Email confirmation
 
 	return nil
 }
