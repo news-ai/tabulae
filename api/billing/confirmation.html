@@ -81,7 +81,8 @@
                                 <input type="hidden" id="code" name="code" />
                                 <input type="hidden" class="form-control" placeholder="Coupon" type="text" name="coupon" id="coupon">
 
-                                <p>Grand total: ${{.price}}</p>
+                                <p id="discount"></p>
+                                <p id="price"></p>
 
                                 <button type="button" class="btn btn-primary" id="checkout-button">Check out</button>
                             </form>
@@ -110,7 +111,16 @@
             email: '{{.userEmail}}'
         });
         Stripe.setPublishableKey('pk_live_BQgcXTDIgDIx8MllwCbQrASC');
-        var price = "{{.price}}";
+
+        function formatPrice(currentPrice, discount) {
+            var discountAmount = (discount.toFixed(3) / 100) * currentPrice;
+            currentPrice -= discountAmount;
+            document.getElementById("price").innerHTML = "Grand total: $" + currentPrice;
+        }
+
+        var price = parseFloat("{{.price}}");
+        formatPrice(price, 0.00);
+
         var missingCard = ("{{.missingCard}}" === 'true');
         if (missingCard) {
             // Disable both buttons
@@ -121,13 +131,26 @@
         $(document).ready(function() {
             var $form = $('#coupon-form');
             $form.submit(function(){
+                // Reset details
                 $('#coupon-valid').hide();
                 $('#coupon-errors').hide();
+                $('#discount').hide();
+                formatPrice(price, 0.00);
+
+                // Post data
                 $.post($(this).attr('action'), $(this).serialize(), function(response){
+                    // If coupon was applied then show the new price & how much coupon helped
                     $('#coupon-valid').text("Coupon was applied");
                     $('#coupon-valid').show();
-                    console.log(response);
+                    if(response && response.PercentageOff) {
+                        percentageDiscount = response.PercentageOff;
+                        document.getElementById("discount").innerHTML = "Percentage discount: " + response.PercentageOff + "%";
+                        $('#discount').show();
+                        formatPrice(price, parseFloat(response.PercentageOff));
+                    }
                 },'json').fail(function(jqXHR, textStatus, errorThrown) {
+                    // If fails then display error message & reset to normal price
+                    formatPrice(price, 0.00);
                     $('#coupon-errors').text("Coupon was invalid");
                     $('#coupon-errors').show();
                 });

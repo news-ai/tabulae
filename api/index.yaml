@@ -67,3 +67,16 @@ indexes:
     - name: CreatedBy
     - name: Created
       direction: desc
+
+- kind: MediaList
+  ancestor: no
+  properties:
+    - name: PublicList 
+    - name: Created
+      direction: desc
+
+- kind: MediaList
+  ancestor: no
+  properties:
+    - name: PublicList 
+    - name: Created
