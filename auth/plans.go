@@ -423,14 +423,14 @@ func BillingPageHandler() http.HandlerFunc {
 				userBilling.StripePlanId = "Ultimate"
 			}
 
-			userTrialExpires := userBilling.Expires.AddDate(0, 0, -1).Format("2006-01-02")
+			userPlanExpires := userBilling.Expires.AddDate(0, 0, -1).Format("2006-01-02")
 
 			data := map[string]interface{}{
-				"userBillingTrialExpires": userTrialExpires,
-				"userBilling":             userBilling,
-				"userEmail":               user.Email,
-				"userActive":              user.IsActive,
-				csrf.TemplateTag:          csrf.TemplateField(r),
+				"userBillingPlanExpires": userPlanExpires,
+				"userBilling":            userBilling,
+				"userEmail":              user.Email,
+				"userActive":             user.IsActive,
+				csrf.TemplateTag:         csrf.TemplateField(r),
 			}
 
 			t := template.New("billing.html")

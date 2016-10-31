@@ -51,10 +51,10 @@
                     <div class="colored-line-left">
                     </div>
                     {{if .userBilling.IsOnTrial}}
-                        <p>You are currently on a trial membership. You are on the {{.userBilling.StripePlanId}} plan. Your trial membership ends on the night of {{.userBillingTrialExpires}}.</p>
+                        <p>You are currently on a trial membership. You are on the {{.userBilling.StripePlanId}} plan. Your trial membership ends on the night of {{.userBillingPlanExpires}}.</p>
                     {{else}}
                         {{if .userActive}}
-                            <p>You have an active plan! You are on the {{.userBilling.StripePlanId}} plan. Thanks for using our platform :)</p>
+                            <p>You have an active plan! You are on the {{.userBilling.StripePlanId}} plan. Your membership ends on the night of {{.userBillingPlanExpires}}. Thanks for using our platform :)</p>
                         {{else}}
                             {{if .userBilling.HasTrial}}
                                 <p>Your subscription has ended. You were on the {{.userBilling.StripePlanId}} plan. Please visit the <a href="/api/billing/plans">Plans</a> tab on the top of the page to begin a new plan.</p>
