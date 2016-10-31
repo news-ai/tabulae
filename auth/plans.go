@@ -346,6 +346,7 @@ func ConfirmPlanHandler() http.HandlerFunc {
 
 		// If the user has a billing profile
 		if err == nil {
+			originalPlan := plan
 			switch plan {
 			case "Personal":
 				plan = "bronze"
@@ -359,13 +360,20 @@ func ConfirmPlanHandler() http.HandlerFunc {
 			log.Infof(c, "%v", duration)
 			log.Infof(c, "%v", coupon)
 			err = billing.AddPlanToUser(r, user, &userBilling, plan, duration, coupon)
+			hasError := false
+			errorMessage := ""
 			if err != nil {
+				hasError = true
 				// Return error to the "confirmation" page
+				errorMessage = err.Error()
 				log.Errorf(c, "%v", err)
-				return
 			}
 
 			data := map[string]interface{}{
+				"plan":           originalPlan,
+				"duration":       duration,
+				"hasError":       hasError,
+				"errorMessage":   errorMessage,
 				"userEmail":      user.Email,
 				csrf.TemplateTag: csrf.TemplateField(r),
 			}
