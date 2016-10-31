@@ -4,7 +4,7 @@ cron:
   schedule: every 1 hours
   target: default
 - description: "imported files removal job"
-  url: /tasks/removeExpiredSessions
+  url: /tasks/removeImportedFiles
   schedule: every day 04:00
   target: default
 # - description: "imported files removal job"
