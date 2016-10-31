@@ -48,17 +48,17 @@ type MediaList struct {
  */
 
 var fieldsMapValueToDescription = map[string]string{
-	"instagramfollowers": "The number of followers this contact has - updated on a daily basis",
-	"instagramfollowing": "The number of accounts this contact is following - updated on a daily basis",
-	"instagramlikes":     "The number of likes all the posts this contact is getting - updated on a daily basis",
-	"instagramcomments":  "The number of comments",
-	"instagramposts":     "The number of instagram posts this contact has posted - updated on a daily basis",
+	"instagramfollowers": "Updated on a daily basis",
+	"instagramfollowing": "Updated on a daily basis",
+	"instagramlikes":     "Updated on a daily basis",
+	"instagramcomments":  "Updated on a daily basis",
+	"instagramposts":     "Updated on a daily basis",
 
-	"twitterfollowers": "Twitter Followers",
-	"twitterfollowing": "Twitter Following",
-	"twitterlikes":     "Twitter Likes",
-	"twitterretweets":  "Twitter Retweets",
-	"twitterposts":     "Twitter Posts",
+	"twitterfollowers": "Updated on a daily basis",
+	"twitterfollowing": "Updated on a daily basis",
+	"twitterlikes":     "Updated on a daily basis",
+	"twitterretweets":  "Updated on a daily basis",
+	"twitterposts":     "Updated on a daily basis",
 }
 
 /*
