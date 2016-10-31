@@ -122,6 +122,7 @@ func init() {
 
 	// Add plan method
 	router.Handler("POST", "/api/billing/confirmation", CSRF(auth.ChoosePlanHandler()))
+	router.Handler("POST", "/api/billing/receipt", CSRF(auth.ConfirmPlanHandler()))
 
 	// Optional checks
 	router.Handler("POST", "/api/billing/check-coupon", auth.CheckCouponValid())

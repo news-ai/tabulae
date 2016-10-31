@@ -76,15 +76,17 @@
                 <div class="col-md-6">
                     <div class="demo-container">
                         <div class="form-container active">
-                            <form id="payment-form" method="post">
+                            <form id="payment-form" method="post" action="receipt">
                                 {{ .csrfField }}
                                 <input type="hidden" id="code" name="code" />
-                                <input type="hidden" class="form-control" placeholder="Coupon" type="text" name="coupon" id="coupon">
+                                <input type="hidden" class="form-control" placeholder="Plan" type="text" name="plan" id="plan" value="{{.plan}}">
+                                <input type="hidden" class="form-control" placeholder="Duration" type="text" name="duration" id="duration" value="{{.duration}}">
+                                <input type="hidden" class="form-control" placeholder="Coupon" type="text" name="coupon" id="couponForm" value="">
 
                                 <p id="discount"></p>
                                 <p id="price"></p>
 
-                                <button type="button" class="btn btn-primary" id="checkout-button">Check out</button>
+                                <button type="submit" class="btn btn-primary" id="checkout-button">Check out</button>
                             </form>
                         </div>
                     </div>
@@ -111,6 +113,9 @@
             email: '{{.userEmail}}'
         });
         Stripe.setPublishableKey('pk_live_BQgcXTDIgDIx8MllwCbQrASC');
+
+        $('#plan').attr('value', '{{.plan}}');
+        $('#duration').attr('value', '{{.duration}}');
 
         function formatPrice(currentPrice, discount) {
             var discountAmount = (discount.toFixed(3) / 100) * currentPrice;
@@ -147,11 +152,14 @@
                         document.getElementById("discount").innerHTML = "Percentage discount: " + response.PercentageOff + "%";
                         $('#discount').show();
                         formatPrice(price, parseFloat(response.PercentageOff));
+
+                        var couponName = $('#coupon').val();
+                        $('#couponForm').attr('value', couponName);
                     }
                 },'json').fail(function(jqXHR, textStatus, errorThrown) {
                     // If fails then display error message & reset to normal price
                     formatPrice(price, 0.00);
-                    $('#coupon-errors').text("Coupon was invalid");
+                    $('#coupon-errors').text("Coupon was invalid or has expired");
                     $('#coupon-errors').show();
                 });
                 return false;

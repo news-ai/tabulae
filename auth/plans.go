@@ -311,7 +311,7 @@ func ConfirmPlanHandler() http.HandlerFunc {
 		c := appengine.NewContext(r)
 		plan := r.FormValue("plan")
 		duration := r.FormValue("duration")
-		// coupon := r.FormValue("coupon")
+		coupon := r.FormValue("coupon")
 
 		// To check if there is a user logged in
 		user, err := controllers.GetCurrentUser(c, r)
@@ -340,28 +340,17 @@ func ConfirmPlanHandler() http.HandlerFunc {
 
 		// If the user has a billing profile
 		if err == nil {
-			switch plan {
-			case "bronze":
-				plan = "Personal"
-			case "silver":
-				plan = "Business"
-			case "gold":
-				plan = "Ultimate"
+			log.Infof(c, "%v", plan)
+			log.Infof(c, "%v", duration)
+			log.Infof(c, "%v", coupon)
+			err = billing.AddPlanToUser(r, user, &userBilling, plan, duration, coupon)
+			if err != nil {
+				// Return error to the "confirmation" page
+				log.Errorf(c, "%v", err)
+				return
 			}
-
-			missingCard := true
-			if len(userBilling.CardsOnFile) > 0 {
-				missingCard = false
-			}
-
-			// Recalculate the price so there's no alteration
-			price := billing.PlanAndDurationToPrice(plan, duration)
 
 			data := map[string]interface{}{
-				"missingCard":    missingCard,
-				"price":          price,
-				"plan":           plan,
-				"duration":       duration,
 				"userEmail":      user.Email,
 				csrf.TemplateTag: csrf.TemplateField(r),
 			}

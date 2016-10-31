@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	// "time"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
@@ -25,7 +26,7 @@ func AddFreeTrialToUser(r *http.Request, user models.User, plan string) (int64, 
 	// Create new customer in Stripe
 	params := &stripe.CustomerParams{
 		Email:    user.Email,
-		Plan:     plan,
+		Plan:     plan + "-trial",
 		Quantity: uint64(1),
 	}
 
@@ -43,7 +44,7 @@ func AddFreeTrialToUser(r *http.Request, user models.User, plan string) (int64, 
 	return billingId, nil
 }
 
-func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billing, plan string, duration string) error {
+func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billing, plan string, duration string, coupon string) error {
 	c := appengine.NewContext(r)
 	httpClient := urlfetch.Client(c)
 	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
@@ -53,6 +54,7 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 		var stripeError StripeError
 		err = json.Unmarshal([]byte(err.Error()), &stripeError)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return errors.New("We had an error getting your user")
 		}
 
@@ -67,8 +69,45 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 	}
 
 	// Start a new subscription without trial (they already went through the trial)
+	params := &stripe.SubParams{
+		Customer: customer.ID,
+		Plan:     plan,
+	}
 
-	// Return if there are any errors
+	if duration == "annually" {
+		params.Plan = plan + "-yearly"
+	}
+
+	if user.IsAdmin {
+		params.Plan = "team-yearly"
+	}
+
+	if coupon != "" {
+		params.Coupon = coupon
+	}
+
+	_, err = sc.Subs.New(params)
+	if err != nil {
+		var stripeError StripeError
+		err = json.Unmarshal([]byte(err.Error()), &stripeError)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return errors.New("We had an error setting your subscription")
+		}
+
+		log.Errorf(c, "%v", err)
+		return errors.New(stripeError.Message)
+	}
+
+	// // Return if there are any errors
+	// expiresAt := time.Unix(newSub.PeriodEnd, 0)
+	// userBilling.Expires = expiresAt
+	// userBilling.StripePlanId = plan
+	// userBilling.Save(c)
+
+	// // Set the user to be an active being on the platform again
+	// user.IsActive = true
+	// user.Save(c)
 
 	return nil
 }
