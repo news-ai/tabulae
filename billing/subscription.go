@@ -99,6 +99,7 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 	expiresAt := time.Unix(newSub.PeriodEnd, 0)
 	userBilling.Expires = expiresAt
 	userBilling.StripePlanId = plan
+	userBilling.IsOnTrial = false
 	userBilling.Save(c)
 
 	// Set the user to be an active being on the platform again

@@ -115,10 +115,16 @@ func ChoosePlanPageHandler() http.HandlerFunc {
 				userBilling.StripePlanId = "Ultimate"
 			}
 
+			userNotActiveNonTrialPlan := true
+			if user.IsActive && !userBilling.IsOnTrial {
+				userNotActiveNonTrialPlan = false
+			}
+
 			data := map[string]interface{}{
-				"currentUserPlan": userBilling.StripePlanId,
-				"userEmail":       user.Email,
-				csrf.TemplateTag:  csrf.TemplateField(r),
+				"userNotActiveNonTrialPlan": userNotActiveNonTrialPlan,
+				"currentUserPlan":           userBilling.StripePlanId,
+				"userEmail":                 user.Email,
+				csrf.TemplateTag:            csrf.TemplateField(r),
 			}
 
 			t := template.New("plans.html")

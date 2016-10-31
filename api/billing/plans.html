@@ -32,7 +32,7 @@
     <script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/ur8dbk9e';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()</script>
 </head>
 
-<body>
+<body class="grey-bg">
     <div id="top">
         <a href="https://tabulae.newsai.co/">Go back to Tabulae</a>
     </div>
@@ -47,6 +47,7 @@
         <div class="container">
             <div class="pricing-section-header">
                 <h2 class="dark-text">Plans</h2>
+            {{if .userNotActiveNonTrialPlan}}
                 <div class="annually-monthly-switch" onclick="changePricingClass()"><label id="annuallyLabel" class="active">Annually</label><div id="pricingClass" class="annually"><span></span></div><label id="monthlyLabel">Monthly</label></div>
                 <p>Save 20% off by signing up with our annual package!</p>
             </div>
@@ -127,6 +128,9 @@
                     </div>
                 </div>
             </div>
+            {{else}}
+                <p>You already have an active paid plan!</p>
+            {{end}}
         </div>
     </section>
     <script src="https://www.newsai.co/js/bootstrap.min.js"></script>
