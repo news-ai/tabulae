@@ -367,7 +367,18 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	if len(updatedMediaList.Contacts) > 0 {
 		mediaList.Contacts = updatedMediaList.Contacts
 	}
+
+	// If you want to empty a list
+	if len(mediaList.Contacts) > 0 && len(updatedMediaList.Contacts) == 0 {
+		mediaList.Contacts = updatedMediaList.Contacts
+	}
+
 	if len(updatedMediaList.FieldsMap) > 0 {
+		mediaList.FieldsMap = updatedMediaList.FieldsMap
+	}
+
+	// If you want to empty the fields map
+	if len(mediaList.FieldsMap) > 0 && len(updatedMediaList.FieldsMap) == 0 {
 		mediaList.FieldsMap = updatedMediaList.FieldsMap
 	}
 
