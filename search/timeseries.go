@@ -172,6 +172,26 @@ func SearchInstagramTimeseriesByUsernames(c context.Context, r *http.Request, us
 	return searchInstagramTimeseriesByUsernames(c, elasticQuery)
 }
 
+func SearchInstagramTimeseriesByUsernamesWithDays(c context.Context, r *http.Request, usernames []string, days int) ([]InstagramTimeseries, error) {
+	if len(usernames) == 0 {
+		return nil, nil
+	}
+
+	elasticQuery := ElasticMGetQuery{}
+	timeNow := time.Now()
+
+	for i := 0; i < len(usernames); i++ {
+		if usernames[i] != "" {
+			for x := 0; x < days; x++ {
+				dateFormatted := timeNow.AddDate(0, 0, -1*x).Format("2006-01-02")
+				elasticQuery.Ids = append(elasticQuery.Ids, usernames[i]+"-"+dateFormatted)
+			}
+		}
+	}
+
+	return searchInstagramTimeseriesByUsernames(c, elasticQuery)
+}
+
 func SearchTwitterTimeseriesByUsernames(c context.Context, r *http.Request, usernames []string) ([]TwitterTimeseries, error) {
 	if len(usernames) == 0 {
 		return nil, nil
@@ -183,6 +203,26 @@ func SearchTwitterTimeseriesByUsernames(c context.Context, r *http.Request, user
 		if usernames[i] != "" {
 			dateToday := time.Now().Format("2006-01-02")
 			elasticQuery.Ids = append(elasticQuery.Ids, usernames[i]+"-"+dateToday)
+		}
+	}
+
+	return searchTwitterTimeseriesByUsernames(c, elasticQuery)
+}
+
+func SearchTwitterTimeseriesByUsernamesWithDays(c context.Context, r *http.Request, usernames []string, days int) ([]TwitterTimeseries, error) {
+	if len(usernames) == 0 {
+		return nil, nil
+	}
+
+	elasticQuery := ElasticMGetQuery{}
+	timeNow := time.Now()
+
+	for i := 0; i < len(usernames); i++ {
+		if usernames[i] != "" {
+			for x := 0; x < days; x++ {
+				dateFormatted := timeNow.AddDate(0, 0, -1*x).Format("2006-01-02")
+				elasticQuery.Ids = append(elasticQuery.Ids, usernames[i]+"-"+dateFormatted)
+			}
 		}
 	}
 

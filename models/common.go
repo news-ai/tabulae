@@ -7,6 +7,11 @@ import (
 	"github.com/news-ai/cast"
 )
 
+type ContactIdsArray struct {
+	ContactIds []int64 `json:"ids"`
+	Days       int     `json:"days"`
+}
+
 func SetField(obj interface{}, name string, value interface{}) error {
 	if name == "id" {
 		name = "Id"

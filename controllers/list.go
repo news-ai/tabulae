@@ -153,7 +153,7 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 func GetPublicMediaLists(c context.Context, r *http.Request) ([]models.MediaList, interface{}, int, error) {
 	mediaLists := []models.MediaList{}
 
-	_, err := GetCurrentUser(c, r)
+	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.MediaList{}, nil, 0, err
@@ -177,7 +177,7 @@ func GetPublicMediaLists(c context.Context, r *http.Request) ([]models.MediaList
 	for i := 0; i < len(mediaLists); i++ {
 		mediaLists[i].Format(ks[i], "lists")
 
-		if mediaLists[i].PublicList {
+		if mediaLists[i].PublicList && user.Id != mediaLists[i].CreatedBy {
 			mediaLists[i].ReadOnly = true
 		}
 	}
@@ -698,6 +698,82 @@ func GetTweetsForList(c context.Context, r *http.Request, id string) (interface{
 	}
 
 	return tweets, nil, len(tweets), nil
+}
+
+func GetTwitterTimeseriesForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var contactIds models.ContactIdsArray
+	err := decoder.Decode(buf, &contactIds)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	twitterUsernames := []string{}
+
+	for i := 0; i < len(contactIds.ContactIds); i++ {
+		contact, err := getContact(c, r, contactIds.ContactIds[i])
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, nil, err
+		}
+
+		if contact.Twitter != "" {
+			twitterUsernames = append(twitterUsernames, contact.Twitter)
+		}
+	}
+
+	defaultDate := 7
+	if contactIds.Days != 0 {
+		defaultDate = contactIds.Days
+	}
+
+	twitterTimeseries, err := search.SearchTwitterTimeseriesByUsernamesWithDays(c, r, twitterUsernames, defaultDate)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	return twitterTimeseries, nil, nil
+}
+
+func GetInstagramTimeseriesForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var contactIds models.ContactIdsArray
+	err := decoder.Decode(buf, &contactIds)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	instagramUsernames := []string{}
+
+	for i := 0; i < len(contactIds.ContactIds); i++ {
+		contact, err := getContact(c, r, contactIds.ContactIds[i])
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, nil, err
+		}
+
+		if contact.Instagram != "" {
+			instagramUsernames = append(instagramUsernames, contact.Instagram)
+		}
+	}
+
+	defaultDate := 7
+	if contactIds.Days != 0 {
+		defaultDate = contactIds.Days
+	}
+
+	instagramTimeseries, err := search.SearchInstagramTimeseriesByUsernamesWithDays(c, r, instagramUsernames, defaultDate)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	return instagramTimeseries, nil, nil
 }
 
 func DuplicateList(c context.Context, r *http.Request, id string) (models.MediaList, interface{}, error) {
