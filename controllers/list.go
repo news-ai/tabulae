@@ -377,11 +377,6 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 		mediaList.FieldsMap = updatedMediaList.FieldsMap
 	}
 
-	// If you want to empty the fields map
-	if len(mediaList.FieldsMap) > 0 && len(updatedMediaList.FieldsMap) == 0 {
-		mediaList.FieldsMap = updatedMediaList.FieldsMap
-	}
-
 	// If new media list wants to be archived then archive it
 	if updatedMediaList.Archived == true {
 		mediaList.Archived = true
