@@ -336,6 +336,32 @@ func filterContact(c context.Context, r *http.Request, queryType, query string) 
 	return models.Contact{}, errors.New("No contact by this " + queryType)
 }
 
+func filterContactsForListId(c context.Context, r *http.Request, listId int64) ([]models.Contact, error) {
+	// Get an contact by a query type
+	ks, err := datastore.NewQuery("Contact").Filter("ListId =", listId).Filter("IsDeleted =", false).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, err
+	}
+
+	var contacts []models.Contact
+	contacts = make([]models.Contact, len(ks))
+	err = nds.GetMulti(c, ks, contacts)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, err
+	}
+
+	if len(contacts) > 0 {
+		for i := 0; i < len(contacts); i++ {
+			contacts[i].Format(ks[i], "contacts")
+		}
+		return contacts, nil
+	}
+
+	return []models.Contact{}, errors.New("No contact by this ListId")
+}
+
 /*
 * Normalization methods
  */
@@ -1087,6 +1113,7 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 		return nil, nil, err
 	}
 
+	// Update contact
 	contact, err := getContact(c, r, currentId)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -1108,6 +1135,24 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 
 	contact.IsDeleted = true
 	contact.Save(c, r)
+
+	// Remove the contact out of the mediaList. This is a safe measure in case
+	// The PATCH is not done to the list after. Data integrity.
+	mediaList, err := getMediaList(c, r, contact.ListId)
+	if err == nil {
+		contactIdPosition := -1
+		for i := 0; i < len(mediaList.Contacts); i++ {
+			if mediaList.Contacts[i] == contact.Id {
+				contactIdPosition = i
+				break
+			}
+		}
+
+		if contactIdPosition != -1 {
+			mediaList.Contacts = append(mediaList.Contacts[:contactIdPosition], mediaList.Contacts[contactIdPosition+1:]...)
+			mediaList.Save(c)
+		}
+	}
 
 	// Pubsub to remove ES contact
 	sync.ResourceSync(r, contact.Id, "Contact", "delete")

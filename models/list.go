@@ -32,6 +32,8 @@ type MediaList struct {
 
 	FieldsMap []CustomFieldsMap `json:"fieldsmap" datastore:",noindex"`
 
+	Tags []string `json:"tags" datastore:",noindex"`
+
 	CustomFields []string `json:"-" datastore:",noindex"`
 	Fields       []string `json:"-" datastore:",noindex"`
 

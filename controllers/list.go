@@ -71,6 +71,23 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 			if mediaList.CreatedBy != user.Id && !user.IsAdmin {
 				return models.MediaList{}, errors.New("Forbidden")
 			}
+
+			// If it is empty but there are still contacts by this list then populate them
+			// This is a data correction problem
+			if len(mediaList.Contacts) == 0 {
+				contacts, err := filterContactsForListId(c, r, mediaList.Id)
+				if err != nil {
+					return mediaList, nil
+				}
+
+				contactIds := []int64{}
+				for i := 0; i < len(contacts); i++ {
+					contactIds = append(contactIds, contacts[i].Id)
+				}
+
+				mediaList.Contacts = contactIds
+				mediaList.Save(c)
+			}
 		}
 
 		return mediaList, nil
@@ -368,13 +385,36 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 		mediaList.Contacts = updatedMediaList.Contacts
 	}
 
-	// If you want to empty a list
-	if len(mediaList.Contacts) > 0 && len(updatedMediaList.Contacts) == 0 {
-		mediaList.Contacts = updatedMediaList.Contacts
+	// Edge case for when you want to empty the list
+	contactsInList, err := filterContactsForListId(c, r, mediaList.Id)
+	if err == nil && len(contactsInList) == 0 {
+		mediaList.Contacts = []int64{}
+	}
+
+	// Edge case for when you want to empty the list & there's only 1 contact
+	if len(mediaList.Contacts) == 1 {
+		// Get the single contact that the mediaList has
+		singleContact, err := getContact(c, r, mediaList.Contacts[0])
+		if err == nil {
+			// If the singleContact has been deleted then we set the mediaList
+			// contacts to empty
+			if singleContact.IsDeleted {
+				mediaList.Contacts = []int64{}
+			}
+		}
 	}
 
 	if len(updatedMediaList.FieldsMap) > 0 {
 		mediaList.FieldsMap = updatedMediaList.FieldsMap
+	}
+
+	if len(updatedMediaList.Tags) > 0 {
+		mediaList.Tags = updatedMediaList.Tags
+	}
+
+	// If you want to empty a list
+	if len(mediaList.Tags) > 0 && len(updatedMediaList.Tags) == 0 {
+		mediaList.Tags = updatedMediaList.Tags
 	}
 
 	// If new media list wants to be archived then archive it
