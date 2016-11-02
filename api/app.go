@@ -214,6 +214,7 @@ func init() {
 	 */
 
 	// Tasks needing to have middleware
+	router.POST("/tasks/socialUsernameToDetails", tasks.SocialUsernameToDetails)
 	router.POST("/tasks/socialUsernameInvalid", tasks.SocialUsernameInvalid)
 	router.POST("/tasks/feedInvalid", tasks.FeedInvalid)
 
