@@ -86,6 +86,7 @@ func (ct *Contact) Create(c context.Context, r *http.Request, currentUser User) 
 	ct.CreatedBy = currentUser.Id
 	ct.Created = time.Now()
 	ct.Normalize()
+	ct.FormatName()
 
 	_, err := ct.Save(c, r)
 	return ct, err
@@ -100,6 +101,7 @@ func (ct *Contact) Save(c context.Context, r *http.Request) (*Contact, error) {
 	// Update the Updated time
 	ct.Updated = time.Now()
 	ct.Normalize()
+	ct.FormatName()
 
 	k, err := nds.Put(c, ct.key(c, "Contact"), ct)
 	if err != nil {
@@ -112,6 +114,26 @@ func (ct *Contact) Save(c context.Context, r *http.Request) (*Contact, error) {
 /*
 * Normalization methods
  */
+
+func (ct *Contact) FormatName() (*Contact, error) {
+	if len(ct.FirstName) > 0 && len(ct.LastName) == 0 {
+		if strings.Contains(ct.FirstName, ",") {
+			nameSplit := strings.Split(ct.FirstName, ", ")
+			if len(nameSplit) > 1 {
+				// Agarwal, Abhi as First Name
+				ct.FirstName = nameSplit[1]
+				ct.LastName = nameSplit[0]
+			}
+		} else if strings.Contains(ct.FirstName, " ") {
+			// Abhi Agarwal as First Name
+			nameSplit := strings.Split(ct.FirstName, " ")
+			if len(nameSplit) > 1 {
+				ct.FirstName = nameSplit[0]
+				ct.LastName = strings.Join(nameSplit[1:], " ")
+			}
+		}
+	}
+}
 
 func (ct *Contact) Normalize() (*Contact, error) {
 	ct.LinkedIn = strings.ToLower(utilities.StripQueryString(ct.LinkedIn))
