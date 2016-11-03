@@ -19,6 +19,12 @@ type ElasticCreatedByQuery struct {
 	} `json:"term"`
 }
 
+type ElasticClientQuery struct {
+	Term struct {
+		Client string `json:"data.Client"`
+	} `json:"term"`
+}
+
 type ElasticListIdQuery struct {
 	Term struct {
 		ListId int64 `json:"data.ListId"`
@@ -148,4 +154,10 @@ func InitializeElasticSearch() {
 	twitterTimeseriesElastic.Index = "timeseries"
 	twitterTimeseriesElastic.Type = "twitter"
 	elasticTwitterTimeseries = &twitterTimeseriesElastic
+
+	listTimeseriesElastic := elastic.Elastic{}
+	listTimeseriesElastic.BaseURL = newBaseURL
+	listTimeseriesElastic.Index = "lists"
+	listTimeseriesElastic.Type = "list"
+	elasticList = &listTimeseriesElastic
 }
