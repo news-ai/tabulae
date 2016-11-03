@@ -31,6 +31,12 @@ type ElasticTagQuery struct {
 	} `json:"match"`
 }
 
+type ElasticAllQuery struct {
+	Term struct {
+		All string `json:"_all"`
+	} `json:"match"`
+}
+
 type ElasticArchivedQuery struct {
 	Term struct {
 		Archived bool `json:"data.Archived"`

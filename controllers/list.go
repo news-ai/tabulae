@@ -165,7 +165,20 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 		if queryField != "" {
 			fieldSelector := strings.Split(queryField, ":")
 			if len(fieldSelector) != 2 {
-				return nil, nil, 0, errors.New("The format should be q=field:value")
+				selectedLists, err := search.SearchListsByAll(c, r, queryField, user.Id)
+				if err != nil {
+					return nil, nil, 0, err
+				}
+
+				selectedMediaLists := []models.MediaList{}
+				for i := 0; i < len(selectedLists); i++ {
+					singleMediaList, err := getMediaList(c, r, selectedLists[i].Id)
+					if err == nil {
+						selectedMediaLists = append(selectedMediaLists, singleMediaList)
+					}
+				}
+
+				return selectedMediaLists, nil, len(selectedMediaLists), nil
 			}
 
 			if fieldSelector[0] == "client" || fieldSelector[0] == "tag" {
