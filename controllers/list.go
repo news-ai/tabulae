@@ -161,15 +161,30 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 			mediaLists[i].AddNewCustomFieldsMapToOldLists(c)
 		}
 
-		// queryField := gcontext.Get(r, "q").(string)
-		// if queryField != "" {
-		// 	fieldSelector := strings.Split(queryField, ":")
-		// 	if len(fieldSelector) != 2 {
-		// 		return nil, nil, 0, errors.New("The format should be q=field:value")
-		// 	}
+		queryField := gcontext.Get(r, "q").(string)
+		if queryField != "" {
+			fieldSelector := strings.Split(queryField, ":")
+			if len(fieldSelector) != 2 {
+				return nil, nil, 0, errors.New("The format should be q=field:value")
+			}
 
-		// 	selectedLists := []models.MediaList{}
-		// }
+			if fieldSelector[0] == "client" {
+				selectedLists, err := search.SearchListsByClientName(c, r, fieldSelector[1], user.Id)
+				if err != nil {
+					return nil, nil, 0, err
+				}
+
+				selectedMediaLists := []models.MediaList{}
+				for i := 0; i < len(selectedLists); i++ {
+					singleMediaList, err := getMediaList(c, r, selectedLists[i].Id)
+					if err == nil {
+						selectedMediaLists = append(selectedMediaLists, singleMediaList)
+					}
+				}
+
+				return selectedMediaLists, nil, len(selectedMediaLists), nil
+			}
+		}
 	}
 
 	// If the user is not active then we block their media lists

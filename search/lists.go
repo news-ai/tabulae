@@ -22,11 +22,14 @@ type Lists struct {
 	Type string `json:"type"`
 
 	Archived   bool      `json:"archived"`
+	Subscribed bool      `json:"subscribed"`
+	PublicList bool      `json:"publiclist"`
 	FileUpload int64     `json:"fileupload"`
 	Created    time.Time `json:"created"`
 	Updated    time.Time `json:"updated"`
 	CreatedBy  int64     `json:"createdby"`
 	Client     string    `json:"client"`
+	Name       string    `json:"name"`
 	Id         int64     `json:"id"`
 }
 
@@ -84,6 +87,8 @@ func SearchListsByClientName(c context.Context, r *http.Request, clientName stri
 	elasticClientQuery := ElasticClientQuery{}
 	elasticClientQuery.Term.Client = clientName
 	elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticClientQuery)
+
+	elasticQuery.MinScore = float32(0.5)
 
 	return searchList(c, elasticQuery)
 }
