@@ -454,6 +454,15 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 		mediaList.Archived = false
 	}
 
+	// If new media list wants to be subscribed to then subscribe to it
+	if updatedMediaList.Subscribed == true {
+		mediaList.Subscribed = true
+	}
+
+	if mediaList.Subscribed == true && updatedMediaList.Subscribed == false {
+		mediaList.Subscribed = false
+	}
+
 	mediaList.Save(c)
 	sync.ResourceSync(r, mediaList.Id, "List", "create")
 	return mediaList, nil, nil

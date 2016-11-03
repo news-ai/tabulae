@@ -7,6 +7,10 @@ cron:
   url: /tasks/removeImportedFiles
   schedule: every day 04:00
   target: default
+- description: "remove expired users"
+  url: /tasks/makeUsersInactive
+  schedule: every 12 hours
+  target: default
 # - description: "imported files removal job"
 #   url: /tasks/removeImportedFiles
 #   schedule: every 12 hours

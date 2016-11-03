@@ -219,6 +219,7 @@ func init() {
 	router.POST("/tasks/feedInvalid", tasks.FeedInvalid)
 
 	// Tasks needing to not have middleware
+	http.HandleFunc("/tasks/makeUsersInactive", tasks.MakeUsersInactive)
 	http.HandleFunc("/tasks/removeExpiredSessions", gaeTasks.RemoveExpiredSessionsHandler)
 	http.HandleFunc("/tasks/removeImportedFiles", tasks.RemoveImportedFilesHandler)
 

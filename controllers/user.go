@@ -112,6 +112,29 @@ func getUsers(c context.Context, r *http.Request) ([]models.User, error) {
 	return users, nil
 }
 
+// Gets every single user
+func getUsersUnauthorized(c context.Context, r *http.Request) ([]models.User, error) {
+	query := datastore.NewQuery("User")
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.User{}, err
+	}
+
+	var users []models.User
+	users = make([]models.User, len(ks))
+	err = nds.GetMulti(c, ks, users)
+	if err != nil {
+		log.Infof(c, "%v", err)
+		return users, err
+	}
+
+	for i := 0; i < len(users); i++ {
+		users[i].Format(ks[i], "users")
+	}
+	return users, nil
+}
+
 /*
 * Filter methods
  */
@@ -161,6 +184,17 @@ func GetUsers(c context.Context, r *http.Request) ([]models.User, interface{}, i
 	}
 
 	return users, nil, len(users), nil
+}
+
+func GetUsersUnauthorized(c context.Context, r *http.Request) ([]models.User, error) {
+	// Get the current user
+	users, err := getUsersUnauthorized(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.User{}, err
+	}
+
+	return users, nil
 }
 
 func GetUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
