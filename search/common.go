@@ -27,7 +27,7 @@ type ElasticClientQuery struct {
 
 type ElasticTagQuery struct {
 	Term struct {
-		Tag string `json:"data.Tag"`
+		Tag string `json:"data.Tags"`
 	} `json:"match"`
 }
 
