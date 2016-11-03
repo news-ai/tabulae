@@ -160,6 +160,16 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 			mediaLists[i].Format(ks[i], "lists")
 			mediaLists[i].AddNewCustomFieldsMapToOldLists(c)
 		}
+
+		// queryField := gcontext.Get(r, "q").(string)
+		// if queryField != "" {
+		// 	fieldSelector := strings.Split(queryField, ":")
+		// 	if len(fieldSelector) != 2 {
+		// 		return nil, nil, 0, errors.New("The format should be q=field:value")
+		// 	}
+
+		// 	selectedLists := []models.MediaList{}
+		// }
 	}
 
 	// If the user is not active then we block their media lists
@@ -253,6 +263,7 @@ func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) 
 		return models.MediaList{}, nil, err
 	}
 
+	sync.ResourceSync(r, medialist.Id, "List", "create")
 	return medialist, nil, nil
 }
 
@@ -343,6 +354,7 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user models.User)
 	fashionFeed.PublicationId = 5308689770610688
 	fashionFeed.Create(c, r, user)
 
+	sync.ResourceSync(r, mediaList.Id, "List", "create")
 	return mediaList, nil, nil
 }
 
@@ -428,7 +440,7 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	}
 
 	mediaList.Save(c)
-	sync.ResourceSync(r, mediaList.Id, "List", "update")
+	sync.ResourceSync(r, mediaList.Id, "List", "create")
 	return mediaList, nil, nil
 }
 
@@ -453,7 +465,7 @@ func UpdateMediaListToPublic(c context.Context, r *http.Request, id string) (mod
 	mediaList.PublicList = !mediaList.PublicList
 
 	mediaList.Save(c)
-	sync.ResourceSync(r, mediaList.Id, "List", "update")
+	sync.ResourceSync(r, mediaList.Id, "List", "create")
 	return mediaList, nil, nil
 }
 
