@@ -30,6 +30,7 @@ type Lists struct {
 	CreatedBy  int64     `json:"createdby"`
 	Client     string    `json:"client"`
 	Name       string    `json:"name"`
+	Tags       []string  `json:"tags"`
 	Id         int64     `json:"id"`
 }
 
@@ -43,7 +44,7 @@ func (l *Lists) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchList(c context.Context, elasticQuery elastic.ElasticQueryMustShould) ([]Lists, error) {
+func searchList(c context.Context, elasticQuery elastic.ElasticQueryMust) ([]Lists, error) {
 	hits, err := elasticList.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -76,7 +77,7 @@ func SearchListsByClientName(c context.Context, r *http.Request, clientName stri
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	elasticQuery := elastic.ElasticQueryMustShould{}
+	elasticQuery := elastic.ElasticQueryMust{}
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
@@ -84,9 +85,13 @@ func SearchListsByClientName(c context.Context, r *http.Request, clientName stri
 	elasticCreatedByQuery.Term.CreatedBy = userId
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 
+	elasticArchivedQuery := ElasticArchivedQuery{}
+	elasticArchivedQuery.Term.Archived = false
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticArchivedQuery)
+
 	elasticClientQuery := ElasticClientQuery{}
 	elasticClientQuery.Term.Client = clientName
-	elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticClientQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticClientQuery)
 
 	elasticQuery.MinScore = float32(0.5)
 

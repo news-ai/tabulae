@@ -22,6 +22,12 @@ type ElasticCreatedByQuery struct {
 type ElasticClientQuery struct {
 	Term struct {
 		Client string `json:"data.Client"`
+	} `json:"match"`
+}
+
+type ElasticArchivedQuery struct {
+	Term struct {
+		Archived bool `json:"data.Archived"`
 	} `json:"term"`
 }
 
