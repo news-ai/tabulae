@@ -168,8 +168,8 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 				return nil, nil, 0, errors.New("The format should be q=field:value")
 			}
 
-			if fieldSelector[0] == "client" {
-				selectedLists, err := search.SearchListsByClientName(c, r, fieldSelector[1], user.Id)
+			if fieldSelector[0] == "client" || fieldSelector[0] == "tag" {
+				selectedLists, err := search.SearchListsByFieldSelector(c, r, fieldSelector[0], fieldSelector[1], user.Id)
 				if err != nil {
 					return nil, nil, 0, err
 				}

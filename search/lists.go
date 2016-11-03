@@ -94,6 +94,40 @@ func SearchListsByClientName(c context.Context, r *http.Request, clientName stri
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticClientQuery)
 
 	elasticQuery.MinScore = float32(0.5)
-
 	return searchList(c, elasticQuery)
+}
+
+func SearchListsByTag(c context.Context, r *http.Request, tag string, userId int64) ([]Lists, error) {
+	if tag == "" {
+		return []Lists{}, nil
+	}
+
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQueryMust{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery.Term.CreatedBy = userId
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
+
+	elasticArchivedQuery := ElasticArchivedQuery{}
+	elasticArchivedQuery.Term.Archived = false
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticArchivedQuery)
+
+	elasticTagQuery := ElasticTagQuery{}
+	elasticTagQuery.Term.Tag = tag
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticTagQuery)
+
+	elasticQuery.MinScore = float32(0.5)
+	return searchList(c, elasticQuery)
+}
+
+func SearchListsByFieldSelector(c context.Context, r *http.Request, fieldSelector string, query string, userId int64) ([]Lists, error) {
+	if fieldSelector == "client" {
+		return SearchListsByClientName(c, r, query, userId)
+	}
+	return SearchListsByTag(c, r, query, userId)
 }

@@ -25,6 +25,12 @@ type ElasticClientQuery struct {
 	} `json:"match"`
 }
 
+type ElasticTagQuery struct {
+	Term struct {
+		Tag string `json:"data.Tag"`
+	} `json:"match"`
+}
+
 type ElasticArchivedQuery struct {
 	Term struct {
 		Archived bool `json:"data.Archived"`
