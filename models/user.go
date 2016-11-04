@@ -41,6 +41,7 @@ type User struct {
 	EmailConfirmed          bool `json:"emailconfirmed"`
 
 	BillingId int64 `json:"-"`
+	TeamId    int64 `json:"-"`
 
 	IsAdmin  bool `json:"-"`
 	IsActive bool `json:"isactive"`

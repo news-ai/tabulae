@@ -13,6 +13,7 @@ type Team struct {
 	Base
 
 	Members []int64 `json:"members" apiModel:"User"`
+	Admins  []int64 `json:"admins" apiModel:"User"`
 }
 
 /*
