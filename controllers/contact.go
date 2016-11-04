@@ -89,6 +89,46 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 * Update methods
  */
 
+func updateSameEmailContacts(c context.Context, r *http.Request, contact *models.Contact) error {
+	sameEmailContacts, err := filterContactByEmailForUser(c, r, contact.Id)
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < len(sameEmailContacts); i++ {
+		sameEmailContacts[i].FirstName = contact.FirstName
+		sameEmailContacts[i].LastName = contact.LastName
+
+		sameEmailContacts[i].Notes = contact.Notes
+
+		sameEmailContacts[i].Employers = contact.Employers
+		sameEmailContacts[i].PastEmployers = contact.PastEmployers
+
+		sameEmailContacts[i].LinkedIn = contact.LinkedIn
+		sameEmailContacts[i].Twitter = contact.Twitter
+		sameEmailContacts[i].Instagram = contact.Instagram
+		sameEmailContacts[i].MuckRack = contact.MuckRack
+		sameEmailContacts[i].Website = contact.Website
+		sameEmailContacts[i].Blog = contact.Blog
+
+		sameEmailContacts[i].TwitterInvalid = contact.TwitterInvalid
+		sameEmailContacts[i].InstagramInvalid = contact.InstagramInvalid
+
+		sameEmailContacts[i].TwitterPrivate = contact.TwitterPrivate
+		sameEmailContacts[i].InstagramPrivate = contact.InstagramPrivate
+
+		sameEmailContacts[i].Location = contact.Location
+		sameEmailContacts[i].PhoneNumber = contact.PhoneNumber
+
+		sameEmailContacts[i].IsOutdated = contact.IsOutdated
+		sameEmailContacts[i].EmailBounced = contact.EmailBounced
+
+		sameEmailContacts[i].Save(c, r)
+	}
+
+	return nil
+}
+
 func updateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, interface{}, error) {
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
@@ -268,6 +308,11 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 		}
 	}
 
+	// err = updateSameEmailContacts(c, r, contact)
+	// if err != nil {
+	// 	log.Errorf(c, "%v", err)
+	// }
+
 	return *contact, nil, nil
 }
 
@@ -387,6 +432,44 @@ func filterContactByEmail(c context.Context, email string) ([]models.Contact, er
 	}
 
 	return contacts, nil
+}
+
+func filterContactByEmailForUser(c context.Context, r *http.Request, id int64) ([]models.Contact, error) {
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, err
+	}
+
+	contact, err := getContact(c, r, id)
+	if err != nil {
+		return []models.Contact{}, err
+	}
+
+	ks, err := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("Email =", contact.Email).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, err
+	}
+
+	var contacts []models.Contact
+	contacts = make([]models.Contact, len(ks))
+	err = nds.GetMulti(c, ks, contacts)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, err
+	}
+
+	// return everything but the current contact
+	fitleredContacts := []models.Contact{}
+	for i := 0; i < len(contacts); i++ {
+		contacts[i].Format(ks[i], "contacts")
+		if contacts[i].Id != contact.Id {
+			fitleredContacts = append(fitleredContacts, contacts[i])
+		}
+	}
+
+	return fitleredContacts, nil
 }
 
 func contactsToPublications(c context.Context, contacts []models.Contact) []models.Publication {

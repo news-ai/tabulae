@@ -56,13 +56,13 @@ type Contact struct {
 	// Custom fields
 	CustomFields []CustomContactField `json:"customfields" datastore:",noindex"`
 
-	// Parent contact
-	IsMasterContact bool  `json:"ismastercontact"`
-	ParentContact   int64 `json:"parent" apiModel:"Contact"`
-
 	// Is information outdated
 	IsOutdated   bool `json:"isoutdated"`
 	EmailBounced bool `json:"emailbounced"`
+
+	// Parent contact
+	IsMasterContact bool  `json:"ismastercontact"`
+	ParentContact   int64 `json:"parent" apiModel:"Contact"`
 
 	IsDeleted bool `json:"isdeleted"`
 	ReadOnly  bool `json:"readonly" datastore:"-"`
@@ -133,6 +133,8 @@ func (ct *Contact) FormatName() (*Contact, error) {
 			}
 		}
 	}
+
+	return ct, nil
 }
 
 func (ct *Contact) Normalize() (*Contact, error) {
