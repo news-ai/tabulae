@@ -64,7 +64,7 @@ func handleMediaList(c context.Context, r *http.Request, id string) (interface{}
 			val, included, count, err := controllers.GetMediaLists(c, r, true)
 			return api.BaseResponseHandler(val, included, count, err, r)
 		} else if id == "clients" {
-			val, included, count, err := controllers.GetMediaListsClients(c, r, true)
+			val, included, count, err := controllers.GetMediaListsClients(c, r)
 			return api.BaseResponseHandler(val, included, count, err, r)
 		} else if id == "public" {
 			val, included, count, err := controllers.GetPublicMediaLists(c, r)

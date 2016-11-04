@@ -204,6 +204,53 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 	return mediaLists, nil, len(mediaLists), nil
 }
 
+func GetMediaListsClients(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
+	clients := struct {
+		Clients []string `json:"clients"`
+	}{
+		[]string{},
+	}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return clients, nil, 0, err
+	}
+
+	query := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id).Filter("Archived =", false)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return clients, nil, 0, err
+	}
+
+	mediaLists := make([]models.MediaList, len(ks))
+	err = nds.GetMulti(c, ks, mediaLists)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return clients, nil, 0, err
+	}
+
+	for i := 0; i < len(mediaLists); i++ {
+		mediaLists[i].Format(ks[i], "lists")
+	}
+
+	uniqueClients := map[string]bool{}
+	for i := 0; i < len(mediaLists); i++ {
+		if mediaLists[i].Client != "" {
+			uniqueClients[mediaLists[i].Client] = true
+		}
+	}
+
+	keys := make([]string, 0, len(uniqueClients))
+	for k := range uniqueClients {
+		keys = append(keys, k)
+	}
+
+	clients.Clients = keys
+	return clients, nil, len(clients.Clients), nil
+}
+
 // Gets every single media list
 func GetPublicMediaLists(c context.Context, r *http.Request) ([]models.MediaList, interface{}, int, error) {
 	mediaLists := []models.MediaList{}
