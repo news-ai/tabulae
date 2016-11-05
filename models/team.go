@@ -12,6 +12,10 @@ import (
 type Team struct {
 	Base
 
+	AgencyId int64 `json:"agencyid" apiModel:"Agency"`
+
+	MaxMembers int `json:"maxmembers" apiModel:"User"`
+
 	Members []int64 `json:"members" apiModel:"User"`
 	Admins  []int64 `json:"admins" apiModel:"User"`
 }
