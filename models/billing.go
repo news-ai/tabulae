@@ -17,6 +17,7 @@ type Billing struct {
 	Expires      time.Time `json:"-"`
 	HasTrial     bool      `json:"-"`
 	IsOnTrial    bool      `json:"-"`
+	IsAgency     bool      `json:"-"`
 
 	CardsOnFile []string `json:"-"`
 }

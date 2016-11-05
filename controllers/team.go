@@ -87,3 +87,19 @@ func GetTeams(c context.Context, r *http.Request) ([]models.Team, interface{}, i
 
 	return teams, nil, len(teams), nil
 }
+
+func GetTeam(c context.Context, id string) (models.Team, interface{}, error) {
+	// Get the details of the current team
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Team{}, nil, err
+	}
+
+	team, err := getTeam(c, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Team{}, nil, err
+	}
+	return team, nil, nil
+}
