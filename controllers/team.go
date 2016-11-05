@@ -121,6 +121,10 @@ func CreateTeam(c context.Context, r *http.Request) ([]models.Team, interface{},
 		return []models.Team{}, nil, err
 	}
 
+	if !currentUser.IsAdmin {
+		return []models.Team{}, nil, errors.New("Forbidden")
+	}
+
 	decoder := ffjson.NewDecoder()
 	var team models.Team
 	err = decoder.Decode(buf, &team)

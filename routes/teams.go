@@ -34,6 +34,8 @@ func handleTeams(c context.Context, w http.ResponseWriter, r *http.Request) (int
 	case "GET":
 		val, included, count, err := controllers.GetTeams(c, r)
 		return api.BaseResponseHandler(val, included, count, err, r)
+	case "POST":
+		return api.BaseSingleResponseHandler(controllers.CreateTeam(c, r))
 	}
 	return nil, errors.New("method not implemented")
 }

@@ -12,6 +12,8 @@ import (
 type Team struct {
 	Base
 
+	Name string `json:"name"`
+
 	AgencyId int64 `json:"agencyid" apiModel:"Agency"`
 
 	MaxMembers int `json:"maxmembers" apiModel:"User"`
@@ -30,7 +32,6 @@ type Team struct {
 
 // Function to create a new team into App Engine
 func (t *Team) Create(c context.Context, r *http.Request, currentUser User) (*Team, error) {
-	t.Members = append(t.Members, currentUser.Id)
 	t.CreatedBy = currentUser.Id
 	t.Created = time.Now()
 

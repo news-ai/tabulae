@@ -148,6 +148,11 @@ func init() {
 	router.GET("/api/agencies", routes.AgenciesHandler)
 	router.GET("/api/agencies/:id", routes.AgencyHandler)
 
+	router.GET("/api/teams", routes.TeamsHandler)
+	router.POST("/api/teams", routes.TeamsHandler)
+	router.GET("/api/teams/:id", routes.TeamHandler)
+	router.GET("/api/teams/:id/:action", routes.TeamActionHandler)
+
 	router.GET("/api/publications", routes.PublicationsHandler)
 	router.POST("/api/publications", routes.PublicationsHandler)
 	router.GET("/api/publications/:id", routes.PublicationHandler)
