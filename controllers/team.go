@@ -12,6 +12,8 @@ import (
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
+
+	"github.com/news-ai/web/utilities"
 )
 
 /*
@@ -102,4 +104,55 @@ func GetTeam(c context.Context, id string) (models.Team, interface{}, error) {
 		return models.Team{}, nil, err
 	}
 	return team, nil, nil
+}
+
+/*
+* Create methods
+ */
+
+func CreateTeam(c context.Context, r *http.Request) ([]models.Team, interface{}, error) {
+	buf, _ := ioutil.ReadAll(r.Body)
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Team{}, nil, err
+	}
+
+	decoder := ffjson.NewDecoder()
+	var team models.Team
+	err = decoder.Decode(buf, &team)
+
+	// If it is an array and you need to do BATCH processing
+	if err != nil {
+		var teams []models.Team
+
+		arrayDecoder := ffjson.NewDecoder()
+		err = arrayDecoder.Decode(buf, &teams)
+
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return []models.Team{}, nil, err
+		}
+
+		newTeams := []models.Team{}
+		for i := 0; i < len(teams); i++ {
+			_, err = teams[i].Create(c, r, currentUser)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return []models.Team{}, nil, err
+			}
+			newTeams = append(newTeams, teams[i])
+		}
+
+		return newTeams, nil, err
+	}
+
+	// Create team
+	_, err = team.Create(c, r, currentUser)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Team{}, nil, err
+	}
+	return []models.Team{team}, nil, nil
 }
