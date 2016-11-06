@@ -381,6 +381,51 @@ func filterContact(c context.Context, r *http.Request, queryType, query string) 
 	return models.Contact{}, errors.New("No contact by this " + queryType)
 }
 
+func filterListsbyContactEmail(c context.Context, r *http.Request, email string) ([]models.MediaList, error) {
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.MediaList{}, err
+	}
+
+	ks, err := datastore.NewQuery("Contact").Filter("Email =", email).Filter("CreatedBy =", user.Id).Filter("IsDeleted =", false).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.MediaList{}, err
+	}
+
+	var contacts []models.Contact
+	contacts = make([]models.Contact, len(ks))
+	err = nds.GetMulti(c, ks, contacts)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.MediaList{}, err
+	}
+
+	mediaListsIds := []int64{}
+	mediaLists := []models.MediaList{}
+	if len(contacts) > 0 {
+		for i := 0; i < len(contacts); i++ {
+			if contacts[i].ListId != 0 {
+				mediaListsIds = append(mediaListsIds, contacts[i].ListId)
+			}
+		}
+
+		mediaListAdded := map[int64]bool{}
+		for i := 0; i < len(mediaListsIds); i++ {
+			if val, ok := mediaListAdded[mediaListsIds[i]]; ok {
+				singleMediaList, err := getMediaList(c, r, mediaListsIds[i])
+				if err == nil {
+					mediaLists = append(mediaLists, singleMediaList)
+					mediaListAdded[mediaListsIds[i]] = true
+				}
+			}
+		}
+	}
+
+	return []models.MediaList{}, errors.New("No media lists for this email")
+}
+
 func filterContactsForListId(c context.Context, r *http.Request, listId int64) ([]models.Contact, error) {
 	// Get an contact by a query type
 	ks, err := datastore.NewQuery("Contact").Filter("ListId =", listId).Filter("IsDeleted =", false).KeysOnly().GetAll(c, nil)
@@ -768,6 +813,33 @@ func GetEmailsForContact(c context.Context, r *http.Request, id string) (interfa
 	}
 
 	return emails, nil, len(emails), nil
+}
+
+func GetListsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	// To check if the user can access it
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	if contact.Email == "" {
+		return []models.MediaList{}, nil, 0, errors.New("Contact has no email")
+	}
+
+	mediaLists, err := filterListsbyContactEmail(c, r, contact.Email)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	return mediaLists, nil, len(mediaLists), nil
 }
 
 func GetHeadlinesForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
