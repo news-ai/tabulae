@@ -388,7 +388,7 @@ func filterListsbyContactEmail(c context.Context, r *http.Request, email string)
 		return []models.MediaList{}, err
 	}
 
-	ks, err := datastore.NewQuery("Contact").Filter("Email =", email).Filter("CreatedBy =", user.Id).Filter("IsDeleted =", false).KeysOnly().GetAll(c, nil)
+	ks, err := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("Email =", email).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.MediaList{}, err
@@ -406,21 +406,23 @@ func filterListsbyContactEmail(c context.Context, r *http.Request, email string)
 	mediaLists := []models.MediaList{}
 	if len(contacts) > 0 {
 		for i := 0; i < len(contacts); i++ {
-			if contacts[i].ListId != 0 {
+			if contacts[i].ListId != 0 && !contacts[i].IsDeleted {
 				mediaListsIds = append(mediaListsIds, contacts[i].ListId)
 			}
 		}
 
 		mediaListAdded := map[int64]bool{}
 		for i := 0; i < len(mediaListsIds); i++ {
-			if val, ok := mediaListAdded[mediaListsIds[i]]; ok {
+			if _, ok := mediaListAdded[mediaListsIds[i]]; !ok {
 				singleMediaList, err := getMediaList(c, r, mediaListsIds[i])
-				if err == nil {
+				if err == nil && !singleMediaList.Archived {
 					mediaLists = append(mediaLists, singleMediaList)
 					mediaListAdded[mediaListsIds[i]] = true
 				}
 			}
 		}
+
+		return mediaLists, nil
 	}
 
 	return []models.MediaList{}, errors.New("No media lists for this email")
