@@ -160,5 +160,16 @@ func CreateTeam(c context.Context, r *http.Request) ([]models.Team, interface{},
 		log.Errorf(c, "%v", err)
 		return []models.Team{}, nil, err
 	}
+
+	for i := 0; i < len(team.Members); i++ {
+		user, err := getUser(c, r, team.Members[i])
+		if err == nil && user.TeamId == 0 {
+			user.TeamId = team.Id
+			user.Save(c)
+		} else {
+			log.Errorf(c, "%v", err)
+		}
+	}
+
 	return []models.Team{team}, nil, nil
 }
