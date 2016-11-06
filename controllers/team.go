@@ -128,30 +128,13 @@ func CreateTeam(c context.Context, r *http.Request) ([]models.Team, interface{},
 	decoder := ffjson.NewDecoder()
 	var team models.Team
 	err = decoder.Decode(buf, &team)
-
-	// If it is an array and you need to do BATCH processing
 	if err != nil {
-		var teams []models.Team
+		log.Errorf(c, "%v", err)
+		return []models.Team{}, nil, err
+	}
 
-		arrayDecoder := ffjson.NewDecoder()
-		err = arrayDecoder.Decode(buf, &teams)
-
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return []models.Team{}, nil, err
-		}
-
-		newTeams := []models.Team{}
-		for i := 0; i < len(teams); i++ {
-			_, err = teams[i].Create(c, r, currentUser)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return []models.Team{}, nil, err
-			}
-			newTeams = append(newTeams, teams[i])
-		}
-
-		return newTeams, nil, err
+	if len(team.Members) > team.MaxMembers {
+		return []models.Team{}, nil, errors.New("The number of members is greater than the allowed number of members")
 	}
 
 	// Create team
@@ -161,15 +144,30 @@ func CreateTeam(c context.Context, r *http.Request) ([]models.Team, interface{},
 		return []models.Team{}, nil, err
 	}
 
+	// Add team Id to team members
+	// Validate member accounts
+	confirmMembers := []int64{}
 	for i := 0; i < len(team.Members); i++ {
 		user, err := getUser(c, r, team.Members[i])
 		if err == nil && user.TeamId == 0 {
+			confirmMembers = append(confirmMembers, user.Id)
 			user.TeamId = team.Id
 			user.Save(c)
-		} else {
-			log.Errorf(c, "%v", err)
 		}
 	}
+
+	// Validate admin accounts
+	confirmAdmins := []int64{}
+	for i := 0; i < len(team.Admins); i++ {
+		user, err := getUser(c, r, team.Admins[i])
+		if err == nil {
+			confirmAdmins = append(confirmAdmins, user.Id)
+		}
+	}
+
+	team.Members = confirmMembers
+	team.Admins = confirmAdmins
+	team.Save(c)
 
 	return []models.Team{team}, nil, nil
 }
