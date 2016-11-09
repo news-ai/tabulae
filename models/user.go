@@ -40,6 +40,8 @@ type User struct {
 	AgreeTermsAndConditions bool `json:"-"`
 	EmailConfirmed          bool `json:"emailconfirmed"`
 
+	GetDailyEmails bool `json:"getdailyemails"`
+
 	BillingId int64 `json:"-"`
 	TeamId    int64 `json:"teamid"`
 
@@ -65,6 +67,7 @@ func (u *User) Normalize() (*User, error) {
 func (u *User) Create(c context.Context, r *http.Request) (*User, error) {
 	// Create user
 	u.IsAdmin = false
+	u.GetDailyEmails = true
 	u.Created = time.Now()
 
 	u.Normalize()

@@ -414,6 +414,16 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 	utilities.UpdateIfNotBlank(&user.FirstName, updatedUser.FirstName)
 	utilities.UpdateIfNotBlank(&user.LastName, updatedUser.LastName)
 
+	// If new user wants to get daily emails
+	if updatedUser.GetDailyEmails == true {
+		user.GetDailyEmails = true
+	}
+
+	// If this person doesn't want to get daily emails anymore
+	if user.GetDailyEmails == true && updatedUser.GetDailyEmails == false {
+		user.GetDailyEmails = false
+	}
+
 	if len(updatedUser.Employers) > 0 {
 		user.Employers = updatedUser.Employers
 	}
