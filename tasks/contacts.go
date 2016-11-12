@@ -111,6 +111,7 @@ func SocialUsernameInvalid(w http.ResponseWriter, r *http.Request, _ httprouter.
 
 	contacts, err := controllers.FilterContacts(c, r, socialData.Network, socialData.Username)
 	if err != nil {
+		log.Errorf(c, "%v", socialData)
 		log.Errorf(c, "%v", err)
 		w.WriteHeader(500)
 		return
