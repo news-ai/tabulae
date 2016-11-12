@@ -14,6 +14,7 @@ var (
 	ContactsTopicID     = "datastore-sync-contacts-functions"
 	PublicationsTopicID = "datastore-sync-publications-functions"
 	ListsTopicID        = "datastore-sync-lists-functions"
+	UsersTopicID        = "datastore-sync-users-functions"
 	TwitterTopicID      = "process-twitter-feed"
 	InstagramTopicID    = "process-instagram-feed"
 	RSSFeedTopicID      = "process-rss-feed"

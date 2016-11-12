@@ -17,6 +17,7 @@ import (
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/permissions"
 	"github.com/news-ai/web/utilities"
@@ -315,6 +316,8 @@ func RegisterUser(r *http.Request, user models.User) (models.User, bool, error) 
 			return user, false, err
 		}
 
+		sync.ResourceSync(r, user.Id, "User", "create")
+
 		// Set the user
 		gcontext.Set(r, "user", user)
 		Update(c, r, &user)
@@ -429,6 +432,7 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 	}
 
 	user.Save(c)
+	sync.ResourceSync(r, user.Id, "User", "create")
 	return user, nil, nil
 }
 
