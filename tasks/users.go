@@ -8,6 +8,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/controllers"
+	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/errors"
 )
@@ -34,6 +35,7 @@ func MakeUsersInactive(w http.ResponseWriter, r *http.Request) {
 			if billing.Expires.Before(time.Now()) {
 				users[i].IsActive = false
 				users[i].Save(c)
+				sync.ResourceSync(r, users[i].Id, "User", "create")
 
 				billing.IsOnTrial = false
 				billing.Save(c)
