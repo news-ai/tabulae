@@ -126,3 +126,8 @@ func SendInvoiceEmail(r *http.Request, email models.Email, plan string, duration
 
 	return emails.SendInternalEmail(r, email, "743f5023-b9df-4d08-be22-611e56c01191", "Welcome to NewsAI Premium!", emailSubstitutes, 0)
 }
+
+func SendTrialExpiresTomorrowEmail(r *http.Request, email models.Email) (bool, string, error) {
+	emailSubstitutes := []emails.EmailSubstitute{}
+	return emails.SendInternalEmail(r, email, "07ac880f-25c1-4472-b553-22d0f9deb7b3", "Your NewsAI trial ends tomorrow :(", emailSubstitutes, 0)
+}

@@ -19,6 +19,8 @@ type Billing struct {
 	IsOnTrial    bool      `json:"-"`
 	IsAgency     bool      `json:"-"`
 
+	TrialEmailSent bool `json:"-"`
+
 	CardsOnFile []string `json:"-"`
 }
 
