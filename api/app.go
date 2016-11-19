@@ -184,6 +184,7 @@ func init() {
 	router.GET("/api/emails/:id", routes.EmailHandler)
 	router.PATCH("/api/emails/:id", routes.EmailHandler)
 	router.GET("/api/emails/:id/:action", routes.EmailActionHandler)
+	router.POST("/api/emails/:id/:action", routes.EmailActionHandler)
 
 	router.GET("/api/templates", routes.TemplatesHandler)
 	router.POST("/api/templates", routes.TemplatesHandler)

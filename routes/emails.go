@@ -12,6 +12,7 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 
 	"github.com/news-ai/tabulae/controllers"
+	"github.com/news-ai/tabulae/files"
 
 	"github.com/news-ai/web/api"
 	nError "github.com/news-ai/web/errors"

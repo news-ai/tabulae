@@ -77,6 +77,9 @@ func UploadImage(r *http.Request, fileName string, file io.Reader, userId, email
 	wc.ACL = []storage.ACLRule{{Entity: storage.ACLEntity("project-owners-newsai-1166"), Role: storage.RoleOwner}}
 	wc.ACL = append(wc.ACL, storage.ACLRule{Entity: storage.AllUsers, Role: storage.RoleReader})
 
+	wc.CacheControl = "public, max-age=86400"
+	wc.ContentDisposition = "inline"
+
 	// Upload the file
 	data, err := ioutil.ReadAll(file)
 	if _, err := wc.Write(data); err != nil {
