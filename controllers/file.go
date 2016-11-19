@@ -129,10 +129,14 @@ func FilterFileByImported(c context.Context, r *http.Request) ([]models.File, er
 		return []models.File{}, err
 	}
 
+	nonImageFiles := []models.File{}
 	for i := 0; i < len(files); i++ {
-		files[i].Format(ks[i], "files")
+		if files[i].Url == "" {
+			files[i].Format(ks[i], "files")
+			nonImageFiles = append(nonImageFiles, files[i])
+		}
 	}
-	return files, nil
+	return nonImageFiles, nil
 }
 
 /*
