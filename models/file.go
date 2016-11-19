@@ -16,6 +16,8 @@ type File struct {
 	ListId   int64  `json:"listid" apiModel:"MediaList"`
 	EmailId  int64  `json:"emailid" apiModel:"Email"`
 
+	Url string `json:"url"`
+
 	Order []string `json:"order" datastore:",noindex"`
 
 	Imported   bool `json:"imported"`

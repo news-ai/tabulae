@@ -51,3 +51,45 @@ func UploadFile(r *http.Request, fileName string, file io.Reader, userId, listId
 	}
 	return val, nil
 }
+
+func UploadImage(r *http.Request, fileName string, file io.Reader, userId, emailId, contentType string) (models.File, error) {
+	c := appengine.NewContext(r)
+
+	bucket, err := getImageStorageBucket(r, "tabulae-email-images")
+	if err != nil {
+		return models.File{}, err
+	}
+
+	client, err := storage.NewClient(c)
+	if err != nil {
+		return models.File{}, err
+	}
+	defer client.Close()
+
+	// Setup the bucket to upload the file
+	clientBucket := client.Bucket(bucket)
+	wc := clientBucket.Object(fileName).NewWriter(c)
+	wc.ContentType = contentType
+	wc.Metadata = map[string]string{
+		"x-goog-meta-userid":  userId,
+		"x-goog-meta-emailId": emailId,
+	}
+	wc.ACL = []storage.ACLRule{{Entity: storage.ACLEntity("project-owners-newsai-1166"), Role: storage.RoleOwner}}
+	wc.ACL = append(wc.ACL, storage.ACLRule{Entity: storage.AllUsers, Role: storage.RoleReader})
+
+	// Upload the file
+	data, err := ioutil.ReadAll(file)
+	if _, err := wc.Write(data); err != nil {
+		return models.File{}, err
+	}
+	if err := wc.Close(); err != nil {
+		return models.File{}, err
+	}
+
+	val, err := controllers.CreateImageFile(r, fileName, emailId, userId, bucket)
+	if err != nil {
+		return models.File{}, err
+	}
+
+	return val, nil
+}

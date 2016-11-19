@@ -26,6 +26,15 @@ func getStorageBucket(r *http.Request, bucket string) (string, error) {
 	return bucket, nil
 }
 
+func getImageStorageBucket(r *http.Request, bucket string) (string, error) {
+	c := appengine.NewContext(r)
+	// In development mode this returns the non-production URL
+	if appengine.IsDevAppServer() {
+		return "staging-image.newsai-1166.appspot.com", nil
+	}
+	return bucket, nil
+}
+
 func getFile(r *http.Request, fileId string) (models.File, error) {
 	c := appengine.NewContext(r)
 	file, _, err := controllers.GetFile(c, r, fileId)

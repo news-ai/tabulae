@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"golang.org/x/net/context"
@@ -182,6 +183,48 @@ func CreateFile(r *http.Request, fileName string, listid string, createdby strin
 	}
 	mediaList.FileUpload = file.Id
 	mediaList.Save(c)
+
+	return file, nil
+}
+
+func CreateImageFile(r *http.Request, fileName string, emailid string, createdby string, bucket string) (models.File, error) {
+	// Since upload.go uses a different appengine package
+	c := appengine.NewContext(r)
+
+	// Convert listId and createdById from string to int64
+	emailId, err := utilities.StringIdToInt(emailid)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.File{}, err
+	}
+	createdBy, err := utilities.StringIdToInt(createdby)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.File{}, err
+	}
+
+	publicURL := "https://storage.googleapis.com/%s/%s"
+
+	// Initialize file
+	file := models.File{}
+	file.FileName = fileName
+	file.EmailId = emailId
+	file.CreatedBy = createdBy
+	file.FileExists = true
+	file.Url = fmt.Sprintf(publicURL, bucket, fileName)
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return file, err
+	}
+
+	// Create file
+	_, err = file.Create(c, r, currentUser)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.File{}, err
+	}
 
 	return file, nil
 }
