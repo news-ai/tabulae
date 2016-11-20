@@ -430,7 +430,19 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 		return email, nil, errors.New("Invalid HTML")
 	}
 
-	emailSent, emailId, err := emails.SendEmail(r, email, user)
+	files := []models.File{}
+	if email.Attachments > 0 {
+		for i := 0; i < len(email.Attachments); i++ {
+			file, err := getFile(c, r, email.Attachments[i])
+			if err == nil {
+				files = append(files, file)
+			} else {
+				log.Errorf(c, "%v", err)
+			}
+		}
+	}
+
+	emailSent, emailId, err := emails.SendEmail(r, email, user, files)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return email, nil, err

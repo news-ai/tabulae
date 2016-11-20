@@ -29,6 +29,8 @@ func handleEmailAction(c context.Context, r *http.Request, id string, action str
 		switch action {
 		case "upload":
 			return api.BaseSingleResponseHandler(files.HandleEmailImageActionUpload(c, r, id))
+		case "attach":
+			return api.BaseSingleResponseHandler(files.HandleEmailAttachActionUpload(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")

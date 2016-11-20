@@ -109,6 +109,15 @@ func GetFile(c context.Context, r *http.Request, id string) (models.File, interf
 	return file, nil, nil
 }
 
+func GetFileById(c context.Context, r *http.Request, id int64) (models.File, interface{}, error) {
+	file, err := getFile(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.File{}, nil, err
+	}
+	return file, nil, nil
+}
+
 func FilterFileByImported(c context.Context, r *http.Request) ([]models.File, error) {
 	// Get a publication by the URL
 	ks, err := datastore.NewQuery("File").Filter("Imported =", true).KeysOnly().GetAll(c, nil)
@@ -229,6 +238,55 @@ func CreateImageFile(r *http.Request, fileName string, emailid string, createdby
 		log.Errorf(c, "%v", err)
 		return models.File{}, err
 	}
+
+	return file, nil
+}
+
+func CreateAttachmentFile(r *http.Request, fileName string, emailid string, createdby string) (models.File, error) {
+	// Since upload.go uses a different appengine package
+	c := appengine.NewContext(r)
+
+	// Convert listId and createdById from string to int64
+	emailId, err := utilities.StringIdToInt(emailid)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.File{}, err
+	}
+	createdBy, err := utilities.StringIdToInt(createdby)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.File{}, err
+	}
+
+	// Initialize file
+	file := models.File{}
+	file.FileName = fileName
+	file.EmailId = emailId
+	file.CreatedBy = createdBy
+	file.FileExists = true
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return file, err
+	}
+
+	// Create file
+	_, err = file.Create(c, r, currentUser)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.File{}, err
+	}
+
+	// Attach attachment to email
+	email, err := getEmail(c, r, emailId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.File{}, err
+	}
+
+	email.Attachments = append(email.Attachments, file.Id)
+	email.Save(c)
 
 	return file, nil
 }

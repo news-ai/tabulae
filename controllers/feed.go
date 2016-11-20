@@ -101,6 +101,15 @@ func GetFeed(c context.Context, r *http.Request, id string) (models.Feed, interf
 	return feed, nil, nil
 }
 
+func GetFeedById(c context.Context, r *http.Request, id int64) (models.Feed, interface{}, error) {
+	feed, err := getFeed(c, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Feed{}, nil, err
+	}
+	return feed, nil, nil
+}
+
 func GetFeeds(c context.Context, r *http.Request) ([]models.Feed, interface{}, int, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {

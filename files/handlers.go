@@ -17,6 +17,35 @@ import (
 	"github.com/news-ai/web/utilities"
 )
 
+func HandleEmailAttachActionUpload(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	user, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	userId := strconv.FormatInt(user.Id, 10)
+
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	noSpaceFileName := ""
+	if handler.Filename != "" {
+		noSpaceFileName = strings.Replace(handler.Filename, " ", "", -1)
+	}
+
+	fileName := strings.Join([]string{userId, id, utilities.RandToken(), noSpaceFileName}, "-")
+	val, err := UploadAttachment(r, fileName, file, userId, id, handler.Header.Get("Content-Type"))
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	return val, nil, nil
+}
+
 func HandleMediaListActionUpload(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
 	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
