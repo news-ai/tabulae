@@ -23,7 +23,7 @@ func RemoveImportedFilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for i := 0; i < len(importedFiles); i++ {
-		err = files.DeleteFile(r, importedFiles[i].FileName)
+		err = files.DeleteFile(r, importedFiles[i])
 		if err != nil {
 			if err.Error() == "storage: object doesn't exist" {
 				importedFiles[i].FileExists = false
