@@ -416,6 +416,7 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 
 	utilities.UpdateIfNotBlank(&user.FirstName, updatedUser.FirstName)
 	utilities.UpdateIfNotBlank(&user.LastName, updatedUser.LastName)
+	utilities.UpdateIfNotBlank(&user.EmailSignature, updatedUser.EmailSignature)
 
 	// If new user wants to get daily emails
 	if updatedUser.GetDailyEmails == true {

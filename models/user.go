@@ -45,6 +45,8 @@ type User struct {
 	BillingId int64 `json:"-"`
 	TeamId    int64 `json:"teamid"`
 
+	EmailSignature string `json:"emailsignature"`
+
 	IsAdmin  bool `json:"-"`
 	IsActive bool `json:"isactive"`
 }

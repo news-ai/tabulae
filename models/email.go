@@ -38,6 +38,7 @@ type Email struct {
 	Clicked       int    `json:"clicked"`
 	Opened        int    `json:"opened"`
 	Spam          bool   `json:"spam"`
+	Cancel        bool   `json:"cancel"`
 
 	IsSent bool `json:"issent"`
 }

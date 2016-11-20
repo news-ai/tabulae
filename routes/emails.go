@@ -24,6 +24,8 @@ func handleEmailAction(c context.Context, r *http.Request, id string, action str
 		switch action {
 		case "send":
 			return api.BaseSingleResponseHandler(controllers.SendEmail(c, r, id))
+		case "cancel":
+			return api.BaseSingleResponseHandler(controllers.CancelEmail(c, r, id))
 		}
 	case "POST":
 		switch action {

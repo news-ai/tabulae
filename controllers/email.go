@@ -215,7 +215,20 @@ func GetEmail(c context.Context, r *http.Request, id string) (models.Email, inte
 		log.Errorf(c, "%v", err)
 		return models.Email{}, nil, err
 	}
-	return email, nil, nil
+
+	includedFiles := []models.File{}
+	if len(email.Attachments) > 0 {
+		for i := 0; i < len(email.Attachments); i++ {
+			file, err := getFile(c, r, email.Attachments[i])
+			if err == nil {
+				includedFiles = append(includedFiles, file)
+			} else {
+				log.Errorf(c, "%v", err)
+			}
+		}
+	}
+
+	return email, includedFiles, nil
 }
 
 /*
@@ -401,6 +414,23 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, inter
 /*
 * Action methods
  */
+
+func CancelEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
+	email, _, err := GetEmail(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Email{}, nil, err
+	}
+
+	err = emails.CancelEmail(r, email)
+	if err != nil {
+		return email, nil, errors.New("Could not cancel")
+	}
+
+	email.Cancel = true
+	email.Save(c)
+	return email, nil, nil
+}
 
 func SendEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
 	email, _, err := GetEmail(c, r, id)
