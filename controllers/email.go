@@ -449,6 +449,12 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 	}
 
 	if emailSent {
+		// Set attachments for deletion
+		for i := 0; i < len(files); i++ {
+			files[i].Imported = true
+			files[i].Save(c)
+		}
+
 		val, err := email.MarkSent(c, emailId)
 		if err != nil {
 			log.Errorf(c, "%v", err)
