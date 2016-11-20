@@ -52,7 +52,7 @@ func UploadFile(r *http.Request, fileName string, file io.Reader, userId, listId
 	return val, nil
 }
 
-func UploadImage(r *http.Request, fileName string, file io.Reader, userId, emailId, contentType string) (models.File, error) {
+func UploadImage(r *http.Request, originalFilename string, fileName string, file io.Reader, userId, emailId, contentType string) (models.File, error) {
 	c := appengine.NewContext(r)
 
 	bucket, err := getImageStorageBucket(r, "tabulae-email-images")
@@ -89,7 +89,7 @@ func UploadImage(r *http.Request, fileName string, file io.Reader, userId, email
 		return models.File{}, err
 	}
 
-	val, err := controllers.CreateImageFile(r, fileName, emailId, userId, bucket)
+	val, err := controllers.CreateImageFile(r, originalFilename, fileName, emailId, userId, bucket)
 	if err != nil {
 		return models.File{}, err
 	}
@@ -97,7 +97,7 @@ func UploadImage(r *http.Request, fileName string, file io.Reader, userId, email
 	return val, nil
 }
 
-func UploadAttachment(r *http.Request, fileName string, file io.Reader, userId, emailId, contentType string) (models.File, error) {
+func UploadAttachment(r *http.Request, originalFilename, fileName string, file io.Reader, userId, emailId, contentType string) (models.File, error) {
 	c := appengine.NewContext(r)
 
 	bucket, err := getImageStorageBucket(r, "tabulae-email-attachment")
@@ -131,7 +131,7 @@ func UploadAttachment(r *http.Request, fileName string, file io.Reader, userId, 
 		return models.File{}, err
 	}
 
-	val, err := controllers.CreateAttachmentFile(r, fileName, emailId, userId)
+	val, err := controllers.CreateAttachmentFile(r, originalFilename, fileName, emailId, userId)
 	if err != nil {
 		return models.File{}, err
 	}

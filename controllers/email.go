@@ -431,7 +431,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 	}
 
 	files := []models.File{}
-	if email.Attachments > 0 {
+	if len(email.Attachments) > 0 {
 		for i := 0; i < len(email.Attachments); i++ {
 			file, err := getFile(c, r, email.Attachments[i])
 			if err == nil {

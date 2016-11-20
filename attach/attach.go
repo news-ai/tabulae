@@ -32,7 +32,7 @@ func ReadAttachment(r *http.Request, file models.File) ([]byte, string, string, 
 		return nil, "", "", err
 	}
 
-	return data, rc.ContentType(), file.FileName, nil
+	return data, rc.ContentType(), file.OriginalName, nil
 }
 
 func GetAttachmentsForEmail(r *http.Request, email models.Email, files []models.File) ([][]byte, []string, []string, error) {

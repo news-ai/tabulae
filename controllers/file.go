@@ -200,7 +200,7 @@ func CreateFile(r *http.Request, fileName string, listid string, createdby strin
 	return file, nil
 }
 
-func CreateImageFile(r *http.Request, fileName string, emailid string, createdby string, bucket string) (models.File, error) {
+func CreateImageFile(r *http.Request, originalFilename string, fileName string, emailid string, createdby string, bucket string) (models.File, error) {
 	// Since upload.go uses a different appengine package
 	c := appengine.NewContext(r)
 
@@ -220,6 +220,7 @@ func CreateImageFile(r *http.Request, fileName string, emailid string, createdby
 
 	// Initialize file
 	file := models.File{}
+	file.OriginalName = originalFilename
 	file.FileName = fileName
 	file.EmailId = emailId
 	file.CreatedBy = createdBy
@@ -242,7 +243,7 @@ func CreateImageFile(r *http.Request, fileName string, emailid string, createdby
 	return file, nil
 }
 
-func CreateAttachmentFile(r *http.Request, fileName string, emailid string, createdby string) (models.File, error) {
+func CreateAttachmentFile(r *http.Request, originalFilename string, fileName string, emailid string, createdby string) (models.File, error) {
 	// Since upload.go uses a different appengine package
 	c := appengine.NewContext(r)
 
@@ -260,6 +261,7 @@ func CreateAttachmentFile(r *http.Request, fileName string, emailid string, crea
 
 	// Initialize file
 	file := models.File{}
+	file.OriginalName = originalFilename
 	file.FileName = fileName
 	file.EmailId = emailId
 	file.CreatedBy = createdBy

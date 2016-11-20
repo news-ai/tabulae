@@ -37,7 +37,7 @@ func HandleEmailAttachActionUpload(c context.Context, r *http.Request, id string
 	}
 
 	fileName := strings.Join([]string{userId, id, utilities.RandToken(), noSpaceFileName}, "-")
-	val, err := UploadAttachment(r, fileName, file, userId, id, handler.Header.Get("Content-Type"))
+	val, err := UploadAttachment(r, handler.Filename, fileName, file, userId, id, handler.Header.Get("Content-Type"))
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
@@ -95,7 +95,7 @@ func HandleEmailImageActionUpload(c context.Context, r *http.Request, id string)
 	}
 
 	fileName := strings.Join([]string{userId, id, utilities.RandToken(), noSpaceFileName}, "-")
-	val, err := UploadImage(r, fileName, file, userId, id, handler.Header.Get("Content-Type"))
+	val, err := UploadImage(r, handler.Filename, fileName, file, userId, id, handler.Header.Get("Content-Type"))
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err

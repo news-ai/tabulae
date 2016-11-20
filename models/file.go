@@ -12,9 +12,10 @@ import (
 type File struct {
 	Base
 
-	FileName string `json:"filename"`
-	ListId   int64  `json:"listid" apiModel:"MediaList"`
-	EmailId  int64  `json:"emailid" apiModel:"Email"`
+	OriginalName string `json:"originalname"`
+	FileName     string `json:"filename"`
+	ListId       int64  `json:"listid" apiModel:"MediaList"`
+	EmailId      int64  `json:"emailid" apiModel:"Email"`
 
 	Url string `json:"url"`
 
