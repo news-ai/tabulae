@@ -29,6 +29,7 @@ type Email struct {
 	SendAt time.Time `json:"sendat"`
 
 	SendGridId string `json:"-"`
+	BatchId    string `json:"batchid"`
 
 	Attachments []int64 `json:"attachments" datastore:",noindex" apiModel:"File"`
 

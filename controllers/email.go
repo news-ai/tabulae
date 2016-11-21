@@ -472,11 +472,14 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 		}
 	}
 
-	emailSent, emailId, err := emails.SendEmail(r, email, user, files)
+	emailSent, emailId, batchId, err := emails.SendEmail(r, email, user, files)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return email, nil, err
 	}
+
+	email.BatchId = batchId
+	email.Save(c)
 
 	if emailSent {
 		// Set attachments for deletion
