@@ -26,7 +26,6 @@ func HandleEmailAttachActionUpload(c context.Context, r *http.Request, id string
 	userId := strconv.FormatInt(user.Id, 10)
 
 	files := []models.File{}
-
 	r.ParseMultipartForm(32 << 20)
 	m := r.MultipartForm
 	fhs := m.File["file"]
@@ -93,25 +92,34 @@ func HandleEmailImageActionUpload(c context.Context, r *http.Request, id string)
 
 	userId := strconv.FormatInt(user.Id, 10)
 
-	file, handler, err := r.FormFile("file")
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, err
+	files := []models.File{}
+	r.ParseMultipartForm(32 << 20)
+	m := r.MultipartForm
+	fhs := m.File["file"]
+	for _, fh := range fhs {
+		f, err := fh.Open()
+		defer f.Close()
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, nil, err
+		}
+
+		noSpaceFileName := ""
+		if fh.Filename != "" {
+			noSpaceFileName = strings.Replace(fh.Filename, " ", "", -1)
+		}
+
+		fileName := strings.Join([]string{userId, id, utilities.RandToken(), noSpaceFileName}, "-")
+		val, err := UploadImage(r, fh.Filename, fileName, f, userId, id, fh.Header.Get("Content-Type"))
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, nil, err
+		}
+
+		files = append(files, val)
 	}
 
-	noSpaceFileName := ""
-	if handler.Filename != "" {
-		noSpaceFileName = strings.Replace(handler.Filename, " ", "", -1)
-	}
-
-	fileName := strings.Join([]string{userId, id, utilities.RandToken(), noSpaceFileName}, "-")
-	val, err := UploadImage(r, handler.Filename, fileName, file, userId, id, handler.Header.Get("Content-Type"))
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, err
-	}
-
-	return val, nil, nil
+	return files, nil, nil
 }
 
 func HandleFileUploadHeaders(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
