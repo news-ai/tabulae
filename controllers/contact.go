@@ -29,6 +29,11 @@ import (
 * Private methods
  */
 
+type copyContactsDetails struct {
+	Contacts []int64 `json:"contacts"`
+	ListId   int64   `json:"listid"`
+}
+
 /*
 * Get methods
  */
@@ -1320,6 +1325,19 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, i
 	}
 
 	return newContacts, nil, len(newContacts), nil
+}
+
+func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, error) {
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var copyContacts copyContactsDetails
+	err := decoder.Decode(buf, &copyContacts)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, nil, 0, err
+	}
+
+	return []models.Contact{}, nil, 0, nil
 }
 
 /*

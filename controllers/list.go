@@ -981,12 +981,12 @@ func GetInstagramTimeseriesForList(c context.Context, r *http.Request, id string
 func DuplicateList(c context.Context, r *http.Request, id string) (models.MediaList, interface{}, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 	decoder := ffjson.NewDecoder()
-	var duplicateListDetails duplicateListDetails
-	err := decoder.Decode(buf, &duplicateListDetails)
+	var duplicateDetails duplicateListDetails
+	err := decoder.Decode(buf, &duplicateDetails)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
 
-	return duplicateList(c, r, id, duplicateListDetails.Name)
+	return duplicateList(c, r, id, duplicateDetails.Name)
 }

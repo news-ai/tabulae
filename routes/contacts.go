@@ -64,6 +64,11 @@ func handleContact(c context.Context, r *http.Request, id string) (interface{}, 
 		return api.BaseSingleResponseHandler(controllers.GetContact(c, r, id))
 	case "PATCH":
 		return api.BaseSingleResponseHandler(controllers.UpdateSingleContact(c, r, id))
+	case "POST":
+		if id == "copy" {
+			val, included, count, err := controllers.CopyContacts(c, r)
+			return api.BaseResponseHandler(val, included, count, err, r)
+		}
 	case "DELETE":
 		return api.BaseSingleResponseHandler(controllers.DeleteContact(c, r, id))
 	}
