@@ -1344,7 +1344,8 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 		return []models.Contact{}, nil, 0, err
 	}
 
-	newContacts := []int64{}
+	newContacts := []models.Contact{}
+	newContactIds := []int64{}
 
 	for i := 0; i < len(copyContacts.Contacts); i++ {
 		contact, err := getContact(c, r, copyContacts.Contacts[i])
@@ -1354,14 +1355,26 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 			contact.CreatedBy = user.Id
 			contact.Created = time.Now()
 			contact.Updated = time.Now()
+			contact.CustomFields = []models.CustomContactField{}
 
 			contact.ListId = copyContacts.ListId
 			contact.Normalize()
 			_, err = Create(c, r, &contact)
 
-			newContacts = append(newContacts, contact.Id)
+			newContactIds = append(newContactIds, contact.Id)
+			newContacts = append(newContacts, contact)
 		}
 	}
+
+	// Add contact to the other media list
+	mediaList, err := getMediaList(c, r, copyContacts.ListId)
+	if err != nil {
+		return []models.Contact{}, nil, 0, err
+	}
+
+	// Append media list
+	mediaList.Contacts = append(mediaList.Contacts, newContactIds...)
+	mediaList.Save(c)
 
 	return newContacts, nil, 0, nil
 }

@@ -163,6 +163,7 @@ func init() {
 	router.PATCH("/api/contacts", routes.ContactsHandler)
 	router.GET("/api/contacts/:id", routes.ContactHandler)
 	router.PATCH("/api/contacts/:id", routes.ContactHandler)
+	router.POST("/api/contacts/:id", routes.ContactHandler)
 	router.DELETE("/api/contacts/:id", routes.ContactHandler)
 	router.GET("/api/contacts/:id/:action", routes.ContactActionHandler)
 
