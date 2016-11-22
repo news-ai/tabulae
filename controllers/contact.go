@@ -1159,9 +1159,19 @@ func BatchCreateContactsForDuplicateList(c context.Context, r *http.Request, con
 	}
 
 	for i := 0; i < len(ks); i++ {
-		contacts[i].Id = ks[i].IntID()
-
 		// Duplicate Feed
+		feeds, err := GetFeedsByResourceId(c, r, "ContactId", previousKeys[i])
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return []int64{}, err
+		}
+
+		for i := 0; i < len(feeds); i++ {
+			feeds[i].Id = 0
+			feeds[i].ListId = mediaListId
+			feeds[i].ContactId = ks[i].IntID()
+			feeds[i].Create(c, r, currentUser)
+		}
 
 		contactIds = append(contactIds, ks[i].IntID())
 	}
