@@ -936,5 +936,30 @@ func DuplicateList(c context.Context, r *http.Request, id string) (models.MediaL
 		return models.MediaList{}, nil, errors.New("Forbidden")
 	}
 
-	return models.MediaList{}, nil, nil
+	// Duplicate a list
+	mediaList.Id = 0
+	mediaList.Contacts = []int64{}
+	mediaList.PublicList = false
+	mediaList.Create(c, r, user)
+
+	contacts := []models.Contact{}
+	for i := 0; i < len(mediaList.Contacts); i++ {
+		contact, err := getContact(c, r, mediaList.Contacts[i])
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		} else {
+			contact.ListId = 0
+			contacts = append(contacts, contact)
+		}
+	}
+
+	newContacts, err := BatchCreateContactsForDuplicateList(c, r, contacts, mediaList.Id)
+	if err != nil {
+		return models.MediaList{}, nil, err
+	}
+
+	mediaList.Contacts = newContacts
+	mediaList.Save(c)
+
+	return mediaList, nil, nil
 }

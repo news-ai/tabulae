@@ -1116,6 +1116,60 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interf
 }
 
 // Does a ES sync in parse package & Twitter sync here
+func BatchCreateContactsForDuplicateList(c context.Context, r *http.Request, contacts []models.Contact, mediaListId int64) ([]int64, error) {
+	var previousKeys []int64
+	var keys []*datastore.Key
+	var contactIds []int64
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []int64{}, err
+	}
+
+	for i := 0; i < len(contacts); i++ {
+		// Previous keys of contacts so we can get lists later
+		previousKeys = append(previousKeys, contacts[i].Id)
+
+		// Remove list specific features for a contact
+		contacts[i].Id = 0
+		contacts[i].CreatedBy = currentUser.Id
+		contacts[i].Created = time.Now()
+		contacts[i].Updated = time.Now()
+		contacts[i].ListId = mediaListId
+		contacts[i].Normalize()
+		keys = append(keys, contacts[i].Key(c))
+	}
+
+	ks := []*datastore.Key{}
+
+	err = nds.RunInTransaction(c, func(ctx context.Context) error {
+		contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+		ks, err = nds.PutMulti(contextWithTimeout, keys, contacts)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return err
+		}
+		return nil
+	}, nil)
+
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []int64{}, err
+	}
+
+	for i := 0; i < len(ks); i++ {
+		contacts[i].Id = ks[i].IntID()
+
+		// Duplicate Feed
+
+		contactIds = append(contactIds, ks[i].IntID())
+	}
+
+	return contactIds, nil
+}
+
+// Does a ES sync in parse package & Twitter sync here
 func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, contacts []models.Contact, mediaListId int64) ([]int64, error) {
 	var keys []*datastore.Key
 	var contactIds []int64
