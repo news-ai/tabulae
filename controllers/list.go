@@ -147,6 +147,8 @@ func duplicateList(c context.Context, r *http.Request, id string, name string) (
 		name = "Copy of " + mediaList.Name
 	}
 
+	previousContacts := mediaList.Contacts
+
 	// Duplicate a list
 	mediaList.Id = 0
 	mediaList.Name = name
@@ -156,8 +158,8 @@ func duplicateList(c context.Context, r *http.Request, id string, name string) (
 	mediaList.Create(c, r, user)
 
 	contacts := []models.Contact{}
-	for i := 0; i < len(mediaList.Contacts); i++ {
-		contact, err := getContact(c, r, mediaList.Contacts[i])
+	for i := 0; i < len(previousContacts); i++ {
+		contact, err := getContact(c, r, previousContacts[i])
 		if err != nil {
 			log.Errorf(c, "%v", err)
 		} else {
@@ -174,6 +176,8 @@ func duplicateList(c context.Context, r *http.Request, id string, name string) (
 	mediaList.Contacts = newContacts
 	mediaList.Save(c)
 
+	sync.ResourceSync(r, mediaList.Id, "List", "create")
+	sync.ResourceBulkSync(r, mediaList.Contacts, "Contact", "create")
 	return mediaList, nil, nil
 }
 
