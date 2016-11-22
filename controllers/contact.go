@@ -1328,16 +1328,42 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, i
 }
 
 func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, error) {
+	// Get logged in user
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, nil, 0, errors.New("Could not get user")
+	}
+
 	buf, _ := ioutil.ReadAll(r.Body)
 	decoder := ffjson.NewDecoder()
 	var copyContacts copyContactsDetails
-	err := decoder.Decode(buf, &copyContacts)
+	err = decoder.Decode(buf, &copyContacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, err
 	}
 
-	return []models.Contact{}, nil, 0, nil
+	newContacts := []int64{}
+
+	for i := 0; i < len(copyContacts.Contacts); i++ {
+		contact, err := getContact(c, r, copyContacts.Contacts[i])
+		if err == nil {
+			contact.Id = 0
+
+			contact.CreatedBy = user.Id
+			contact.Created = time.Now()
+			contact.Updated = time.Now()
+
+			contact.ListId = copyContacts.ListId
+			contact.Normalize()
+			_, err = Create(c, r, &contact)
+
+			newContacts = append(newContacts, contact.Id)
+		}
+	}
+
+	return newContacts, nil, 0, nil
 }
 
 /*
