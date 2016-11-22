@@ -34,6 +34,10 @@ var nonCustomHeadersName = []string{"First Name", "Last Name", "Email", "Employe
 var customHeaders = []string{"instagramfollowers", "instagramfollowing", "instagramlikes", "instagramcomments", "instagramposts", "twitterfollowers", "twitterfollowing", "twitterlikes", "twitterretweets", "twitterposts"}
 var customHeadersName = []string{"Instagram Followers", "Instagram Following", "Instagram Likes", "Instagram Comments", "Instagram Posts", "Twitter Followers", "Twitter Following", "Twitter Likes", "Twitter Retweets", "Twitter Posts"}
 
+type duplicateListDetails struct {
+	Name string `json:"name"`
+}
+
 /*
 * Private methods
  */
@@ -119,6 +123,58 @@ func getFieldsMap() []models.CustomFieldsMap {
 	}
 
 	return fieldsmap
+}
+
+func duplicateList(c context.Context, r *http.Request, id string, name string) (models.MediaList, interface{}, error) {
+	// Get the details of the current media list
+	mediaList, _, err := GetMediaList(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.MediaList{}, nil, err
+	}
+
+	// Checking if the current user logged in can edit this particular id
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.MediaList{}, nil, err
+	}
+	if mediaList.CreatedBy != user.Id {
+		return models.MediaList{}, nil, errors.New("Forbidden")
+	}
+
+	if name == "" {
+		name = "Copy of " + mediaList.Name
+	}
+
+	// Duplicate a list
+	mediaList.Id = 0
+	mediaList.Name = name
+	mediaList.Contacts = []int64{}
+	mediaList.PublicList = false
+	mediaList.CreatedBy = user.Id
+	mediaList.Create(c, r, user)
+
+	contacts := []models.Contact{}
+	for i := 0; i < len(mediaList.Contacts); i++ {
+		contact, err := getContact(c, r, mediaList.Contacts[i])
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		} else {
+			contact.ListId = 0
+			contacts = append(contacts, contact)
+		}
+	}
+
+	newContacts, err := BatchCreateContactsForDuplicateList(c, r, contacts, mediaList.Id)
+	if err != nil {
+		return models.MediaList{}, nil, err
+	}
+
+	mediaList.Contacts = newContacts
+	mediaList.Save(c)
+
+	return mediaList, nil, nil
 }
 
 /*
@@ -919,47 +975,14 @@ func GetInstagramTimeseriesForList(c context.Context, r *http.Request, id string
 }
 
 func DuplicateList(c context.Context, r *http.Request, id string) (models.MediaList, interface{}, error) {
-	// Get the details of the current media list
-	mediaList, _, err := GetMediaList(c, r, id)
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var duplicateListDetails duplicateListDetails
+	err := decoder.Decode(buf, &duplicateListDetails)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
 
-	// Checking if the current user logged in can edit this particular id
-	user, err := GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.MediaList{}, nil, err
-	}
-	if mediaList.CreatedBy != user.Id {
-		return models.MediaList{}, nil, errors.New("Forbidden")
-	}
-
-	// Duplicate a list
-	mediaList.Id = 0
-	mediaList.Contacts = []int64{}
-	mediaList.PublicList = false
-	mediaList.Create(c, r, user)
-
-	contacts := []models.Contact{}
-	for i := 0; i < len(mediaList.Contacts); i++ {
-		contact, err := getContact(c, r, mediaList.Contacts[i])
-		if err != nil {
-			log.Errorf(c, "%v", err)
-		} else {
-			contact.ListId = 0
-			contacts = append(contacts, contact)
-		}
-	}
-
-	newContacts, err := BatchCreateContactsForDuplicateList(c, r, contacts, mediaList.Id)
-	if err != nil {
-		return models.MediaList{}, nil, err
-	}
-
-	mediaList.Contacts = newContacts
-	mediaList.Save(c)
-
-	return mediaList, nil, nil
+	return duplicateList(c, r, id, duplicateListDetails.Name)
 }

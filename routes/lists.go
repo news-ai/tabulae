@@ -52,6 +52,8 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 			return api.BaseSingleResponseHandler(controllers.GetTwitterTimeseriesForList(c, r, id))
 		case "instagramtimeseries":
 			return api.BaseSingleResponseHandler(controllers.GetInstagramTimeseriesForList(c, r, id))
+		case "duplicate":
+			return api.BaseSingleResponseHandler(controllers.DuplicateList(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")
