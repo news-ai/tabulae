@@ -183,6 +183,7 @@ func init() {
 	router.PATCH("/api/emails", routes.EmailsHandler)
 	router.GET("/api/emails/:id", routes.EmailHandler)
 	router.PATCH("/api/emails/:id", routes.EmailHandler)
+	router.POST("/api/emails/:id", routes.EmailHandler)
 	router.GET("/api/emails/:id/:action", routes.EmailActionHandler)
 	router.POST("/api/emails/:id/:action", routes.EmailActionHandler)
 

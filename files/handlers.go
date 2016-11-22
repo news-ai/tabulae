@@ -84,7 +84,7 @@ func HandleMediaListActionUpload(c context.Context, r *http.Request, id string) 
 	return val, nil, nil
 }
 
-func HandleEmailImageActionUpload(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+func HandleEmailImageActionUpload(c context.Context, r *http.Request) (interface{}, interface{}, error) {
 	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		return nil, nil, err
@@ -109,8 +109,8 @@ func HandleEmailImageActionUpload(c context.Context, r *http.Request, id string)
 			noSpaceFileName = strings.Replace(fh.Filename, " ", "", -1)
 		}
 
-		fileName := strings.Join([]string{userId, id, utilities.RandToken(), noSpaceFileName}, "-")
-		val, err := UploadImage(r, fh.Filename, fileName, f, userId, id, fh.Header.Get("Content-Type"))
+		fileName := strings.Join([]string{userId, utilities.RandToken(), noSpaceFileName}, "-")
+		val, err := UploadImage(r, fh.Filename, fileName, f, userId, fh.Header.Get("Content-Type"))
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, nil, err

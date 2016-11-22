@@ -200,16 +200,11 @@ func CreateFile(r *http.Request, fileName string, listid string, createdby strin
 	return file, nil
 }
 
-func CreateImageFile(r *http.Request, originalFilename string, fileName string, emailid string, createdby string, bucket string) (models.File, error) {
+func CreateImageFile(r *http.Request, originalFilename string, fileName string, createdby string, bucket string) (models.File, error) {
 	// Since upload.go uses a different appengine package
 	c := appengine.NewContext(r)
 
 	// Convert listId and createdById from string to int64
-	emailId, err := utilities.StringIdToInt(emailid)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.File{}, err
-	}
 	createdBy, err := utilities.StringIdToInt(createdby)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -222,7 +217,6 @@ func CreateImageFile(r *http.Request, originalFilename string, fileName string, 
 	file := models.File{}
 	file.OriginalName = originalFilename
 	file.FileName = fileName
-	file.EmailId = emailId
 	file.CreatedBy = createdBy
 	file.FileExists = true
 	file.Url = fmt.Sprintf(publicURL, bucket, fileName)
