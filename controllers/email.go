@@ -472,6 +472,21 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 		}
 	}
 
+	// Send through gmail
+	if user.AccessToken != "" {
+		err = emails.SendGmailEmail(r, user, email)
+		if err != nil {
+			return email, nil, err
+		}
+
+		val, err := email.MarkSent(c, "")
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return *val, nil, err
+		}
+		return *val, nil, nil
+	}
+
 	emailSent, emailId, batchId, err := emails.SendEmail(r, email, user, files)
 	if err != nil {
 		log.Errorf(c, "%v", err)
