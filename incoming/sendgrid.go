@@ -65,11 +65,13 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 		// Add to appropriate Email model
 		switch singleEvent.Event {
 		case "open":
-			_, notification, err = controllers.MarkOpened(c, r, &email)
-			if err != nil {
-				hasErrors = true
-				log.Errorf(c, "%v", singleEvent)
-				log.Errorf(c, "%v", err)
+			for x := 0; x < singleEvent.Count; x++ {
+				_, notification, err = controllers.MarkOpened(c, r, &email)
+				if err != nil {
+					hasErrors = true
+					log.Errorf(c, "%v", singleEvent)
+					log.Errorf(c, "%v", err)
+				}
 			}
 		default:
 			hasErrors = true
