@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	"golang.org/x/net/context"
@@ -474,6 +475,9 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 
 	// Send through gmail
 	if user.AccessToken != "" {
+		emailId := strconv.FormatInt(email.Id, 10)
+		email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
+
 		err = emails.SendGmailEmail(r, user, email)
 		if err != nil {
 			return email, nil, err
@@ -484,6 +488,12 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 			log.Errorf(c, "%v", err)
 			return *val, nil, err
 		}
+		val, err = email.MarkDelivered(c)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return *val, nil, err
+		}
+
 		return *val, nil, nil
 	}
 
