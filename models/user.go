@@ -47,6 +47,7 @@ type User struct {
 
 	EmailSignature string `json:"emailsignature"`
 
+	Gmail    bool `json:"gmail"`
 	IsAdmin  bool `json:"-"`
 	IsActive bool `json:"isactive"`
 }

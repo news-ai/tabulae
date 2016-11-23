@@ -329,6 +329,11 @@ func RegisterUser(r *http.Request, user models.User) (models.User, bool, error) 
 		}
 		return user, true, nil
 	}
+
+	existingUser.Gmail = user.Gmail
+	existingUser.GoogleId = user.GoogleId
+	existingUser.Save(c)
+
 	return existingUser, false, errors.New("User with the email already exists")
 }
 

@@ -92,6 +92,7 @@ func init() {
 
 	// Login with Google
 	router.GET("/api/auth/google", auth.GoogleLoginHandler)
+	router.GET("/api/auth/gmail", auth.GmailLoginHandler)
 	router.GET("/api/auth/googlecallback", auth.GoogleCallbackHandler)
 
 	// Internal auth: Linkedin

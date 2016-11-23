@@ -37,6 +37,20 @@ var (
 		},
 		Endpoint: google.Endpoint,
 	}
+
+	gmailOauthConfig = &oauth2.Config{
+		RedirectURL:  "https://tabulae.newsai.org/api/auth/googlecallback",
+		ClientID:     os.Getenv("GOOGLEAUTHKEY"),
+		ClientSecret: os.Getenv("GOOGLEAUTHSECRET"),
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.profile",
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/gmail.readonly",
+			"https://www.googleapis.com/auth/gmail.compose",
+			"https://www.googleapis.com/auth/gmail.send",
+		},
+		Endpoint: google.Endpoint,
+	}
 )
 
 // Handler to redirect user to the Google OAuth2 page
@@ -52,6 +66,7 @@ func GoogleLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	}
 
 	session.Values["state"] = state
+	session.Values["gmail"] = "no"
 
 	if r.URL.Query().Get("next") != "" {
 		session.Values["next"] = r.URL.Query().Get("next")
@@ -64,6 +79,35 @@ func GoogleLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 
 	// Redirect the user to the login page
 	url := googleOauthConfig.AuthCodeURL(state)
+	http.Redirect(w, r, url, 302)
+}
+
+// Handler to redirect user to the Google OAuth2 page
+func GmailLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	c := appengine.NewContext(r)
+	// Generate a random state that we identify the user with
+	state := utilities.RandToken()
+
+	// Save the session for each of the users
+	session, err := Store.Get(r, "sess")
+	if err != nil {
+		log.Errorf(c, "%v", err)
+	}
+
+	session.Values["state"] = state
+	session.Values["gmail"] = "yes"
+
+	if r.URL.Query().Get("next") != "" {
+		session.Values["next"] = r.URL.Query().Get("next")
+	}
+
+	err = session.Save(r, w)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+	}
+
+	// Redirect the user to the login page
+	url := gmailOauthConfig.AuthCodeURL(state)
 	http.Redirect(w, r, url, 302)
 }
 
@@ -117,6 +161,11 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	newUser.LastName = googleUser.FamilyName
 	newUser.EmailConfirmed = true
 	newUser.IsActive = false
+
+	if session.Values["gmail"] == "yes" {
+		newUser.Gmail = true
+	}
+
 	user, _, _ := controllers.RegisterUser(r, newUser)
 
 	session.Values["email"] = googleUser.Email
