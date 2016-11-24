@@ -64,6 +64,7 @@ func GoogleLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 
 	session.Values["state"] = state
 	session.Values["gmail"] = "no"
+	session.Values["gmail_email"] = ""
 
 	if r.URL.Query().Get("next") != "" {
 		session.Values["next"] = r.URL.Query().Get("next")
@@ -82,6 +83,15 @@ func GoogleLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 // Handler to redirect user to the Google OAuth2 page
 func GmailLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	c := appengine.NewContext(r)
+
+	// Make sure the user has been logged in when at gmail auth
+	user, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		fmt.Fprintln(w, "user not logged in")
+		return
+	}
+
 	// Generate a random state that we identify the user with
 	state := utilities.RandToken()
 
@@ -93,6 +103,7 @@ func GmailLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 
 	session.Values["state"] = state
 	session.Values["gmail"] = "yes"
+	session.Values["gmail_email"] = user.Email
 
 	if r.URL.Query().Get("next") != "" {
 		session.Values["next"] = r.URL.Query().Get("next")
@@ -163,6 +174,12 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	newUser.GoogleCode = r.URL.Query().Get("code")
 	if session.Values["gmail"] == "yes" {
 		newUser.Gmail = true
+
+		if session.Values["gmail_email"].(string) != googleUser.Email {
+			log.Errorf(c, "%v", "Tried to login with email "+googleUser.Email+" for user "+session.Values["gmail_email"].(string))
+			http.Redirect(w, r, "https://tabulae.newsai.co/settings", 302)
+			return
+		}
 	}
 
 	user, _, _ := controllers.RegisterUser(r, newUser)
