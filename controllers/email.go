@@ -488,6 +488,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 			log.Errorf(c, "%v", err)
 			return *val, nil, err
 		}
+
 		val, err = email.MarkDelivered(c)
 		if err != nil {
 			log.Errorf(c, "%v", err)

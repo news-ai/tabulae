@@ -160,6 +160,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	newUser.IsActive = false
 
 	newUser.AccessToken = tkn.AccessToken
+	newUser.GoogleCode = r.URL.Query().Get("code")
 	if session.Values["gmail"] == "yes" {
 		newUser.Gmail = true
 	}

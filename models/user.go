@@ -49,6 +49,7 @@ type User struct {
 
 	Gmail       bool   `json:"gmail"`
 	AccessToken string `json:"-"`
+	GoogleCode  string `json:"-"`
 
 	IsAdmin  bool `json:"-"`
 	IsActive bool `json:"isactive"`

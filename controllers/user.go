@@ -333,6 +333,7 @@ func RegisterUser(r *http.Request, user models.User) (models.User, bool, error) 
 	existingUser.Gmail = user.Gmail
 	existingUser.GoogleId = user.GoogleId
 	existingUser.AccessToken = user.AccessToken
+	existingUser.GoogleCode = user.GoogleCode
 	existingUser.Save(c)
 
 	return existingUser, false, errors.New("User with the email already exists")
