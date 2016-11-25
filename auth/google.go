@@ -115,7 +115,7 @@ func GmailLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 	}
 
 	// Redirect the user to the login page
-	url := gmailOauthConfig.AuthCodeURL(state)
+	url := gmailOauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	http.Redirect(w, r, url, 302)
 }
 
@@ -130,6 +130,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	}
 
 	if r.URL.Query().Get("state") != session.Values["state"] {
+		log.Errorf(c, "%v", "no state match; possible csrf OR cookies not enabled")
 		fmt.Fprintln(w, "no state match; possible csrf OR cookies not enabled")
 		return
 	}
@@ -137,11 +138,13 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	tkn, err := googleOauthConfig.Exchange(c, r.URL.Query().Get("code"))
 
 	if err != nil {
+		log.Errorf(c, "%v", "there was an issue getting your token")
 		fmt.Fprintln(w, "there was an issue getting your token")
 		return
 	}
 
 	if !tkn.Valid() {
+		log.Errorf(c, "%v", "retreived invalid token")
 		fmt.Fprintln(w, "retreived invalid token")
 		return
 	}
@@ -149,6 +152,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	client := urlfetch.Client(c)
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo?alt=json&access_token=" + tkn.AccessToken)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		fmt.Fprintln(w, err.Error())
 		return
 	}
@@ -158,6 +162,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	var googleUser User
 	err = decoder.Decode(&googleUser)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		fmt.Fprintln(w, err.Error())
 		return
 	}
@@ -170,6 +175,9 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	newUser.EmailConfirmed = true
 	newUser.IsActive = false
 
+	newUser.TokenType = tkn.TokenType
+	newUser.GoogleExpiresIn = tkn.Expiry
+	newUser.RefreshToken = tkn.RefreshToken
 	newUser.AccessToken = tkn.AccessToken
 	newUser.GoogleCode = r.URL.Query().Get("code")
 	if session.Values["gmail"] == "yes" {
@@ -194,6 +202,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 			u, err := url.Parse(returnURL)
 			if err != nil {
 				http.Redirect(w, r, returnURL, 302)
+				return
 			}
 
 			if user.LastLoggedIn.IsZero() {
@@ -232,4 +241,5 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	}
 
 	http.Redirect(w, r, "/", 302)
+	return
 }

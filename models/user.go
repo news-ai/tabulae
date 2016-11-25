@@ -47,9 +47,12 @@ type User struct {
 
 	EmailSignature string `json:"emailsignature"`
 
-	Gmail       bool   `json:"gmail"`
-	AccessToken string `json:"-"`
-	GoogleCode  string `json:"-"`
+	Gmail           bool      `json:"gmail"`
+	AccessToken     string    `json:"-"`
+	GoogleCode      string    `json:"-"`
+	GoogleExpiresIn time.Time `json:"-"`
+	RefreshToken    string    `json:"-"`
+	TokenType       string    `json:"-"`
 
 	IsAdmin  bool `json:"-"`
 	IsActive bool `json:"isactive"`

@@ -19,6 +19,7 @@ import (
 	"github.com/news-ai/tabulae/models"
 
 	"github.com/news-ai/web/emails"
+	"github.com/news-ai/web/google"
 	"github.com/news-ai/web/permissions"
 	"github.com/news-ai/web/utilities"
 )
@@ -475,6 +476,13 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 
 	// Send through gmail
 	if user.AccessToken != "" {
+		err = google.ValidateAccessToken(r, user)
+
+		// Refresh access token if err is nil
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		}
+
 		emailId := strconv.FormatInt(email.Id, 10)
 		email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
 
