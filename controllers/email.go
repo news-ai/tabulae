@@ -426,7 +426,7 @@ func CancelEmail(c context.Context, r *http.Request, id string) (models.Email, i
 
 	err = emails.CancelEmail(r, email)
 	if err != nil {
-		return email, nil, errors.New("Could not cancel")
+		return email, nil, err
 	}
 
 	email.Cancel = true
