@@ -437,16 +437,13 @@ func CancelEmail(c context.Context, r *http.Request, id string) (models.Email, i
 func GetCurrentSchedueledEmails(c context.Context, r *http.Request) ([]models.Email, error) {
 	emails := []models.Email{}
 
-	// When the email is "Delievered == false" and has a "SendAt" date
-	// And "Cancel == false"
-
 	timeNow := time.Now()
-
 	currentTime := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), timeNow.Hour(), timeNow.Minute(), 0, 0, time.FixedZone("GMT", 0))
 
-	log.Infof(c, "%v", currentTime)
+	// When the email is "Delievered == false" and has a "SendAt" date
+	// And "Cancel == false". Also a filer if the user has sent it already or not
+	query := datastore.NewQuery("Email").Filter("SendAt <=", currentTime).Filter("IsSent =", true).Filter("Delievered =", false).Filter("Cancel =", false)
 
-	query := datastore.NewQuery("Email").Filter("SendAt =", currentTime).Filter("IsSent =", true).Filter("Delievered =", false).Filter("Cancel =", false)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)

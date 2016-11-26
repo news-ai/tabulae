@@ -80,3 +80,10 @@ indexes:
   properties:
     - name: PublicList 
     - name: Created
+
+- kind: Email
+  properties:
+  - name: Cancel
+  - name: Delievered
+  - name: IsSent
+  - name: SendAt
