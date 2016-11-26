@@ -330,7 +330,9 @@ func RegisterUser(r *http.Request, user models.User) (models.User, bool, error) 
 		return user, true, nil
 	}
 
-	existingUser.RefreshToken = user.RefreshToken
+	if user.RefreshToken != "" {
+		existingUser.RefreshToken = user.RefreshToken
+	}
 	existingUser.TokenType = user.TokenType
 	existingUser.GoogleExpiresIn = user.GoogleExpiresIn
 	existingUser.Gmail = user.Gmail

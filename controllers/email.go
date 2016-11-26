@@ -477,10 +477,14 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 	// Send through gmail
 	if user.AccessToken != "" {
 		err = google.ValidateAccessToken(r, user)
-
 		// Refresh access token if err is nil
 		if err != nil {
 			log.Errorf(c, "%v", err)
+			user, err = google.RefreshAccessToken(r, user)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return email, nil, errors.New("Could not refresh user token")
+			}
 		}
 
 		emailId := strconv.FormatInt(email.Id, 10)
