@@ -547,31 +547,39 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 		return *val, nil, nil
 	}
 
-	emailSent, emailId, batchId, err := emails.SendEmail(r, email, user, files)
+	email.Method = "sendgrid"
+	val, err := email.MarkSent(c, "")
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return email, nil, err
+		return *val, nil, err
 	}
 
-	email.BatchId = batchId
-	email.Save(c)
-
-	if emailSent {
-		// Set attachments for deletion
-		for i := 0; i < len(files); i++ {
-			files[i].Imported = true
-			files[i].Save(c)
-		}
-
-		email.Method = "sendgrid"
-		val, err := email.MarkSent(c, emailId)
+	// Check to see if there is no sendat date or if date is in the past
+	if val.SendAt.IsZero() || val.SendAt.Before(time.Now()) {
+		emailSent, emailId, err := emails.SendEmail(r, *val, user, files)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return *val, nil, err
 		}
-		return *val, nil, nil
+
+		val, err = email.MarkSent(c, emailId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return *val, nil, err
+		}
+
+		if emailSent {
+			// Set attachments for deletion
+			for i := 0; i < len(files); i++ {
+				files[i].Imported = true
+				files[i].Save(c)
+			}
+
+			return *val, nil, nil
+		}
 	}
-	return email, nil, errors.New("Email could not be sent")
+
+	return *val, nil, nil
 }
 
 func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason string) (*models.Email, models.NotificationChange, error) {

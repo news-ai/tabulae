@@ -76,7 +76,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 			files := []models.File{}
 			if len(schedueled[i].Attachments) > 0 {
 				for i := 0; i < len(schedueled[i].Attachments); i++ {
-					file, err := controllers.GetFileById(c, r, schedueled[i].Attachments[i])
+					file, _, err := controllers.GetFileById(c, r, schedueled[i].Attachments[i])
 					if err == nil {
 						files = append(files, file)
 					} else {
@@ -86,14 +86,13 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
-			emailSent, emailId, batchId, err := emails.SendEmail(r, schedueled[i], user, files)
+			emailSent, emailId, err := emails.SendEmail(r, schedueled[i], user, files)
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", err)
 				continue
 			}
 
-			schedueled[i].BatchId = batchId
 			schedueled[i].Save(c)
 
 			if emailSent {
@@ -103,7 +102,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 					files[i].Save(c)
 				}
 
-				val, err := schedueled[i].MarkSent(c, emailId)
+				_, err := schedueled[i].MarkSent(c, emailId)
 				if err != nil {
 					log.Errorf(c, "%v", err)
 					hasErrors = true
