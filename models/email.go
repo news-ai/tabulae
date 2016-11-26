@@ -31,6 +31,9 @@ type Email struct {
 	SendGridId string `json:"-"`
 	BatchId    string `json:"batchid"`
 
+	GmailId       string `json:"gmailid"`
+	GmailThreadId string `json:"gmailthreadid"`
+
 	Attachments []int64 `json:"attachments" datastore:",noindex" apiModel:"File"`
 
 	Delievered    bool   `json:"delivered"`

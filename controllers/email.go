@@ -475,7 +475,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 	}
 
 	// Send through gmail
-	if user.AccessToken != "" {
+	if user.AccessToken != "" && user.Gmail {
 		err = google.ValidateAccessToken(r, user)
 		// Refresh access token if err is nil
 		if err != nil {
@@ -490,10 +490,13 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 		emailId := strconv.FormatInt(email.Id, 10)
 		email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
 
-		err = emails.SendGmailEmail(r, user, email)
+		gmailId, gmailThreadId, err := emails.SendGmailEmail(r, user, email)
 		if err != nil {
 			return email, nil, err
 		}
+
+		email.GmailId = gmailId
+		email.GmailThreadId = gmailThreadId
 
 		val, err := email.MarkSent(c, "")
 		if err != nil {
