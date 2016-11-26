@@ -19,6 +19,7 @@ import (
 	"github.com/news-ai/tabulae/middleware"
 	"github.com/news-ai/tabulae/notifications"
 	"github.com/news-ai/tabulae/routes"
+	"github.com/news-ai/tabulae/schedule"
 	"github.com/news-ai/tabulae/search"
 	"github.com/news-ai/tabulae/tasks"
 	"github.com/news-ai/tabulae/utils"
@@ -229,6 +230,7 @@ func init() {
 	router.POST("/tasks/feedInvalid", tasks.FeedInvalid)
 
 	// Tasks needing to not have middleware
+	http.HandleFunc("/tasks/sendSchedueleEmails", schedule.SchedueleEmailTask)
 	http.HandleFunc("/tasks/makeUsersInactive", tasks.MakeUsersInactive)
 	http.HandleFunc("/tasks/removeExpiredSessions", gaeTasks.RemoveExpiredSessionsHandler)
 	http.HandleFunc("/tasks/removeImportedFiles", tasks.RemoveImportedFilesHandler)

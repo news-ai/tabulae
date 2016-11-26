@@ -12,6 +12,8 @@ import (
 type Email struct {
 	Base
 
+	Method string `json:"method"`
+
 	// Which list it belongs to
 	ListId     int64 `json:"listid" apiModel:"List"`
 	TemplateId int64 `json:"templateid" apiModel:"Template"`
@@ -36,7 +38,7 @@ type Email struct {
 
 	Attachments []int64 `json:"attachments" datastore:",noindex" apiModel:"File"`
 
-	Delievered    bool   `json:"delivered"`
+	Delievered    bool   `json:"delivered"` // The email has been officially sent by our platform
 	BouncedReason string `json:"bouncedreason"`
 	Bounced       bool   `json:"bounced"`
 	Clicked       int    `json:"clicked"`
@@ -44,7 +46,7 @@ type Email struct {
 	Spam          bool   `json:"spam"`
 	Cancel        bool   `json:"cancel"`
 
-	IsSent bool `json:"issent"`
+	IsSent bool `json:"issent"` // Basically if the user has clicked on "/send"
 }
 
 /*

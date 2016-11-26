@@ -490,24 +490,28 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 		emailId := strconv.FormatInt(email.Id, 10)
 		email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
 
-		gmailId, gmailThreadId, err := emails.SendGmailEmail(r, user, email)
-		if err != nil {
-			return email, nil, err
-		}
-
-		email.GmailId = gmailId
-		email.GmailThreadId = gmailThreadId
-
+		email.Method = "gmail"
 		val, err := email.MarkSent(c, "")
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return *val, nil, err
 		}
 
-		val, err = email.MarkDelivered(c)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return *val, nil, err
+		// Check to see if there is no sendat date or if date is in the past
+		if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
+			gmailId, gmailThreadId, err := emails.SendGmailEmail(r, user, email)
+			if err != nil {
+				return email, nil, err
+			}
+
+			email.GmailId = gmailId
+			email.GmailThreadId = gmailThreadId
+
+			val, err = email.MarkDelivered(c)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return *val, nil, err
+			}
 		}
 
 		return *val, nil, nil
@@ -529,6 +533,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 			files[i].Save(c)
 		}
 
+		email.Method = "sendgrid"
 		val, err := email.MarkSent(c, emailId)
 		if err != nil {
 			log.Errorf(c, "%v", err)
