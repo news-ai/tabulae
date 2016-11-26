@@ -5,8 +5,9 @@ import (
 	// "time"
 
 	"google.golang.org/appengine"
-	// "google.golang.org/appengine/log"
-	// "github.com/news-ai/tabulae/controllers"
+
+	"github.com/news-ai/tabulae/controllers"
+	"google.golang.org/appengine/log"
 	// "github.com/news-ai/tabulae/emails"
 	// "github.com/news-ai/tabulae/sync"
 	// "github.com/news-ai/web/errors"
@@ -18,4 +19,15 @@ import (
 func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
+	emails, err := controllers.GetCurrentSchedueledEmails(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	log.Infof(c, "%v", emails)
+
+	w.WriteHeader(200)
+	return
 }

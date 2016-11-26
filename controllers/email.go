@@ -434,6 +434,39 @@ func CancelEmail(c context.Context, r *http.Request, id string) (models.Email, i
 	return email, nil, nil
 }
 
+func GetCurrentSchedueledEmails(c context.Context, r *http.Request) ([]models.Email, error) {
+	emails := []models.Email{}
+
+	// When the email is "Delievered == false" and has a "SendAt" date
+	// And "Cancel == false"
+
+	timeNow := time.Now()
+
+	currentTime := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), timeNow.Hour(), timeNow.Minute(), 0, 0, time.FixedZone("GMT", 0))
+
+	log.Infof(c, "%v", currentTime)
+
+	query := datastore.NewQuery("Email").Filter("SendAt =", currentTime).Filter("IsSent =", true).Filter("Delievered =", false).Filter("Cancel =", false)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, err
+	}
+
+	emails = make([]models.Email, len(ks))
+	err = nds.GetMulti(c, ks, emails)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, err
+	}
+
+	for i := 0; i < len(emails); i++ {
+		emails[i].Format(ks[i], "emails")
+	}
+
+	return emails, nil
+}
+
 func SendEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
 	email, _, err := GetEmail(c, r, id)
 	if err != nil {
