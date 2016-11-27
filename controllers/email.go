@@ -424,14 +424,15 @@ func CancelEmail(c context.Context, r *http.Request, id string) (models.Email, i
 		return models.Email{}, nil, err
 	}
 
-	err = emails.CancelEmail(r, email)
-	if err != nil {
-		return email, nil, err
+	// If it has not been delivered and has a sentat date then we can cancel it
+	// and that sendAt date is in the future.
+	if !email.Delievered && !email.SendAt.IsZero() && email.SendAt.After(time.Now()) {
+		email.Cancel = true
+		email.Save(c)
+		return email, nil, nil
 	}
 
-	email.Cancel = true
-	email.Save(c)
-	return email, nil, nil
+	return email, nil, errors.New("Email has already been delivered")
 }
 
 func GetCurrentSchedueledEmails(c context.Context, r *http.Request) ([]models.Email, error) {
@@ -529,7 +530,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 
 		// Check to see if there is no sendat date or if date is in the past
 		if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
-			gmailId, gmailThreadId, err := emails.SendGmailEmail(r, user, email)
+			gmailId, gmailThreadId, err := emails.SendGmailEmail(r, user, email, files)
 			if err != nil {
 				return email, nil, err
 			}

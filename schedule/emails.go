@@ -41,6 +41,19 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
+		files := []models.File{}
+		if len(schedueled[i].Attachments) > 0 {
+			for i := 0; i < len(schedueled[i].Attachments); i++ {
+				file, _, err := controllers.GetFileById(c, r, schedueled[i].Attachments[i])
+				if err == nil {
+					files = append(files, file)
+				} else {
+					hasErrors = true
+					log.Errorf(c, "%v", err)
+				}
+			}
+		}
+
 		if schedueled[i].Method == "gmail" {
 			if user.AccessToken != "" && user.Gmail {
 				err = google.ValidateAccessToken(r, user)
@@ -55,7 +68,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 
-				gmailId, gmailThreadId, err := emails.SendGmailEmail(r, user, schedueled[i])
+				gmailId, gmailThreadId, err := emails.SendGmailEmail(r, user, schedueled[i], files)
 				if err != nil {
 					hasErrors = true
 					log.Errorf(c, "%v", err)
@@ -73,19 +86,6 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		} else {
-			files := []models.File{}
-			if len(schedueled[i].Attachments) > 0 {
-				for i := 0; i < len(schedueled[i].Attachments); i++ {
-					file, _, err := controllers.GetFileById(c, r, schedueled[i].Attachments[i])
-					if err == nil {
-						files = append(files, file)
-					} else {
-						hasErrors = true
-						log.Errorf(c, "%v", err)
-					}
-				}
-			}
-
 			emailSent, emailId, err := emails.SendEmail(r, schedueled[i], user, files)
 			if err != nil {
 				hasErrors = true
