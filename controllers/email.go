@@ -532,6 +532,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 		if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
 			gmailId, gmailThreadId, err := emails.SendGmailEmail(r, user, email, files)
 			if err != nil {
+				log.Errorf(c, "%v", err)
 				return email, nil, err
 			}
 

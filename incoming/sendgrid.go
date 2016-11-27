@@ -73,6 +73,15 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 					log.Errorf(c, "%v", err)
 				}
 			}
+		case "click":
+			for x := 0; x < singleEvent.Count; x++ {
+				_, notification, err = controllers.MarkClicked(c, r, &email)
+				if err != nil {
+					hasErrors = true
+					log.Errorf(c, "%v", singleEvent)
+					log.Errorf(c, "%v", err)
+				}
+			}
 		default:
 			hasErrors = true
 			log.Errorf(c, "%v", singleEvent)
