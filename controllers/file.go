@@ -54,6 +54,24 @@ func getFile(c context.Context, r *http.Request, id int64) (models.File, error) 
 	return models.File{}, errors.New("No file by this id")
 }
 
+func getFileUnauthorized(c context.Context, r *http.Request, id int64) (models.File, error) {
+	// Get the File by id
+	var file models.File
+	fileId := datastore.NewKey(c, "File", "", id, nil)
+
+	err := nds.Get(c, fileId, &file)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.File{}, err
+	}
+
+	if !file.Created.IsZero() {
+		file.Format(fileId, "files")
+		return file, nil
+	}
+	return models.File{}, errors.New("No file by this id")
+}
+
 /*
 * Public methods
  */
@@ -111,6 +129,15 @@ func GetFile(c context.Context, r *http.Request, id string) (models.File, interf
 
 func GetFileById(c context.Context, r *http.Request, id int64) (models.File, interface{}, error) {
 	file, err := getFile(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.File{}, nil, err
+	}
+	return file, nil, nil
+}
+
+func GetFileByIdUnauthorized(c context.Context, r *http.Request, id int64) (models.File, interface{}, error) {
+	file, err := getFileUnauthorized(c, r, id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.File{}, nil, err

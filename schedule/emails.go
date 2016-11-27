@@ -43,8 +43,8 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 
 		files := []models.File{}
 		if len(schedueled[i].Attachments) > 0 {
-			for i := 0; i < len(schedueled[i].Attachments); i++ {
-				file, _, err := controllers.GetFileById(c, r, schedueled[i].Attachments[i])
+			for x := 0; x < len(schedueled[i].Attachments); x++ {
+				file, _, err := controllers.GetFileByIdUnauthorized(c, r, schedueled[i].Attachments[x])
 				if err == nil {
 					files = append(files, file)
 				} else {
@@ -68,6 +68,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 
+				log.Infof(c, "%v", files)
 				gmailId, gmailThreadId, err := emails.SendGmailEmail(r, user, schedueled[i], files)
 				if err != nil {
 					hasErrors = true
@@ -83,6 +84,12 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 					hasErrors = true
 					log.Errorf(c, "%v", err)
 					continue
+				}
+
+				// if files are present
+				for i := 0; i < len(files); i++ {
+					files[i].Imported = true
+					files[i].Save(c)
 				}
 			}
 		} else {
