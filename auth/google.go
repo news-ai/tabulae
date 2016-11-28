@@ -97,7 +97,6 @@ func RemoveGmailHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 
 	if r.URL.Query().Get("next") != "" {
 		returnURL := r.URL.Query().Get("next")
-		u, err := url.Parse(returnURL)
 		if err != nil {
 			http.Redirect(w, r, returnURL, 302)
 			return

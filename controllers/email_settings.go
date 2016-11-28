@@ -133,5 +133,5 @@ func CreateEmailSettings(c context.Context, r *http.Request) (models.EmailSettin
 }
 
 func VerifyEmailSetting(c context.Context, r *http.Request, id string) (models.EmailSetting, interface{}, error) {
-	return nil, nil, nil
+	return models.EmailSetting{}, nil, nil
 }
