@@ -39,18 +39,12 @@ func handleEmailAction(c context.Context, r *http.Request, id string, action str
 func handleEmail(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		if id == "settings" {
-			val, included, count, err := controllers.GetEmailSettings(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
-		}
 		return api.BaseSingleResponseHandler(controllers.GetEmail(c, r, id))
 	case "PATCH":
 		return api.BaseSingleResponseHandler(controllers.UpdateSingleEmail(c, r, id))
 	case "POST":
 		if id == "upload" {
 			return api.BaseSingleResponseHandler(files.HandleEmailImageActionUpload(c, r))
-		} else if id == "settings" {
-			return api.BaseSingleResponseHandler(controllers.CreateEmailSettings(c, r))
 		}
 	}
 	return nil, errors.New("method not implemented")

@@ -81,6 +81,34 @@ func GoogleLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 }
 
 // Handler to redirect user to the Google OAuth2 page
+func RemoveGmailHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	c := appengine.NewContext(r)
+
+	// Make sure the user has been logged in when at gmail auth
+	user, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		fmt.Fprintln(w, "user not logged in")
+		return
+	}
+
+	user.Gmail = false
+	controllers.SaveUser(c, r, &user)
+
+	if r.URL.Query().Get("next") != "" {
+		returnURL := r.URL.Query().Get("next")
+		u, err := url.Parse(returnURL)
+		if err != nil {
+			http.Redirect(w, r, returnURL, 302)
+			return
+		}
+	}
+
+	http.Redirect(w, r, "https://tabulae.newsai.co/settings", 302)
+	return
+}
+
+// Handler to redirect user to the Google OAuth2 page
 func GmailLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	c := appengine.NewContext(r)
 

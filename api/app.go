@@ -94,6 +94,7 @@ func init() {
 	// Login with Google
 	router.GET("/api/auth/google", auth.GoogleLoginHandler)
 	router.GET("/api/auth/gmail", auth.GmailLoginHandler)
+	router.GET("/api/auth/remove-gmail", auth.RemoveGmailHandler)
 	router.GET("/api/auth/googlecallback", auth.GoogleCallbackHandler)
 
 	// Internal auth: Linkedin
@@ -190,6 +191,11 @@ func init() {
 	router.POST("/api/emails/:id", routes.EmailHandler)
 	router.GET("/api/emails/:id/:action", routes.EmailActionHandler)
 	router.POST("/api/emails/:id/:action", routes.EmailActionHandler)
+
+	router.GET("/api/email-settings", routes.EmailSettingsHandler)
+	router.POST("/api/email-settings", routes.EmailSettingsHandler)
+	router.GET("/api/email-settings/:id", routes.EmailSettingHandler)
+	router.GET("/api/email-settings/:id/:action", routes.EmailSettingActionHandler)
 
 	router.GET("/api/templates", routes.TemplatesHandler)
 	router.POST("/api/templates", routes.TemplatesHandler)

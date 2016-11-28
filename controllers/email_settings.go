@@ -16,6 +16,7 @@ import (
 	"github.com/news-ai/tabulae/models"
 
 	"github.com/news-ai/web/permissions"
+	"github.com/news-ai/web/utilities"
 )
 
 func getEmailSetting(c context.Context, r *http.Request, id int64) (models.EmailSetting, error) {
@@ -47,6 +48,23 @@ func getEmailSetting(c context.Context, r *http.Request, id int64) (models.Email
 		return emailSetting, nil
 	}
 	return models.EmailSetting{}, errors.New("No email setting by this id")
+}
+
+func GetEmailSetting(c context.Context, r *http.Request, id string) (models.EmailSetting, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.EmailSetting{}, nil, err
+	}
+
+	emailSetting, err := getEmailSetting(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.EmailSetting{}, nil, err
+	}
+
+	return emailSetting, nil, nil
 }
 
 func GetEmailSettings(c context.Context, r *http.Request) ([]models.EmailSetting, interface{}, int, error) {
@@ -112,4 +130,8 @@ func CreateEmailSettings(c context.Context, r *http.Request) (models.EmailSettin
 	currentUser.EmailSetting = emailSettings.Id
 	SaveUser(c, r, &currentUser)
 	return emailSettings, nil, nil
+}
+
+func VerifyEmailSetting(c context.Context, r *http.Request, id string) (models.EmailSetting, interface{}, error) {
+	return nil, nil, nil
 }
