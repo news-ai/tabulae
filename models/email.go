@@ -9,6 +9,19 @@ import (
 	"github.com/qedus/nds"
 )
 
+type EmailSetting struct {
+	Base
+
+	SMTPServer  string `json:"SMTPServer"`
+	SMTPPortTLS int    `json:"SMTPPortTLS"`
+	SMTPPortSSL int    `json:"SMTPPortSSL"`
+	SMTPSSLTLS  bool   `json:"SMTPSSLTLS"`
+
+	IMAPServer string `json:"IMAPServer"`
+	IMAPPort   int    `json:"IMAPPort"`
+	IMAPSSLTLS bool   `json:"IMAPSSLTLS"`
+}
+
 type Email struct {
 	Base
 
@@ -66,6 +79,14 @@ func (e *Email) Create(c context.Context, r *http.Request, currentUser User) (*E
 	return e, err
 }
 
+func (es *EmailSetting) Create(c context.Context, r *http.Request, currentUser User) (*EmailSetting, error) {
+	es.CreatedBy = currentUser.Id
+	es.Created = time.Now()
+
+	_, err := es.Save(c)
+	return es, err
+}
+
 /*
 * Update methods
  */
@@ -81,6 +102,19 @@ func (e *Email) Save(c context.Context) (*Email, error) {
 	}
 	e.Id = k.IntID()
 	return e, nil
+}
+
+// Function to save a new email into App Engine
+func (es *EmailSetting) Save(c context.Context) (*EmailSetting, error) {
+	// Update the Updated time
+	es.Updated = time.Now()
+
+	k, err := nds.Put(c, es.key(c, "EmailSetting"), es)
+	if err != nil {
+		return nil, err
+	}
+	es.Id = k.IntID()
+	return es, nil
 }
 
 func (e *Email) MarkSent(c context.Context, emailId string) (*Email, error) {

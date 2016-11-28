@@ -29,6 +29,7 @@ type User struct {
 
 	LastLoggedIn time.Time `json:"-"`
 
+	// Social network settings
 	LinkedinId      string `json:"-"`
 	LinkedinAuthKey string `json:"-"`
 
@@ -45,6 +46,7 @@ type User struct {
 	BillingId int64 `json:"-"`
 	TeamId    int64 `json:"teamid"`
 
+	// Email settings
 	EmailSignature string `json:"emailsignature"`
 
 	Gmail           bool      `json:"gmail"`
@@ -53,6 +55,9 @@ type User struct {
 	GoogleExpiresIn time.Time `json:"-"`
 	RefreshToken    string    `json:"-"`
 	TokenType       string    `json:"-"`
+
+	ExternalEmail bool  `json:"externalemail"`
+	EmailSetting  int64 `json:"emailsetting"`
 
 	IsAdmin  bool `json:"-"`
 	IsActive bool `json:"isactive"`
