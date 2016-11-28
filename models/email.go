@@ -17,9 +17,10 @@ type EmailSetting struct {
 	SMTPPortSSL int    `json:"SMTPPortSSL"`
 	SMTPSSLTLS  bool   `json:"SMTPSSLTLS"`
 
-	IMAPServer string `json:"IMAPServer"`
-	IMAPPort   int    `json:"IMAPPort"`
-	IMAPSSLTLS bool   `json:"IMAPSSLTLS"`
+	IMAPServer  string `json:"IMAPServer"`
+	IMAPPortTLS int    `json:"IMAPPortTLS"`
+	IMAPPortSSL int    `json:"IMAPPortSSL"`
+	IMAPSSLTLS  bool   `json:"IMAPSSLTLS"`
 }
 
 type Email struct {

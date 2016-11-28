@@ -59,6 +59,9 @@ type User struct {
 	ExternalEmail bool  `json:"externalemail"`
 	EmailSetting  int64 `json:"emailsetting"`
 
+	SMTPValid    bool   `json:"-"`
+	SMTPPassword []byte `json:"-"`
+
 	IsAdmin  bool `json:"-"`
 	IsActive bool `json:"isactive"`
 }

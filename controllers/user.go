@@ -360,6 +360,12 @@ func AddUserToContext(c context.Context, r *http.Request, email string) {
 * Update methods
  */
 
+func SaveUser(c context.Context, r *http.Request, u *models.User) (*models.User, error) {
+	u.Save(c)
+	sync.ResourceSync(r, u.Id, "User", "create")
+	return u, nil
+}
+
 func Update(c context.Context, r *http.Request, u *models.User) (*models.User, error) {
 	if len(u.Employers) == 0 {
 		CreateAgencyFromUser(c, r, u)
