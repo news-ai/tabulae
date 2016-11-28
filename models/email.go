@@ -42,6 +42,9 @@ type Email struct {
 	Subject string `json:"subject" datastore:",noindex"`
 	Body    string `json:"body" datastore:",noindex"`
 
+	CC  []string `json:"cc"`  // Carbon copy email addresses
+	BCC []string `json:"bcc"` // Blind carbon copy email addresses
+
 	// User details
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`

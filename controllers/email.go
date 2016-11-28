@@ -325,6 +325,9 @@ func UpdateEmail(c context.Context, r *http.Request, currentUser models.User, em
 	utilities.UpdateIfNotBlank(&email.Body, updatedEmail.Body)
 	utilities.UpdateIfNotBlank(&email.To, updatedEmail.To)
 
+	email.CC = updatedEmail.CC
+	email.BCC = updatedEmail.BCC
+
 	if updatedEmail.ListId != 0 {
 		email.ListId = updatedEmail.ListId
 	}
