@@ -33,6 +33,11 @@ func handleEmailSetting(c context.Context, r *http.Request, id string) (interfac
 	switch r.Method {
 	case "GET":
 		return api.BaseSingleResponseHandler(controllers.GetEmailSetting(c, r, id))
+	case "POST":
+		switch id {
+		case "add-email":
+			return api.BaseSingleResponseHandler(controllers.AddUserEmail(c, r))
+		}
 	}
 	return nil, errors.New("method not implemented")
 }

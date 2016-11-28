@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	"golang.org/x/net/context"
 
@@ -15,6 +16,7 @@ import (
 
 	"github.com/news-ai/tabulae/models"
 
+	"github.com/news-ai/web/encrypt"
 	"github.com/news-ai/web/permissions"
 	"github.com/news-ai/web/utilities"
 )
@@ -101,6 +103,33 @@ func GetEmailSettings(c context.Context, r *http.Request) ([]models.EmailSetting
 /*
 * Create methods
  */
+
+func AddUserEmail(c context.Context, r *http.Request) (models.User, interface{}, error) {
+	buf, _ := ioutil.ReadAll(r.Body)
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	decoder := ffjson.NewDecoder()
+	var userEmailSettings models.UserEmailSetting
+	err = decoder.Decode(buf, &userEmailSettings)
+	if err != nil {
+		return models.User{}, nil, err
+	}
+
+	userPw, err := encrypt.EncryptString(userEmailSettings.SMTPPassword, os.Getenv("SECRETKEYEMAILPW"))
+	if err != nil {
+		return models.User{}, nil, err
+	}
+
+	currentUser.SMTPPassword = []byte(userPw)
+	SaveUser(c, r, &currentUser)
+
+	return currentUser, nil, nil
+}
 
 func CreateEmailSettings(c context.Context, r *http.Request) (models.EmailSetting, interface{}, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
