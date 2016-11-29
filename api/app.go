@@ -195,6 +195,7 @@ func init() {
 	router.GET("/api/email-settings", routes.EmailSettingsHandler)
 	router.POST("/api/email-settings", routes.EmailSettingsHandler)
 	router.GET("/api/email-settings/:id", routes.EmailSettingHandler)
+	router.POST("/api/email-settings/:id", routes.EmailSettingHandler)
 	router.GET("/api/email-settings/:id/:action", routes.EmailSettingActionHandler)
 
 	router.GET("/api/templates", routes.TemplatesHandler)

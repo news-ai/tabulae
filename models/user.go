@@ -60,6 +60,7 @@ type User struct {
 	EmailSetting  int64 `json:"emailsetting"`
 
 	SMTPValid    bool   `json:"-"`
+	SMTPUsername string `json:"-"`
 	SMTPPassword []byte `json:"-"`
 
 	IsAdmin  bool `json:"-"`

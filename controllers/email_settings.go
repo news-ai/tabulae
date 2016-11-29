@@ -125,6 +125,7 @@ func AddUserEmail(c context.Context, r *http.Request) (models.User, interface{},
 		return models.User{}, nil, err
 	}
 
+	currentUser.SMTPUsername = userEmailSettings.SMTPUsername
 	currentUser.SMTPPassword = []byte(userPw)
 	SaveUser(c, r, &currentUser)
 

@@ -10,6 +10,7 @@ import (
 )
 
 type UserEmailSetting struct {
+	SMTPUsername string `json:"smtpusername"`
 	SMTPPassword string `json:"smtppassword"`
 }
 
