@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 
 	"golang.org/x/net/context"
 
@@ -16,6 +17,7 @@ import (
 
 	"github.com/news-ai/tabulae/models"
 
+	"github.com/news-ai/web/emails"
 	"github.com/news-ai/web/encrypt"
 	"github.com/news-ai/web/permissions"
 	"github.com/news-ai/web/utilities"
@@ -163,5 +165,32 @@ func CreateEmailSettings(c context.Context, r *http.Request) (models.EmailSettin
 }
 
 func VerifyEmailSetting(c context.Context, r *http.Request, id string) (models.EmailSetting, interface{}, error) {
-	return models.EmailSetting{}, nil, nil
+	emailSetting, _, err := GetEmailSetting(c, r, id)
+	if err != nil {
+		return models.EmailSetting{}, nil, err
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.EmailSetting{}, nil, err
+	}
+
+	n := bytes.IndexByte(currentUser.SMTPPassword, 0)
+	SMTPPassword := string(currentUser.SMTPPassword[:n])
+
+	decryptedPassword, err := encrypt.DecryptString(SMTPPassword, os.Getenv("SECRETKEYEMAILPW"))
+	if err != nil {
+		return models.EmailSetting{}, nil, err
+	}
+
+	serverName := emailSetting.SMTPServer + strconv.Itoa(emailSetting.SMTPPortSSL)
+
+	err = emails.VerifySMTP(c, serverName, currentUser.SMTPUsername, decryptedPassword)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return emailSetting, nil, err
+	}
+
+	return emailSetting, nil, nil
 }
