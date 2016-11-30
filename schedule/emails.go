@@ -93,26 +93,28 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		} else {
-			emailSent, emailId, err := emails.SendEmail(r, schedueled[i], user, files)
-			if err != nil {
-				hasErrors = true
-				log.Errorf(c, "%v", err)
-				continue
-			}
-
-			schedueled[i].Save(c)
-
-			if emailSent {
-				// Set attachments for deletion
-				for i := 0; i < len(files); i++ {
-					files[i].Imported = true
-					files[i].Save(c)
+			if !schedueled[i].SendAt.IsZero() && schedueled[i].SendGridId == "" {
+				emailSent, emailId, err := emails.SendEmail(r, schedueled[i], user, files)
+				if err != nil {
+					hasErrors = true
+					log.Errorf(c, "%v", err)
+					continue
 				}
 
-				_, err := schedueled[i].MarkSent(c, emailId)
-				if err != nil {
-					log.Errorf(c, "%v", err)
-					hasErrors = true
+				schedueled[i].Save(c)
+
+				if emailSent {
+					// Set attachments for deletion
+					for i := 0; i < len(files); i++ {
+						files[i].Imported = true
+						files[i].Save(c)
+					}
+
+					_, err := schedueled[i].MarkSent(c, emailId)
+					if err != nil {
+						log.Errorf(c, "%v", err)
+						hasErrors = true
+					}
 				}
 			}
 		}

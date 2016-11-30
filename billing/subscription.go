@@ -15,7 +15,6 @@ import (
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/client"
 
-	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 )
@@ -121,14 +120,10 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 	}
 
 	// Email confirmation
-	emailReceipt, _ := controllers.CreateEmailInternal(r, user.Email, "", "")
-	emailSent, emailId, err := emails.SendInvoiceEmail(r, emailReceipt, originalPlan, emailDuration, ExpiresAt, billAmount, paidAmount)
-	if !emailSent || err != nil {
-		// Redirect user back to login page
-		log.Errorf(c, "%v", "Receipt email was not sent for "+user.Email)
+	err = emails.AddUserToTabulaePremiumList(c, user, originalPlan, emailDuration, ExpiresAt, billAmount, paidAmount)
+	if err != nil {
 		log.Errorf(c, "%v", err)
 	}
 
-	emailReceipt.MarkSent(c, emailId)
 	return nil
 }

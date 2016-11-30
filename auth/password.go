@@ -137,7 +137,7 @@ func ForgetPasswordHandler() http.HandlerFunc {
 		email := r.FormValue("email")
 
 		// Validate email
-		validEmail, err := mail.ParseAddress(email)
+		_, err := mail.ParseAddress(email)
 		if err != nil {
 			invalidEmailAlert := url.QueryEscape("The email you entered is not valid!")
 			http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
@@ -160,18 +160,15 @@ func ForgetPasswordHandler() http.HandlerFunc {
 		user.ResetPasswordCode = utilities.RandToken()
 		user.Save(c)
 
-		emailReset, _ := controllers.CreateEmailInternal(r, validEmail.Address, user.FirstName, user.LastName)
-		emailSent, emailId, err := emails.SendResetEmail(r, emailReset, user.ResetPasswordCode)
-		if !emailSent || err != nil {
+		resetPwErr := emails.ResetUserPassword(c, user, user.ResetPasswordCode)
+		if resetPwErr != nil {
 			// Redirect user back to login page
 			log.Errorf(c, "%v", "Reset email was not sent for "+email)
-			log.Errorf(c, "%v", err)
+			log.Errorf(c, "%v", resetPwErr)
 			emailResetErr := url.QueryEscape("Could not send a reset email. We'll fix this soon!")
 			http.Redirect(w, r, "/api/auth?success=false&message="+emailResetErr, 302)
 			return
 		}
-
-		emailReset.MarkSent(c, emailId)
 
 		// Redirect user back to login page
 		resetMessage := url.QueryEscape("We sent you a password reset email!")
@@ -241,18 +238,15 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		}
 
 		// Email could fail to send if there is no singleUser. Create check later.
-		emailConfirmation, _ := controllers.CreateEmailInternal(r, email, firstName, lastName)
-		emailSent, emailId, err := emails.SendConfirmationEmail(r, emailConfirmation, user.ConfirmationCode)
-		if !emailSent || err != nil {
+		confirmErr := emails.ConfirmUserAccount(c, user, user.ConfirmationCode)
+		if confirmErr != nil {
 			// Redirect user back to login page
 			log.Errorf(c, "%v", "Confirmation email was not sent for "+email)
-			log.Errorf(c, "%v", err)
+			log.Errorf(c, "%v", confirmErr)
 			emailRegistered := url.QueryEscape("Could not send confirmation email. We'll fix this soon!")
 			http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
 			return
 		}
-
-		emailConfirmation.MarkSent(c, emailId)
 
 		// Redirect user back to login page
 		confirmationMessage := url.QueryEscape("We sent you a confirmation email!")
