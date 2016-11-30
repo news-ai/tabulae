@@ -63,7 +63,7 @@ func TrialPlanPageHandler() http.HandlerFunc {
 				}
 			}
 
-			billingId, err := billing.AddFreeTrialToUser(r, user, "free-trial")
+			billingId, err := billing.AddFreeTrialToUser(r, user, "free")
 			user.IsActive = true
 			user.BillingId = billingId
 			user.Save(c)
