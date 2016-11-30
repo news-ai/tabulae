@@ -41,30 +41,6 @@ func MakeUsersInactive(w http.ResponseWriter, r *http.Request) {
 				billing.IsOnTrial = false
 				billing.Save(c)
 			}
-			// else {
-			// 	// If trial expiring email hasn't been sent
-			// 	if !billing.TrialEmailSent {
-			// 		// Check if it expires tomorrow
-			// 		tomorrow := time.Now().AddDate(0, 0, 1)
-			// 		expiresAt := billing.Expires
-			// 		difference := tomorrow.YearDay() - expiresAt.YearDay()
-
-			// 		if difference == 0 {
-			// 			// Send the email to the user alerting them that their subscription is going to expire
-			// 			emailTrialExpires, _ := controllers.CreateEmailInternal(r, users[i].Email, users[i].FirstName, users[i].LastName)
-			// 			emailSent, emailId, err := emails.SendTrialExpiresTomorrowEmail(r, emailTrialExpires)
-			// 			if !emailSent || err != nil {
-			// 				// Redirect user back to login page
-			// 				log.Errorf(c, "%v", "Trial expires email email was not sent for "+users[i].Email)
-			// 				log.Errorf(c, "%v", err)
-			// 			}
-			// 			emailTrialExpires.MarkSent(c, emailId)
-
-			// 			billing.TrialEmailSent = true
-			// 			billing.Save(c)
-			// 		}
-			// 	}
-			// }
 		}
 	}
 }

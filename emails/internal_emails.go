@@ -24,11 +24,6 @@ func SendConfirmationEmail(r *http.Request, email models.Email, confirmationCode
 	return emails.SendInternalEmail(r, email, "a64e454c-19d5-4bba-9cef-bd185e7c9b0b", "Thanks for signing up!", emailSubstitutes, 0)
 }
 
-func SendWelcomeEmail(r *http.Request, email models.Email) (bool, string, error) {
-	emailSubstitutes := []emails.EmailSubstitute{}
-	return emails.SendInternalEmail(r, email, "89d03e1c-6f9a-4820-8beb-db8b9856e7de", "Welcome To NewsAI Tabulae!", emailSubstitutes, 0)
-}
-
 func SendResetEmail(r *http.Request, email models.Email, resetPasswordCode string) (bool, string, error) {
 	// Adding the confirmation code for emails
 	t := &url.URL{Path: resetPasswordCode}
