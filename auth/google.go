@@ -237,15 +237,13 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 				q.Set("firstTimeUser", "true")
 				u.RawQuery = q.Encode()
 
-				emailWelcome, _ := controllers.CreateEmailInternal(r, user.Email, user.FirstName, user.LastName)
-				emailSent, emailId, err := emails.SendWelcomeEmail(r, emailWelcome)
-				if !emailSent || err != nil {
+				err = emails.AddUserToTabulaeTrialList(c, user)
+				if err != nil {
 					// Redirect user back to login page
 					log.Errorf(c, "%v", "Welcome email was not sent for "+user.Email)
 					log.Errorf(c, "%v", err)
 				}
 
-				emailWelcome.MarkSent(c, emailId)
 				user.ConfirmLoggedIn(c)
 			}
 			http.Redirect(w, r, u.String(), 302)
@@ -253,15 +251,12 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 		}
 	} else {
 		if user.LastLoggedIn.IsZero() {
-			emailWelcome, _ := controllers.CreateEmailInternal(r, user.Email, user.FirstName, user.LastName)
-			emailSent, emailId, err := emails.SendWelcomeEmail(r, emailWelcome)
-			if !emailSent || err != nil {
+			err = emails.AddUserToTabulaeTrialList(c, user)
+			if err != nil {
 				// Redirect user back to login page
 				log.Errorf(c, "%v", "Welcome email was not sent for "+user.Email)
 				log.Errorf(c, "%v", err)
 			}
-
-			emailWelcome.MarkSent(c, emailId)
 		}
 		http.Redirect(w, r, "/api/billing/plans/trial", 302)
 		return

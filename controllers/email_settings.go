@@ -167,6 +167,7 @@ func CreateEmailSettings(c context.Context, r *http.Request) (models.EmailSettin
 func VerifyEmailSetting(c context.Context, r *http.Request, id string) (models.EmailSetting, interface{}, error) {
 	emailSetting, _, err := GetEmailSetting(c, r, id)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.EmailSetting{}, nil, err
 	}
 
@@ -176,16 +177,14 @@ func VerifyEmailSetting(c context.Context, r *http.Request, id string) (models.E
 		return models.EmailSetting{}, nil, err
 	}
 
-	n := bytes.IndexByte(currentUser.SMTPPassword, 0)
-	SMTPPassword := string(currentUser.SMTPPassword[:n])
-
+	SMTPPassword := string(currentUser.SMTPPassword[:])
 	decryptedPassword, err := encrypt.DecryptString(SMTPPassword, os.Getenv("SECRETKEYEMAILPW"))
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return models.EmailSetting{}, nil, err
 	}
 
-	serverName := emailSetting.SMTPServer + strconv.Itoa(emailSetting.SMTPPortSSL)
-
+	serverName := emailSetting.SMTPServer + ":" + strconv.Itoa(emailSetting.SMTPPortSSL)
 	err = emails.VerifySMTP(c, serverName, currentUser.SMTPUsername, decryptedPassword)
 	if err != nil {
 		log.Errorf(c, "%v", err)
