@@ -63,14 +63,46 @@ func TrialPlanPageHandler() http.HandlerFunc {
 				}
 			}
 
-			data := map[string]interface{}{
-				"userEmail":      user.Email,
-				csrf.TemplateTag: csrf.TemplateField(r),
+			billingId, err := billing.AddFreeTrialToUser(r, user, "free-trial")
+			user.IsActive = true
+			user.BillingId = billingId
+			user.Save(c)
+
+			// If there was an error creating this person's trial
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				http.Redirect(w, r, "/api/billing/plans/trial", 302)
+				return
 			}
 
-			t := template.New("trial.html")
-			t, _ = t.ParseFiles("billing/trial.html")
-			t.Execute(w, data)
+			// If not then their is now probably successful so we redirect them back
+			returnURL := "https://tabulae.newsai.co/"
+			session, _ := Store.Get(r, "sess")
+			if session.Values["next"] != nil {
+				returnURL = session.Values["next"].(string)
+			}
+			u, err := url.Parse(returnURL)
+
+			// If there's an error in parsing the return value
+			// then returning it.
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				http.Redirect(w, r, returnURL, 302)
+				return
+			}
+
+			// This would be a bug since they should not be here if they
+			// are a firstTimeUser. But we'll allow it to help make
+			// experience normal.
+			if user.LastLoggedIn.IsZero() {
+				q := u.Query()
+				q.Set("firstTimeUser", "true")
+				u.RawQuery = q.Encode()
+				user.ConfirmLoggedIn(c)
+			}
+
+			http.Redirect(w, r, u.String(), 302)
+			return
 		} else {
 			// If the user is active then they don't need to start a free trial
 			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
@@ -136,77 +168,6 @@ func ChoosePlanPageHandler() http.HandlerFunc {
 			http.Redirect(w, r, "/api/billing/plans/trial", 302)
 			return
 		}
-	}
-}
-
-func ChooseTrialPlanHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		c := appengine.NewContext(r)
-		plan := r.FormValue("plan")
-
-		// To check if there is a user logged in
-		user, err := controllers.GetCurrentUser(c, r)
-
-		if r.URL.Query().Get("next") != "" {
-			session, _ := Store.Get(r, "sess")
-			session.Values["next"] = r.URL.Query().Get("next")
-			session.Save(r, w)
-
-			// If there is a next and the user has not been logged in
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				http.Redirect(w, r, r.URL.Query().Get("next"), 302)
-				return
-			}
-		}
-
-		// If there is no next and the user is not logged in
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
-			return
-		}
-
-		billingId, err := billing.AddFreeTrialToUser(r, user, plan)
-		user.IsActive = true
-		user.BillingId = billingId
-		user.Save(c)
-
-		// If there was an error creating this person's trial
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			http.Redirect(w, r, "/api/billing/plans/trial", 302)
-			return
-		}
-
-		// If not then their is now probably successful so we redirect them back
-		returnURL := "https://tabulae.newsai.co/"
-		session, _ := Store.Get(r, "sess")
-		if session.Values["next"] != nil {
-			returnURL = session.Values["next"].(string)
-		}
-		u, err := url.Parse(returnURL)
-
-		// If there's an error in parsing the return value
-		// then returning it.
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			http.Redirect(w, r, returnURL, 302)
-			return
-		}
-
-		// This would be a bug since they should not be here if they
-		// are a firstTimeUser. But we'll allow it to help make
-		// experience normal.
-		if user.LastLoggedIn.IsZero() {
-			q := u.Query()
-			q.Set("firstTimeUser", "true")
-			u.RawQuery = q.Encode()
-			user.ConfirmLoggedIn(c)
-		}
-
-		http.Redirect(w, r, u.String(), 302)
-		return
 	}
 }
 

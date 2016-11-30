@@ -114,7 +114,6 @@ func init() {
 
 	// Start a free trial
 	router.Handler("GET", "/api/billing/plans/trial", CSRF(auth.TrialPlanPageHandler()))
-	router.Handler("POST", "/api/billing/plans/start-trial", CSRF(auth.ChooseTrialPlanHandler()))
 
 	// Get all the plans
 	router.Handler("GET", "/api/billing/plans", CSRF(auth.ChoosePlanPageHandler()))
