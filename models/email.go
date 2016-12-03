@@ -68,6 +68,8 @@ type Email struct {
 	Spam          bool   `json:"spam"`
 	Cancel        bool   `json:"cancel"`
 
+	Archived bool `json:"archived"`
+
 	IsSent bool `json:"issent"` // Basically if the user has clicked on "/send"
 }
 

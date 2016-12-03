@@ -19,6 +19,8 @@ type User struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 
+	EmailAlias string `json:"emailalias"`
+
 	Password []byte `json:"-"`
 	ApiKey   string `json:"-"`
 

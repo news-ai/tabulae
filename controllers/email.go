@@ -54,7 +54,7 @@ func getEmail(c context.Context, r *http.Request, id int64) (models.Email, error
 			return models.Email{}, errors.New("Could not get user")
 		}
 
-		if !permissions.AccessToObject(email.CreatedBy, user.Id) {
+		if !permissions.AccessToObject(email.CreatedBy, user.Id) && !user.IsAdmin {
 			return models.Email{}, errors.New("Forbidden")
 		}
 
@@ -436,6 +436,18 @@ func CancelEmail(c context.Context, r *http.Request, id string) (models.Email, i
 	}
 
 	return email, nil, errors.New("Email has already been delivered")
+}
+
+func ArchiveEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
+	email, _, err := GetEmail(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Email{}, nil, err
+	}
+
+	email.Archived = true
+	email.Save(c)
+	return email, nil, nil
 }
 
 func GetCurrentSchedueledEmails(c context.Context, r *http.Request) ([]models.Email, error) {
