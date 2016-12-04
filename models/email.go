@@ -9,6 +9,13 @@ import (
 	"github.com/qedus/nds"
 )
 
+type SMTPSettings struct {
+	Servername string `json:"servername"`
+
+	EmailUser     string `json:"emailuser"`
+	EmailPassword string `json:"emailpassword"`
+}
+
 type UserEmailSetting struct {
 	SMTPUsername string `json:"smtpusername"`
 	SMTPPassword string `json:"smtppassword"`

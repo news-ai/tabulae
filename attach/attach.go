@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"cloud.google.com/go/storage"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
-	"google.golang.org/cloud/storage"
 
 	"github.com/news-ai/tabulae/models"
 )

@@ -120,7 +120,7 @@ func AddUserEmail(c context.Context, r *http.Request) (models.User, interface{},
 		return models.User{}, nil, err
 	}
 
-	userPw, err := encrypt.EncryptString(userEmailSettings.SMTPPassword, os.Getenv("SECRETKEYEMAILPW"))
+	userPw, err := encrypt.EncryptString(userEmailSettings.SMTPPassword)
 	if err != nil {
 		return models.User{}, nil, err
 	}
