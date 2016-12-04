@@ -1,14 +1,19 @@
 package controllers
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"time"
 
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/urlfetch"
 
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
@@ -19,6 +24,11 @@ import (
 	"github.com/news-ai/web/permissions"
 	"github.com/news-ai/web/utilities"
 )
+
+type VerifyEmailResponse struct {
+	Status bool   `json:"status"`
+	Error  string `json:"error"`
+}
 
 func getEmailSetting(c context.Context, r *http.Request, id int64) (models.EmailSetting, error) {
 	if id == 0 {
@@ -161,21 +171,55 @@ func CreateEmailSettings(c context.Context, r *http.Request) (models.EmailSettin
 	return emailSettings, nil, nil
 }
 
-func VerifyEmailSetting(c context.Context, r *http.Request, id string) (models.EmailSetting, interface{}, error) {
+func VerifyEmailSetting(c context.Context, r *http.Request, id string) (VerifyEmailResponse, interface{}, error) {
 	emailSetting, _, err := GetEmailSetting(c, r, id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return models.EmailSetting{}, nil, err
+		return VerifyEmailResponse{}, nil, err
 	}
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return models.EmailSetting{}, nil, err
+		return VerifyEmailResponse{}, nil, err
 	}
 
 	SMTPPassword := string(currentUser.SMTPPassword[:])
 	log.Infof(c, "%v", SMTPPassword)
 
-	return emailSetting, nil, nil
+	contextWithTimeout, _ := context.WithTimeout(c, time.Second*30)
+	client := urlfetch.Client(contextWithTimeout)
+	getUrl := "https://tabulae-smtp.newsai.org/"
+
+	verifyEmailRequest := models.SMTPSettings{}
+
+	verifyEmailRequest.Servername = emailSetting.SMTPServer + ":" + strconv.Itoa(emailSetting.SMTPPortSSL)
+	verifyEmailRequest.EmailUser = currentUser.SMTPUsername
+	verifyEmailRequest.EmailPassword = SMTPPassword
+
+	VerifyEmailRequest, err := json.Marshal(verifyEmailRequest)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return VerifyEmailResponse{}, nil, err
+	}
+	log.Infof(c, "%v", string(VerifyEmailRequest))
+	verifyEmailQuery := bytes.NewReader(VerifyEmailRequest)
+
+	req, _ := http.NewRequest("POST", getUrl, verifyEmailQuery)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return VerifyEmailResponse{}, nil, err
+	}
+
+	decoder := json.NewDecoder(resp.Body)
+	var verifyResponse VerifyEmailResponse
+	err = decoder.Decode(&verifyResponse)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return VerifyEmailResponse{}, nil, err
+	}
+
+	return verifyResponse, nil, nil
 }
