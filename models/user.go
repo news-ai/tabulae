@@ -61,7 +61,7 @@ type User struct {
 	ExternalEmail bool  `json:"externalemail"`
 	EmailSetting  int64 `json:"emailsetting"`
 
-	SMTPValid    bool   `json:"-"`
+	SMTPValid    bool   `json:"smtpvalid"`
 	SMTPUsername string `json:"-"`
 	SMTPPassword []byte `json:"-"`
 

@@ -136,6 +136,7 @@ func AddUserEmail(c context.Context, r *http.Request) (models.User, interface{},
 
 	currentUser.SMTPUsername = userEmailSettings.SMTPUsername
 	currentUser.SMTPPassword = []byte(userPw)
+	currentUser.SMTPValid = false
 	SaveUser(c, r, &currentUser)
 
 	return currentUser, nil, nil
@@ -167,6 +168,7 @@ func CreateEmailSettings(c context.Context, r *http.Request) (models.EmailSettin
 	emailSettings.Type = "emailsettings"
 
 	currentUser.EmailSetting = emailSettings.Id
+	currentUser.SMTPValid = false
 	SaveUser(c, r, &currentUser)
 	return emailSettings, nil, nil
 }
@@ -219,6 +221,11 @@ func VerifyEmailSetting(c context.Context, r *http.Request, id string) (VerifyEm
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return VerifyEmailResponse{}, nil, err
+	}
+
+	if verifyResponse.Status {
+		currentUser.SMTPValid = true
+		SaveUser(c, r, &currentUser)
 	}
 
 	return verifyResponse, nil, nil
