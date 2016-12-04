@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"os"
 
 	"golang.org/x/net/context"
 
@@ -160,4 +159,23 @@ func CreateEmailSettings(c context.Context, r *http.Request) (models.EmailSettin
 	currentUser.EmailSetting = emailSettings.Id
 	SaveUser(c, r, &currentUser)
 	return emailSettings, nil, nil
+}
+
+func VerifyEmailSetting(c context.Context, r *http.Request, id string) (models.EmailSetting, interface{}, error) {
+	emailSetting, _, err := GetEmailSetting(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.EmailSetting{}, nil, err
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.EmailSetting{}, nil, err
+	}
+
+	SMTPPassword := string(currentUser.SMTPPassword[:])
+	log.Infof(c, "%v", SMTPPassword)
+
+	return emailSetting, nil, nil
 }

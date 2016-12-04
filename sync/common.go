@@ -37,7 +37,7 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	} else if !exists {
-		if _, err := PubsubClient.NewTopic(c, InfluencerTopicID); err != nil {
+		if _, err := PubsubClient.CreateTopic(c, InfluencerTopicID); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}
@@ -48,7 +48,7 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	} else if !exists {
-		if _, err := PubsubClient.NewTopic(c, ContactsTopicID); err != nil {
+		if _, err := PubsubClient.CreateTopic(c, ContactsTopicID); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}
@@ -59,7 +59,7 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	} else if !exists {
-		if _, err := PubsubClient.NewTopic(c, PublicationsTopicID); err != nil {
+		if _, err := PubsubClient.CreateTopic(c, PublicationsTopicID); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}
@@ -70,7 +70,7 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	} else if !exists {
-		if _, err := PubsubClient.NewTopic(c, ListsTopicID); err != nil {
+		if _, err := PubsubClient.CreateTopic(c, ListsTopicID); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}
@@ -81,7 +81,7 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	} else if !exists {
-		if _, err := PubsubClient.NewTopic(c, TwitterTopicID); err != nil {
+		if _, err := PubsubClient.CreateTopic(c, TwitterTopicID); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}
@@ -92,7 +92,7 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	} else if !exists {
-		if _, err := PubsubClient.NewTopic(c, RSSFeedTopicID); err != nil {
+		if _, err := PubsubClient.CreateTopic(c, RSSFeedTopicID); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}
@@ -103,7 +103,7 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	} else if !exists {
-		if _, err := PubsubClient.NewTopic(c, InstagramTopicID); err != nil {
+		if _, err := PubsubClient.CreateTopic(c, InstagramTopicID); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}

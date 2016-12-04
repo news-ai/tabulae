@@ -18,6 +18,13 @@ import (
 )
 
 func handleEmailSettingAction(c context.Context, r *http.Request, id string, action string) (interface{}, error) {
+	switch r.Method {
+	case "GET":
+		switch action {
+		case "verify":
+			return api.BaseSingleResponseHandler(controllers.VerifyEmailSetting(c, r, id))
+		}
+	}
 	return nil, errors.New("method not implemented")
 }
 
