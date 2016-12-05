@@ -520,6 +520,37 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 		}
 	}
 
+	if user.SMTPValid && user.ExternalEmail {
+		emailId := strconv.FormatInt(email.Id, 10)
+		email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
+		email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
+		email.Method = "smtp"
+		val, err := email.MarkSent(c, "")
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return *val, nil, err
+		}
+
+		// Check to see if there is no sendat date or if date is in the past
+		if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
+			emailBody, err := emails.GenerateEmail(r, user, email, files)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return *val, nil, err
+			}
+
+			log.Infof(c, "%v", emailBody)
+
+			val, err = email.MarkDelivered(c)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return *val, nil, err
+			}
+		}
+
+		return *val, nil, nil
+	}
+
 	// Send through gmail
 	if user.AccessToken != "" && user.Gmail {
 		err = google.ValidateAccessToken(r, user)

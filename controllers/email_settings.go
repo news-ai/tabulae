@@ -191,7 +191,7 @@ func VerifyEmailSetting(c context.Context, r *http.Request, id string) (VerifyEm
 
 	contextWithTimeout, _ := context.WithTimeout(c, time.Second*30)
 	client := urlfetch.Client(contextWithTimeout)
-	getUrl := "https://tabulae-smtp.newsai.org/"
+	getUrl := "https://tabulae-smtp.newsai.org/verify"
 
 	verifyEmailRequest := models.SMTPSettings{}
 
