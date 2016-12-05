@@ -25,7 +25,7 @@ import (
 	"github.com/news-ai/web/utilities"
 )
 
-type VerifyEmailResponse struct {
+type SMTPEmailResponse struct {
 	Status bool   `json:"status"`
 	Error  string `json:"error"`
 }
@@ -173,21 +173,20 @@ func CreateEmailSettings(c context.Context, r *http.Request) (models.EmailSettin
 	return emailSettings, nil, nil
 }
 
-func VerifyEmailSetting(c context.Context, r *http.Request, id string) (VerifyEmailResponse, interface{}, error) {
+func VerifyEmailSetting(c context.Context, r *http.Request, id string) (SMTPEmailResponse, interface{}, error) {
 	emailSetting, _, err := GetEmailSetting(c, r, id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return VerifyEmailResponse{}, nil, err
+		return SMTPEmailResponse{}, nil, err
 	}
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return VerifyEmailResponse{}, nil, err
+		return SMTPEmailResponse{}, nil, err
 	}
 
 	SMTPPassword := string(currentUser.SMTPPassword[:])
-	log.Infof(c, "%v", SMTPPassword)
 
 	contextWithTimeout, _ := context.WithTimeout(c, time.Second*30)
 	client := urlfetch.Client(contextWithTimeout)
@@ -202,7 +201,7 @@ func VerifyEmailSetting(c context.Context, r *http.Request, id string) (VerifyEm
 	VerifyEmailRequest, err := json.Marshal(verifyEmailRequest)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return VerifyEmailResponse{}, nil, err
+		return SMTPEmailResponse{}, nil, err
 	}
 	log.Infof(c, "%v", string(VerifyEmailRequest))
 	verifyEmailQuery := bytes.NewReader(VerifyEmailRequest)
@@ -212,15 +211,15 @@ func VerifyEmailSetting(c context.Context, r *http.Request, id string) (VerifyEm
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return VerifyEmailResponse{}, nil, err
+		return SMTPEmailResponse{}, nil, err
 	}
 
 	decoder := json.NewDecoder(resp.Body)
-	var verifyResponse VerifyEmailResponse
+	var verifyResponse SMTPEmailResponse
 	err = decoder.Decode(&verifyResponse)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return VerifyEmailResponse{}, nil, err
+		return SMTPEmailResponse{}, nil, err
 	}
 
 	if verifyResponse.Status {

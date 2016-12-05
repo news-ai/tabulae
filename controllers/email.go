@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +14,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/urlfetch"
 
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
@@ -520,7 +523,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 		}
 	}
 
-	if user.SMTPValid && user.ExternalEmail {
+	if user.SMTPValid && user.ExternalEmail && user.EmailSetting != 0 {
 		emailId := strconv.FormatInt(email.Id, 10)
 		email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
 		email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
@@ -539,13 +542,63 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 				return *val, nil, err
 			}
 
-			log.Infof(c, "%v", emailBody)
-
-			val, err = email.MarkDelivered(c)
+			emailSetting, err := getEmailSetting(c, r, user.EmailSetting)
 			if err != nil {
 				log.Errorf(c, "%v", err)
 				return *val, nil, err
 			}
+
+			SMTPPassword := string(user.SMTPPassword[:])
+
+			contextWithTimeout, _ := context.WithTimeout(c, time.Second*30)
+			client := urlfetch.Client(contextWithTimeout)
+			getUrl := "https://tabulae-smtp.newsai.org/send"
+
+			sendEmailRequest := models.SMTPEmailSettings{}
+
+			sendEmailRequest.Servername = emailSetting.SMTPServer + ":" + strconv.Itoa(emailSetting.SMTPPortSSL)
+			sendEmailRequest.EmailUser = user.SMTPUsername
+			sendEmailRequest.EmailPassword = SMTPPassword
+			sendEmailRequest.To = email.To
+			sendEmailRequest.Subject = email.Subject
+			sendEmailRequest.Body = emailBody
+
+			SendEmailRequest, err := json.Marshal(sendEmailRequest)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return *val, nil, err
+			}
+			log.Infof(c, "%v", string(SendEmailRequest))
+			sendEmailQuery := bytes.NewReader(SendEmailRequest)
+
+			req, _ := http.NewRequest("POST", getUrl, sendEmailQuery)
+
+			resp, err := client.Do(req)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return *val, nil, err
+			}
+
+			decoder := json.NewDecoder(resp.Body)
+			var verifyResponse SMTPEmailResponse
+			err = decoder.Decode(&verifyResponse)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return *val, nil, err
+			}
+
+			log.Infof(c, "%v", verifyResponse)
+
+			if verifyResponse.Status {
+				val, err = email.MarkDelivered(c)
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					return *val, nil, err
+				}
+				return *val, nil, nil
+			}
+
+			return *val, nil, errors.New(verifyResponse.Error)
 		}
 
 		return *val, nil, nil
