@@ -16,6 +16,17 @@ type SMTPSettings struct {
 	EmailPassword string `json:"emailpassword"`
 }
 
+type SMTPEmailSettings struct {
+	Servername string `json:"servername"`
+
+	EmailUser     string `json:"emailuser"`
+	EmailPassword string `json:"emailpassword"`
+
+	To      string `json:"to"`
+	Subject string `json:"subject"`
+	Body    string `json:"body"`
+}
+
 type UserEmailSetting struct {
 	SMTPUsername string `json:"smtpusername"`
 	SMTPPassword string `json:"smtppassword"`
