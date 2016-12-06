@@ -446,6 +446,18 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 		user.GetDailyEmails = false
 	}
 
+	if user.SMTPValid {
+		// If new user wants to get daily emails
+		if updatedUser.ExternalEmail == true {
+			user.ExternalEmail = true
+		}
+
+		// If this person doesn't want to get daily emails anymore
+		if user.ExternalEmail == true && updatedUser.ExternalEmail == false {
+			user.ExternalEmail = false
+		}
+	}
+
 	if len(updatedUser.Employers) > 0 {
 		user.Employers = updatedUser.Employers
 	}

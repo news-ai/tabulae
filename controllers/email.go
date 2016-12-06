@@ -555,7 +555,6 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 			getUrl := "https://tabulae-smtp.newsai.org/send"
 
 			sendEmailRequest := models.SMTPEmailSettings{}
-
 			sendEmailRequest.Servername = emailSetting.SMTPServer + ":" + strconv.Itoa(emailSetting.SMTPPortSSL)
 			sendEmailRequest.EmailUser = user.SMTPUsername
 			sendEmailRequest.EmailPassword = SMTPPassword
