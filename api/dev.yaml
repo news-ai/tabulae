@@ -41,6 +41,7 @@ env_variables:
   ELASTIC_PASS: 'XkJRNRx2EGCd6'
   STRIPE_PUBLISHABLE_KEY: 'pk_live_BQgcXTDIgDIx8MllwCbQrASC'
   STRIPE_SECRET_KEY: 'sk_live_KRYDxkzOQU7c2zvxI2WhXhV7'
+  FULLCONTACT_API_KEY: '5686291ee0c6c944'
 
 inbound_services:
 - mail
