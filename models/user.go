@@ -67,6 +67,8 @@ type User struct {
 
 	IsAdmin  bool `json:"-"`
 	IsActive bool `json:"isactive"`
+
+	EnhanceCredits int `json:"enhancecredits"`
 }
 
 /*
