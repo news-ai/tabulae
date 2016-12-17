@@ -56,6 +56,7 @@ func InstagramSync(r *http.Request, instagramUser string, instagramAccessToken s
 
 		return sync(r, data, InstagramTopicID)
 	}
+
 	return errors.New("Instagram username is not valid")
 }
 
@@ -119,10 +120,11 @@ func ResourceBulkSync(r *http.Request, resourceIds []int64, resource string, met
 	return nil
 }
 
-func EmailSync(r *http.Request, resourceId int64, email string) error {
+func EmailSync(r *http.Request, email string) error {
 	data := map[string]string{
-		"Email": email,
+		"email": email,
 	}
+
 	return sync(r, data, EnhanceTopicID)
 }
 
