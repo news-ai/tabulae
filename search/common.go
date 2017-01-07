@@ -178,4 +178,10 @@ func InitializeElasticSearch() {
 	listTimeseriesElastic.Index = "lists"
 	listTimeseriesElastic.Type = "list"
 	elasticList = &listTimeseriesElastic
+
+	contactDatabaseElastic := elastic.Elastic{}
+	contactDatabaseElastic.BaseURL = newBaseURL
+	contactDatabaseElastic.Index = "database"
+	contactDatabaseElastic.Type = "contacts"
+	elasticContactDatabase = &contactDatabaseElastic
 }

@@ -661,6 +661,29 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 	return contact, includes, nil
 }
 
+func GetEnrichProfile(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	contactDetail, err := search.SearchContactDatabase(c, r, contact.Email)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	return contactDetail, nil, nil
+}
+
 func GetTweetsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)

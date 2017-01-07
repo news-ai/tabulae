@@ -53,6 +53,8 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 		case "lists":
 			val, included, count, err := controllers.GetListsForContact(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)
+		case "database":
+			return api.BaseSingleResponseHandler(controllers.GetEnrichProfile(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")
