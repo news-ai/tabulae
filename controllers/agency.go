@@ -31,6 +31,7 @@ func getAgency(c context.Context, id int64) (models.Agency, error) {
 	if id == 0 {
 		return models.Agency{}, errors.New("datastore: no such entity")
 	}
+
 	// Get the agency by id
 	var agency models.Agency
 	agencyId := datastore.NewKey(c, "Agency", "", id, nil)
@@ -44,6 +45,7 @@ func getAgency(c context.Context, id int64) (models.Agency, error) {
 		agency.Format(agencyId, "agencies")
 		return agency, nil
 	}
+
 	return models.Agency{}, errors.New("No agency by this id")
 }
 
@@ -74,6 +76,7 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
 		agencies[0].Format(ks[0], "agencies")
 		return agencies[0], nil
 	}
+
 	return models.Agency{}, errors.New("No agency by the field " + queryType)
 }
 
@@ -145,6 +148,7 @@ func GetAgency(c context.Context, id string) (models.Agency, interface{}, error)
 		log.Errorf(c, "%v", err)
 		return models.Agency{}, nil, err
 	}
+
 	return agency, nil, nil
 }
 
@@ -157,29 +161,30 @@ func CreateAgencyFromUser(c context.Context, r *http.Request, u *models.User) (m
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Agency{}, err
-	} else {
-		agency, err := FilterAgencyByEmail(c, agencyEmail)
-		if err != nil {
-			agency = models.Agency{}
-			agency.Name, err = utilities.ExtractNameFromEmail(agencyEmail)
-			agency.Email = agencyEmail
-			agency.Created = time.Now()
-
-			// The person who signs up for the agency at the beginning
-			// becomes the defacto administrator until we change.
-			agency.Administrators = append(agency.Administrators, u.Id)
-			currentUser, err := GetCurrentUser(c, r)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return agency, err
-			}
-			agency.Create(c, r, currentUser)
-		}
-		u.Employers = append(u.Employers, agency.Id)
-		u.Save(c)
-		return agency, nil
 	}
-	return models.Agency{}, nil
+
+	agency, err := FilterAgencyByEmail(c, agencyEmail)
+	if err != nil {
+		agency = models.Agency{}
+		agency.Name, err = utilities.ExtractNameFromEmail(agencyEmail)
+		agency.Email = agencyEmail
+		agency.Created = time.Now()
+
+		// The person who signs up for the agency at the beginning
+		// becomes the defacto administrator until we change.
+		agency.Administrators = append(agency.Administrators, u.Id)
+		currentUser, err := GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return agency, err
+		}
+
+		agency.Create(c, r, currentUser)
+	}
+
+	u.Employers = append(u.Employers, agency.Id)
+	u.Save(c)
+	return agency, nil
 }
 
 /*
@@ -193,5 +198,6 @@ func FilterAgencyByEmail(c context.Context, email string) (models.Agency, error)
 		log.Errorf(c, "%v", err)
 		return models.Agency{}, err
 	}
+
 	return agency, nil
 }

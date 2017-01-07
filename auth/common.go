@@ -40,9 +40,11 @@ func GetCurrentUserEmail(r *http.Request) (string, error) {
 	if err != nil {
 		return "", errors.New("No user logged in")
 	}
+
 	if session.Values["email"] == nil {
 		return "", errors.New("No user logged in")
 	}
+
 	return session.Values["email"].(string), nil
 }
 
@@ -52,9 +54,11 @@ func GetCurrentUserId(r *http.Request) (int64, error) {
 	if err != nil {
 		return 0, errors.New("No user logged in")
 	}
+
 	if session.Values["id"] == nil {
 		return 0, errors.New("No user logged in")
 	}
+
 	return session.Values["id"].(int64), nil
 }
 

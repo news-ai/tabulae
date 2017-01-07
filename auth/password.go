@@ -33,10 +33,10 @@ func PasswordLoginHandler() http.HandlerFunc {
 			return
 		}
 
-		// // Generate a random state that we identify the user with
+		// Generate a random state that we identify the user with
 		state := utilities.RandToken()
 
-		// // Save the session for each of the users
+		// Save the session for each of the users
 		session, _ := Store.Get(r, "sess")
 		session.Values["state"] = state
 		session.Save(r, w)
@@ -89,6 +89,7 @@ func PasswordLoginHandler() http.HandlerFunc {
 				return
 			}
 		}
+
 		wrongPasswordMessage := url.QueryEscape("You entered the wrong password!")
 		http.Redirect(w, r, "/api/auth?success=false&message="+wrongPasswordMessage, 302)
 		return

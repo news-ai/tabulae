@@ -58,6 +58,7 @@ func getEmailSetting(c context.Context, r *http.Request, id int64) (models.Email
 
 		return emailSetting, nil
 	}
+
 	return models.EmailSetting{}, errors.New("No email setting by this id")
 }
 
@@ -170,6 +171,7 @@ func CreateEmailSettings(c context.Context, r *http.Request) (models.EmailSettin
 	currentUser.EmailSetting = emailSettings.Id
 	currentUser.SMTPValid = false
 	SaveUser(c, r, &currentUser)
+
 	return emailSettings, nil, nil
 }
 
@@ -203,11 +205,11 @@ func VerifyEmailSetting(c context.Context, r *http.Request, id string) (SMTPEmai
 		log.Errorf(c, "%v", err)
 		return SMTPEmailResponse{}, nil, err
 	}
+
 	log.Infof(c, "%v", string(VerifyEmailRequest))
 	verifyEmailQuery := bytes.NewReader(VerifyEmailRequest)
 
 	req, _ := http.NewRequest("POST", getUrl, verifyEmailQuery)
-
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Errorf(c, "%v", err)

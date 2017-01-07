@@ -64,11 +64,11 @@ func LinkedinLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.P
 	// Redirect the user to the login page
 	url := linkedinOauthConfig.AuthCodeURL(state)
 	http.Redirect(w, r, url, 302)
+	return
 }
 
 func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	c := appengine.NewContext(r)
-
 	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Infof(c, "%v", err)
@@ -89,7 +89,6 @@ func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httproute
 	}
 
 	tkn, err := linkedinOauthConfig.Exchange(c, r.URL.Query().Get("code"))
-
 	if err != nil {
 		fmt.Fprintln(w, "there was an issue getting your token")
 		return
@@ -106,9 +105,9 @@ func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httproute
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	req.Header.Set("Bearer", tkn.AccessToken)
 	response, err := client.Do(req)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -137,7 +136,6 @@ func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httproute
 	}
 
 	linkedinUser.AccessToken = tkn.AccessToken
-
 	currentUser.LinkedinId = linkedinUser.Id
 	currentUser.LinkedinAuthKey = tkn.AccessToken
 	currentUser.Save(c)
@@ -153,4 +151,5 @@ func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httproute
 	}
 
 	http.Redirect(w, r, "/", 302)
+	return
 }

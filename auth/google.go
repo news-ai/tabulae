@@ -78,6 +78,7 @@ func GoogleLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	// Redirect the user to the login page
 	url := googleOauthConfig.AuthCodeURL(state)
 	http.Redirect(w, r, url, 302)
+	return
 }
 
 // Handler to redirect user to the Google OAuth2 page
