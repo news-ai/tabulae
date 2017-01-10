@@ -24,6 +24,8 @@ func handlePublicationActions(c context.Context, r *http.Request, id string, act
 		case "headlines":
 			val, included, count, err := controllers.GetHeadlinesForPublication(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)
+		case "database-profile":
+			return api.BaseSingleResponseHandler(controllers.GetEnrichCompanyProfile(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")

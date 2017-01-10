@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"golang.org/x/net/context"
@@ -162,6 +163,38 @@ func GetHeadlinesForPublication(c context.Context, r *http.Request, id string) (
 	}
 
 	return headlines, nil, len(headlines), nil
+}
+
+func GetEnrichCompanyProfile(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	publication, err := getPublication(c, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	if publication.Url == "" {
+		return nil, nil, errors.New("Publication has no URL")
+	}
+
+	publicationUrl, err := url.Parse(publication.Url)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	publicationDetail, err := search.SearchCompanyDatabase(c, r, publicationUrl.Host)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	return publicationDetail, nil, nil
 }
 
 /*

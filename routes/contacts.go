@@ -53,7 +53,7 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 		case "lists":
 			val, included, count, err := controllers.GetListsForContact(c, r, id)
 			return api.BaseResponseHandler(val, included, count, err, r)
-		case "database":
+		case "database-profile":
 			return api.BaseSingleResponseHandler(controllers.GetEnrichProfile(c, r, id))
 		}
 	}
