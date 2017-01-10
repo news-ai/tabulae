@@ -274,6 +274,41 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 	return presentPublication, nil, 1, nil
 }
 
+/*
+* Update methods
+ */
+
+func UpdatePublication(c context.Context, r *http.Request, id string) (models.Publication, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Publication{}, nil, err
+	}
+
+	publication, err := getPublication(c, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Publication{}, nil, err
+	}
+
+	decoder := ffjson.NewDecoder()
+	buf, _ := ioutil.ReadAll(r.Body)
+	var updatedPublication models.Publication
+	err = decoder.Decode(buf, &updatedPublication)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Publication{}, nil, err
+	}
+
+	if publication.Url == "" && updatedPublication.Url != "" {
+		publication.Url = updatedPublication.Url
+		publication.Save(c)
+	}
+
+	return publication, nil, nil
+}
+
 func FindOrCreatePublication(c context.Context, r *http.Request, name string) (models.Publication, error) {
 	name = strings.Trim(name, " ")
 	publication, _, err := FilterPublicationByName(c, name)
