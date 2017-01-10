@@ -35,6 +35,8 @@ func handlePublication(c context.Context, r *http.Request, id string) (interface
 	switch r.Method {
 	case "GET":
 		return api.BaseSingleResponseHandler(controllers.GetPublication(c, id))
+	case "PATCH":
+		return api.BaseSingleResponseHandler(controllers.UpdatePublication(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }

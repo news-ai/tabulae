@@ -159,6 +159,7 @@ func init() {
 	router.GET("/api/publications", routes.PublicationsHandler)
 	router.POST("/api/publications", routes.PublicationsHandler)
 	router.GET("/api/publications/:id", routes.PublicationHandler)
+	router.PATCH("/api/publications/:id", routes.PublicationHandler)
 	router.GET("/api/publications/:id/:action", routes.PublicationActionHandler)
 
 	router.GET("/api/contacts", routes.ContactsHandler)
