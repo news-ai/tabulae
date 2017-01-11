@@ -222,7 +222,7 @@ func CreateFeed(c context.Context, r *http.Request) (models.Feed, interface{}, e
 		}
 	}
 
-	publication, err := FindOrCreatePublication(c, r, publicationName)
+	publication, err := FindOrCreatePublication(c, r, publicationName, baseDomain)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Feed{}, nil, err

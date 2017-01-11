@@ -233,7 +233,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 				return []models.Publication{}, nil, 0, err
 			}
 
-			presentPublication, _, err := FilterPublicationByName(c, publications[i].Name)
+			presentPublication, _, err := FilterPublicationByNameAndUrl(c, publications[i].Name, publications[i].Url)
 			if err != nil {
 				_, err = publications[i].Create(c, r, currentUser)
 				if err != nil {
@@ -255,7 +255,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 		return models.Publication{}, nil, 0, err
 	}
 
-	presentPublication, _, err := FilterPublicationByName(c, publication.Name)
+	presentPublication, _, err := FilterPublicationByNameAndUrl(c, publication.Name, publication.Url)
 	if err != nil {
 		currentUser, err := GetCurrentUser(c, r)
 		if err != nil {
@@ -309,9 +309,9 @@ func UpdatePublication(c context.Context, r *http.Request, id string) (models.Pu
 	return publication, nil, nil
 }
 
-func FindOrCreatePublication(c context.Context, r *http.Request, name string) (models.Publication, error) {
+func FindOrCreatePublication(c context.Context, r *http.Request, name string, url string) (models.Publication, error) {
 	name = strings.Trim(name, " ")
-	publication, _, err := FilterPublicationByName(c, name)
+	publication, _, err := FilterPublicationByNameAndUrl(c, name, url)
 	if err != nil {
 		currentUser, err := GetCurrentUser(c, r)
 		if err != nil {
@@ -338,22 +338,33 @@ func FindOrCreatePublication(c context.Context, r *http.Request, name string) (m
 * Filter methods
  */
 
-func FilterPublicationByUrl(c context.Context, url string) (models.Publication, error) {
-	// Get the id of the current publication
-	publication, err := filterPublication(c, "Url", url)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.Publication{}, err
-	}
-	return publication, nil
-}
+func FilterPublicationByNameAndUrl(c context.Context, name string, url string) (models.Publication, interface{}, error) {
+	// If the url is not empty then we try and compare it to ones that already exist
+	if url != "" {
+		publication, err := filterPublication(c, "Url", url)
 
-func FilterPublicationByName(c context.Context, name string) (models.Publication, interface{}, error) {
-	// Get the id of the current publication
+		// If it does exist then return it
+		if err == nil {
+			return publication, nil, nil
+		}
+	}
+
+	// If the url is empty or it doesn't exist then we try search by name
 	publication, err := filterPublication(c, "Name", name)
 	if err != nil {
+		// This means there's no name or url that matches that publication object
 		log.Errorf(c, "%v", err)
 		return models.Publication{}, nil, err
 	}
+
+	// If the name does exist then we return it
+	// Here we can be a little clever
+	if url != "" {
+		// If there is a url present in the search object but not in the publication
+		// object then we add it and save it.
+		publication.Url = url
+		publication.Save(c)
+	}
+
 	return publication, nil, nil
 }
