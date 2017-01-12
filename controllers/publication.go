@@ -359,7 +359,7 @@ func FilterPublicationByNameAndUrl(c context.Context, name string, url string) (
 
 	// If the name does exist then we return it
 	// Here we can be a little clever
-	if url != "" {
+	if url != "" && publication.Url == "" {
 		// If there is a url present in the search object but not in the publication
 		// object then we add it and save it.
 		publication.Url = url

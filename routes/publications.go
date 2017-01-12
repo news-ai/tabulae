@@ -46,7 +46,7 @@ func handlePublications(c context.Context, w http.ResponseWriter, r *http.Reques
 	case "GET":
 		if len(r.URL.Query()) > 0 {
 			if val, ok := r.URL.Query()["name"]; ok && len(val) > 0 {
-				return api.BaseSingleResponseHandler(controllers.FilterPublicationByName(c, val[0]))
+				return api.BaseSingleResponseHandler(controllers.FilterPublicationByNameAndUrl(c, val[0], ""))
 			}
 		}
 		val, included, count, err := controllers.GetPublications(c, r)

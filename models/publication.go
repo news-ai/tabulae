@@ -23,7 +23,7 @@ type Publication struct {
 	Twitter   string `json:"twitter"`
 	Instagram string `json:"instagram"`
 	MuckRack  string `json:"-"`
-	Website   string `json:"website"`
+	Website   string `json:"-"`
 	Blog      string `json:"blog"`
 }
 
