@@ -301,11 +301,48 @@ func UpdatePublication(c context.Context, r *http.Request, id string) (models.Pu
 		return models.Publication{}, nil, err
 	}
 
-	if publication.Url == "" && updatedPublication.Url != "" {
+	if publication.Verified {
+		return models.Publication{}, nil, errors.New("Url of a verified publication can not be changed")
+	}
+
+	// If updated publication url is empty and the publication has not been verified
+	if updatedPublication.Url != "" && !publication.Verified {
 		publication.Url = updatedPublication.Url
 		publication.Save(c)
 	}
 
+	sync.ResourceSync(r, publication.Id, "Publication", "create")
+	return publication, nil, nil
+}
+
+func VerifyPublication(c context.Context, r *http.Request, id string) (models.Publication, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Publication{}, nil, err
+	}
+
+	publication, err := getPublication(c, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Publication{}, nil, err
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Publication{}, nil, err
+	}
+
+	if !currentUser.IsAdmin {
+		return models.Publication{}, nil, errors.New("Forbidden")
+	}
+
+	publication.Verified = true
+	publication.Save(c)
+
+	sync.ResourceSync(r, publication.Id, "Publication", "create")
 	return publication, nil, nil
 }
 

@@ -25,6 +25,8 @@ type Publication struct {
 	MuckRack  string `json:"-"`
 	Website   string `json:"-"`
 	Blog      string `json:"blog"`
+
+	Verified bool `json:"verified"`
 }
 
 /*
