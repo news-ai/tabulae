@@ -18,6 +18,7 @@ type Billing struct {
 	HasTrial     bool      `json:"-"`
 	IsOnTrial    bool      `json:"-"`
 	IsAgency     bool      `json:"-"`
+	IsCancel     bool      `json:"-"`
 
 	TrialEmailSent bool `json:"-"`
 
