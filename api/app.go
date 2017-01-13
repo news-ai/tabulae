@@ -126,6 +126,9 @@ func init() {
 	router.Handler("POST", "/api/billing/confirmation", CSRF(auth.ChoosePlanHandler()))
 	router.Handler("POST", "/api/billing/receipt", CSRF(auth.ConfirmPlanHandler()))
 
+	// Cancel plan method
+	router.Handler("GET", "/api/billing/cancel", CSRF(auth.CancelPlanPageHandler()))
+
 	// Optional checks
 	router.Handler("POST", "/api/billing/check-coupon", auth.CheckCouponValid())
 
