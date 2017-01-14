@@ -12,7 +12,7 @@
     <meta property="og:title" content="NewsAI" />
     <meta property="og:description" content="NewsAI is a news intelligence platform for public relations professionals to streamline the process of monitoring news, finding influencers, and building media lists for their clients. " />
 
-    <title>NewsAI - Cancel</title>
+    <title>NewsAI - Receipt</title>
 
     <link rel="icon" href="https://www.newsai.co/images/favicon.ico">
     <link rel="apple-touch-icon" href="https://www.newsai.co/images/apple-touch-icon.png">
@@ -27,13 +27,6 @@
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="stylesheet" href="/static/css/newsai.css">
     <link rel="stylesheet" href="/static/css/responsive.css">
-    <link rel="stylesheet" href="/static/css/confirmation.css">
-
-    <style type="text/css">
-        * {
-            border-radius: 0 !important;
-        }
-    </style>
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/ur8dbk9e';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()</script>
@@ -54,14 +47,11 @@
     <div class="container">
         <div class="row list" id="social-sync">
             <div class="col-md-6 left-align">
-                <h2 class="dark-text">Can we help?</h2>
+                <h2 id="title" class="dark-text">Sorry to see you go :(</h2>
                 <div class="colored-line-left">
                 </div>
-                <p>We're sorry that you're thinking about cancelling your membership. We would love to help. Can you tell us why you're thinking of leaving?</p>
-                <h3 class="dark-text">Is it too expensive?</h3>
-                <p>Change your plan</p>
-                <h3 class="dark-text">Is it any of these reasons?</h3>
-                <p>Keep membership or <a href="">Cancel membership</a></p>
+                <p>We're sad you're leaving! Let us know if there is anything we can improve for you.</p>
+                <p></p>
             </div>
             <div class="col-md-6">
             </div>
@@ -70,8 +60,6 @@
 </section>
 <script src="https://www.newsai.co/js/bootstrap.min.js"></script>
 <script src="https://www.newsai.co/js/newsai.js"></script>
-<script src="/static/js/common.js"></script>
-<script type="text/javascript" src="https://js.stripe.com/v2/"></script>
 <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
             (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -82,62 +70,10 @@
     ga('send', 'pageview');
 </script>
 <script>
+
     Intercom('boot', {
         app_id: 'ur8dbk9e',
         email: '{{.userEmail}}'
-    });
-    Stripe.setPublishableKey('pk_live_BQgcXTDIgDIx8MllwCbQrASC');
-
-    $('#plan').attr('value', '{{.plan}}');
-    $('#duration').attr('value', '{{.duration}}');
-
-    function formatPrice(currentPrice, discount) {
-        var discountAmount = (discount.toFixed(3) / 100) * currentPrice;
-        currentPrice -= discountAmount;
-        document.getElementById("price").innerHTML = "Grand total: $" + currentPrice;
-    }
-
-    var price = parseFloat("{{.price}}");
-    formatPrice(price, 0.00);
-
-    var missingCard = ("{{.missingCard}}" === 'true');
-    if (missingCard) {
-        // Disable both buttons
-        document.getElementById("apply-button").disabled = true;
-        document.getElementById("checkout-button").disabled = true;
-    }
-
-    $(document).ready(function() {
-        var $form = $('#coupon-form');
-        $form.submit(function(){
-            // Reset details
-            $('#coupon-valid').hide();
-            $('#coupon-errors').hide();
-            $('#discount').hide();
-            formatPrice(price, 0.00);
-
-            // Post data
-            $.post($(this).attr('action'), $(this).serialize(), function(response){
-                // If coupon was applied then show the new price & how much coupon helped
-                $('#coupon-valid').text("Coupon was applied");
-                $('#coupon-valid').show();
-                if(response && response.PercentageOff) {
-                    percentageDiscount = response.PercentageOff;
-                    document.getElementById("discount").innerHTML = "Percentage discount: " + response.PercentageOff + "%";
-                    $('#discount').show();
-                    formatPrice(price, parseFloat(response.PercentageOff));
-
-                    var couponName = $('#coupon').val();
-                    $('#couponForm').attr('value', couponName);
-                }
-            },'json').fail(function(jqXHR, textStatus, errorThrown) {
-                // If fails then display error message & reset to normal price
-                formatPrice(price, 0.00);
-                $('#coupon-errors').text("Coupon was invalid or has expired");
-                $('#coupon-errors').show();
-            });
-            return false;
-        });
     });
 </script>
 </body>

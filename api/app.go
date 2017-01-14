@@ -150,6 +150,7 @@ func init() {
 	router.GET("/api/users/:id", routes.UserHandler)
 	router.PATCH("/api/users/:id", routes.UserHandler)
 	router.GET("/api/users/:id/:action", routes.UserActionHandler)
+	router.POST("/api/users/:id/:action", routes.UserActionHandler)
 
 	router.GET("/api/agencies", routes.AgenciesHandler)
 	router.GET("/api/agencies/:id", routes.AgencyHandler)

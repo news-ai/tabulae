@@ -25,6 +25,11 @@ func handleUserActions(c context.Context, r *http.Request, id string, action str
 		case "token":
 			return notifications.GetUserToken(c, r)
 		}
+	case "POST":
+		switch action {
+		case "feedback":
+			return api.BaseSingleResponseHandler(controllers.FeedbackFromUser(c, r, id))
+		}
 	}
 	return nil, errors.New("method not implemented")
 }

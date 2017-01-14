@@ -20,7 +20,10 @@ type Billing struct {
 	IsAgency     bool      `json:"-"`
 	IsCancel     bool      `json:"-"`
 
-	ReasonForCancel string `json:"-"`
+	ReasonForCancel   string `json:"-"`
+
+	ReasonNotPurchase  string `json:"-"`
+	FeedbackAfterTrial string `json:"-"`
 
 	TrialEmailSent bool `json:"-"`
 

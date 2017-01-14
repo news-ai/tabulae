@@ -10,6 +10,11 @@ import (
 	"github.com/qedus/nds"
 )
 
+type UserFeedback struct {
+	ReasonForCancel    string `json:"reason"`
+	FeedbackAfterTrial string `json:"feedback"`
+}
+
 type User struct {
 	Base
 
@@ -67,6 +72,8 @@ type User struct {
 
 	IsAdmin  bool `json:"-"`
 	IsActive bool `json:"isactive"`
+
+	TrialFeedback bool `json:"trialfeedback"`
 
 	EnhanceCredits int `json:"enhancecredits"`
 }

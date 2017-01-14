@@ -356,6 +356,65 @@ func AddUserToContext(c context.Context, r *http.Request, email string) {
 	}
 }
 
+func FeedbackFromUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+	user := models.User{}
+	err := errors.New("")
+
+	switch id {
+	case "me":
+		user, err = GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(c, r, userId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var userFeedback models.UserFeedback
+	err = decoder.Decode(buf, &userFeedback)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	// Get user's billing profile and add reasons there
+	userBilling, err := GetUserBilling(c, r, currentUser)
+	userBilling.ReasonForCancel = userFeedback.ReasonForCancel
+	userBilling.FeedbackAfterTrial = userFeedback.FeedbackAfterTrial
+	userBilling.Save(c)
+
+	// Set the trial feedback to true - since they gave us feedback now
+	user.TrialFeedback = true
+	user.Save(c)
+
+	sync.ResourceSync(r, user.Id, "User", "create")
+	return user, nil, nil
+}
+
 /*
 * Update methods
  */
