@@ -403,7 +403,7 @@ func FeedbackFromUser(c context.Context, r *http.Request, id string) (models.Use
 
 	// Get user's billing profile and add reasons there
 	userBilling, err := GetUserBilling(c, r, currentUser)
-	userBilling.ReasonForCancel = userFeedback.ReasonForCancel
+	userBilling.ReasonNotPurchase = userFeedback.ReasonNotPurchase
 	userBilling.FeedbackAfterTrial = userFeedback.FeedbackAfterTrial
 	userBilling.Save(c)
 

@@ -11,8 +11,8 @@ import (
 )
 
 type UserFeedback struct {
-	ReasonForCancel    string `json:"reason"`
-	FeedbackAfterTrial string `json:"feedback"`
+	ReasonNotPurchase    string `json:"reason"`
+	FeedbackAfterTrial   string `json:"feedback"`
 }
 
 type User struct {
