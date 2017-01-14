@@ -111,6 +111,66 @@ func TrialPlanPageHandler() http.HandlerFunc {
 	}
 }
 
+func CancelPlanPageHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c := appengine.NewContext(r)
+		user, err := controllers.GetCurrentUser(c, r)
+
+		if r.URL.Query().Get("next") != "" {
+			session, _ := Store.Get(r, "sess")
+			session.Values["next"] = r.URL.Query().Get("next")
+			session.Save(r, w)
+
+			// If there is a next and the user has not been logged in
+			if err != nil {
+				http.Redirect(w, r, r.URL.Query().Get("next"), 302)
+				return
+			}
+		}
+
+		// If there is no next and the user is not logged in
+		if err != nil {
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
+			return
+		}
+
+		userBilling, err := controllers.GetUserBilling(c, r, user)
+
+		// If the user has a billing profile
+		if err == nil {
+			switch userBilling.StripePlanId {
+			case "bronze":
+				userBilling.StripePlanId = "Personal"
+			case "silver":
+				userBilling.StripePlanId = "Business"
+			case "gold":
+				userBilling.StripePlanId = "Ultimate"
+			}
+
+			userNotActiveNonTrialPlan := true
+			if user.IsActive && !userBilling.IsOnTrial {
+				userNotActiveNonTrialPlan = false
+			}
+
+			data := map[string]interface{}{
+				"userNotActiveNonTrialPlan": userNotActiveNonTrialPlan,
+				"currentUserPlan":           userBilling.StripePlanId,
+				"userEmail":                 user.Email,
+				csrf.TemplateTag:            csrf.TemplateField(r),
+			}
+
+			t := template.New("cancel.html")
+			t, _ = t.ParseFiles("billing/cancel.html")
+			t.Execute(w, data)
+		} else {
+			// If the user does not have billing profile that means that they
+			// have not started their trial yet.
+			http.Redirect(w, r, "/api/billing/plans/trial", 302)
+			return
+		}
+	}
+}
+
 func ChoosePlanPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
