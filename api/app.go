@@ -140,7 +140,6 @@ func init() {
 	 */
 
 	router.POST("/api/incoming/internal_tracker", incoming.InternalTrackerHandler)
-	router.POST("/api/incoming/sendgrid", incoming.SendGridHandler)
 
 	/*
 	* API Handler
