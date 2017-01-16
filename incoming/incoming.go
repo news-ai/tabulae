@@ -19,14 +19,6 @@ import (
 	"github.com/news-ai/web/errors"
 )
 
-type SendGridEvent struct {
-	SgMessageID string `json:"sg_message_id"`
-	Email       string `json:"email"`
-	Timestamp   int    `json:"timestamp"`
-	Event       string `json:"event"`
-	Reason      string `json:"reason"`
-}
-
 type InternalTrackerEvent struct {
 	// Similar between both
 	Event string `json:"event"`
