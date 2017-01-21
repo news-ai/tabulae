@@ -120,6 +120,10 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 		params.Coupon = coupon
 	}
 
+	if coupon == "FAVORITES" && duration == "annually" {
+		return errors.New("Sorry - you can't use this coupon code on a yearly plan.")
+	}
+
 	newSub, err := sc.Subs.New(params)
 	if err != nil {
 		var stripeError StripeError

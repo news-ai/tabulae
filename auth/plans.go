@@ -366,9 +366,15 @@ func CheckCouponValid() http.HandlerFunc {
 
 		c := appengine.NewContext(r)
 		coupon := r.FormValue("coupon")
+		duration := r.FormValue("duration")
 
 		if coupon == "" {
 			nError.ReturnError(w, http.StatusInternalServerError, "Coupon error", "Please enter a coupon")
+			return
+		}
+
+		if coupon == "FAVORITES" && duration == "annually" {
+			nError.ReturnError(w, http.StatusInternalServerError, "Coupon error", "Sorry - you can't use this coupon code on a yearly plan.")
 			return
 		}
 
