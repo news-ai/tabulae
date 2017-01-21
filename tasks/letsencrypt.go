@@ -7,6 +7,6 @@ import (
 
 func LetsEncryptValidation(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/plain")
-	fmt.Fprintf(w, "E4SjEKBbKa2JC3e2NR84axgIa2RHqzQ7pEwS_p9wsQE.DiiAVjAECHnbMqDTfs755KqRpbNq4LPmoCvd-AqUmRM")
+	fmt.Fprintf(w, "cK4fsCUnbTkr0j5fkuYM-V9NwoET2JP_4iRTBBvLDUE.oKzw5QYkN1q8zhhAe-jdS_VxeEiIqz4MC7pSvnuwGq4")
 	return
 }

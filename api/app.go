@@ -240,7 +240,7 @@ func init() {
 	router.POST("/tasks/feedInvalid", tasks.FeedInvalid)
 
 	// Tasks needing to not have middleware
-	http.HandleFunc("/.well-known/acme-challenge/E4SjEKBbKa2JC3e2NR84axgIa2RHqzQ7pEwS_p9wsQE", tasks.LetsEncryptValidation)
+	http.HandleFunc("/.well-known/acme-challenge/cK4fsCUnbTkr0j5fkuYM-V9NwoET2JP_4iRTBBvLDUE", tasks.LetsEncryptValidation)
 	http.HandleFunc("/tasks/sendSchedueleEmails", schedule.SchedueleEmailTask)
 	http.HandleFunc("/tasks/makeUsersInactive", tasks.MakeUsersInactive)
 	http.HandleFunc("/tasks/removeExpiredSessions", gaeTasks.RemoveExpiredSessionsHandler)
