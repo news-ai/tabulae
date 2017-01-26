@@ -41,6 +41,8 @@ func PasswordLoginHandler() http.HandlerFunc {
 		session.Values["state"] = state
 		session.Save(r, w)
 
+		log.Infof(c, "%v", validEmail.Address)
+
 		user, isOk, _ := controllers.ValidateUserPassword(r, validEmail.Address, password)
 		if isOk {
 			if user.GoogleId != "" {
@@ -185,7 +187,6 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		c := appengine.NewContext(r)
 		// Setup to authenticate the user into the API
 		firstName := r.FormValue("firstname")
-		lastName := r.FormValue("lastname")
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 		invitationCode := r.FormValue("invitationcode")
@@ -219,7 +220,6 @@ func PasswordRegisterHandler() http.HandlerFunc {
 
 		user := models.User{}
 		user.FirstName = firstName
-		user.LastName = lastName
 		user.Email = validEmail.Address
 		user.Password = hashedPassword
 		user.EmailConfirmed = false

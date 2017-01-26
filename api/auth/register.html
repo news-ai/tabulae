@@ -39,45 +39,32 @@
             <form role="form" method="post" action="userregister" class="registrationbox" data-parsley-validate>
                 {{ .csrfField }}
                 <h2>NewsAI <small>Tabulae</small></h2>
+                <h3>Start your free 7-day trial of NewsAI!</h3>
                 <hr class="colorgraph">
+                <a href="https://tabulae.newsai.org/api/auth/google?next=https://tabulae.newsai.co/" class="btn btn-primary btn-block btn-lg">Sign up with Google</a>
+                <br>
+                <p>OR</p>
+                <br>
                 <div class="alert alert-danger" role="alert" id="alertBox" style="display:none">
                   <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
                   <span class="sr-only">Error:</span> <span id="errorMessage"></span>
                 </div>
-                <div class="row">
-                    <div class="col-xs-12 col-sm-6 col-md-6">
-                        <div class="form-group">
-                            <input type="text" name="firstname" id="first_name" class="form-control input-lg" placeholder="First Name" tabindex="1" required>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 col-sm-6 col-md-6">
-                        <div class="form-group">
-                            <input type="text" name="lastname" id="last_name" class="form-control input-lg" placeholder="Last Name" tabindex="2" required>
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <input type="email" name="email" id="email" class="form-control input-lg" placeholder="Your Email Address" tabindex="1" type="email" data-parsley-type="email" required>
                 </div>
                 <div class="form-group">
-                    <input type="email" name="email" id="email" class="form-control input-lg" placeholder="Email Address" tabindex="3" type="email" data-parsley-type="email" required>
-                </div>
-                <div class="row">
-                    <div class="col-xs-12 col-sm-6 col-md-6">
-                        <div class="form-group">
-                            <input type="password" name="password" id="password" class="form-control input-lg" placeholder="Password" tabindex="4" data-parsley-minlength="1" data-parsley-errors-container=".errorspannewpassinput" data-parsley-required-message="Please enter your new password." data-parsley-pattern="(?=.*[a-z])(?=.*[A-Z]).*" data-parsley-pattern-message="Your password must contain at least (1) lowercase and (1) uppercase letter." data-parsley-required>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 col-sm-6 col-md-6">
-                        <div class="form-group">
-                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control input-lg" placeholder="Confirm Password" tabindex="5" data-parsley-equalto="#password" data-parsley-minlength="1" data-parsley-errors-container=".errorspannewpassinput" data-parsley-required-message="Please enter your new password." data-parsley-pattern="(?=.*[a-z])(?=.*[A-Z]).*" data-parsley-pattern-message="Your password must contain at least (1) lowercase and (1) uppercase letter." data-parsley-required>
-                        </div>
-                    </div>
+                    <input type="password" name="password" id="password" class="form-control input-lg" placeholder="Your Password" tabindex="2" data-parsley-minlength="1" data-parsley-errors-container=".errorspannewpassinput" data-parsley-required-message="Please enter your new password." data-parsley-pattern="(?=.*[a-z])(?=.*[A-Z]).*" data-parsley-pattern-message="Your password must contain at least (1) lowercase and (1) uppercase letter." data-parsley-required>
                 </div>
                 <div class="form-group">
-                    <input type="text" name="invitationcode" id="invitation_code" class="form-control input-lg" placeholder="Invitation Code" tabindex="6">
+                    <input type="text" name="firstname" id="first_name" class="form-control input-lg" placeholder="Your First Name" tabindex="3" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" name="invitationcode" style="display: none;" id="invitation_code" class="form-control input-lg" placeholder="Invitation Code" tabindex="4">
                 </div>
                 <div class="row">
                     <div class="col-xs-4 col-sm-3 col-md-3">
                         <span class="button-checkbox">
-                            <button type="button" class="btn" data-color="info" tabindex="7">I Agree</button>
+                            <button type="button" class="btn" data-color="info" tabindex="5">I Agree</button>
                             <input type="checkbox" name="t_and_c" id="t_and_c" class="hidden" value="1" required>
                         </span>
                     </div>
@@ -87,7 +74,7 @@
                 </div>
                 <hr class="colorgraph">
                 <div class="row">
-                    <div style="max-width: 50%; margin: 0 auto;"><input type="submit" value="Register" class="btn btn-primary btn-block btn-lg" tabindex="8"></div>
+                    <div style="max-width: 50%; margin: 0 auto;"><input type="submit" style="background-color: #428bca; border-color: #428bca;" value="Start my trial" class="btn btn-primary btn-block btn-lg" tabindex="8"></div>
                 </div>
             </form>
         </div>
