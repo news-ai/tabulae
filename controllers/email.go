@@ -523,10 +523,10 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 		}
 	}
 
+	emailId := strconv.FormatInt(email.Id, 10)
+	email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
+	email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
 	if user.SMTPValid && user.ExternalEmail && user.EmailSetting != 0 {
-		emailId := strconv.FormatInt(email.Id, 10)
-		email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
-		email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
 		email.Method = "smtp"
 		val, err := email.MarkSent(c, "")
 		if err != nil {
@@ -616,9 +616,6 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 			}
 		}
 
-		emailId := strconv.FormatInt(email.Id, 10)
-		email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
-		email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
 		email.Method = "gmail"
 		val, err := email.MarkSent(c, "")
 		if err != nil {
@@ -647,9 +644,6 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 		return *val, nil, nil
 	}
 
-	emailId := strconv.FormatInt(email.Id, 10)
-	email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
-	email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
 	email.Method = "sendgrid"
 	val, err := email.MarkSent(c, "")
 	if err != nil {
