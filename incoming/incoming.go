@@ -123,13 +123,6 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 					log.Errorf(c, "%v", singleEvent)
 					log.Errorf(c, "%v", err)
 				}
-			case "click":
-				_, notification, err = controllers.MarkClicked(c, r, &email)
-				if err != nil {
-					hasErrors = true
-					log.Errorf(c, "%v", singleEvent)
-					log.Errorf(c, "%v", err)
-				}
 			case "delivered":
 				_, err = controllers.MarkDelivered(c, &email)
 				if err != nil {
@@ -139,13 +132,6 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 				}
 			case "spamreport":
 				_, notification, err = controllers.MarkSpam(c, r, &email)
-				if err != nil {
-					hasErrors = true
-					log.Errorf(c, "%v", singleEvent)
-					log.Errorf(c, "%v", err)
-				}
-			case "open":
-				_, notification, err = controllers.MarkOpened(c, r, &email)
 				if err != nil {
 					hasErrors = true
 					log.Errorf(c, "%v", singleEvent)
