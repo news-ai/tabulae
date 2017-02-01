@@ -11,8 +11,8 @@ import (
 )
 
 type UserFeedback struct {
-	ReasonNotPurchase    string `json:"reason"`
-	FeedbackAfterTrial   string `json:"feedback"`
+	ReasonNotPurchase  string `json:"reason"`
+	FeedbackAfterTrial string `json:"feedback"`
 }
 
 type User struct {
@@ -31,8 +31,9 @@ type User struct {
 
 	Employers []int64 `json:"employers" apiModel:"Agency"`
 
-	ResetPasswordCode string `json:"-"`
-	ConfirmationCode  string `json:"-"`
+	ResetPasswordCode      string `json:"-"`
+	ConfirmationCode       string `json:"-"`
+	ConfirmationCodeBackup string `json:"-"`
 
 	LastLoggedIn time.Time `json:"-"`
 

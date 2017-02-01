@@ -9,6 +9,16 @@ if (emailParameter) {
 }
 
 $(function () {
+     // Checking password
+    var instance = $('form').parsley();
+    $('form').on('submit', function(){
+        if (instance.isValid()) {
+            $('#registrationButton').attr('disabled', 'disabled');
+            return true;
+        }
+        return false;
+    });
+
     $('.button-checkbox').each(function () {
 
         // Settings
@@ -24,15 +34,6 @@ $(function () {
                     icon: 'glyphicon glyphicon-unchecked'
                 }
             };
-
-        // Checking password
-       var instance =  $('form').parsley();
-        $('form').on('submit',function(){
-           if (instance.isValid()) {
-            return true;
-           }
-           return false;
-        });
 
         // Event Handlers
         $button.on('click', function () {

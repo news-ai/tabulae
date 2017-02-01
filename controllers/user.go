@@ -168,6 +168,78 @@ func filterUser(c context.Context, queryType, query string) (models.User, error)
 	return models.User{}, errors.New("No user by this " + queryType)
 }
 
+func filterUserConfirmed(c context.Context, queryType, query string) (models.User, error) {
+	// Get the current signed in user details by Id
+	ks, err := datastore.NewQuery("User").Filter(queryType+" =", query).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, err
+	}
+
+	if len(ks) == 0 {
+		return models.User{}, errors.New("No user by the field " + queryType)
+	}
+
+	// This shouldn't happen, but if the user double registers. Handle this case I guess
+	if len(ks) > 1 {
+		whichUserConfirmed := models.User{}
+		for i := 0; i < len(ks); i++ {
+			user := models.User{}
+			userId := ks[i]
+
+			err = nds.Get(c, userId, &user)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return models.User{}, err
+			}
+
+			if !user.Created.IsZero() {
+				user.Format(userId, "users")
+
+				if user.EmailConfirmed {
+					whichUserConfirmed = user
+				}
+			}
+		}
+
+		// If none of them have confirmed their emails
+		if whichUserConfirmed.Email == "" {
+			user := models.User{}
+			userId := ks[0]
+
+			err = nds.Get(c, userId, &user)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return models.User{}, err
+			}
+
+			if !user.Created.IsZero() {
+				user.Format(userId, "users")
+				return user, nil
+			}
+		}
+
+		return whichUserConfirmed, nil
+	} else {
+		// The normal case where there's only one email
+		user := models.User{}
+		userId := ks[0]
+
+		err = nds.Get(c, userId, &user)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, err
+		}
+
+		if !user.Created.IsZero() {
+			user.Format(userId, "users")
+			return user, nil
+		}
+	}
+
+	return models.User{}, errors.New("No user by this " + queryType)
+}
+
 /*
 * Public methods
  */
@@ -223,6 +295,16 @@ func GetUser(c context.Context, r *http.Request, id string) (models.User, interf
 	}
 }
 
+func GetUserByEmailForValidation(c context.Context, email string) (models.User, error) {
+	// Get the current user
+	user, err := filterUserConfirmed(c, "Email", email)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, err
+	}
+	return user, nil
+}
+
 func GetUserByEmail(c context.Context, email string) (models.User, error) {
 	// Get the current user
 	user, err := filterUser(c, "Email", email)
@@ -248,7 +330,15 @@ func GetUserByConfirmationCode(c context.Context, confirmationCode string) (mode
 	user, err := filterUser(c, "ConfirmationCode", confirmationCode)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return models.User{}, err
+
+		// Have a backup ConfirmationCode
+		userBackup, errBackup := filterUser(c, "ConfirmationCodeBackup", confirmationCode)
+		if errBackup != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, err
+		}
+
+		return userBackup, nil
 	}
 	return user, nil
 }
@@ -532,7 +622,7 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 
 func ValidateUserPassword(r *http.Request, email string, password string) (models.User, bool, error) {
 	c := appengine.NewContext(r)
-	user, err := GetUserByEmail(c, email)
+	user, err := GetUserByEmailForValidation(c, email)
 	if err == nil {
 		err = utilities.ValidatePassword(user.Password, password)
 		if err != nil {
