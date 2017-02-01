@@ -20,6 +20,7 @@ import (
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/search"
 
 	"github.com/news-ai/web/emails"
 	"github.com/news-ai/web/google"
@@ -720,4 +721,21 @@ func MarkOpened(c context.Context, r *http.Request, e *models.Email) (*models.Em
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "OPENED", "")
 	_, err := e.MarkOpened(c)
 	return e, notification, err
+}
+
+func GetEmailLogs(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	email, _, err := GetEmail(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Email{}, nil, err
+	}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return email, nil, err
+	}
+
+	logs, err := search.SearchEmailLogByEmailId(c, r, user, email.Id)
+	return logs, nil, err
 }

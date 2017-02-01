@@ -67,6 +67,8 @@ type Contact struct {
 	IsDeleted bool `json:"isdeleted"`
 	ReadOnly  bool `json:"readonly" datastore:"-"`
 
+	ImageURL string `json:"imageurl"`
+
 	LinkedInUpdated time.Time `json:"linkedinupdated"`
 }
 

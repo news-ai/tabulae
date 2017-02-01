@@ -49,6 +49,12 @@ type ElasticListIdQuery struct {
 	} `json:"term"`
 }
 
+type ElasticEmailIdQuery struct {
+	Term struct {
+		EmailId int64 `json:"data.EmailId"`
+	} `json:"term"`
+}
+
 type ElasticContactIdQuery struct {
 	Term struct {
 		ContactId int64 `json:"data.ContactId"`
@@ -184,4 +190,10 @@ func InitializeElasticSearch() {
 	contactDatabaseElastic.Index = "database"
 	contactDatabaseElastic.Type = "contacts"
 	elasticContactDatabase = &contactDatabaseElastic
+
+	emailLogElastic := elastic.Elastic{}
+	emailLogElastic.BaseURL = newBaseURL
+	emailLogElastic.Index = "emails"
+	emailLogElastic.Type = "log"
+	elasticEmailLog = &emailLogElastic
 }
