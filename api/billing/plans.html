@@ -88,13 +88,13 @@
                             {{ .csrfField }}
                             <input type="hidden" id="code" name="code" />
                             <input type="hidden" class="duration" id="duration" name="duration" value="annually">
-                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver">
+                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver-1">
                               Try this plan
                             </button>
                         </form>
                         <div class="price">
                             <div id="businessPackage" {{if eq .currentUserPlan "Business" }} class="color-bg" {{end}}>
-                                <h2><span class="sign">$</span><span id="businessPrice">39.99</span> <span class="month">/month</span></h2>
+                                <h2><span class="sign">$</span><span id="businessPrice">29.99</span> <span class="month">/month</span></h2>
                             </div>
                         </div>
                         <ul class="package-feature">
@@ -112,13 +112,13 @@
                             {{ .csrfField }}
                             <input type="hidden" id="code" name="code" />
                             <input type="hidden" class="duration" id="duration" name="duration" value="annually">
-                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="gold">
+                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="gold-1">
                               Try this plan
                             </button>
                         </form>
                         <div class="price">
                             <div id="ultimatePackage" {{if eq .currentUserPlan "Ultimate" }} class="color-bg" {{end}}>
-                                <h2><span class="sign">$</span><span id="ultimatePrice">63.99</span> <span class="month">/month</span></h2>
+                                <h2><span class="sign">$</span><span id="ultimatePrice">43.99</span> <span class="month">/month</span></h2>
                             </div>
                         </div>
                         <ul class="package-feature">

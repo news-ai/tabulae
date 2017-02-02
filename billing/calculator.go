@@ -20,18 +20,18 @@ func PlanAndDurationToPrice(plan string, duration string) float64 {
 		case "Personal":
 			price = 9.99 * 1
 		case "Business":
-			price = 49.99 * 1
+			price = 35.99 * 1
 		case "Ultimate":
-			price = 79.99 * 1
+			price = 54.99 * 1
 		}
 	} else {
 		switch plan {
 		case "Personal":
 			price = 7.99 * 12
 		case "Business":
-			price = 39.99 * 12
+			price = 29.99 * 12
 		case "Ultimate":
-			price = 63.99 * 12
+			price = 43.99 * 12
 		}
 	}
 

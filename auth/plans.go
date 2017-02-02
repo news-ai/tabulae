@@ -141,9 +141,9 @@ func CancelPlanPageHandler() http.HandlerFunc {
 			switch userBilling.StripePlanId {
 			case "bronze":
 				userBilling.StripePlanId = "Personal"
-			case "silver":
+			case "silver-1":
 				userBilling.StripePlanId = "Business"
-			case "gold":
+			case "gold-1":
 				userBilling.StripePlanId = "Ultimate"
 			}
 
@@ -206,9 +206,9 @@ func CancelPlanHandler() http.HandlerFunc {
 			switch userBilling.StripePlanId {
 			case "bronze":
 				plan = "Personal"
-			case "silver":
+			case "silver-1":
 				plan = "Business"
-			case "gold":
+			case "gold-1":
 				plan = "Ultimate"
 			}
 
@@ -260,9 +260,9 @@ func ChoosePlanPageHandler() http.HandlerFunc {
 			switch userBilling.StripePlanId {
 			case "bronze":
 				userBilling.StripePlanId = "Personal"
-			case "silver":
+			case "silver-1":
 				userBilling.StripePlanId = "Business"
-			case "gold":
+			case "gold-1":
 				userBilling.StripePlanId = "Ultimate"
 			}
 
@@ -326,9 +326,9 @@ func ChoosePlanHandler() http.HandlerFunc {
 			switch plan {
 			case "bronze":
 				plan = "Personal"
-			case "silver":
+			case "silver-1":
 				plan = "Business"
-			case "gold":
+			case "gold-1":
 				plan = "Ultimate"
 			}
 
@@ -437,9 +437,9 @@ func ConfirmPlanHandler() http.HandlerFunc {
 			case "Personal":
 				plan = "bronze"
 			case "Business":
-				plan = "silver"
+				plan = "silver-1"
 			case "Ultimate":
-				plan = "gold"
+				plan = "gold-1"
 			}
 
 			err = billing.AddPlanToUser(r, user, &userBilling, plan, duration, coupon, originalPlan)
@@ -503,9 +503,9 @@ func BillingPageHandler() http.HandlerFunc {
 			switch userBilling.StripePlanId {
 			case "bronze":
 				userBilling.StripePlanId = "Personal"
-			case "silver":
+			case "silver-1":
 				userBilling.StripePlanId = "Business"
-			case "gold":
+			case "gold-1":
 				userBilling.StripePlanId = "Ultimate"
 			}
 
