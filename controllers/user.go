@@ -446,6 +446,54 @@ func AddUserToContext(c context.Context, r *http.Request, email string) {
 	}
 }
 
+func AddEmailToUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+	user := models.User{}
+	err := errors.New("")
+
+	switch id {
+	case "me":
+		user, err = GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(c, r, userId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	// Only available when using SendGrid
+	if user.Gmail || user.ExternalEmail {
+		return user, nil, errors.New("Feature only works when using Sendgrid")
+	}
+
+	// Generate User Emails Code to send to confirmation email
+
+	// Send Confirmation Email to this email address
+
+	return user, nil, nil
+}
+
 func FeedbackFromUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
 	user := models.User{}
 	err := errors.New("")
