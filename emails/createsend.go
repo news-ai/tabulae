@@ -36,6 +36,14 @@ type CampaignMonitorResetEmail struct {
 	AddRecipientsToList bool `json:"AddRecipientsToList"`
 }
 
+type CampaignMonitorAddUserEmail struct {
+	To   []string `json:"To"`
+	Data struct {
+		ADD_EMAIL_CODE string `json:"ADD_EMAIL_CODE"`
+	} `json:"Data"`
+	AddRecipientsToList bool `json:"AddRecipientsToList"`
+}
+
 type CampaignMonitorConfirmationEmail struct {
 	To   []string `json:"To"`
 	Data struct {
@@ -213,6 +221,48 @@ func AddUserToTabulaeTrialList(c context.Context, user models.User) error {
 	}
 
 	if resp.StatusCode == 201 {
+		return nil
+	}
+
+	return errors.New("Error happened when sending email")
+}
+
+func AddEmailToUser(c context.Context, user models.User, userEmailCode string) error {
+	apiKey := os.Getenv("CAMPAIGNMONITOR_API_KEY")
+	addEmailCodeId := ""
+
+	contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
+	client := urlfetch.Client(contextWithTimeout)
+
+	addEmail := CampaignMonitorAddUserEmail{}
+
+	userEmail := user.FirstName + " " + user.LastName + " <" + user.Email + " >"
+	addEmail.To = append(addEmail.To, userEmail)
+	addEmail.AddRecipientsToList = false
+
+	t := &url.URL{Path: userEmailCode}
+	encodedUserEmailCode := t.String()
+	addEmail.Data.ADD_EMAIL_CODE = encodedUserEmailCode
+
+	AddUserEmail, err := json.Marshal(addEmail)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return err
+	}
+	addUserEmailJson := bytes.NewReader(AddUserEmail)
+
+	postUrl := "https://api.createsend.com/api/v3.1/transactional/smartEmail/" + addEmailCodeId + "/send"
+
+	req, _ := http.NewRequest("POST", postUrl, addUserEmailJson)
+	req.SetBasicAuth(apiKey, "x")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return err
+	}
+
+	if resp.StatusCode == 201 || resp.StatusCode == 202 || resp.StatusCode == 200 {
 		return nil
 	}
 

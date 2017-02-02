@@ -487,7 +487,20 @@ func AddEmailToUser(c context.Context, r *http.Request, id string) (models.User,
 		return user, nil, errors.New("Feature only works when using Sendgrid")
 	}
 
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var userEmail models.UserEmail
+	err = decoder.Decode(buf, &userEmail)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
 	// Generate User Emails Code to send to confirmation email
+	userEmailCode := models.UserEmailCode{}
+	userEmailCode.InviteCode = utilities.RandToken()
+	userEmailCode.Email = userEmail.Email
+	userEmailCode.Create(c, r, currentUser)
 
 	// Send Confirmation Email to this email address
 
