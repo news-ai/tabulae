@@ -4,6 +4,8 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"net/mail"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -16,6 +18,7 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/sync"
 
@@ -496,15 +499,94 @@ func AddEmailToUser(c context.Context, r *http.Request, id string) (models.User,
 		return models.User{}, nil, err
 	}
 
+	userEmail.Email = strings.ToLower(userEmail.Email)
+	validEmail, err := mail.ParseAddress(userEmail.Email)
+	if err != nil {
+		return user, nil, err
+	}
+
+	if user.Email == validEmail.Address {
+		return user, nil, errors.New("Can't add your default email as an extra email")
+	}
+
 	// Generate User Emails Code to send to confirmation email
 	userEmailCode := models.UserEmailCode{}
 	userEmailCode.InviteCode = utilities.RandToken()
-	userEmailCode.Email = userEmail.Email
+	userEmailCode.Email = validEmail.Address
 	userEmailCode.Create(c, r, currentUser)
 
 	// Send Confirmation Email to this email address
+	addUserEmailErr := emails.AddEmailToUser(c, user, validEmail.Address, userEmailCode.InviteCode)
+	if addUserEmailErr != nil {
+		return user, nil, err
+	}
 
 	return user, nil, nil
+}
+
+func ConfirmAddEmailToUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+	user := models.User{}
+	err := errors.New("")
+
+	switch id {
+	case "me":
+		user, err = GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(c, r, userId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return user, nil, err
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return user, nil, err
+	}
+
+	if r.URL.Query().Get("code") != "" {
+		query := datastore.NewQuery("UserEmailCode").Filter("InviteCode =", r.URL.Query().Get("code"))
+		query = constructQuery(query, r)
+		ks, err := query.KeysOnly().GetAll(c, nil)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return user, nil, err
+		}
+
+		var userEmailCodes []models.UserEmailCode
+		userEmailCodes = make([]models.UserEmailCode, len(ks))
+		err = nds.GetMulti(c, ks, userEmailCodes)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return user, nil, err
+		}
+
+		if len(userEmailCodes) > 0 {
+			user.Emails = append(user.Emails, userEmailCodes[0].Email)
+			SaveUser(c, r, &user)
+			return user, nil, nil
+		}
+
+		return user, nil, errors.New("No code by the code you entered")
+	}
+
+	return user, nil, errors.New("No code present")
 }
 
 func FeedbackFromUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {

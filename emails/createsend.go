@@ -227,16 +227,16 @@ func AddUserToTabulaeTrialList(c context.Context, user models.User) error {
 	return errors.New("Error happened when sending email")
 }
 
-func AddEmailToUser(c context.Context, user models.User, userEmailCode string) error {
+func AddEmailToUser(c context.Context, user models.User, userToEmail, userEmailCode string) error {
 	apiKey := os.Getenv("CAMPAIGNMONITOR_API_KEY")
-	addEmailCodeId := ""
+	addEmailCodeId := "3cf262ae-51aa-4735-a163-c570a8e861b3"
 
 	contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
 	client := urlfetch.Client(contextWithTimeout)
 
 	addEmail := CampaignMonitorAddUserEmail{}
 
-	userEmail := user.FirstName + " " + user.LastName + " <" + user.Email + " >"
+	userEmail := user.FirstName + " " + user.LastName + " <" + userToEmail + " >"
 	addEmail.To = append(addEmail.To, userEmail)
 	addEmail.AddRecipientsToList = false
 

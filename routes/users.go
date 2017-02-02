@@ -24,11 +24,15 @@ func handleUserActions(c context.Context, r *http.Request, id string, action str
 		switch action {
 		case "token":
 			return notifications.GetUserToken(c, r)
+		case "confirm-email":
+			return api.BaseSingleResponseHandler(controllers.ConfirmAddEmailToUser(c, r, id))
 		}
 	case "POST":
 		switch action {
 		case "feedback":
 			return api.BaseSingleResponseHandler(controllers.FeedbackFromUser(c, r, id))
+		case "add-email":
+			return api.BaseSingleResponseHandler(controllers.AddEmailToUser(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")
