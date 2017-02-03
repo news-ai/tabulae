@@ -268,6 +268,26 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 
 		newEmails := []models.Email{}
 		for i := 0; i < len(emails); i++ {
+
+			// Test if the email we are sending with is in the user's SendGridFrom or is their Email
+			if emails[i].FromEmail != "" {
+				userEmailValid := false
+				if currentUser.Email == emails[i].FromEmail {
+					userEmailValid = true
+				}
+
+				for x := 0; x < len(currentUser.Emails); x++ {
+					if currentUser.Emails[x] == emails[i].FromEmail {
+						userEmailValid = true
+					}
+				}
+
+				// If this is if the email added is not valid in SendGridFrom
+				if !userEmailValid {
+					return []models.Email{}, nil, errors.New("The email requested is not confirmed by the user yet")
+				}
+			}
+
 			_, err = emails[i].Create(c, r, currentUser)
 			if err != nil {
 				log.Errorf(c, "%v", err)
@@ -277,6 +297,25 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 		}
 
 		return newEmails, nil, err
+	}
+
+	// Test if the email we are sending with is in the user's SendGridFrom or is their Email
+	if email.FromEmail != "" {
+		userEmailValid := false
+		if currentUser.Email == email.FromEmail {
+			userEmailValid = true
+		}
+
+		for i := 0; i < len(currentUser.Emails); i++ {
+			if currentUser.Emails[i] == email.FromEmail {
+				userEmailValid = true
+			}
+		}
+
+		// If this is if the email added is not valid in SendGridFrom
+		if !userEmailValid {
+			return []models.Email{}, nil, errors.New("The email requested is not confirmed by you yet")
+		}
 	}
 
 	// Create email
@@ -667,7 +706,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 
 		// If this is if the email added is not valid in SendGridFrom
 		if !userEmailValid {
-			return *val, nil, errors.New("The email requested is not confirmed by you yet")
+			return *val, nil, errors.New("The email requested is not confirmed by the user yet")
 		}
 	}
 
