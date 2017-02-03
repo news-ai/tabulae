@@ -583,13 +583,12 @@ func ConfirmAddEmailToUser(c context.Context, r *http.Request, id string) (model
 			return user, nil, err
 		}
 
-		if !permissions.AccessToObject(user.Id, userEmailCodes[0].CreatedBy) {
-			err = errors.New("Forbidden")
-			log.Errorf(c, "%v", err)
-			return user, nil, err
-		}
-
 		if len(userEmailCodes) > 0 {
+			if !permissions.AccessToObject(user.Id, userEmailCodes[0].CreatedBy) {
+				err = errors.New("Forbidden")
+				log.Errorf(c, "%v", err)
+				return user, nil, err
+			}
 			alreadyExists := false
 			for i := 0; i < len(user.Emails); i++ {
 				if user.Emails[i] == userEmailCodes[0].Email {
