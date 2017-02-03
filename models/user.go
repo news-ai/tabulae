@@ -15,6 +15,11 @@ type UserFeedback struct {
 	FeedbackAfterTrial string `json:"feedback"`
 }
 
+type UserPlan struct {
+	ReasonNotPurchase  string `json:"reason"`
+	FeedbackAfterTrial string `json:"feedback"`
+}
+
 type User struct {
 	Base
 

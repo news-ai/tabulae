@@ -530,6 +530,54 @@ func AddEmailToUser(c context.Context, r *http.Request, id string) (models.User,
 	return user, nil, nil
 }
 
+func GetUserPlanDetails(c context.Context, r *http.Request, id string) (models.UserPlan, interface{}, error) {
+	user := models.User{}
+	err := errors.New("")
+
+	switch id {
+	case "me":
+		user, err = GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.UserPlan{}, nil, err
+		}
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.UserPlan{}, nil, err
+		}
+		user, err = getUser(c, r, userId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.UserPlan{}, nil, err
+		}
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.UserPlan{}, nil, err
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return models.UserPlan{}, nil, err
+	}
+
+	billing, err := GetUserBilling(c, r, currentUser)
+	if err != nil {
+		return models.UserPlan{}, nil, err
+	}
+
+	userPlan := models.UserPlan{}
+
+	//billing.StripePlanId
+
+	return userPlan, nil, nil
+}
+
 func ConfirmAddEmailToUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
 	user := models.User{}
 	err := errors.New("")
