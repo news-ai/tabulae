@@ -509,6 +509,12 @@ func AddEmailToUser(c context.Context, r *http.Request, id string) (models.User,
 		return user, nil, errors.New("Can't add your default email as an extra email")
 	}
 
+	for i := 0; i < len(user.Emails); i++ {
+		if user.Emails[i] == validEmail.Address {
+			return user, nil, errors.New("Email already exists for the user")
+		}
+	}
+
 	// Generate User Emails Code to send to confirmation email
 	userEmailCode := models.UserEmailCode{}
 	userEmailCode.InviteCode = utilities.RandToken()
@@ -554,7 +560,7 @@ func ConfirmAddEmailToUser(c context.Context, r *http.Request, id string) (model
 		return user, nil, err
 	}
 
-	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.IsAdmin {
+	if !permissions.AccessToObject(user.Id, currentUser.Id) {
 		err = errors.New("Forbidden")
 		log.Errorf(c, "%v", err)
 		return user, nil, err
@@ -577,9 +583,24 @@ func ConfirmAddEmailToUser(c context.Context, r *http.Request, id string) (model
 			return user, nil, err
 		}
 
+		if !permissions.AccessToObject(user.Id, userEmailCodes[0].CreatedBy) {
+			err = errors.New("Forbidden")
+			log.Errorf(c, "%v", err)
+			return user, nil, err
+		}
+
 		if len(userEmailCodes) > 0 {
-			user.Emails = append(user.Emails, userEmailCodes[0].Email)
-			SaveUser(c, r, &user)
+			alreadyExists := false
+			for i := 0; i < len(user.Emails); i++ {
+				if user.Emails[i] == userEmailCodes[0].Email {
+					alreadyExists = true
+				}
+			}
+
+			if !alreadyExists {
+				user.Emails = append(user.Emails, userEmailCodes[0].Email)
+				SaveUser(c, r, &user)
+			}
 			return user, nil, nil
 		}
 
