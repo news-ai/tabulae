@@ -652,6 +652,25 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 		return *val, nil, err
 	}
 
+	// Test if the email we are sending with is in the user's SendGridFrom or is their Email
+	if val.FromEmail != "" {
+		userEmailValid := false
+		if user.Email == val.FromEmail {
+			userEmailValid = true
+		}
+
+		for i := 0; i < len(user.Emails); i++ {
+			if user.Emails[i] == val.FromEmail {
+				userEmailValid = true
+			}
+		}
+
+		// If this is if the email added is not valid in SendGridFrom
+		if !userEmailValid {
+			return *val, nil, errors.New("The email requested is not confirmed by you yet")
+		}
+	}
+
 	// Check to see if there is no sendat date or if date is in the past
 	if val.SendAt.IsZero() || val.SendAt.Before(time.Now()) {
 		emailSent, emailId, err := emails.SendEmail(r, *val, user, files)

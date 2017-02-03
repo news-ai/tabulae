@@ -56,6 +56,8 @@ type Email struct {
 	TemplateId int64 `json:"templateid" apiModel:"Template"`
 	ContactId  int64 `json:"contactId" apiModel:"Contact"`
 
+	FromEmail string `json:"fromemail"`
+
 	Sender  string `json:"sender"`
 	To      string `json:"to"`
 	Subject string `json:"subject" datastore:",noindex"`

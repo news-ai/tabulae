@@ -24,7 +24,7 @@ type User struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 
-	Emails []string `json:"emails"`
+	Emails []string `json:"sendgridemails"`
 
 	EmailAlias string `json:"emailalias"`
 
