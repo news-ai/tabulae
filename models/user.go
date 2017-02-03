@@ -16,8 +16,7 @@ type UserFeedback struct {
 }
 
 type UserPlan struct {
-	ReasonNotPurchase  string `json:"reason"`
-	FeedbackAfterTrial string `json:"feedback"`
+	EmailAccounts  int `json:"emailaccounts"`
 }
 
 type User struct {

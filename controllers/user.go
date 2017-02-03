@@ -20,6 +20,7 @@ import (
 
 	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/billing"
 	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/permissions"
@@ -566,12 +567,14 @@ func GetUserPlanDetails(c context.Context, r *http.Request, id string) (models.U
 		return models.UserPlan{}, nil, err
 	}
 
-	billing, err := GetUserBilling(c, r, currentUser)
+	userBilling, err := GetUserBilling(c, r, currentUser)
 	if err != nil {
 		return models.UserPlan{}, nil, err
 	}
 
 	userPlan := models.UserPlan{}
+	userPlanName := billing.BillingIdToPlanName(userBilling.StripePlanId)
+	userPlan.EmailAccounts = billing.UserMaximumEmailAccounts(userPlanName)
 
 	//billing.StripePlanId
 
