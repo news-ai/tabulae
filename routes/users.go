@@ -97,6 +97,12 @@ func UserActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	action := ps.ByName("action")
 
 	val, err := handleUserActions(c, r, id, action)
+
+	if action == "confirm-email" {
+		http.Redirect(w, r, "https://tabulae.newsai.co/settings", 302)
+		return
+	}
+
 	if err == nil {
 		err = ffjson.NewEncoder(w).Encode(val)
 	}
