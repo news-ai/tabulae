@@ -11,6 +11,9 @@ import (
 
 type BillingHistory struct {
 	Base
+
+	StartDate      time.Time `json:"-"`
+	EndDate        time.Time `json:"-"`
 }
 
 /*
