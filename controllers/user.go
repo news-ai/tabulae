@@ -576,8 +576,6 @@ func GetUserPlanDetails(c context.Context, r *http.Request, id string) (models.U
 	userPlanName := billing.BillingIdToPlanName(userBilling.StripePlanId)
 	userPlan.EmailAccounts = billing.UserMaximumEmailAccounts(userPlanName)
 
-	//billing.StripePlanId
-
 	return userPlan, nil, nil
 }
 
