@@ -14,6 +14,8 @@ type BillingHistory struct {
 
 	StartDate      time.Time `json:"-"`
 	EndDate        time.Time `json:"-"`
+
+	Price int `json:"-"`
 }
 
 /*
