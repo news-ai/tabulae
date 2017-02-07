@@ -150,6 +150,8 @@ func (ct *Contact) Normalize() (*Contact, error) {
 	ct.Website = utilities.StripQueryStringForWebsite(ct.Website)
 	ct.Blog = utilities.StripQueryStringForWebsite(ct.Blog)
 
+	ct.Email = strings.ToLower(ct.Email)
+
 	return ct, nil
 }
 

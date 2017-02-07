@@ -30,6 +30,8 @@ type User struct {
 
 	Emails []string `json:"sendgridemails"`
 
+	EmailProvider string `json:"emailprovider" datastore:"-"`
+
 	EmailAlias string `json:"emailalias"`
 
 	Password []byte `json:"-"`
