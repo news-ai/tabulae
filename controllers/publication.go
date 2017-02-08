@@ -346,6 +346,30 @@ func VerifyPublication(c context.Context, r *http.Request, id string) (models.Pu
 	return publication, nil, nil
 }
 
+func UploadFindOrCreatePublication(c context.Context, r *http.Request, name string, url string) (models.Publication, error) {
+	name = strings.Trim(name, " ")
+	publication, _, err := FilterPublicationByNameAndUrl(c, name, url)
+	if err != nil {
+		currentUser, err := GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.Publication{}, err
+		}
+
+		var newPublication models.Publication
+		newPublication.Name = name
+		_, err = newPublication.Create(c, r, currentUser)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.Publication{}, err
+		}
+
+		return newPublication, nil
+	}
+
+	return publication, nil
+}
+
 func FindOrCreatePublication(c context.Context, r *http.Request, name string, url string) (models.Publication, error) {
 	name = strings.Trim(name, " ")
 	publication, _, err := FilterPublicationByNameAndUrl(c, name, url)

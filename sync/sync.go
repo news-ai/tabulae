@@ -92,7 +92,7 @@ func ResourceBulkSync(r *http.Request, resourceIds []int64, resource string, met
 	stringResourceIds := []string{}
 
 	for i := 0; i < len(resourceIds); i++ {
-		if i > 0 && i%75 == 0 {
+		if i > 0 && i%500 == 0 {
 			stringResourceIds = append(stringResourceIds, strings.Join(tempStringResourceIds, ","))
 			tempStringResourceIds = []string{}
 		} else {
