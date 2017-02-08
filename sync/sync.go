@@ -80,6 +80,27 @@ func SocialSync(r *http.Request, socialField string, url string, contactId int64
 	return sync(r, data, InfluencerTopicID)
 }
 
+func ListUploadResourceBulkSync(r *http.Request, listId int64, resourceIds []int64) error {
+	tempContactResourceIds := []string{}
+	for i := 0; i < len(resourceIds); i++ {
+		tempContactResourceIds = append(tempContactResourceIds, strconv.FormatInt(resourceIds[i], 10))
+	}
+
+	topicName := ListUploadTopicID
+	data := map[string]string{
+		"ListId":    strconv.FormatInt(listId, 10),
+		"ContactId": strings.Join(tempContactResourceIds, ","),
+		"Method":    "create",
+	}
+
+	err := sync(r, data, topicName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func ResourceBulkSync(r *http.Request, resourceIds []int64, resource string, method string) error {
 	topicName := ""
 	if resource == "Contact" {
@@ -92,7 +113,7 @@ func ResourceBulkSync(r *http.Request, resourceIds []int64, resource string, met
 	stringResourceIds := []string{}
 
 	for i := 0; i < len(resourceIds); i++ {
-		if i > 0 && i%500 == 0 {
+		if i > 0 && i%75 == 0 {
 			stringResourceIds = append(stringResourceIds, strings.Join(tempStringResourceIds, ","))
 			tempStringResourceIds = []string{}
 		} else {

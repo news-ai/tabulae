@@ -19,6 +19,7 @@ var (
 	InstagramTopicID    = "process-instagram-feed"
 	EnhanceTopicID      = "process-enhance"
 	RSSFeedTopicID      = "process-rss-feed"
+	ListUploadTopicID   = "process-new-list-upload"
 	projectID           = "newsai-1166"
 )
 

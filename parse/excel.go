@@ -60,7 +60,7 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 
 	// Save the media list
 	mediaList.Save(c)
-	sync.ResourceBulkSync(r, mediaList.Contacts, "Contact", "create")
+	sync.ListUploadResourceBulkSync(r, mediaList.Id, mediaList.Contacts)
 
 	return mediaList, nil
 }
