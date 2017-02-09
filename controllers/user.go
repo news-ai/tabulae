@@ -18,9 +18,9 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/tabulae/billing"
 	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/models"
-	"github.com/news-ai/tabulae/billing"
 	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/permissions"
@@ -272,6 +272,16 @@ func GetUsersUnauthorized(c context.Context, r *http.Request) ([]models.User, er
 	}
 
 	return users, nil
+}
+
+func GetUserById(c context.Context, r *http.Request, id int64) (models.User, interface{}, error) {
+	// Get the details of the current user
+	user, err := getUser(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+	return user, nil, nil
 }
 
 func GetUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {

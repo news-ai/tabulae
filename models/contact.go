@@ -69,6 +69,8 @@ type Contact struct {
 
 	ImageURL string `json:"imageurl"`
 
+	TeamId int64 `json:"teamid"`
+
 	LinkedInUpdated time.Time `json:"linkedinupdated"`
 }
 

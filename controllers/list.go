@@ -311,6 +311,28 @@ func GetMediaListsClients(c context.Context, r *http.Request) (interface{}, inte
 	return clients, nil, len(clients.Clients), nil
 }
 
+func GetAllMediaLists(c context.Context, r *http.Request) ([]models.MediaList, error) {
+	query := datastore.NewQuery("MediaList")
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.MediaList{}, err
+	}
+
+	mediaLists := make([]models.MediaList, len(ks))
+	err = nds.GetMulti(c, ks, mediaLists)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.MediaList{}, err
+	}
+
+	for i := 0; i < len(mediaLists); i++ {
+		mediaLists[i].Format(ks[i], "lists")
+	}
+
+	return mediaLists, nil
+}
+
 // Gets every single media list
 func GetPublicMediaLists(c context.Context, r *http.Request) ([]models.MediaList, interface{}, int, error) {
 	mediaLists := []models.MediaList{}
@@ -374,10 +396,6 @@ func GetTeamMediaLists(c context.Context, r *http.Request) ([]models.MediaList, 
 
 	for i := 0; i < len(mediaLists); i++ {
 		mediaLists[i].Format(ks[i], "lists")
-
-		if mediaLists[i].PublicList && user.Id != mediaLists[i].CreatedBy {
-			mediaLists[i].ReadOnly = true
-		}
 	}
 
 	return mediaLists, nil, len(mediaLists), nil
