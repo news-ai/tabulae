@@ -221,6 +221,16 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 			mediaLists[i].AddNewCustomFieldsMapToOldLists(c)
 		}
 
+		// Go through their media lists and add TeamID if not present
+		if user.TeamId != 0 {
+			for i := 0; i < len(mediaLists); i++ {
+				if mediaLists[i].TeamId == 0 {
+					mediaLists[i].TeamId = user.TeamId
+					mediaLists[i].Save(c)
+				}
+			}
+		}
+
 		queryField := gcontext.Get(r, "q").(string)
 		if queryField != "" {
 			fieldSelector := strings.Split(queryField, ":")
@@ -369,7 +379,8 @@ func GetPublicMediaLists(c context.Context, r *http.Request) ([]models.MediaList
 	return mediaLists, nil, len(mediaLists), nil
 }
 
-// Gets every single media list
+// Gets all of the team media lists
+// Excludes any media list that is logged in users
 func GetTeamMediaLists(c context.Context, r *http.Request) ([]models.MediaList, interface{}, int, error) {
 	mediaLists := []models.MediaList{}
 
@@ -394,11 +405,16 @@ func GetTeamMediaLists(c context.Context, r *http.Request) ([]models.MediaList, 
 		return []models.MediaList{}, nil, 0, err
 	}
 
+	mediaListsOthers := []models.MediaList{}
+
 	for i := 0; i < len(mediaLists); i++ {
 		mediaLists[i].Format(ks[i], "lists")
+		if mediaLists[i].CreatedBy != user.Id {
+			mediaListsOthers = append(mediaListsOthers, mediaLists[i])
+		}
 	}
 
-	return mediaLists, nil, len(mediaLists), nil
+	return mediaListsOthers, nil, len(mediaListsOthers), nil
 }
 
 func GetMediaList(c context.Context, r *http.Request, id string) (models.MediaList, interface{}, error) {
@@ -444,6 +460,7 @@ func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) 
 
 	// Initial values for fieldsmap
 	medialist.FieldsMap = getFieldsMap()
+	medialist.TeamId = currentUser.TeamId
 
 	// Create media list
 	_, err = medialist.Create(c, r, currentUser)

@@ -71,6 +71,9 @@ func handleMediaList(c context.Context, r *http.Request, id string) (interface{}
 		} else if id == "public" {
 			val, included, count, err := controllers.GetPublicMediaLists(c, r)
 			return api.BaseResponseHandler(val, included, count, err, r)
+		} else if id == "team" {
+			val, included, count, err := controllers.GetTeamMediaLists(c, r)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		}
 		return api.BaseSingleResponseHandler(controllers.GetMediaList(c, r, id))
 	case "PATCH":

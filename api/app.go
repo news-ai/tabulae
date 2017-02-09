@@ -239,12 +239,16 @@ func init() {
 	router.POST("/tasks/socialUsernameInvalid", tasks.SocialUsernameInvalid)
 	router.POST("/tasks/feedInvalid", tasks.FeedInvalid)
 
+	// Repeated tasks
 	// Tasks needing to not have middleware
 	http.HandleFunc("/.well-known/acme-challenge/cK4fsCUnbTkr0j5fkuYM-V9NwoET2JP_4iRTBBvLDUE", tasks.LetsEncryptValidation)
 	http.HandleFunc("/tasks/sendSchedueleEmails", schedule.SchedueleEmailTask)
 	http.HandleFunc("/tasks/makeUsersInactive", tasks.MakeUsersInactive)
 	http.HandleFunc("/tasks/removeExpiredSessions", gaeTasks.RemoveExpiredSessionsHandler)
 	http.HandleFunc("/tasks/removeImportedFiles", tasks.RemoveImportedFilesHandler)
+
+	// One-off tasks
+	// http.HandleFunc("/tasks/listsToIncludeTeamId", tasks.ListsToIncludeTeamId)
 
 	/*
 	* Appengine Handler
