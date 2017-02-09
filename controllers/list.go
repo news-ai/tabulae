@@ -347,6 +347,42 @@ func GetPublicMediaLists(c context.Context, r *http.Request) ([]models.MediaList
 	return mediaLists, nil, len(mediaLists), nil
 }
 
+// Gets every single media list
+func GetTeamMediaLists(c context.Context, r *http.Request) ([]models.MediaList, interface{}, int, error) {
+	mediaLists := []models.MediaList{}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.MediaList{}, nil, 0, err
+	}
+
+	query := datastore.NewQuery("MediaList").Filter("TeamId =", user.TeamId).Filter("Archived =", false)
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.MediaList{}, nil, 0, err
+	}
+
+	mediaLists = make([]models.MediaList, len(ks))
+	err = nds.GetMulti(c, ks, mediaLists)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.MediaList{}, nil, 0, err
+	}
+
+	for i := 0; i < len(mediaLists); i++ {
+		mediaLists[i].Format(ks[i], "lists")
+
+		if mediaLists[i].PublicList && user.Id != mediaLists[i].CreatedBy {
+			mediaLists[i].ReadOnly = true
+		}
+	}
+
+	return mediaLists, nil, len(mediaLists), nil
+}
+
 func GetMediaList(c context.Context, r *http.Request, id string) (models.MediaList, interface{}, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)

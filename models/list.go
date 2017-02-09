@@ -39,6 +39,8 @@ type MediaList struct {
 
 	FileUpload int64 `json:"fileupload" apiModel:"File"`
 
+	TeamId int64 `json:"teamid"`
+
 	ReadOnly   bool `json:"readonly" datastore:"-"`
 	PublicList bool `json:"publiclist"`
 	Archived   bool `json:"archived"`
