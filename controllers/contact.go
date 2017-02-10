@@ -343,9 +343,7 @@ func filterContacts(c context.Context, r *http.Request, queryType, query string)
 		for i := 0; i < len(contacts); i++ {
 			contacts[i].Format(ks[i], "contacts")
 		}
-
 		return contacts, nil
-
 	}
 	return []models.Contact{}, errors.New("No contact by this " + queryType)
 }
@@ -373,7 +371,13 @@ func filterContact(c context.Context, r *http.Request, queryType, query string) 
 			return models.Contact{}, err
 		}
 
-		if !contacts[0].IsMasterContact && !permissions.AccessToObject(contacts[0].CreatedBy, user.Id) {
+		mediaList, err := getMediaList(c, r, contacts[0].ListId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.Contact{}, err
+		}
+
+		if !contacts[0].IsMasterContact && mediaList.TeamId != user.TeamId && !permissions.AccessToObject(contacts[0].CreatedBy, user.Id) {
 			err = errors.New("Forbidden")
 			log.Errorf(c, "%v", err)
 			return models.Contact{}, err
@@ -1294,7 +1298,13 @@ func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.
 		return models.Contact{}, nil, errors.New("Could not get user")
 	}
 
-	if !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
+	mediaList, err := getMediaList(c, r, contact.ListId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, err
+	}
+
+	if mediaList.TeamId != user.TeamId && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
 		return models.Contact{}, nil, errors.New("You don't have permissions to edit these objects")
 	}
 
@@ -1336,7 +1346,13 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, i
 			return []models.Contact{}, nil, 0, err
 		}
 
-		if !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
+		mediaList, err := getMediaList(c, r, contact.ListId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return []models.Contact{}, nil, 0, err
+		}
+
+		if mediaList.TeamId != user.TeamId && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
 			return []models.Contact{}, nil, 0, errors.New("Forbidden")
 		}
 
