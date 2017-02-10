@@ -80,17 +80,23 @@ func SocialSync(r *http.Request, socialField string, url string, contactId int64
 	return sync(r, data, InfluencerTopicID)
 }
 
-func ListUploadResourceBulkSync(r *http.Request, listId int64, resourceIds []int64) error {
+func ListUploadResourceBulkSync(r *http.Request, listId int64, contactIds []int64, publicationIds []int64) error {
 	tempContactResourceIds := []string{}
-	for i := 0; i < len(resourceIds); i++ {
-		tempContactResourceIds = append(tempContactResourceIds, strconv.FormatInt(resourceIds[i], 10))
+	for i := 0; i < len(contactIds); i++ {
+		tempContactResourceIds = append(tempContactResourceIds, strconv.FormatInt(contactIds[i], 10))
+	}
+
+	tempPublicationResourceIds := []string{}
+	for i := 0; i < len(contactIds); i++ {
+		tempPublicationResourceIds = append(tempPublicationResourceIds, strconv.FormatInt(publicationIds[i], 10))
 	}
 
 	topicName := ListUploadTopicID
 	data := map[string]string{
-		"ListId":    strconv.FormatInt(listId, 10),
-		"ContactId": strings.Join(tempContactResourceIds, ","),
-		"Method":    "create",
+		"ListId":       strconv.FormatInt(listId, 10),
+		"PubicationId": strings.Join(tempPublicationResourceIds, ","),
+		"ContactId":    strings.Join(tempContactResourceIds, ","),
+		"Method":       "create",
 	}
 
 	err := sync(r, data, topicName)

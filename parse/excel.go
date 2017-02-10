@@ -35,7 +35,7 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 	}
 
 	// Batch create all the contact
-	contactIds, err := controllers.BatchCreateContactsForExcelUpload(c, r, contacts, mediaListid)
+	contactIds, publicationIds, err := controllers.BatchCreateContactsForExcelUpload(c, r, contacts, mediaListid)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, err
@@ -60,7 +60,7 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, headers []string, med
 
 	// Save the media list
 	mediaList.Save(c)
-	sync.ListUploadResourceBulkSync(r, mediaList.Id, mediaList.Contacts)
+	sync.ListUploadResourceBulkSync(r, mediaList.Id, mediaList.Contacts, publicationIds)
 
 	return mediaList, nil
 }

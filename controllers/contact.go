@@ -1209,14 +1209,15 @@ func BatchCreateContactsForDuplicateList(c context.Context, r *http.Request, con
 }
 
 // Does a ES sync in parse package & Twitter sync here
-func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, contacts []models.Contact, mediaListId int64) ([]int64, error) {
+func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, contacts []models.Contact, mediaListId int64) ([]int64, []int64, error) {
 	var keys []*datastore.Key
 	var contactIds []int64
+	var publicationIds []int64
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []int64{}, err
+		return []int64{}, []int64{}, err
 	}
 
 	for i := 0; i < len(contacts); i++ {
@@ -1226,6 +1227,14 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 		contacts[i].ListId = mediaListId
 		contacts[i].Normalize()
 		keys = append(keys, contacts[i].Key(c))
+
+		for x := 0; x < len(contacts[i].Employers); x++ {
+			publicationIds = append(publicationIds, contacts[i].Employers[x])
+		}
+
+		for x := 0; x < len(contacts[i].PastEmployers); x++ {
+			publicationIds = append(publicationIds, contacts[i].PastEmployers[x])
+		}
 
 		// If there is a Twitter
 		if contacts[i].Twitter != "" {
@@ -1250,14 +1259,14 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []int64{}, err
+		return []int64{}, []int64{}, err
 	}
 
 	for i := 0; i < len(ks); i++ {
 		contactIds = append(contactIds, ks[i].IntID())
 	}
 
-	return contactIds, nil
+	return contactIds, publicationIds, nil
 }
 
 /*
