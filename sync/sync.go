@@ -93,10 +93,10 @@ func ListUploadResourceBulkSync(r *http.Request, listId int64, contactIds []int6
 
 	topicName := ListUploadTopicID
 	data := map[string]string{
-		"ListId":       strconv.FormatInt(listId, 10),
-		"PubicationId": strings.Join(tempPublicationResourceIds, ","),
-		"ContactId":    strings.Join(tempContactResourceIds, ","),
-		"Method":       "create",
+		"ListId":        strconv.FormatInt(listId, 10),
+		"PublicationId": strings.Join(tempPublicationResourceIds, ","),
+		"ContactId":     strings.Join(tempContactResourceIds, ","),
+		"Method":        "create",
 	}
 
 	err := sync(r, data, topicName)
