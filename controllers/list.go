@@ -72,6 +72,10 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 				return models.MediaList{}, errors.New("Could not get user")
 			}
 
+			// 3 ways to check if user can access media list:
+			// 1. If admin
+			// 2. If created by user
+			// 3. If is within the user's team
 			if mediaList.TeamId != user.TeamId && mediaList.CreatedBy != user.Id && !user.IsAdmin {
 				return models.MediaList{}, errors.New("Forbidden")
 			}
@@ -139,7 +143,8 @@ func duplicateList(c context.Context, r *http.Request, id string, name string) (
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
 	}
-	if mediaList.CreatedBy != user.Id {
+
+	if mediaList.TeamId != user.TeamId && mediaList.CreatedBy != user.Id && !user.IsAdmin {
 		return models.MediaList{}, nil, errors.New("Forbidden")
 	}
 
@@ -201,7 +206,7 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 
 	// If the user is active then we can return their media lists
 	if user.IsActive {
-		query := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id).Filter("Archived =", archived)
+		query := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id).Filter("Archived =", archived).Filter("PublicList =", false)
 		query = constructQuery(query, r)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
@@ -583,7 +588,7 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 		return models.MediaList{}, nil, err
 	}
 
-	if mediaList.CreatedBy != user.Id && !user.IsAdmin {
+	if mediaList.TeamId != user.TeamId && mediaList.CreatedBy != user.Id && !user.IsAdmin {
 		return models.MediaList{}, nil, errors.New("Forbidden")
 	}
 
