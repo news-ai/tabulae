@@ -60,26 +60,24 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 			return models.Contact{}, err
 		}
 
-		if contact.ListId != 0 {
-			contactList, err := getMediaList(c, r, contact.ListId)
-			if err != nil {
-				err = errors.New("Forbidden")
-				log.Errorf(c, "%v", err)
-				return models.Contact{}, err
-			}
+		contactList, err := getMediaList(c, r, contact.ListId)
+		if err != nil {
+			err = errors.New("Forbidden")
+			log.Errorf(c, "%v", err)
+			return models.Contact{}, err
+		}
 
-			// If it is a public list
-			if contactList.PublicList {
-				// If it is a public list, and you don't own it or are an admin
-				if contactList.PublicList && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
-					contact.ReadOnly = true
-				}
-				return contact, nil
+		// If it is a public list
+		if contact.ListId != 0 && contactList.PublicList {
+			// You don't own it and you are not an admin
+			if contactList.PublicList && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
+				contact.ReadOnly = true
 			}
+			return contact, nil
 		}
 
 		// This runs if it is not a public list
-		if !contact.IsMasterContact && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
+		if contactList.TeamId != user.TeamId && !contact.IsMasterContact && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
 			err = errors.New("Forbidden")
 			log.Errorf(c, "%v", err)
 			return models.Contact{}, err
@@ -1431,6 +1429,12 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 		return nil, nil, err
 	}
 
+	mediaList, mediaListExists := getMediaList(c, r, contact.ListId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -1438,7 +1442,7 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 	}
 
 	// Double check permissions. Admins should not be able to delete.
-	if !permissions.AccessToObject(contact.CreatedBy, user.Id) {
+	if mediaList.TeamId != user.TeamId && !permissions.AccessToObject(contact.CreatedBy, user.Id) {
 		err = errors.New("Forbidden")
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
@@ -1449,8 +1453,7 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 
 	// Remove the contact out of the mediaList. This is a safe measure in case
 	// The PATCH is not done to the list after. Data integrity.
-	mediaList, err := getMediaList(c, r, contact.ListId)
-	if err == nil {
+	if mediaListExists == nil {
 		contactIdPosition := -1
 		for i := 0; i < len(mediaList.Contacts); i++ {
 			if mediaList.Contacts[i] == contact.Id {
