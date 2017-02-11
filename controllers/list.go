@@ -395,6 +395,10 @@ func GetTeamMediaLists(c context.Context, r *http.Request) ([]models.MediaList, 
 		return []models.MediaList{}, nil, 0, err
 	}
 
+	if user.TeamId == 0 {
+		return []models.MediaList{}, nil, 0, errors.New("You are not a part of a team")
+	}
+
 	query := datastore.NewQuery("MediaList").Filter("TeamId =", user.TeamId).Filter("Archived =", false)
 	query = constructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
