@@ -83,7 +83,13 @@ indexes:
 
 - kind: Email
   properties:
-  - name: Cancel
-  - name: Delievered
-  - name: IsSent
-  - name: SendAt
+    - name: Cancel
+    - name: Delievered
+    - name: IsSent
+    - name: SendAt
+
+- kind: MediaList
+  properties:
+    - name: TeamId
+    - name: Created
+      direction: desc
