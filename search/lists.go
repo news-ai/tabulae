@@ -32,6 +32,7 @@ type Lists struct {
 	Name       string    `json:"name"`
 	Tags       []string  `json:"tags"`
 	Id         int64     `json:"id"`
+	TeamId     int64     `json:"teamid"`
 }
 
 func (l *Lists) FillStruct(m map[string]interface{}) error {
