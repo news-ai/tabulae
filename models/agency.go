@@ -15,6 +15,8 @@ type Agency struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 
+	BillingId int64 `json:"email"`
+
 	Administrators []int64 `json:"administrators" datastore:",noindex" apiModel:"User"`
 }
 

@@ -199,6 +199,15 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 	return emails, nil, len(emails), nil
 }
 
+func GetTeamEmails(c context.Context, r *http.Request, id int64) ([]models.Email, interface{}, int, error) {
+	email, err := getEmail(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Email{}, err
+	}
+	return email, nil
+}
+
 func GetEmailById(c context.Context, r *http.Request, id int64) (models.Email, error) {
 	email, err := getEmail(c, r, id)
 	if err != nil {
@@ -288,6 +297,8 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 				}
 			}
 
+			emails[i].TeamId = currentUser.TeamId
+
 			_, err = emails[i].Create(c, r, currentUser)
 			if err != nil {
 				log.Errorf(c, "%v", err)
@@ -317,6 +328,8 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 			return []models.Email{}, nil, errors.New("The email requested is not confirmed by you yet")
 		}
 	}
+
+	email.TeamId = currentUser.TeamId
 
 	// Create email
 	_, err = email.Create(c, r, currentUser)

@@ -78,6 +78,8 @@ type Email struct {
 	GmailId       string `json:"gmailid"`
 	GmailThreadId string `json:"gmailthreadid"`
 
+	TeamId int64 `json:"teamid"`
+
 	Attachments []int64 `json:"attachments" datastore:",noindex" apiModel:"File"`
 
 	Delievered    bool   `json:"delivered"` // The email has been officially sent by our platform

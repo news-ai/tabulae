@@ -43,6 +43,10 @@ func handleEmailAction(c context.Context, r *http.Request, id string, action str
 func handleEmail(c context.Context, r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
+		if id == "team" {
+			val, included, count, err := controllers.GetTeamEmails(c, r)
+			return api.BaseResponseHandler(val, included, count, err, r)
+		}
 		return api.BaseSingleResponseHandler(controllers.GetEmail(c, r, id))
 	case "PATCH":
 		return api.BaseSingleResponseHandler(controllers.UpdateSingleEmail(c, r, id))
