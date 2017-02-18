@@ -93,3 +93,8 @@ indexes:
     - name: TeamId
     - name: Created
       direction: desc
+
+- kind: Email
+  properties:
+    - name: CreatedBy
+    - name: SendAt
