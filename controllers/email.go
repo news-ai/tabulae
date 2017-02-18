@@ -199,6 +199,25 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 	return emails, nil, len(emails), nil
 }
 
+func GetNumberOfScheduledEmails(c context.Context, r *http.Request) (int, error) {
+	_, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return 0, err
+	}
+
+	// Filter all emails that are in the future (scheduled for later)
+	query := datastore.NewQuery("Email").Filter("SendAt >=", time.Now())
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return 0, err
+	}
+
+	return len(ks), nil
+}
+
 func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
 	emails := []models.Email{}
 
