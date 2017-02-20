@@ -26,10 +26,12 @@ func AdminPageHandler() http.HandlerFunc {
 
 		numberEmailsScheduled, _ := controllers.GetNumberOfScheduledEmails(c, r)
 		getNumberOfEmailsCreatedToday, _ := controllers.GetNumberOfEmailsCreatedToday(c, r)
+		getNumberOfEmailsCreatedMonth, _ := controllers.GetNumberOfEmailsCreatedMonth(c, r)
 
 		data := map[string]interface{}{
 			"numberEmailsScheduled":         numberEmailsScheduled,
 			"getNumberOfEmailsCreatedToday": getNumberOfEmailsCreatedToday,
+			"getNumberOfEmailsCreatedMonth": getNumberOfEmailsCreatedMonth,
 		}
 
 		t := template.New("emails.html")
