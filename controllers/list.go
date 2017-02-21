@@ -606,10 +606,19 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	}
 
 	utilities.UpdateIfNotBlank(&mediaList.Name, updatedMediaList.Name)
-	utilities.UpdateIfNotBlank(&mediaList.Client, updatedMediaList.Client)
 
 	if len(updatedMediaList.Contacts) > 0 {
 		mediaList.Contacts = updatedMediaList.Contacts
+	} else {
+		utilities.UpdateIfNotBlank(&mediaList.Client, updatedMediaList.Client)
+		if len(updatedMediaList.Tags) > 0 {
+			mediaList.Tags = updatedMediaList.Tags
+		}
+
+		// If you want to empty a list
+		if len(mediaList.Tags) > 0 && len(updatedMediaList.Tags) == 0 {
+			mediaList.Tags = updatedMediaList.Tags
+		}
 	}
 
 	// Edge case for when you want to empty the list
@@ -633,15 +642,6 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 
 	if len(updatedMediaList.FieldsMap) > 0 {
 		mediaList.FieldsMap = updatedMediaList.FieldsMap
-	}
-
-	if len(updatedMediaList.Tags) > 0 {
-		mediaList.Tags = updatedMediaList.Tags
-	}
-
-	// If you want to empty a list
-	if len(mediaList.Tags) > 0 && len(updatedMediaList.Tags) == 0 {
-		mediaList.Tags = updatedMediaList.Tags
 	}
 
 	// If new media list wants to be archived then archive it

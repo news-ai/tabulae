@@ -503,9 +503,9 @@ func BillingPageHandler() http.HandlerFunc {
 			switch userBilling.StripePlanId {
 			case "bronze":
 				userBilling.StripePlanId = "Personal"
-			case "silver-1":
+			case "silver-1", "silver":
 				userBilling.StripePlanId = "Business"
-			case "gold-1":
+			case "gold-1", "gold":
 				userBilling.StripePlanId = "Ultimate"
 			}
 
