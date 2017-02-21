@@ -65,7 +65,7 @@ func GetNumberOfScheduledEmails(c context.Context, r *http.Request) (int, error)
 	}
 
 	// Filter all emails that are in the future (scheduled for later)
-	query := datastore.NewQuery("Email").Filter("SendAt >=", time.Now())
+	query := datastore.NewQuery("Email").Filter("SendAt >=", time.Now()).Filter("Cancel =", false)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)

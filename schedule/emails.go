@@ -30,7 +30,6 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Infof(c, "%v", len(schedueled))
-	log.Infof(c, "%v", schedueled)
 
 	// Loop through the emails and send them
 	for i := 0; i < len(schedueled); i++ {
@@ -69,6 +68,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 				}
 
 				log.Infof(c, "%v", files)
+				log.Infof(c, "%v", schedueled[i])
 				gmailId, gmailThreadId, err := emails.SendGmailEmail(r, user, schedueled[i], files)
 				if err != nil {
 					hasErrors = true
@@ -94,6 +94,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			if !schedueled[i].SendAt.IsZero() && schedueled[i].SendGridId == "" {
+				log.Infof(c, "%v", schedueled[i])
 				emailSent, emailId, err := emails.SendEmail(r, schedueled[i], user, files)
 				if err != nil {
 					hasErrors = true

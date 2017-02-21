@@ -556,11 +556,17 @@ func GetCurrentSchedueledEmails(c context.Context, r *http.Request) ([]models.Em
 		return []models.Email{}, err
 	}
 
+	emailsToSend := []models.Email{}
+
 	for i := 0; i < len(emails); i++ {
 		emails[i].Format(ks[i], "emails")
+
+		if !emails[i].SendAt.IsZero() {
+			emailsToSend = append(emailsToSend, emails[i])
+		}
 	}
 
-	return emails, nil
+	return emailsToSend, nil
 }
 
 func SendEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {

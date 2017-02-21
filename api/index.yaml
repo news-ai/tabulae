@@ -98,3 +98,8 @@ indexes:
   properties:
     - name: CreatedBy
     - name: SendAt
+
+- kind: Email
+  properties:
+    - name: Cancel
+    - name: SendAt
