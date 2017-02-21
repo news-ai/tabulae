@@ -35,6 +35,8 @@ func handleUserActions(c context.Context, r *http.Request, id string, action str
 			return api.BaseSingleResponseHandler(controllers.FeedbackFromUser(c, r, id))
 		case "add-email":
 			return api.BaseSingleResponseHandler(controllers.AddEmailToUser(c, r, id))
+		case "remove-email":
+			return api.BaseSingleResponseHandler(controllers.RemoveEmailFromUser(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")

@@ -29,7 +29,7 @@ func UserMaximumSocialAccounts(plan string) int {
 func UserMaximumEmailAccounts(plan string) int {
 	switch plan {
 	case "Personal":
-		return 1
+		return 0
 	case "Business":
 		return 5
 	case "Ultimate":
@@ -38,4 +38,3 @@ func UserMaximumEmailAccounts(plan string) int {
 
 	return 0
 }
-

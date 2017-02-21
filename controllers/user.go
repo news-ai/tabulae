@@ -541,6 +541,76 @@ func AddEmailToUser(c context.Context, r *http.Request, id string) (models.User,
 	return user, nil, nil
 }
 
+func RemoveEmailFromUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+	user := models.User{}
+	err := errors.New("")
+
+	switch id {
+	case "me":
+		user, err = GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(c, r, userId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	// Only available when using SendGrid
+	if user.Gmail || user.ExternalEmail {
+		return user, nil, errors.New("Feature only works when using Sendgrid")
+	}
+
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var userEmail models.UserEmail
+	err = decoder.Decode(buf, &userEmail)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	userEmail.Email = strings.ToLower(userEmail.Email)
+	validEmail, err := mail.ParseAddress(userEmail.Email)
+	if err != nil {
+		return user, nil, err
+	}
+
+	if user.Email == validEmail.Address {
+		return user, nil, errors.New("Can't remove your default email as an extra email")
+	}
+
+	for i := 0; i < len(user.Emails); i++ {
+		if user.Emails[i] == validEmail.Address {
+			user.Emails = append(user.Emails[:i], user.Emails[i+1:]...)
+		}
+	}
+
+	SaveUser(c, r, &user)
+	return user, nil, nil
+}
+
 func GetUserPlanDetails(c context.Context, r *http.Request, id string) (models.UserPlan, interface{}, error) {
 	user := models.User{}
 	err := errors.New("")
@@ -571,13 +641,13 @@ func GetUserPlanDetails(c context.Context, r *http.Request, id string) (models.U
 		return models.UserPlan{}, nil, err
 	}
 
-	if !permissions.AccessToObject(user.Id, currentUser.Id) {
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.IsAdmin {
 		err = errors.New("Forbidden")
 		log.Errorf(c, "%v", err)
 		return models.UserPlan{}, nil, err
 	}
 
-	userBilling, err := GetUserBilling(c, r, currentUser)
+	userBilling, err := GetUserBilling(c, r, user)
 	if err != nil {
 		return models.UserPlan{}, nil, err
 	}
@@ -585,6 +655,7 @@ func GetUserPlanDetails(c context.Context, r *http.Request, id string) (models.U
 	userPlan := models.UserPlan{}
 	userPlanName := billing.BillingIdToPlanName(userBilling.StripePlanId)
 	userPlan.EmailAccounts = billing.UserMaximumEmailAccounts(userPlanName)
+	userPlan.OnTrial = userBilling.IsOnTrial
 
 	return userPlan, nil, nil
 }
