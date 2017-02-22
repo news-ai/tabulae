@@ -577,11 +577,6 @@ func RemoveEmailFromUser(c context.Context, r *http.Request, id string) (models.
 		return models.User{}, nil, err
 	}
 
-	// Only available when using SendGrid
-	if user.Gmail || user.ExternalEmail {
-		return user, nil, errors.New("Feature only works when using Sendgrid")
-	}
-
 	buf, _ := ioutil.ReadAll(r.Body)
 	decoder := ffjson.NewDecoder()
 	var userEmail models.UserEmail
