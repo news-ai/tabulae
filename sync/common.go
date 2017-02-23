@@ -9,19 +9,20 @@ import (
 )
 
 var (
-	PubsubClient        *pubsub.Client
-	InfluencerTopicID   = "influencer"
-	ContactsTopicID     = "datastore-sync-contacts-functions"
-	PublicationsTopicID = "datastore-sync-publications-functions"
-	ListsTopicID        = "datastore-sync-lists-functions"
-	ListChangeTopicId   = "process-list-change"
-	UsersTopicID        = "datastore-sync-users-functions"
-	TwitterTopicID      = "process-twitter-feed"
-	InstagramTopicID    = "process-instagram-feed"
-	EnhanceTopicID      = "process-enhance"
-	RSSFeedTopicID      = "process-rss-feed"
-	ListUploadTopicID   = "process-new-list-upload"
-	projectID           = "newsai-1166"
+	PubsubClient         *pubsub.Client
+	InfluencerTopicID    = "influencer"
+	ContactsTopicID      = "datastore-sync-contacts-functions"
+	PublicationsTopicID  = "datastore-sync-publications-functions"
+	ListsTopicID         = "datastore-sync-lists-functions"
+	ListChangeTopicId    = "process-list-change"
+	ContactChangeTopicID = "process-contact-change"
+	UsersTopicID         = "datastore-sync-users-functions"
+	TwitterTopicID       = "process-twitter-feed"
+	InstagramTopicID     = "process-instagram-feed"
+	EnhanceTopicID       = "process-enhance"
+	RSSFeedTopicID       = "process-rss-feed"
+	ListUploadTopicID    = "process-new-list-upload"
+	projectID            = "newsai-1166"
 )
 
 func configurePubsub(r *http.Request) (*pubsub.Client, error) {
