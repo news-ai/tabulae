@@ -100,6 +100,10 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		"twitterposts":     true,
 	}
 
+	newDefaultFieldsMap := map[string]bool{
+		"phonenumber": true,
+	}
+
 	newFieldsMapNames := map[string]string{
 		"instagramfollowers": "Instagram Followers",
 		"instagramfollowing": "Instagram Following",
@@ -124,6 +128,7 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		"instagram":     "Instagram",
 		"website":       "Website",
 		"blog":          "Blog",
+		"phonenumber":   "Phone #",
 	}
 
 	isChanged := false
@@ -140,6 +145,10 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 			}
 		}
 
+		if _, ok := newDefaultFieldsMap[ml.FieldsMap[i].Value]; ok {
+			newDefaultFieldsMap[ml.FieldsMap[i].Value] = false
+		}
+
 		// If this particular name exists in newFieldsMapNames
 		if _, ok := newFieldsMapNames[ml.FieldsMap[i].Name]; ok {
 			ml.FieldsMap[i].Name = newFieldsMapNames[ml.FieldsMap[i].Name]
@@ -154,6 +163,19 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 				Name:        newFieldsMapNames[key],
 				Value:       key,
 				CustomField: true,
+				Hidden:      true,
+			}
+			ml.FieldsMap = append(ml.FieldsMap, field)
+		}
+	}
+
+	for key, v := range newDefaultFieldsMap {
+		if v {
+			isChanged = true
+			field := CustomFieldsMap{
+				Name:        newFieldsMapNames[key],
+				Value:       key,
+				CustomField: false,
 				Hidden:      true,
 			}
 			ml.FieldsMap = append(ml.FieldsMap, field)
