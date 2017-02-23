@@ -103,3 +103,14 @@ indexes:
   properties:
     - name: Cancel
     - name: SendAt
+
+- kind: Email
+  properties:
+    - name: IsSent
+    - name: SendAt
+
+- kind: Email
+  properties:
+    - name: Cancel
+    - name: IsSent
+    - name: Created

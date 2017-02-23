@@ -47,7 +47,7 @@ func GetNumberOfEmailsCreatedToday(c context.Context, r *http.Request) (int, err
 	morningTime := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), 0, 0, 0, 0, timeNow.Location())
 
 	// Filter all emails that are in the future (scheduled for later)
-	query := datastore.NewQuery("Email").Filter("Created >=", morningTime)
+	query := datastore.NewQuery("Email").Filter("Created >=", morningTime).Filter("Cancel =", false).Filter("IsSent =", true)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -65,7 +65,7 @@ func GetNumberOfScheduledEmails(c context.Context, r *http.Request) (int, error)
 	}
 
 	// Filter all emails that are in the future (scheduled for later)
-	query := datastore.NewQuery("Email").Filter("SendAt >=", time.Now()).Filter("Cancel =", false)
+	query := datastore.NewQuery("Email").Filter("SendAt >=", time.Now()).Filter("Cancel =", false).Filter("IsSent =", true)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
