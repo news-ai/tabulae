@@ -49,6 +49,9 @@ func handleEmail(c context.Context, r *http.Request, id string) (interface{}, er
 		} else if id == "scheduled" {
 			val, included, count, err := controllers.GetScheduledEmails(c, r)
 			return api.BaseResponseHandler(val, included, count, err, r)
+		} else if id == "sent" {
+			val, included, count, err := controllers.GetSentEmails(c, r)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		}
 		return api.BaseSingleResponseHandler(controllers.GetEmail(c, r, id))
 	case "PATCH":

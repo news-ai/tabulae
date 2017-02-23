@@ -199,6 +199,38 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 	return emails, nil, len(emails), nil
 }
 
+func GetSentEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
+	emails := []models.Email{}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, 0, err
+	}
+
+	// Filter all emails that are in the future (scheduled for later)
+	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("IsSent =", true).Filter("Cancel =", false)
+	query = constructQuery(query, r)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, 0, err
+	}
+
+	emails = make([]models.Email, len(ks))
+	err = nds.GetMulti(c, ks, emails)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, 0, err
+	}
+
+	for i := 0; i < len(emails); i++ {
+		emails[i].Format(ks[i], "emails")
+	}
+
+	return emails, nil, len(emails), nil
+}
+
 func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
 	emails := []models.Email{}
 
@@ -209,7 +241,7 @@ func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, int
 	}
 
 	// Filter all emails that are in the future (scheduled for later)
-	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("SendAt >=", time.Now())
+	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("SendAt >=", time.Now()).Filter("Cancel =", false)
 	query = constructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
