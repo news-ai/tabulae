@@ -14,6 +14,7 @@ var (
 	ContactsTopicID     = "datastore-sync-contacts-functions"
 	PublicationsTopicID = "datastore-sync-publications-functions"
 	ListsTopicID        = "datastore-sync-lists-functions"
+	ListChangeTopicId   = "process-list-change"
 	UsersTopicID        = "datastore-sync-users-functions"
 	TwitterTopicID      = "process-twitter-feed"
 	InstagramTopicID    = "process-instagram-feed"
@@ -117,6 +118,17 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		return nil, err
 	} else if !exists {
 		if _, err := PubsubClient.CreateTopic(c, EnhanceTopicID); err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, err
+		}
+	}
+
+	// Create the topic for instagram if it doesn't exist.
+	if exists, err := PubsubClient.Topic(ListChangeTopicId).Exists(c); err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	} else if !exists {
+		if _, err := PubsubClient.CreateTopic(c, ListChangeTopicId); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}
