@@ -124,7 +124,7 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 					log.Errorf(c, "%v", err)
 				}
 			case "delivered":
-				_, err = controllers.MarkDelivered(c, &email)
+				_, err = controllers.MarkDelivered(c, r, &email)
 				if err != nil {
 					hasErrors = true
 					log.Errorf(c, "%v", singleEvent)

@@ -841,6 +841,7 @@ func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason str
 	}
 
 	_, err = e.MarkBounced(c, reason)
+	sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, notification, err
 }
 
@@ -848,6 +849,7 @@ func MarkSpam(c context.Context, r *http.Request, e *models.Email) (*models.Emai
 	SetUser(c, r, e.CreatedBy)
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "SPAM", "")
 	_, err := e.MarkSpam(c)
+	sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, notification, err
 }
 
@@ -855,17 +857,21 @@ func MarkClicked(c context.Context, r *http.Request, e *models.Email) (*models.E
 	SetUser(c, r, e.CreatedBy)
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "CLICKED", "")
 	_, err := e.MarkClicked(c)
+	sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, notification, err
 }
 
-func MarkDelivered(c context.Context, e *models.Email) (*models.Email, error) {
-	return e.MarkDelivered(c)
+func MarkDelivered(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
+	_, err := e.MarkDelivered(c)
+	sync.ResourceSync(r, e.Id, "Email", "create")
+	return e, err
 }
 
 func MarkOpened(c context.Context, r *http.Request, e *models.Email) (*models.Email, models.NotificationChange, error) {
 	SetUser(c, r, e.CreatedBy)
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "OPENED", "")
 	_, err := e.MarkOpened(c)
+	sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, notification, err
 }
 

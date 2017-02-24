@@ -9,6 +9,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/emails"
 	"github.com/news-ai/web/google"
@@ -80,6 +81,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 				schedueled[i].GmailThreadId = gmailThreadId
 
 				_, err = schedueled[i].MarkDelivered(c)
+				sync.ResourceSync(r, schedueled[i].Id, "Email", "create")
 				if err != nil {
 					hasErrors = true
 					log.Errorf(c, "%v", err)
@@ -112,6 +114,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 					}
 
 					_, err := schedueled[i].MarkSent(c, emailId)
+					sync.ResourceSync(r, schedueled[i].Id, "Email", "create")
 					if err != nil {
 						log.Errorf(c, "%v", err)
 						hasErrors = true
