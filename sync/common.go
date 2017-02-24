@@ -15,6 +15,7 @@ var (
 	PublicationsTopicID  = "datastore-sync-publications-functions"
 	ListsTopicID         = "datastore-sync-lists-functions"
 	ListChangeTopicId    = "process-list-change"
+	EmailChangeTopicID   = "process-email-change"
 	ContactChangeTopicID = "process-contact-change"
 	UsersTopicID         = "datastore-sync-users-functions"
 	UserChangeTopicID    = "process-user-change"

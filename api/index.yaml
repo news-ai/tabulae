@@ -114,3 +114,10 @@ indexes:
     - name: Cancel
     - name: IsSent
     - name: Created
+
+- kind: Email
+  properties:
+    - name: Cancel
+    - name: IsSent
+    - name: Created
+      direction: desc

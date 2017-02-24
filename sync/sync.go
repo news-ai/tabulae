@@ -171,6 +171,8 @@ func ResourceSync(r *http.Request, resourceId int64, resource string, method str
 		topicName = ListChangeTopicId
 	} else if resource == "User" {
 		topicName = UserChangeTopicID
+	} else if resource == "Email" {
+		topicName = EmailChangeTopicID
 	}
 
 	return sync(r, data, topicName)

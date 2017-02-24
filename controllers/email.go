@@ -21,6 +21,7 @@ import (
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/search"
+	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/emails"
 	"github.com/news-ai/web/google"
@@ -357,8 +358,9 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 			}
 
 			emails[i].TeamId = currentUser.TeamId
-
 			_, err = emails[i].Create(c, r, currentUser)
+
+			sync.ResourceSync(r, emails[i].Id, "Email", "create")
 			if err != nil {
 				log.Errorf(c, "%v", err)
 				return []models.Email{}, nil, err
@@ -392,6 +394,7 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 
 	// Create email
 	_, err = email.Create(c, r, currentUser)
+	sync.ResourceSync(r, email.Id, "Email", "create")
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, err
@@ -451,6 +454,7 @@ func UpdateEmail(c context.Context, r *http.Request, currentUser models.User, em
 		email.TemplateId = updatedEmail.TemplateId
 	}
 
+	sync.ResourceSync(r, email.Id, "Email", "create")
 	email.Save(c)
 
 	return *email, nil, nil
@@ -546,6 +550,7 @@ func CancelEmail(c context.Context, r *http.Request, id string) (models.Email, i
 	// and that sendAt date is in the future.
 	if !email.Delievered && !email.SendAt.IsZero() && email.SendAt.After(time.Now()) {
 		email.Cancel = true
+		sync.ResourceSync(r, email.Id, "Email", "create")
 		email.Save(c)
 		return email, nil, nil
 	}
@@ -561,6 +566,7 @@ func ArchiveEmail(c context.Context, r *http.Request, id string) (models.Email, 
 	}
 
 	email.Archived = true
+	sync.ResourceSync(r, email.Id, "Email", "create")
 	email.Save(c)
 	return email, nil, nil
 }
@@ -715,6 +721,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 				return *val, nil, nil
 			}
 
+			sync.ResourceSync(r, val.Id, "Email", "create")
 			return *val, nil, errors.New(verifyResponse.Error)
 		}
 
@@ -759,6 +766,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 			}
 		}
 
+		sync.ResourceSync(r, val.Id, "Email", "create")
 		return *val, nil, nil
 	}
 
@@ -809,10 +817,12 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 				files[i].Save(c)
 			}
 
+			sync.ResourceSync(r, val.Id, "Email", "create")
 			return *val, nil, nil
 		}
 	}
 
+	sync.ResourceSync(r, val.Id, "Email", "create")
 	return *val, nil, nil
 }
 
