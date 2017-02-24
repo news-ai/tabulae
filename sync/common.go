@@ -17,6 +17,7 @@ var (
 	ListChangeTopicId    = "process-list-change"
 	ContactChangeTopicID = "process-contact-change"
 	UsersTopicID         = "datastore-sync-users-functions"
+	UserChangeTopicID    = "process-user-change"
 	TwitterTopicID       = "process-twitter-feed"
 	InstagramTopicID     = "process-instagram-feed"
 	EnhanceTopicID       = "process-enhance"
