@@ -6,6 +6,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	"google.golang.org/appengine/datastore"
+
 	"github.com/qedus/nds"
 )
 
@@ -100,12 +102,16 @@ type Email struct {
 }
 
 /*
-* Private methods
+* Public methods
  */
 
 /*
 * Create methods
  */
+
+func (e *Email) Key(c context.Context) *datastore.Key {
+	return e.key(c, "Email")
+}
 
 func (e *Email) Create(c context.Context, r *http.Request, currentUser User) (*Email, error) {
 	e.IsSent = false

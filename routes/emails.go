@@ -73,7 +73,7 @@ func handleEmails(c context.Context, w http.ResponseWriter, r *http.Request) (in
 		val, included, count, err := controllers.GetEmails(c, r)
 		return api.BaseResponseHandler(val, included, count, err, r)
 	case "POST":
-		return api.BaseSingleResponseHandler(controllers.CreateEmail(c, r))
+		return api.BaseSingleResponseHandler(controllers.CreateEmailTransition(c, r))
 	case "PATCH":
 		return api.BaseSingleResponseHandler(controllers.UpdateBatchEmail(c, r))
 	}

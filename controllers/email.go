@@ -335,9 +335,9 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 			return []models.Email{}, nil, err
 		}
 
-		newEmails := []models.Email{}
-		for i := 0; i < len(emails); i++ {
+		var keys []*datastore.Key
 
+		for i := 0; i < len(emails); i++ {
 			// Test if the email we are sending with is in the user's SendGridFrom or is their Email
 			if emails[i].FromEmail != "" {
 				userEmailValid := false
@@ -357,18 +357,33 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 				}
 			}
 
+			emails[i].Id = 0
+			emails[i].CreatedBy = currentUser.Id
+			emails[i].Created = time.Now()
+			emails[i].Updated = time.Now()
 			emails[i].TeamId = currentUser.TeamId
-			_, err = emails[i].Create(c, r, currentUser)
+			emails[i].IsSent = false
 
-			// sync.ResourceSync(r, emails[i].Id, "Email", "create")
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return []models.Email{}, nil, err
-			}
-			newEmails = append(newEmails, emails[i])
+			keys = append(keys, emails[i].Key(c))
 		}
 
-		return newEmails, nil, err
+		ks := []*datastore.Key{}
+
+		err = nds.RunInTransaction(c, func(ctx context.Context) error {
+			contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+			ks, err = nds.PutMulti(contextWithTimeout, keys, emails)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return err
+			}
+			return nil
+		}, nil)
+
+		for i := 0; i < len(ks); i++ {
+			emails[i].Format(ks[i], "emails")
+		}
+
+		return emails, nil, err
 	}
 
 	// Test if the email we are sending with is in the user's SendGridFrom or is their Email
