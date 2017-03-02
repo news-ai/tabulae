@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"golang.org/x/net/context"
 
@@ -124,6 +125,18 @@ func CreateTemplate(c context.Context, r *http.Request) (models.Template, interf
 		return template, nil, err
 	}
 
+	if template.Name == "" {
+		template.Name = "Sample"
+	}
+
+	if template.Subject == "" {
+		template.Subject = template.Name
+	}
+
+	if strings.TrimSpace(template.Subject) == "" {
+		template.Subject = template.Name
+	}
+
 	// Create template
 	_, err = template.Create(c, r, currentUser)
 	if err != nil {
@@ -152,7 +165,7 @@ func UpdateTemplate(c context.Context, r *http.Request, id string) (models.Templ
 		log.Errorf(c, "%v", err)
 		return models.Template{}, nil, err
 	}
-	if template.CreatedBy != user.Id {
+	if template.CreatedBy != user.Id && !user.IsAdmin {
 		return models.Template{}, nil, errors.New("Forbidden")
 	}
 
