@@ -1250,7 +1250,7 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 	ks := []*datastore.Key{}
 
 	err = nds.RunInTransaction(c, func(ctx context.Context) error {
-		contextWithTimeout, _ := context.WithTimeout(c, time.Second*300)
+		contextWithTimeout, _ := context.WithTimeout(c, time.Second*1000)
 		ks, err = nds.PutMulti(contextWithTimeout, keys, contacts)
 		if err != nil {
 			log.Errorf(c, "%v", err)

@@ -693,6 +693,29 @@ func UpdateMediaListToPublic(c context.Context, r *http.Request, id string) (mod
 	return mediaList, nil, nil
 }
 
+func ReSyncMediaList(c context.Context, r *http.Request, id string) (models.MediaList, interface{}, error) {
+	// Get the details of the current media list
+	mediaList, _, err := GetMediaList(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.MediaList{}, nil, err
+	}
+
+	// Checking if the current user logged in can edit this particular id
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.MediaList{}, nil, err
+	}
+	if !user.IsAdmin {
+		return models.MediaList{}, nil, errors.New("Forbidden")
+	}
+
+	sync.ListUploadResourceBulkSync(r, mediaList.Id, mediaList.Contacts, []int64{})
+	sync.ResourceSync(r, mediaList.Id, "List", "create")
+	return mediaList, nil, nil
+}
+
 /*
 * Action methods
  */

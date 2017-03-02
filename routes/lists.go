@@ -43,6 +43,8 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 			return api.BaseResponseHandler(val, included, count, err, r)
 		case "public":
 			return api.BaseSingleResponseHandler(controllers.UpdateMediaListToPublic(c, r, id))
+		case "resync":
+			return api.BaseSingleResponseHandler(controllers.ReSyncMediaList(c, r, id))
 		}
 	case "POST":
 		switch action {

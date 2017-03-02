@@ -310,6 +310,98 @@ func GetEmail(c context.Context, r *http.Request, id string) (models.Email, inte
 * Create methods
  */
 
+func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, interface{}, error) {
+	buf, _ := ioutil.ReadAll(r.Body)
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, err
+	}
+
+	decoder := ffjson.NewDecoder()
+	var email models.Email
+	err = decoder.Decode(buf, &email)
+
+	// If it is an array and you need to do BATCH processing
+	if err != nil {
+		var emails []models.Email
+
+		arrayDecoder := ffjson.NewDecoder()
+		err = arrayDecoder.Decode(buf, &emails)
+
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return []models.Email{}, nil, err
+		}
+
+		newEmails := []models.Email{}
+		for i := 0; i < len(emails); i++ {
+
+			// Test if the email we are sending with is in the user's SendGridFrom or is their Email
+			if emails[i].FromEmail != "" {
+				userEmailValid := false
+				if currentUser.Email == emails[i].FromEmail {
+					userEmailValid = true
+				}
+
+				for x := 0; x < len(currentUser.Emails); x++ {
+					if currentUser.Emails[x] == emails[i].FromEmail {
+						userEmailValid = true
+					}
+				}
+
+				// If this is if the email added is not valid in SendGridFrom
+				if !userEmailValid {
+					return []models.Email{}, nil, errors.New("The email requested is not confirmed by the user yet")
+				}
+			}
+
+			emails[i].TeamId = currentUser.TeamId
+			_, err = emails[i].Create(c, r, currentUser)
+
+			// sync.ResourceSync(r, emails[i].Id, "Email", "create")
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return []models.Email{}, nil, err
+			}
+			newEmails = append(newEmails, emails[i])
+		}
+
+		return newEmails, nil, err
+	}
+
+	// Test if the email we are sending with is in the user's SendGridFrom or is their Email
+	if email.FromEmail != "" {
+		userEmailValid := false
+		if currentUser.Email == email.FromEmail {
+			userEmailValid = true
+		}
+
+		for i := 0; i < len(currentUser.Emails); i++ {
+			if currentUser.Emails[i] == email.FromEmail {
+				userEmailValid = true
+			}
+		}
+
+		// If this is if the email added is not valid in SendGridFrom
+		if !userEmailValid {
+			return []models.Email{}, nil, errors.New("The email requested is not confirmed by you yet")
+		}
+	}
+
+	email.TeamId = currentUser.TeamId
+
+	// Create email
+	_, err = email.Create(c, r, currentUser)
+	// sync.ResourceSync(r, email.Id, "Email", "create")
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, err
+	}
+	return []models.Email{email}, nil, nil
+}
+
 func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 
@@ -360,7 +452,7 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 			emails[i].TeamId = currentUser.TeamId
 			_, err = emails[i].Create(c, r, currentUser)
 
-			sync.ResourceSync(r, emails[i].Id, "Email", "create")
+			// sync.ResourceSync(r, emails[i].Id, "Email", "create")
 			if err != nil {
 				log.Errorf(c, "%v", err)
 				return []models.Email{}, nil, err
@@ -394,7 +486,7 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 
 	// Create email
 	_, err = email.Create(c, r, currentUser)
-	sync.ResourceSync(r, email.Id, "Email", "create")
+	// sync.ResourceSync(r, email.Id, "Email", "create")
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, err
@@ -607,6 +699,29 @@ func GetCurrentSchedueledEmails(c context.Context, r *http.Request) ([]models.Em
 	return emailsToSend, nil
 }
 
+func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var bulkEmailIds models.BulkSendEmailIds
+	err := decoder.Decode(buf, &bulkEmailIds)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, 0, err
+	}
+
+	emails := []models.Email{}
+
+	for i := 0; i < len(bulkEmailIds.EmailIds); i++ {
+		singleEmail, _, err := SendEmail(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10))
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		}
+		emails = append(emails, singleEmail)
+	}
+
+	return emails, nil, len(bulkEmailIds.EmailIds), nil
+}
+
 func SendEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
 	email, _, err := GetEmail(c, r, id)
 	if err != nil {
@@ -721,7 +836,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 				return *val, nil, nil
 			}
 
-			sync.ResourceSync(r, val.Id, "Email", "create")
+			// sync.ResourceSync(r, val.Id, "Email", "create")
 			return *val, nil, errors.New(verifyResponse.Error)
 		}
 
@@ -766,7 +881,7 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 			}
 		}
 
-		sync.ResourceSync(r, val.Id, "Email", "create")
+		// sync.ResourceSync(r, val.Id, "Email", "create")
 		return *val, nil, nil
 	}
 
@@ -817,12 +932,12 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 				files[i].Save(c)
 			}
 
-			sync.ResourceSync(r, val.Id, "Email", "create")
+			// sync.ResourceSync(r, val.Id, "Email", "create")
 			return *val, nil, nil
 		}
 	}
 
-	sync.ResourceSync(r, val.Id, "Email", "create")
+	// sync.ResourceSync(r, val.Id, "Email", "create")
 	return *val, nil, nil
 }
 

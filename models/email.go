@@ -9,6 +9,10 @@ import (
 	"github.com/qedus/nds"
 )
 
+type BulkSendEmailIds struct {
+	EmailIds []int64 `json:"emailids"`
+}
+
 type SMTPSettings struct {
 	Servername string `json:"servername"`
 

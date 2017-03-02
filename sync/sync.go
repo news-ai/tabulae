@@ -87,7 +87,7 @@ func ListUploadResourceBulkSync(r *http.Request, listId int64, contactIds []int6
 	}
 
 	tempPublicationResourceIds := []string{}
-	for i := 0; i < len(contactIds); i++ {
+	for i := 0; i < len(publicationIds); i++ {
 		tempPublicationResourceIds = append(tempPublicationResourceIds, strconv.FormatInt(publicationIds[i], 10))
 	}
 

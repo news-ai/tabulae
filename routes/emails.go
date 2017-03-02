@@ -59,6 +59,9 @@ func handleEmail(c context.Context, r *http.Request, id string) (interface{}, er
 	case "POST":
 		if id == "upload" {
 			return api.BaseSingleResponseHandler(files.HandleEmailImageActionUpload(c, r))
+		} else if id == "bulksend" {
+			val, included, count, err := controllers.BulkSendEmail(c, r)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		}
 	}
 	return nil, errors.New("method not implemented")
