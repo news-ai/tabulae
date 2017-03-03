@@ -420,97 +420,6 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 	return []models.Email{email}, nil, nil
 }
 
-func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, error) {
-	buf, _ := ioutil.ReadAll(r.Body)
-
-	currentUser, err := GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, err
-	}
-
-	decoder := ffjson.NewDecoder()
-	var email models.Email
-	err = decoder.Decode(buf, &email)
-
-	// If it is an array and you need to do BATCH processing
-	if err != nil {
-		var emails []models.Email
-
-		arrayDecoder := ffjson.NewDecoder()
-		err = arrayDecoder.Decode(buf, &emails)
-
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return []models.Email{}, nil, err
-		}
-
-		newEmails := []models.Email{}
-		for i := 0; i < len(emails); i++ {
-
-			// Test if the email we are sending with is in the user's SendGridFrom or is their Email
-			if emails[i].FromEmail != "" {
-				userEmailValid := false
-				if currentUser.Email == emails[i].FromEmail {
-					userEmailValid = true
-				}
-
-				for x := 0; x < len(currentUser.Emails); x++ {
-					if currentUser.Emails[x] == emails[i].FromEmail {
-						userEmailValid = true
-					}
-				}
-
-				// If this is if the email added is not valid in SendGridFrom
-				if !userEmailValid {
-					return []models.Email{}, nil, errors.New("The email requested is not confirmed by the user yet")
-				}
-			}
-
-			emails[i].TeamId = currentUser.TeamId
-			_, err = emails[i].Create(c, r, currentUser)
-
-			// sync.ResourceSync(r, emails[i].Id, "Email", "create")
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return []models.Email{}, nil, err
-			}
-			newEmails = append(newEmails, emails[i])
-		}
-
-		return newEmails, nil, err
-	}
-
-	// Test if the email we are sending with is in the user's SendGridFrom or is their Email
-	if email.FromEmail != "" {
-		userEmailValid := false
-		if currentUser.Email == email.FromEmail {
-			userEmailValid = true
-		}
-
-		for i := 0; i < len(currentUser.Emails); i++ {
-			if currentUser.Emails[i] == email.FromEmail {
-				userEmailValid = true
-			}
-		}
-
-		// If this is if the email added is not valid in SendGridFrom
-		if !userEmailValid {
-			return []models.Email{}, nil, errors.New("The email requested is not confirmed by you yet")
-		}
-	}
-
-	email.TeamId = currentUser.TeamId
-
-	// Create email
-	_, err = email.Create(c, r, currentUser)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, err
-	}
-	return []models.Email{email}, nil, nil
-}
-
 func CreateEmailInternal(r *http.Request, to, firstName, lastName string) (models.Email, error) {
 	c := appengine.NewContext(r)
 
@@ -563,9 +472,8 @@ func UpdateEmail(c context.Context, r *http.Request, currentUser models.User, em
 		email.TemplateId = updatedEmail.TemplateId
 	}
 
-	// sync.ResourceSync(r, email.Id, "Email", "create")
 	email.Save(c)
-
+	sync.ResourceSync(r, email.Id, "Email", "create")
 	return *email, nil, nil
 }
 
@@ -659,8 +567,8 @@ func CancelEmail(c context.Context, r *http.Request, id string) (models.Email, i
 	// and that sendAt date is in the future.
 	if !email.Delievered && !email.SendAt.IsZero() && email.SendAt.After(time.Now()) {
 		email.Cancel = true
-		// sync.ResourceSync(r, email.Id, "Email", "create")
 		email.Save(c)
+		sync.ResourceSync(r, email.Id, "Email", "create")
 		return email, nil, nil
 	}
 
@@ -675,8 +583,8 @@ func ArchiveEmail(c context.Context, r *http.Request, id string) (models.Email, 
 	}
 
 	email.Archived = true
-	// sync.ResourceSync(r, email.Id, "Email", "create")
 	email.Save(c)
+	sync.ResourceSync(r, email.Id, "Email", "create")
 	return email, nil, nil
 }
 
@@ -984,7 +892,6 @@ func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason str
 	}
 
 	_, err = e.MarkBounced(c, reason)
-	// sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, notification, err
 }
 
@@ -992,7 +899,6 @@ func MarkSpam(c context.Context, r *http.Request, e *models.Email) (*models.Emai
 	SetUser(c, r, e.CreatedBy)
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "SPAM", "")
 	_, err := e.MarkSpam(c)
-	// sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, notification, err
 }
 
@@ -1000,13 +906,11 @@ func MarkClicked(c context.Context, r *http.Request, e *models.Email) (*models.E
 	SetUser(c, r, e.CreatedBy)
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "CLICKED", "")
 	_, err := e.MarkClicked(c)
-	// sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, notification, err
 }
 
 func MarkDelivered(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
 	_, err := e.MarkDelivered(c)
-	// sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, err
 }
 
@@ -1014,7 +918,6 @@ func MarkOpened(c context.Context, r *http.Request, e *models.Email) (*models.Em
 	SetUser(c, r, e.CreatedBy)
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "OPENED", "")
 	_, err := e.MarkOpened(c)
-	// sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, notification, err
 }
 
