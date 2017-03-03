@@ -336,6 +336,7 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 		}
 
 		var keys []*datastore.Key
+		emailIds := []int64{}
 
 		for i := 0; i < len(emails); i++ {
 			// Test if the email we are sending with is in the user's SendGridFrom or is their Email
@@ -381,8 +382,10 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 
 		for i := 0; i < len(ks); i++ {
 			emails[i].Format(ks[i], "emails")
+			emailIds = append(emailIds, emails[i].Id)
 		}
 
+		sync.EmailResourceBulkSync(r, emailIds)
 		return emails, nil, err
 	}
 
@@ -409,7 +412,7 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 
 	// Create email
 	_, err = email.Create(c, r, currentUser)
-	// sync.ResourceSync(r, email.Id, "Email", "create")
+	sync.ResourceSync(r, email.Id, "Email", "create")
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, err
@@ -501,7 +504,6 @@ func CreateEmail(c context.Context, r *http.Request) ([]models.Email, interface{
 
 	// Create email
 	_, err = email.Create(c, r, currentUser)
-	// sync.ResourceSync(r, email.Id, "Email", "create")
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, err
@@ -561,7 +563,7 @@ func UpdateEmail(c context.Context, r *http.Request, currentUser models.User, em
 		email.TemplateId = updatedEmail.TemplateId
 	}
 
-	sync.ResourceSync(r, email.Id, "Email", "create")
+	// sync.ResourceSync(r, email.Id, "Email", "create")
 	email.Save(c)
 
 	return *email, nil, nil
@@ -657,7 +659,7 @@ func CancelEmail(c context.Context, r *http.Request, id string) (models.Email, i
 	// and that sendAt date is in the future.
 	if !email.Delievered && !email.SendAt.IsZero() && email.SendAt.After(time.Now()) {
 		email.Cancel = true
-		sync.ResourceSync(r, email.Id, "Email", "create")
+		// sync.ResourceSync(r, email.Id, "Email", "create")
 		email.Save(c)
 		return email, nil, nil
 	}
@@ -673,7 +675,7 @@ func ArchiveEmail(c context.Context, r *http.Request, id string) (models.Email, 
 	}
 
 	email.Archived = true
-	sync.ResourceSync(r, email.Id, "Email", "create")
+	// sync.ResourceSync(r, email.Id, "Email", "create")
 	email.Save(c)
 	return email, nil, nil
 }
@@ -971,7 +973,7 @@ func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason str
 	}
 
 	_, err = e.MarkBounced(c, reason)
-	sync.ResourceSync(r, e.Id, "Email", "create")
+	// sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, notification, err
 }
 
@@ -979,7 +981,7 @@ func MarkSpam(c context.Context, r *http.Request, e *models.Email) (*models.Emai
 	SetUser(c, r, e.CreatedBy)
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "SPAM", "")
 	_, err := e.MarkSpam(c)
-	sync.ResourceSync(r, e.Id, "Email", "create")
+	// sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, notification, err
 }
 
@@ -987,13 +989,13 @@ func MarkClicked(c context.Context, r *http.Request, e *models.Email) (*models.E
 	SetUser(c, r, e.CreatedBy)
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "CLICKED", "")
 	_, err := e.MarkClicked(c)
-	sync.ResourceSync(r, e.Id, "Email", "create")
+	// sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, notification, err
 }
 
 func MarkDelivered(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
 	_, err := e.MarkDelivered(c)
-	sync.ResourceSync(r, e.Id, "Email", "create")
+	// sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, err
 }
 
@@ -1001,7 +1003,7 @@ func MarkOpened(c context.Context, r *http.Request, e *models.Email) (*models.Em
 	SetUser(c, r, e.CreatedBy)
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "OPENED", "")
 	_, err := e.MarkOpened(c)
-	sync.ResourceSync(r, e.Id, "Email", "create")
+	// sync.ResourceSync(r, e.Id, "Email", "create")
 	return e, notification, err
 }
 

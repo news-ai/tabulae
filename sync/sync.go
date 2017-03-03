@@ -80,6 +80,26 @@ func SocialSync(r *http.Request, socialField string, url string, contactId int64
 	return sync(r, data, InfluencerTopicID)
 }
 
+func EmailResourceBulkSync(r *http.Request, emailIds []int64) error {
+	tempEmailResourceIds := []string{}
+	for i := 0; i < len(emailIds); i++ {
+		tempEmailResourceIds = append(tempEmailResourceIds, strconv.FormatInt(emailIds[i], 10))
+	}
+
+	topicName := EmailBulkTopicID
+	data := map[string]string{
+		"EmailId": strings.Join(tempEmailResourceIds, ","),
+		"Method":  "create",
+	}
+
+	err := sync(r, data, topicName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func ListUploadResourceBulkSync(r *http.Request, listId int64, contactIds []int64, publicationIds []int64) error {
 	tempContactResourceIds := []string{}
 	for i := 0; i < len(contactIds); i++ {
