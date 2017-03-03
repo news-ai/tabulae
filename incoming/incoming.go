@@ -15,6 +15,7 @@ import (
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/notifications"
+	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/errors"
 )
@@ -51,10 +52,13 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 		return
 	}
 
+	emailIds := []int64{}
+
 	for i := 0; i < len(allEvents); i++ {
 		singleEvent := allEvents[i]
 		if singleEvent.SgMessageID == "" {
 			email, _, err := controllers.GetEmail(c, r, singleEvent.ID)
+			emailIds = append(emailIds, email.Id)
 			notification := models.NotificationChange{}
 
 			// If there is an error
@@ -107,6 +111,7 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 			// Validate email exists with particular SendGridId
 			sendGridId := strings.Split(singleEvent.SgMessageID, ".")[0]
 			email, err := controllers.FilterEmailBySendGridID(c, sendGridId)
+			emailIds = append(emailIds, email.Id)
 			notification := models.NotificationChange{}
 			if err != nil {
 				hasErrors = true
@@ -163,6 +168,8 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 		errors.ReturnError(w, http.StatusInternalServerError, "Internal Tracker handling error", "Problem parsing data")
 		return
 	}
+
+	sync.EmailResourceBulkSync(r, emailIds)
 	w.WriteHeader(200)
 	return
 }

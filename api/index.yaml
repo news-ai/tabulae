@@ -121,3 +121,12 @@ indexes:
     - name: IsSent
     - name: Created
       direction: desc
+
+- kind: Email
+  properties:
+    - name: Cancel
+    - name: CreatedBy
+    - name: IsSent
+    - name: SendAt
+    - name: Created
+      direction: desc
