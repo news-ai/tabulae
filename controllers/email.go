@@ -727,19 +727,22 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 	}
 
 	emails := []models.Email{}
+	emailIds := []int64{}
 
 	for i := 0; i < len(bulkEmailIds.EmailIds); i++ {
-		singleEmail, _, err := SendEmail(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10))
+		singleEmail, _, err := SendEmail(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10), false)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 		}
 		emails = append(emails, singleEmail)
+		emailIds = append(emailIds, singleEmail.Id)
 	}
 
-	return emails, nil, len(bulkEmailIds.EmailIds), nil
+	sync.EmailResourceBulkSync(r, emailIds)
+	return emails, nil, len(emails), nil
 }
 
-func SendEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
+func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (models.Email, interface{}, error) {
 	email, _, err := GetEmail(c, r, id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -853,7 +856,9 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 				return *val, nil, nil
 			}
 
-			// sync.ResourceSync(r, val.Id, "Email", "create")
+			if isNotBulk {
+				sync.ResourceSync(r, val.Id, "Email", "create")
+			}
 			return *val, nil, errors.New(verifyResponse.Error)
 		}
 
@@ -898,7 +903,9 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 			}
 		}
 
-		// sync.ResourceSync(r, val.Id, "Email", "create")
+		if isNotBulk {
+			sync.ResourceSync(r, val.Id, "Email", "create")
+		}
 		return *val, nil, nil
 	}
 
@@ -949,12 +956,16 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 				files[i].Save(c)
 			}
 
-			// sync.ResourceSync(r, val.Id, "Email", "create")
+			if isNotBulk {
+				sync.ResourceSync(r, val.Id, "Email", "create")
+			}
 			return *val, nil, nil
 		}
 	}
 
-	// sync.ResourceSync(r, val.Id, "Email", "create")
+	if isNotBulk {
+		sync.ResourceSync(r, val.Id, "Email", "create")
+	}
 	return *val, nil, nil
 }
 

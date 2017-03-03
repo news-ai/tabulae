@@ -23,7 +23,7 @@ func handleEmailAction(c context.Context, r *http.Request, id string, action str
 	case "GET":
 		switch action {
 		case "send":
-			return api.BaseSingleResponseHandler(controllers.SendEmail(c, r, id))
+			return api.BaseSingleResponseHandler(controllers.SendEmail(c, r, id, true))
 		case "cancel":
 			return api.BaseSingleResponseHandler(controllers.CancelEmail(c, r, id))
 		case "archive":
