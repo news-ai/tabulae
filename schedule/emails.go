@@ -114,7 +114,12 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 					}
 
 					_, err := schedueled[i].MarkSent(c, emailId)
-					// sync.ResourceSync(r, schedueled[i].Id, "Email", "create")
+					if err != nil {
+						log.Errorf(c, "%v", err)
+						hasErrors = true
+					}
+
+					_, err = schedueled[i].MarkDelivered(c)
 					if err != nil {
 						log.Errorf(c, "%v", err)
 						hasErrors = true

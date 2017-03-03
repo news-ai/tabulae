@@ -857,6 +857,12 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 			return *val, nil, err
 		}
 
+		val, err = email.MarkDelivered(c)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return *val, nil, err
+		}
+
 		if emailSent {
 			// Set attachments for deletion
 			for i := 0; i < len(files); i++ {

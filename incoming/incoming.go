@@ -96,16 +96,9 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 			// Send user notification
 			if notification.Verb != "" {
 				// Send the notification to the user if they have a socket open
-				currentUser, err := controllers.GetCurrentUser(c, r)
-				if err != nil {
-					log.Errorf(c, "%v", err)
-					w.WriteHeader(500)
-					return
-				}
-
 				notificationChanges := []models.NotificationChange{}
 				notificationChanges = append(notificationChanges, notification)
-				notifications.SendNotification(r, notificationChanges, currentUser.Id)
+				notifications.SendNotification(r, notificationChanges, email.CreatedBy)
 			}
 		} else {
 			// Validate email exists with particular SendGridId
@@ -150,16 +143,9 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 			// Send user notification
 			if notification.Verb != "" {
 				// Send the notification to the user if they have a socket open
-				currentUser, err := controllers.GetCurrentUser(c, r)
-				if err != nil {
-					log.Errorf(c, "%v", err)
-					w.WriteHeader(500)
-					return
-				}
-
 				notificationChanges := []models.NotificationChange{}
 				notificationChanges = append(notificationChanges, notification)
-				notifications.SendNotification(r, notificationChanges, currentUser.Id)
+				notifications.SendNotification(r, notificationChanges, email.CreatedBy)
 			}
 		}
 	}

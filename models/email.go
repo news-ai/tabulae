@@ -162,6 +162,7 @@ func (es *EmailSetting) Save(c context.Context) (*EmailSetting, error) {
 
 func (e *Email) MarkSent(c context.Context, emailId string) (*Email, error) {
 	e.IsSent = true
+	e.Delievered = true
 	e.SendGridId = emailId
 	_, err := e.Save(c)
 	if err != nil {
@@ -172,6 +173,7 @@ func (e *Email) MarkSent(c context.Context, emailId string) (*Email, error) {
 
 func (e *Email) MarkBounced(c context.Context, reason string) (*Email, error) {
 	e.Bounced = true
+	e.Delievered = true
 	e.BouncedReason = reason
 	_, err := e.Save(c)
 	if err != nil {
@@ -182,6 +184,7 @@ func (e *Email) MarkBounced(c context.Context, reason string) (*Email, error) {
 
 func (e *Email) MarkClicked(c context.Context) (*Email, error) {
 	e.Clicked += 1
+	e.Delievered = true
 	_, err := e.Save(c)
 	if err != nil {
 		return e, err
@@ -200,6 +203,7 @@ func (e *Email) MarkDelivered(c context.Context) (*Email, error) {
 
 func (e *Email) MarkSpam(c context.Context) (*Email, error) {
 	e.Spam = true
+	e.Delievered = true
 	_, err := e.Save(c)
 	if err != nil {
 		return e, err
@@ -209,6 +213,7 @@ func (e *Email) MarkSpam(c context.Context) (*Email, error) {
 
 func (e *Email) MarkOpened(c context.Context) (*Email, error) {
 	e.Opened += 1
+	e.Delievered = true
 	_, err := e.Save(c)
 	if err != nil {
 		return e, err
