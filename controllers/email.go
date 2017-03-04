@@ -16,6 +16,7 @@ import (
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
@@ -940,6 +941,23 @@ func GetEmailLogs(c context.Context, r *http.Request, id string) (interface{}, i
 		return email, nil, err
 	}
 
-	logs, err := search.SearchEmailLogByEmailId(c, r, user, email.Id)
+	logs, _, err := search.SearchEmailLogByEmailId(c, r, user, email.Id)
 	return logs, nil, err
+}
+
+func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
+	queryField := gcontext.Get(r, "q").(string)
+
+	if queryField == "" {
+		return nil, nil, 0, nil
+	}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	emails, count, err := search.SearchEmailLogByQuery(c, r, user, queryField)
+	return emails, nil, count, err
 }

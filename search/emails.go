@@ -17,26 +17,29 @@ import (
 
 var (
 	elasticEmailLog *elastic.Elastic
+	elasticEmails   *elastic.Elastic
 )
 
-func searchEmailLog(c context.Context, elasticQuery elastic.ElasticQuery) (interface{}, error) {
-	hits, err := elasticEmailLog.QueryStruct(c, elasticQuery)
+func searchEmail(c context.Context, elasticQuery interface{}) (interface{}, int, error) {
+	hits, err := elasticEmails.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, err
+		return nil, 0, err
 	}
+
+	log.Infof(c, "%v", hits)
 
 	emailLogHits := []interface{}{}
 	for i := 0; i < len(hits.Hits); i++ {
 		emailLogHits = append(emailLogHits, hits.Hits[i].Source.Data)
 	}
 
-	return emailLogHits, nil
+	return emailLogHits, len(emailLogHits), nil
 }
 
-func SearchEmailLogByEmailId(c context.Context, r *http.Request, user models.User, emailId int64) (interface{}, error) {
+func SearchEmailLogByEmailId(c context.Context, r *http.Request, user models.User, emailId int64) (interface{}, int, error) {
 	if emailId == 0 {
-		return nil, nil
+		return nil, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -50,5 +53,37 @@ func SearchEmailLogByEmailId(c context.Context, r *http.Request, user models.Use
 	elasticEmailIdQuery.Term.EmailId = emailId
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticEmailIdQuery)
 
-	return searchEmailLog(c, elasticQuery)
+	return searchEmail(c, elasticQuery)
+}
+
+func SearchEmailLogByQuery(c context.Context, r *http.Request, user models.User, searchQuery string) (interface{}, int, error) {
+	if searchQuery == "" {
+		return nil, 0, nil
+	}
+
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQueryWithSort{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery.Term.CreatedBy = user.Id
+
+	elasticMatchQuery := elastic.ElasticMatchQuery{}
+	elasticMatchQuery.Match.All = searchQuery
+
+	// elasticEmailToQuery := ElasticEmailToQuery{}
+	// elasticEmailToQuery.Term.To = searchQuery
+
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
+
+	elasticCreatedQuery := ElasticSortDataCreatedQuery{}
+	elasticCreatedQuery.DataCreated.Order = "desc"
+	elasticCreatedQuery.DataCreated.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
+
+	return searchEmail(c, elasticQuery)
 }
