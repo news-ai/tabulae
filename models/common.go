@@ -46,7 +46,7 @@ func SetField(obj interface{}, name string, value interface{}) error {
 	}
 
 	// Cast int
-	if name == "Comments" || name == "Likes" || name == "InstagramLikes" || name == "InstagramComments" || name == "StatusesCount" || name == "UtcOffset" || name == "FavouritesCount" || name == "ListedCount" || name == "FriendsCount" || name == "FollowersCount" || name == "ID" || name == "InstagramWidth" || name == "InstagramHeight" || name == "Retweets" || name == "TwitterLikes" || name == "TwitterRetweets" || name == "Followers" || name == "Following" || name == "Posts" || name == "ExpiresIn" {
+	if name == "Comments" || name == "Likes" || name == "InstagramLikes" || name == "InstagramComments" || name == "StatusesCount" || name == "UtcOffset" || name == "FavouritesCount" || name == "ListedCount" || name == "FriendsCount" || name == "FollowersCount" || name == "ID" || name == "InstagramWidth" || name == "InstagramHeight" || name == "Retweets" || name == "TwitterLikes" || name == "TwitterRetweets" || name == "Followers" || name == "Following" || name == "Posts" || name == "ExpiresIn" || name == "Clicked" || name == "Opened" {
 		returnValue := cast.ToInt(value)
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)
@@ -54,7 +54,7 @@ func SetField(obj interface{}, name string, value interface{}) error {
 	}
 
 	// Cast string array
-	if name == "Categories" || name == "Tags" {
+	if name == "Categories" || name == "Tags" || name == "CC" || name == "BCC" {
 		returnValue := cast.ToStringSlice(value)
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)
@@ -62,7 +62,7 @@ func SetField(obj interface{}, name string, value interface{}) error {
 	}
 
 	// Cast time
-	if name == "Created" || name == "Updated" || name == "LinkedInUpdated" || name == "PublishDate" || name == "CreatedAt" {
+	if name == "Created" || name == "Updated" || name == "LinkedInUpdated" || name == "PublishDate" || name == "CreatedAt" || name == "SendAt" {
 		returnValue, err := cast.ToTime(value)
 		if err != nil {
 			return err
@@ -80,7 +80,7 @@ func SetField(obj interface{}, name string, value interface{}) error {
 	}
 
 	// Int64
-	if name == "Id" || name == "CreatedBy" || name == "ParentContact" || name == "ListId" || name == "ContactId" || name == "PublicationId" || name == "TweetId" || name == "FileUpload" || name == "TeamId" {
+	if name == "Id" || name == "CreatedBy" || name == "ParentContact" || name == "ListId" || name == "ContactId" || name == "PublicationId" || name == "TweetId" || name == "FileUpload" || name == "TeamId" || name == "TemplateId" {
 		returnValue := cast.ToInt64(value)
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)
@@ -88,7 +88,7 @@ func SetField(obj interface{}, name string, value interface{}) error {
 	}
 
 	// Int64 array
-	if name == "Administrators" || name == "Employers" || name == "PastEmployers" {
+	if name == "Administrators" || name == "Employers" || name == "PastEmployers" || name == "Attachments" {
 		returnValue, err := cast.ToInt64SliceE(value)
 		if err != nil {
 			return err

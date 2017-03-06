@@ -1228,6 +1228,7 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 		contacts[i].Updated = time.Now()
 		contacts[i].ListId = mediaListId
 		contacts[i].Normalize()
+		contacts[i].FormatName()
 		keys = append(keys, contacts[i].Key(c))
 
 		for x := 0; x < len(contacts[i].Employers); x++ {
