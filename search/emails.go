@@ -88,7 +88,7 @@ func (e *Email) FillStruct(m map[string]interface{}) error {
 }
 
 func searchEmail(c context.Context, elasticQuery interface{}) (interface{}, int, error) {
-	hits, err := elasticEmails.QueryStruct(c, elasticQuery)
+	hits, err := elasticEmailLog.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, 0, err
