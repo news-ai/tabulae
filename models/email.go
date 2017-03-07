@@ -162,7 +162,6 @@ func (es *EmailSetting) Save(c context.Context) (*EmailSetting, error) {
 
 func (e *Email) MarkSent(c context.Context, emailId string) (*Email, error) {
 	e.IsSent = true
-	e.Delievered = true
 	e.SendGridId = emailId
 	_, err := e.Save(c)
 	if err != nil {
