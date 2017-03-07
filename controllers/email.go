@@ -369,25 +369,73 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 			keys = append(keys, emails[i].Key(c))
 		}
 
-		ks := []*datastore.Key{}
+		if len(keys) < 700 {
+			ks := []*datastore.Key{}
+			err = nds.RunInTransaction(c, func(ctx context.Context) error {
+				contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+				ks, err = nds.PutMulti(contextWithTimeout, keys, emails)
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					return err
+				}
+				return nil
+			}, nil)
 
-		err = nds.RunInTransaction(c, func(ctx context.Context) error {
-			contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
-			ks, err = nds.PutMulti(contextWithTimeout, keys, emails)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return err
+			for i := 0; i < len(ks); i++ {
+				emails[i].Format(ks[i], "emails")
+				emailIds = append(emailIds, emails[i].Id)
 			}
-			return nil
-		}, nil)
 
-		for i := 0; i < len(ks); i++ {
-			emails[i].Format(ks[i], "emails")
-			emailIds = append(emailIds, emails[i].Id)
+			sync.EmailResourceBulkSync(r, emailIds)
+			return emails, nil, err
+		} else {
+			firstHalfKeys := []*datastore.Key{}
+			secondHalfKeys := []*datastore.Key{}
+
+			startOne := 0
+			endOne := 700
+
+			startTwo := 700
+			endTwo := len(keys)
+
+			err1 := nds.RunInTransaction(c, func(ctx context.Context) error {
+				contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+				firstHalfKeys, err = nds.PutMulti(contextWithTimeout, keys[startOne:endOne], emails[startOne:endOne])
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					return err
+				}
+				return nil
+			}, nil)
+
+			err2 := nds.RunInTransaction(c, func(ctx context.Context) error {
+				contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+				secondHalfKeys, err = nds.PutMulti(contextWithTimeout, keys[startTwo:endTwo], emails[startTwo:endTwo])
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					return err
+				}
+				return nil
+			}, nil)
+
+			firstHalfKeys = append(firstHalfKeys, secondHalfKeys...)
+
+			for i := 0; i < len(firstHalfKeys); i++ {
+				emails[i].Format(firstHalfKeys[i], "emails")
+				emailIds = append(emailIds, emails[i].Id)
+			}
+
+			if err1 != nil {
+				err = err1
+			}
+
+			if err2 != nil {
+				err = err2
+			}
+
+			sync.EmailResourceBulkSync(r, emailIds)
+			return emails, nil, err
 		}
-
-		sync.EmailResourceBulkSync(r, emailIds)
-		return emails, nil, err
 	}
 
 	// Test if the email we are sending with is in the user's SendGridFrom or is their Email
