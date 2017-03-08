@@ -130,3 +130,19 @@ indexes:
     - name: SendAt
     - name: Created
       direction: desc
+
+- kind: Email
+  properties:
+    - name: Cancel
+    - name: CreatedBy
+    - name: IsSent
+    - name: SendAt
+      direction: desc
+    - name: Created
+      direction: desc
+
+- kind: Email
+  properties:
+    - name: Delievered
+    - name: Created
+      direction: desc
