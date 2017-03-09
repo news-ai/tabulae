@@ -874,14 +874,8 @@ func GetListsForContact(c context.Context, r *http.Request, id string) (interfac
 	return mediaLists, nil, len(mediaLists), nil
 }
 
-func GetHeadlinesForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+func GetHeadlinesForContactById(c context.Context, r *http.Request, currentId int64) ([]search.Headline, interface{}, int, error) {
 	// Get the details of the current user
-	currentId, err := utilities.StringIdToInt(id)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
-	}
-
 	feeds, err := GetFeedsByResourceId(c, r, "ContactId", currentId)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -895,6 +889,17 @@ func GetHeadlinesForContact(c context.Context, r *http.Request, id string) (inte
 	}
 
 	return headlines, nil, len(headlines), nil
+}
+
+func GetHeadlinesForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	return GetHeadlinesForContactById(c, r, currentId)
 }
 
 func GetFeedForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {

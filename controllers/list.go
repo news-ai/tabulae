@@ -31,8 +31,8 @@ import (
 var nonCustomHeaders = []string{"firstname", "lastname", "email", "employers", "pastemployers", "notes", "linkedin", "twitter", "instagram", "website", "blog", "phonenumber"}
 var nonCustomHeadersName = []string{"First Name", "Last Name", "Email", "Employers", "Past Employers", "Notes", "Linkedin", "Twitter", "Instagram", "Website", "Blog", "Phone #"}
 
-var customHeaders = []string{"instagramfollowers", "instagramfollowing", "instagramlikes", "instagramcomments", "instagramposts", "twitterfollowers", "twitterfollowing", "twitterlikes", "twitterretweets", "twitterposts"}
-var customHeadersName = []string{"Instagram Followers", "Instagram Following", "Instagram Likes", "Instagram Comments", "Instagram Posts", "Twitter Followers", "Twitter Following", "Twitter Likes", "Twitter Retweets", "Twitter Posts"}
+var customHeaders = []string{"instagramfollowers", "instagramfollowing", "instagramlikes", "instagramcomments", "instagramposts", "twitterfollowers", "twitterfollowing", "twitterlikes", "twitterretweets", "twitterposts", "latestheadline"}
+var customHeadersName = []string{"Instagram Followers", "Instagram Following", "Instagram Likes", "Instagram Comments", "Instagram Posts", "Twitter Followers", "Twitter Following", "Twitter Likes", "Twitter Retweets", "Twitter Posts", "Latest Headline"}
 
 type duplicateListDetails struct {
 	Name string `json:"name"`
@@ -872,6 +872,16 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 							customField.Value = strconv.Itoa(twitterProfile.Retweets)
 						} else if customField.Name == "twitterposts" {
 							customField.Value = strconv.Itoa(twitterProfile.Posts)
+						}
+					}
+
+					if customField.Name == "latestheadline" {
+						// Get the feed of the contact
+						headlines, _, _, err := GetHeadlinesForContactById(c, r, contacts[i].Id)
+
+						// Set the value of the post name to the user
+						if err == nil && len(headlines) > 0 {
+							customField.Value = headlines[0].Title
 						}
 					}
 

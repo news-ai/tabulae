@@ -63,6 +63,8 @@ var fieldsMapValueToDescription = map[string]string{
 	"twitterlikes":     "Updated on a daily basis",
 	"twitterretweets":  "Updated on a daily basis",
 	"twitterposts":     "Updated on a daily basis",
+
+	"latestheadline": "Updated on a daily basis",
 }
 
 /*
@@ -98,6 +100,8 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		"twitterlikes":     true,
 		"twitterretweets":  true,
 		"twitterposts":     true,
+
+		"latestheadline": true,
 	}
 
 	newDefaultFieldsMap := map[string]bool{
@@ -116,6 +120,8 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		"twitterlikes":     "Twitter Likes",
 		"twitterretweets":  "Twitter Retweets",
 		"twitterposts":     "Twitter Posts",
+
+		"latestheadline": "Latest Headline",
 
 		"firstname":     "First Name",
 		"lastname":      "Last Name",
@@ -140,6 +146,12 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 			}
 		}
 		if strings.Contains(ml.FieldsMap[i].Value, "twitter") {
+			if _, ok := newFieldsMap[ml.FieldsMap[i].Value]; ok {
+				newFieldsMap[ml.FieldsMap[i].Value] = false
+			}
+		}
+
+		if strings.Contains(ml.FieldsMap[i].Value, "latestheadline") {
 			if _, ok := newFieldsMap[ml.FieldsMap[i].Value]; ok {
 				newFieldsMap[ml.FieldsMap[i].Value] = false
 			}
@@ -182,6 +194,17 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		}
 	}
 
+	// Remove Duplicates
+	duplicateValues := map[string]bool{}
+	finalFieldsMap := []CustomFieldsMap{}
+	for i := 0; i < len(ml.FieldsMap); i++ {
+		if _, ok := duplicateValues[ml.FieldsMap[i].Value]; !ok {
+			finalFieldsMap = append(finalFieldsMap, ml.FieldsMap[i])
+			duplicateValues[ml.FieldsMap[i].Value] = true
+		}
+	}
+	ml.FieldsMap = finalFieldsMap
+
 	if isChanged {
 		ml.Save(c)
 	}
@@ -205,7 +228,6 @@ func (ml *MediaList) Format(key *datastore.Key, modelType string) {
 	ml.Id = key.IntID()
 
 	// Add descriptions on runtime
-
 	for i := 0; i < len(ml.FieldsMap); i++ {
 		if ml.FieldsMap[i].Value == "employers" || ml.FieldsMap[i].Value == "pastemployers" {
 			ml.FieldsMap[i].Internal = true
@@ -216,6 +238,10 @@ func (ml *MediaList) Format(key *datastore.Key, modelType string) {
 		}
 
 		if ml.FieldsMap[i].Value != "instagram" && strings.Contains(ml.FieldsMap[i].Value, "instagram") {
+			ml.FieldsMap[i].ReadOnly = true
+		}
+
+		if ml.FieldsMap[i].Value == "latestheadline" {
 			ml.FieldsMap[i].ReadOnly = true
 		}
 
