@@ -1,15 +1,21 @@
 package schedule
 
 import (
+	"bytes"
+	"encoding/json"
 	"net/http"
+	"strconv"
+	"time"
+
+	"golang.org/x/net/context"
 
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/urlfetch"
 
 	"github.com/news-ai/tabulae/controllers"
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/models"
-	// "github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/emails"
 	"github.com/news-ai/web/google"
@@ -94,7 +100,8 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 					files[i].Save(c)
 				}
 			}
-		} else {
+		} else if schedueled[i].Method == "sendgrid" {
+			// If email is sent through SendGrid
 			if !schedueled[i].SendAt.IsZero() && schedueled[i].SendGridId == "" {
 				log.Infof(c, "%v", schedueled[i])
 				emailSent, emailId, err := emails.SendEmail(r, schedueled[i], user, files)
@@ -124,6 +131,76 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 						log.Errorf(c, "%v", err)
 						hasErrors = true
 					}
+				}
+			}
+		} else {
+			// If scheduled from SMTP.
+			// If their SMTP is valid & they are using an external email.
+			// We assume all this information is correct & they can send
+			// emails through SMTP.
+			if user.SMTPValid && user.ExternalEmail && user.EmailSetting != 0 {
+				emailBody, err := emails.GenerateEmail(r, user, schedueled[i], files)
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					hasErrors = true
+				}
+
+				emailSetting, err := controllers.GetEmailSettingById(c, r, user.EmailSetting)
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					hasErrors = true
+				}
+
+				SMTPPassword := string(user.SMTPPassword[:])
+
+				contextWithTimeout, _ := context.WithTimeout(c, time.Second*30)
+				client := urlfetch.Client(contextWithTimeout)
+				getUrl := "https://tabulae-smtp.newsai.org/send"
+
+				sendEmailRequest := models.SMTPEmailSettings{}
+				sendEmailRequest.Servername = emailSetting.SMTPServer + ":" + strconv.Itoa(emailSetting.SMTPPortSSL)
+				sendEmailRequest.EmailUser = user.SMTPUsername
+				sendEmailRequest.EmailPassword = SMTPPassword
+				sendEmailRequest.To = schedueled[i].To
+				sendEmailRequest.Subject = schedueled[i].Subject
+				sendEmailRequest.Body = emailBody
+
+				SendEmailRequest, err := json.Marshal(sendEmailRequest)
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					hasErrors = true
+				}
+
+				log.Infof(c, "%v", string(SendEmailRequest))
+				sendEmailQuery := bytes.NewReader(SendEmailRequest)
+
+				req, _ := http.NewRequest("POST", getUrl, sendEmailQuery)
+
+				resp, err := client.Do(req)
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					hasErrors = true
+				}
+
+				decoder := json.NewDecoder(resp.Body)
+				var verifyResponse controllers.SMTPEmailResponse
+				err = decoder.Decode(&verifyResponse)
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					hasErrors = true
+				}
+
+				log.Infof(c, "%v", verifyResponse)
+
+				if verifyResponse.Status {
+					_, err := schedueled[i].MarkDelivered(c)
+					if err != nil {
+						log.Errorf(c, "%v", err)
+						hasErrors = true
+					}
+				} else {
+					log.Errorf(c, "%v", verifyResponse)
+					hasErrors = true
 				}
 			}
 		}

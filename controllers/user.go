@@ -814,11 +814,29 @@ func Update(c context.Context, r *http.Request, u *models.User) (*models.User, e
 	}
 
 	if billing.Expires.Before(time.Now()) {
-		u.IsActive = false
-		u.Save(c)
+		if billing.IsOnTrial {
+			u.IsActive = false
+			u.Save(c)
 
-		billing.IsOnTrial = false
-		billing.Save(c)
+			billing.IsOnTrial = false
+			billing.Save(c)
+		} else {
+			if billing.IsCancel {
+				u.IsActive = false
+				u.Save(c)
+			} else {
+				// If they haven't canceled then we can add a month until they do.
+				// More sophisticated to add the amount depending on what
+				// plan they were on.
+				addAMonth := billing.Expires.AddDate(0, 1, 0)
+				billing.Expires = addAMonth
+				billing.Save(c)
+
+				// Keep the user active
+				u.IsActive = true
+				u.Save(c)
+			}
+		}
 	}
 
 	return u, nil

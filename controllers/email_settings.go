@@ -79,6 +79,28 @@ func GetEmailSetting(c context.Context, r *http.Request, id string) (models.Emai
 	return emailSetting, nil, nil
 }
 
+// To get details without having to authenticate (when sending scheduled emails)
+func GetEmailSettingById(c context.Context, r *http.Request, id int64) (models.EmailSetting, error) {
+	if id == 0 {
+		return models.EmailSetting{}, errors.New("datastore: no such entity")
+	}
+	// Get the email by id
+	var emailSetting models.EmailSetting
+	emailSettingId := datastore.NewKey(c, "EmailSetting", "", id, nil)
+	err := nds.Get(c, emailSettingId, &emailSetting)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.EmailSetting{}, err
+	}
+
+	if !emailSetting.Created.IsZero() {
+		emailSetting.Format(emailSettingId, "emailsettings")
+		return emailSetting, nil
+	}
+
+	return models.EmailSetting{}, errors.New("No email setting by this id")
+}
+
 func GetEmailSettings(c context.Context, r *http.Request) ([]models.EmailSetting, interface{}, int, error) {
 	emailSettings := []models.EmailSetting{}
 
