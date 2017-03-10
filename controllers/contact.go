@@ -232,7 +232,7 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 
 		// Check if there are special fields we need to get data for
 		for i := 0; i < len(mediaList.FieldsMap); i++ {
-			if mediaList.FieldsMap[i].ReadOnly {
+			if mediaList.FieldsMap[i].ReadOnly && !mediaList.FieldsMap[i].Hidden {
 				readOnlyPresent = append(readOnlyPresent, mediaList.FieldsMap[i].Value)
 				if strings.Contains(mediaList.FieldsMap[i].Value, "instagram") {
 					if len(instagramTimeseries) == 0 {
@@ -272,35 +272,64 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 				lowerCaseInstagramUsername := strings.ToLower(contact.Instagram)
 				lowerCaseTwitterUsername := strings.ToLower(contact.Twitter)
 
-				if _, ok := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]; ok {
-					instagramProfile := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]
+				if lowerCaseInstagramUsername != "" {
+					if _, ok := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]; ok {
+						instagramProfile := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]
 
-					if customField.Name == "instagramfollowers" {
-						customField.Value = strconv.Itoa(instagramProfile.Followers)
-					} else if customField.Name == "instagramfollowing" {
-						customField.Value = strconv.Itoa(instagramProfile.Following)
-					} else if customField.Name == "instagramlikes" {
-						customField.Value = strconv.Itoa(instagramProfile.Likes)
-					} else if customField.Name == "instagramcomments" {
-						customField.Value = strconv.Itoa(instagramProfile.Comments)
-					} else if customField.Name == "instagramposts" {
-						customField.Value = strconv.Itoa(instagramProfile.Posts)
+						if customField.Name == "instagramfollowers" {
+							customField.Value = strconv.Itoa(instagramProfile.Followers)
+						} else if customField.Name == "instagramfollowing" {
+							customField.Value = strconv.Itoa(instagramProfile.Following)
+						} else if customField.Name == "instagramlikes" {
+							customField.Value = strconv.Itoa(instagramProfile.Likes)
+						} else if customField.Name == "instagramcomments" {
+							customField.Value = strconv.Itoa(instagramProfile.Comments)
+						} else if customField.Name == "instagramposts" {
+							customField.Value = strconv.Itoa(instagramProfile.Posts)
+						}
 					}
 				}
 
-				if _, ok := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]; ok {
-					twitterProfile := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]
+				if lowerCaseTwitterUsername != "" {
+					if _, ok := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]; ok {
+						twitterProfile := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]
 
-					if customField.Name == "twitterfollowers" {
-						customField.Value = strconv.Itoa(twitterProfile.Followers)
-					} else if customField.Name == "twitterfollowing" {
-						customField.Value = strconv.Itoa(twitterProfile.Following)
-					} else if customField.Name == "twitterlikes" {
-						customField.Value = strconv.Itoa(twitterProfile.Likes)
-					} else if customField.Name == "twitterretweets" {
-						customField.Value = strconv.Itoa(twitterProfile.Retweets)
-					} else if customField.Name == "twitterposts" {
-						customField.Value = strconv.Itoa(twitterProfile.Posts)
+						if customField.Name == "twitterfollowers" {
+							customField.Value = strconv.Itoa(twitterProfile.Followers)
+						} else if customField.Name == "twitterfollowing" {
+							customField.Value = strconv.Itoa(twitterProfile.Following)
+						} else if customField.Name == "twitterlikes" {
+							customField.Value = strconv.Itoa(twitterProfile.Likes)
+						} else if customField.Name == "twitterretweets" {
+							customField.Value = strconv.Itoa(twitterProfile.Retweets)
+						} else if customField.Name == "twitterposts" {
+							customField.Value = strconv.Itoa(twitterProfile.Posts)
+						}
+					}
+				}
+
+				if customField.Name == "latestheadline" {
+					// Get the feed of the contact
+					headlines, _, _, err := GetHeadlinesForContactById(c, r, contact.Id)
+
+					// Set the value of the post name to the user
+					if err == nil && len(headlines) > 0 {
+						customField.Value = headlines[0].Title
+					}
+				}
+
+				if customField.Name == "lastcontacted" {
+					emails, _, _, err := GetOrderedEmailsForContactById(c, r, contact.Id)
+
+					// Set the value of the post name to the user
+					if err == nil && len(emails) > 0 {
+						// The processing here is a little more complex
+						// customField.Value = emails[0].Created
+						if !emails[0].SendAt.IsZero() {
+							customField.Value = emails[0].SendAt.Format(time.RFC3339)
+						} else {
+							customField.Value = emails[0].Created.Format(time.RFC3339)
+						}
 					}
 				}
 
