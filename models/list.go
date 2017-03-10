@@ -20,6 +20,7 @@ type CustomFieldsMap struct {
 	Internal    bool   `json:"internal" datastore:"-"`
 	ReadOnly    bool   `json:"readonly" datastore:"-"`
 	Description string `json:"description" datastore:"-"`
+	Type        string `json:"type" datastore:"-"`
 }
 
 type MediaList struct {
@@ -252,6 +253,10 @@ func (ml *MediaList) Format(key *datastore.Key, modelType string) {
 
 		if ml.FieldsMap[i].Value == "latestheadline" || ml.FieldsMap[i].Value == "lastcontacted" {
 			ml.FieldsMap[i].ReadOnly = true
+		}
+
+		if ml.FieldsMap[i].Value == "lastcontacted" {
+			ml.FieldsMap[i].Type = "Date"
 		}
 
 		// If this particular value exists in fieldsMapValueToDescription then add description

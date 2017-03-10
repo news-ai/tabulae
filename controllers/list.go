@@ -889,7 +889,6 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 				}
 
 				if customField.Name == "lastcontacted" {
-					log.Infof(c, "%v", contacts[i].Id)
 					emails, _, _, err := GetOrderedEmailsForContactById(c, r, contacts[i].Id)
 
 					// Set the value of the post name to the user
@@ -897,9 +896,9 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 						// The processing here is a little more complex
 						// customField.Value = emails[0].Created
 						if !emails[0].SendAt.IsZero() {
-							customField.Value = emails[0].SendAt.Format("Jan 02 2006 at 15:04")
+							customField.Value = emails[0].SendAt.Format(time.RFC3339)
 						} else {
-							customField.Value = emails[0].Created.Format("Jan 02 2006 at 15:04")
+							customField.Value = emails[0].Created.Format(time.RFC3339)
 						}
 					}
 				}
