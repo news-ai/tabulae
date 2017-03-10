@@ -824,13 +824,18 @@ func GetTwitterTimeseriesForContact(c context.Context, r *http.Request, id strin
 	return twitterTimeseries, nil, nil
 }
 
-func GetEmailsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
-	currentId, err := utilities.StringIdToInt(id)
+func GetOrderedEmailsForContactById(c context.Context, r *http.Request, currentId int64) ([]models.Email, interface{}, int, error) {
+	// To check if the user can access it
+	emails, err := filterOrderedEmailbyContactId(c, r, currentId)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, err
 	}
 
+	return emails, nil, len(emails), nil
+}
+
+func GetEmailsForContactById(c context.Context, r *http.Request, currentId int64) ([]models.Email, interface{}, int, error) {
 	// To check if the user can access it
 	contact, err := getContact(c, r, currentId)
 	if err != nil {
@@ -845,6 +850,16 @@ func GetEmailsForContact(c context.Context, r *http.Request, id string) (interfa
 	}
 
 	return emails, nil, len(emails), nil
+}
+
+func GetEmailsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	return GetEmailsForContactById(c, r, currentId)
 }
 
 func GetListsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
@@ -1242,14 +1257,6 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 
 		for x := 0; x < len(contacts[i].PastEmployers); x++ {
 			publicationIds = append(publicationIds, contacts[i].PastEmployers[x])
-		}
-
-		// If there is a Twitter
-		if contacts[i].Twitter != "" {
-			sync.TwitterSync(r, contacts[i].Twitter)
-		}
-		if contacts[i].Instagram != "" {
-			sync.InstagramSync(r, contacts[i].Instagram, currentUser.InstagramAuthKey)
 		}
 	}
 

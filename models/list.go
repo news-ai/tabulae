@@ -102,6 +102,7 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		"twitterposts":     true,
 
 		"latestheadline": true,
+		"lastcontacted":  true,
 	}
 
 	newDefaultFieldsMap := map[string]bool{
@@ -122,6 +123,8 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		"twitterposts":     "Twitter Posts",
 
 		"latestheadline": "Latest Headline",
+
+		"lastcontacted": "Last Contacted",
 
 		"firstname":     "First Name",
 		"lastname":      "Last Name",
@@ -152,6 +155,12 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		}
 
 		if strings.Contains(ml.FieldsMap[i].Value, "latestheadline") {
+			if _, ok := newFieldsMap[ml.FieldsMap[i].Value]; ok {
+				newFieldsMap[ml.FieldsMap[i].Value] = false
+			}
+		}
+
+		if strings.Contains(ml.FieldsMap[i].Value, "lastcontacted") {
 			if _, ok := newFieldsMap[ml.FieldsMap[i].Value]; ok {
 				newFieldsMap[ml.FieldsMap[i].Value] = false
 			}
@@ -241,7 +250,7 @@ func (ml *MediaList) Format(key *datastore.Key, modelType string) {
 			ml.FieldsMap[i].ReadOnly = true
 		}
 
-		if ml.FieldsMap[i].Value == "latestheadline" {
+		if ml.FieldsMap[i].Value == "latestheadline" || ml.FieldsMap[i].Value == "lastcontacted" {
 			ml.FieldsMap[i].ReadOnly = true
 		}
 

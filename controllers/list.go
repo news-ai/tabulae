@@ -31,8 +31,8 @@ import (
 var nonCustomHeaders = []string{"firstname", "lastname", "email", "employers", "pastemployers", "notes", "linkedin", "twitter", "instagram", "website", "blog", "phonenumber"}
 var nonCustomHeadersName = []string{"First Name", "Last Name", "Email", "Employers", "Past Employers", "Notes", "Linkedin", "Twitter", "Instagram", "Website", "Blog", "Phone #"}
 
-var customHeaders = []string{"instagramfollowers", "instagramfollowing", "instagramlikes", "instagramcomments", "instagramposts", "twitterfollowers", "twitterfollowing", "twitterlikes", "twitterretweets", "twitterposts", "latestheadline"}
-var customHeadersName = []string{"Instagram Followers", "Instagram Following", "Instagram Likes", "Instagram Comments", "Instagram Posts", "Twitter Followers", "Twitter Following", "Twitter Likes", "Twitter Retweets", "Twitter Posts", "Latest Headline"}
+var customHeaders = []string{"instagramfollowers", "instagramfollowing", "instagramlikes", "instagramcomments", "instagramposts", "twitterfollowers", "twitterfollowing", "twitterlikes", "twitterretweets", "twitterposts", "latestheadline", "lastcontacted"}
+var customHeadersName = []string{"Instagram Followers", "Instagram Following", "Instagram Likes", "Instagram Comments", "Instagram Posts", "Twitter Followers", "Twitter Following", "Twitter Likes", "Twitter Retweets", "Twitter Posts", "Latest Headline", "Last Contacted"}
 
 type duplicateListDetails struct {
 	Name string `json:"name"`
@@ -801,7 +801,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 
 	// Check if there are special fields we need to get data for
 	for i := 0; i < len(mediaList.FieldsMap); i++ {
-		if mediaList.FieldsMap[i].ReadOnly {
+		if mediaList.FieldsMap[i].ReadOnly && !mediaList.FieldsMap[i].Hidden {
 			readOnlyPresent = append(readOnlyPresent, mediaList.FieldsMap[i].Value)
 			if strings.Contains(mediaList.FieldsMap[i].Value, "instagram") {
 				if len(instagramTimeseries) == 0 {
@@ -835,14 +835,14 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 		}
 
 		for i := 0; i < len(contacts); i++ {
-			if contacts[i].Instagram != "" || contacts[i].Twitter != "" {
-				for x := 0; x < len(readOnlyPresent); x++ {
-					customField := models.CustomContactField{}
-					customField.Name = readOnlyPresent[x]
+			for x := 0; x < len(readOnlyPresent); x++ {
+				customField := models.CustomContactField{}
+				customField.Name = readOnlyPresent[x]
 
-					lowerCaseInstagramUsername := strings.ToLower(contacts[i].Instagram)
-					lowerCaseTwitterUsername := strings.ToLower(contacts[i].Twitter)
+				lowerCaseInstagramUsername := strings.ToLower(contacts[i].Instagram)
+				lowerCaseTwitterUsername := strings.ToLower(contacts[i].Twitter)
 
+				if lowerCaseInstagramUsername != "" {
 					if _, ok := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]; ok {
 						instagramProfile := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]
 
@@ -858,7 +858,9 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 							customField.Value = strconv.Itoa(instagramProfile.Posts)
 						}
 					}
+				}
 
+				if lowerCaseTwitterUsername != "" {
 					if _, ok := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]; ok {
 						twitterProfile := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]
 
@@ -874,20 +876,36 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 							customField.Value = strconv.Itoa(twitterProfile.Posts)
 						}
 					}
+				}
 
-					if customField.Name == "latestheadline" {
-						// Get the feed of the contact
-						headlines, _, _, err := GetHeadlinesForContactById(c, r, contacts[i].Id)
+				if customField.Name == "latestheadline" {
+					// Get the feed of the contact
+					headlines, _, _, err := GetHeadlinesForContactById(c, r, contacts[i].Id)
 
-						// Set the value of the post name to the user
-						if err == nil && len(headlines) > 0 {
-							customField.Value = headlines[0].Title
+					// Set the value of the post name to the user
+					if err == nil && len(headlines) > 0 {
+						customField.Value = headlines[0].Title
+					}
+				}
+
+				if customField.Name == "lastcontacted" {
+					log.Infof(c, "%v", contacts[i].Id)
+					emails, _, _, err := GetOrderedEmailsForContactById(c, r, contacts[i].Id)
+
+					// Set the value of the post name to the user
+					if err == nil && len(emails) > 0 {
+						// The processing here is a little more complex
+						// customField.Value = emails[0].Created
+						if !emails[0].SendAt.IsZero() {
+							customField.Value = emails[0].SendAt.Format("Jan 02 2006 at 15:04")
+						} else {
+							customField.Value = emails[0].Created.Format("Jan 02 2006 at 15:04")
 						}
 					}
+				}
 
-					if customField.Value != "" {
-						contacts[i].CustomFields = append(contacts[i].CustomFields, customField)
-					}
+				if customField.Value != "" {
+					contacts[i].CustomFields = append(contacts[i].CustomFields, customField)
 				}
 			}
 		}

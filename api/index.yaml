@@ -146,3 +146,9 @@ indexes:
     - name: Delievered
     - name: Created
       direction: desc
+
+- kind: Email
+  properties:
+  - name: ContactId
+  - name: Created
+    direction: desc
