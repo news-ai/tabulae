@@ -63,6 +63,7 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 
 			// If there is an error
 			if err != nil {
+				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
 				log.Errorf(c, "%v", err)
 				errors.ReturnError(w, http.StatusInternalServerError, "Internal Tracker issue", err.Error())
