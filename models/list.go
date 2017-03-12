@@ -103,7 +103,7 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		"twitterposts":     true,
 
 		"latestheadline": true,
-		"lastcontacted":  true,
+		// "lastcontacted":  true,
 	}
 
 	newDefaultFieldsMap := map[string]bool{
@@ -125,7 +125,7 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 
 		"latestheadline": "Latest Headline",
 
-		"lastcontacted": "Last Contacted",
+		// "lastcontacted": "Last Contacted",
 
 		"firstname":     "First Name",
 		"lastname":      "Last Name",
@@ -161,11 +161,11 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 			}
 		}
 
-		if strings.Contains(ml.FieldsMap[i].Value, "lastcontacted") {
-			if _, ok := newFieldsMap[ml.FieldsMap[i].Value]; ok {
-				newFieldsMap[ml.FieldsMap[i].Value] = false
-			}
-		}
+		// if strings.Contains(ml.FieldsMap[i].Value, "lastcontacted") {
+		// 	if _, ok := newFieldsMap[ml.FieldsMap[i].Value]; ok {
+		// 		newFieldsMap[ml.FieldsMap[i].Value] = false
+		// 	}
+		// }
 
 		if _, ok := newDefaultFieldsMap[ml.FieldsMap[i].Value]; ok {
 			newDefaultFieldsMap[ml.FieldsMap[i].Value] = false
