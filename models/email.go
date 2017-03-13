@@ -78,8 +78,9 @@ type Email struct {
 
 	SendAt time.Time `json:"sendat"`
 
-	SendGridId string `json:"-"`
-	BatchId    string `json:"batchid"`
+	SendGridId  string `json:"-"`
+	SparkPostId string `json:"-"`
+	BatchId     string `json:"batchid"`
 
 	GmailId       string `json:"gmailid"`
 	GmailThreadId string `json:"gmailthreadid"`

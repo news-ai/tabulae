@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"google.golang.org/appengine"
@@ -120,7 +121,11 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 		params.Coupon = coupon
 	}
 
-	if coupon == "FAVORITES" && duration == "annually" {
+	if strings.ToLower(coupon) == "favorites" && duration == "annually" {
+		return errors.New("Sorry - you can't use this coupon code on a yearly plan.")
+	}
+
+	if strings.ToLower(coupon) == "prcouture" && duration == "annually" {
 		return errors.New("Sorry - you can't use this coupon code on a yearly plan.")
 	}
 

@@ -896,6 +896,73 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 		return *val, nil, nil
 	}
 
+	if user.IsAdmin {
+		// Use SparkPost
+		log.Infof(c, "%v", "Using SparkPost")
+
+		// Mark email as sent again with "sparkpost" method
+		email.Method = "sparkpost"
+		val, err := email.MarkSent(c, "")
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return *val, nil, err
+		}
+
+		// Test if the email we are sending with is in the user's SendGridFrom or is their Email
+		if val.FromEmail != "" {
+			userEmailValid := false
+			if user.Email == val.FromEmail {
+				userEmailValid = true
+			}
+
+			for i := 0; i < len(user.Emails); i++ {
+				if user.Emails[i] == val.FromEmail {
+					userEmailValid = true
+				}
+			}
+
+			// If this is if the email added is not valid in SendGridFrom
+			if !userEmailValid {
+				return *val, nil, errors.New("The email requested is not confirmed by the user yet")
+			}
+		}
+
+		// Check to see if there is no sendat date or if date is in the past
+		if val.SendAt.IsZero() || val.SendAt.Before(time.Now()) {
+			emailSent, emailId, err := emails.SendSparkPostEmail(r, *val, user, files)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return *val, nil, err
+			}
+
+			val.SparkPostId = emailId
+			val, err = email.MarkSent(c, "")
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return *val, nil, err
+			}
+
+			val, err = email.MarkDelivered(c)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return *val, nil, err
+			}
+
+			if emailSent {
+				// Set attachments for deletion
+				for i := 0; i < len(files); i++ {
+					files[i].Imported = true
+					files[i].Save(c)
+				}
+
+				if isNotBulk {
+					sync.ResourceSync(r, val.Id, "Email", "create")
+				}
+				return *val, nil, nil
+			}
+		}
+	}
+
 	email.Method = "sendgrid"
 	val, err := email.MarkSent(c, "")
 	if err != nil {
