@@ -273,7 +273,7 @@ func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, int
 	}
 
 	// Filter all emails that are in the future (scheduled for later)
-	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("SendAt >=", time.Now()).Filter("Cancel =", false)
+	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("SendAt >=", time.Now()).Filter("Cancel =", false).Filter("IsSent =", true)
 	query = constructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
