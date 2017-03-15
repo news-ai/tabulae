@@ -160,8 +160,20 @@
                 },'json').fail(function(jqXHR, textStatus, errorThrown) {
                     // If fails then display error message & reset to normal price
                     formatPrice(price, 0.00);
-                    $('#coupon-errors').text("Coupon was invalid or has expired");
-                    $('#coupon-errors').show();
+                    if (jqXHR) {
+                        var apiResponse = JSON.parse(jqXHR.responseText);
+                        console.log(apiResponse);
+                        if (apiResponse && apiResponse.errors && apiResponse.errors.length > 0 && apiResponse.errors[0]) {
+                            $('#coupon-errors').text(apiResponse.errors[0].message);
+                            $('#coupon-errors').show();
+                        } else {
+                            $('#coupon-errors').text("Coupon was invalid or has expired");
+                            $('#coupon-errors').show();
+                        }
+                    } else {
+                        $('#coupon-errors').text("Coupon was invalid or has expired");
+                        $('#coupon-errors').show();
+                    }
                 });
                 return false;
             });
