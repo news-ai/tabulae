@@ -57,7 +57,7 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 	for i := 0; i < len(allEvents); i++ {
 		singleEvent := allEvents[i]
 		if singleEvent.SgMessageID == "" {
-			email, _, err := controllers.GetEmail(c, r, singleEvent.ID)
+			email, _, err := controllers.GetEmailUnauthorized(c, r, singleEvent.ID)
 			emailIds = append(emailIds, email.Id)
 			notification := models.NotificationChange{}
 

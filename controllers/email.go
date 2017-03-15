@@ -69,6 +69,26 @@ func getEmail(c context.Context, r *http.Request, id int64) (models.Email, error
 	return models.Email{}, errors.New("No email by this id")
 }
 
+func getEmailUnauthorized(c context.Context, r *http.Request, id int64) (models.Email, error) {
+	if id == 0 {
+		return models.Email{}, errors.New("datastore: no such entity")
+	}
+	// Get the email by id
+	var email models.Email
+	emailId := datastore.NewKey(c, "Email", "", id, nil)
+	err := nds.Get(c, emailId, &email)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Email{}, err
+	}
+
+	if !email.Created.IsZero() {
+		email.Format(emailId, "emails")
+		return email, nil
+	}
+	return models.Email{}, errors.New("No email by this id")
+}
+
 /*
 * Filter methods
  */
@@ -306,6 +326,23 @@ func GetEmailById(c context.Context, r *http.Request, id int64) (models.Email, e
 		return models.Email{}, err
 	}
 	return email, nil
+}
+
+func GetEmailUnauthorized(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Email{}, nil, err
+	}
+
+	email, err := getEmailUnauthorized(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Email{}, nil, err
+	}
+
+	return email, nil, nil
 }
 
 func GetEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
