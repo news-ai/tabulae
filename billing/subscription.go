@@ -118,15 +118,20 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 	}
 
 	if coupon != "" {
+		coupon = strings.ToUpper(coupon)
 		params.Coupon = coupon
 	}
 
 	if strings.ToLower(coupon) == "favorites" && duration == "annually" {
-		return errors.New("Sorry - you can't use this coupon code on a yearly plan.")
+		return errors.New("Sorry - you can't use this coupon code on a yearly plan. Please switch the monthly one to use this!")
 	}
 
 	if strings.ToLower(coupon) == "prcouture" && duration == "annually" {
-		return errors.New("Sorry - you can't use this coupon code on a yearly plan.")
+		return errors.New("Sorry - you can't use this coupon code on a yearly plan. Please switch the monthly one to use this!")
+	}
+
+	if strings.ToLower(coupon) == "prconsultants" && duration == "annually" {
+		return errors.New("Sorry - you can't use this coupon code on a yearly plan. Please switch the monthly one to use this!")
 	}
 
 	newSub, err := sc.Subs.New(params)

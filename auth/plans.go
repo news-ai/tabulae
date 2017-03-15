@@ -373,8 +373,20 @@ func CheckCouponValid() http.HandlerFunc {
 			return
 		}
 
+		coupon = strings.ToUpper(coupon)
+
 		if coupon == "FAVORITES" && duration == "annually" {
-			nError.ReturnError(w, http.StatusInternalServerError, "Coupon error", "Sorry - you can't use this coupon code on a yearly plan.")
+			nError.ReturnError(w, http.StatusInternalServerError, "Coupon error", "Sorry - you can't use this coupon code on a yearly plan. Please switch the monthly one to use this!")
+			return
+		}
+
+		if coupon == "PRCOUTURE" && duration == "annually" {
+			nError.ReturnError(w, http.StatusInternalServerError, "Coupon error", "Sorry - you can't use this coupon code on a yearly plan. Please switch the monthly one to use this!")
+			return
+		}
+
+		if coupon == "PRCONSULTANTS" && duration == "annually" {
+			nError.ReturnError(w, http.StatusInternalServerError, "Coupon error", "Sorry - you can't use this coupon code on a yearly plan. Please switch the monthly one to use this!")
 			return
 		}
 
