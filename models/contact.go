@@ -153,6 +153,7 @@ func (ct *Contact) Normalize() (*Contact, error) {
 	ct.Blog = utilities.StripQueryStringForWebsite(ct.Blog)
 
 	ct.Email = strings.ToLower(ct.Email)
+	ct.Email = strings.TrimSpace(ct.Email)
 
 	return ct, nil
 }
