@@ -152,3 +152,9 @@ indexes:
   - name: ContactId
   - name: Created
     direction: desc
+
+- kind: Email
+  properties:
+  - name: IsSent
+  - name: Created
+    direction: desc
