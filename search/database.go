@@ -7,6 +7,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	gcontext "github.com/gorilla/context"
+
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 
@@ -19,6 +21,23 @@ var (
 
 type EnhanceResponse struct {
 	Data interface{} `json:"data"`
+}
+
+func searchESContactsDatabase(c context.Context, elasticQuery elastic.ElasticQuery) (interface{}, int, error) {
+	hits, err := elasticContactDatabase.QueryStruct(c, elasticQuery)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, 0, err
+	}
+
+	contactHits := hits.Hits
+	var contacts []interface{}
+	for i := 0; i < len(contactHits); i++ {
+		rawContact := contactHits[i].Source.Data
+		contacts = append(contacts, rawContact)
+	}
+
+	return contacts, len(contactHits), nil
 }
 
 func SearchCompanyDatabase(c context.Context, r *http.Request, url string) (interface{}, error) {
@@ -65,4 +84,15 @@ func SearchContactDatabase(c context.Context, r *http.Request, email string) (in
 	}
 
 	return enhanceResponse.Data, nil
+}
+
+func SearchESContactsDatabase(c context.Context, r *http.Request) (interface{}, int, error) {
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	return searchESContactsDatabase(c, elasticQuery)
 }
