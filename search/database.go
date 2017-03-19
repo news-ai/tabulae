@@ -23,6 +23,11 @@ type EnhanceResponse struct {
 	Data interface{} `json:"data"`
 }
 
+type DatabaseResponse struct {
+	Email string      `json:"email"`
+	Data  interface{} `json:"data"`
+}
+
 func searchESContactsDatabase(c context.Context, elasticQuery elastic.ElasticQuery) (interface{}, int, error) {
 	hits, err := elasticContactDatabase.QueryStruct(c, elasticQuery)
 	if err != nil {
@@ -34,7 +39,11 @@ func searchESContactsDatabase(c context.Context, elasticQuery elastic.ElasticQue
 	var contacts []interface{}
 	for i := 0; i < len(contactHits); i++ {
 		rawContact := contactHits[i].Source.Data
-		contacts = append(contacts, rawContact)
+		contactData := DatabaseResponse{
+			Email: contactHits[i].ID,
+			Data:  rawContact,
+		}
+		contacts = append(contacts, contactData)
 	}
 
 	return contacts, len(contactHits), nil
