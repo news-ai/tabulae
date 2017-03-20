@@ -666,6 +666,8 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	}
 
 	_, mediaListSaveErr := mediaList.Save(c)
+
+	// If there's a problem saving the document
 	if mediaListSaveErr != nil {
 		log.Errorf(c, "%v", err)
 		mediaList.Save(c)

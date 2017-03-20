@@ -34,6 +34,10 @@ type copyContactsDetails struct {
 	ListId   int64   `json:"listid"`
 }
 
+type deleteContactsDetails struct {
+	Contacts []int64 `json:"contacts"`
+}
+
 /*
 * Get methods
  */
@@ -1472,6 +1476,36 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 * Delete methods
  */
 
+func BulkDeleteContacts(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, error) {
+	// Get logged in user
+	// user, err := GetCurrentUser(c, r)
+	// if err != nil {
+	// 	log.Errorf(c, "%v", err)
+	// 	return []models.Contact{}, nil, 0, errors.New("Could not get user")
+	// }
+
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var deleteContacts deleteContactsDetails
+	err := decoder.Decode(buf, &deleteContacts)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+	}
+
+	contacts := []models.Contact{}
+	for i := 0; i < len(deleteContacts.Contacts); i++ {
+		contact, err := getContact(c, r, deleteContacts.Contacts[i])
+		if err == nil {
+			contact.IsDeleted = true
+			contact.Save(c, r)
+
+			contacts = append(contacts, contact)
+		}
+	}
+
+	return contacts, nil, len(contacts), nil
+}
+
 func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
@@ -1487,7 +1521,7 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 		return nil, nil, err
 	}
 
-	mediaList, mediaListExists := getMediaList(c, r, contact.ListId)
+	mediaList, err := getMediaList(c, r, contact.ListId)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
@@ -1509,25 +1543,7 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 	contact.IsDeleted = true
 	contact.Save(c, r)
 
-	// Remove the contact out of the mediaList. This is a safe measure in case
-	// The PATCH is not done to the list after. Data integrity.
-	if mediaListExists == nil {
-		contactIdPosition := -1
-		for i := 0; i < len(mediaList.Contacts); i++ {
-			if mediaList.Contacts[i] == contact.Id {
-				contactIdPosition = i
-				break
-			}
-		}
-
-		if contactIdPosition != -1 {
-			mediaList.Contacts = append(mediaList.Contacts[:contactIdPosition], mediaList.Contacts[contactIdPosition+1:]...)
-			mediaList.Save(c)
-		}
-	}
-
 	// Pubsub to remove ES contact
 	sync.ResourceSync(r, contact.Id, "Contact", "delete")
-
 	return nil, nil, nil
 }
