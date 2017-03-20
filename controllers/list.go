@@ -625,6 +625,8 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	contactsInList, err := filterContactsForListId(c, r, mediaList.Id)
 	if err == nil && len(contactsInList) == 0 {
 		mediaList.Contacts = []int64{}
+	} else {
+		log.Infof(c, "%v", err)
 	}
 
 	// Edge case for when you want to empty the list & there's only 1 contact
@@ -663,7 +665,11 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 		mediaList.Subscribed = false
 	}
 
-	mediaList.Save(c)
+	_, mediaListSaveErr := mediaList.Save(c)
+	if mediaListSaveErr != nil {
+		log.Errorf(c, "%v", err)
+		mediaList.Save(c)
+	}
 	sync.ResourceSync(r, mediaList.Id, "List", "create")
 	return mediaList, nil, nil
 }

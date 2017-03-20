@@ -8,6 +8,7 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
 	"github.com/qedus/nds"
 )
@@ -227,6 +228,7 @@ func (ml *MediaList) Save(c context.Context) (*MediaList, error) {
 
 	k, err := nds.Put(c, ml.key(c, "MediaList"), ml)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	ml.Format(k, "lists")
