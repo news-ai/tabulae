@@ -71,6 +71,9 @@ func handleEmail(c context.Context, r *http.Request, id string) (interface{}, er
 		} else if id == "bulkcancel" {
 			val, included, count, err := controllers.BulkCancelEmail(c, r)
 			return api.BaseResponseHandler(val, included, count, err, r)
+		} else if id == "bulkattach" {
+			val, included, count, err := files.HandleBulkEmailAttachActionUpload(c, r, id)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		}
 	}
 	return nil, errors.New("method not implemented")

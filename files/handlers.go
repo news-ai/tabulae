@@ -17,6 +17,44 @@ import (
 	"github.com/news-ai/web/utilities"
 )
 
+func HandleBulkEmailAttachActionUpload(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+	user, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+
+	userId := strconv.FormatInt(user.Id, 10)
+
+	files := []models.File{}
+	r.ParseMultipartForm(32 << 20)
+	m := r.MultipartForm
+	fhs := m.File["file"]
+	for _, fh := range fhs {
+		f, err := fh.Open()
+		defer f.Close()
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, nil, 0, err
+		}
+
+		noSpaceFileName := ""
+		if fh.Filename != "" {
+			noSpaceFileName = strings.Replace(fh.Filename, " ", "", -1)
+		}
+
+		fileName := strings.Join([]string{userId, id, utilities.RandToken(), noSpaceFileName}, "-")
+		val, err := UploadAttachment(r, fh.Filename, fileName, f, userId, id, fh.Header.Get("Content-Type"))
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, nil, 0, err
+		}
+
+		files = append(files, val)
+	}
+
+	return files, nil, len(files), nil
+}
+
 func HandleEmailAttachActionUpload(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
 	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {

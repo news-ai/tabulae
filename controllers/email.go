@@ -715,9 +715,31 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, inter
  */
 
 func CancelAllScheduled(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
-	emails, _, _, err := GetScheduledEmails(c, r)
+	emails := []models.Email{}
+
+	user, err := GetCurrentUser(c, r)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, 0, err
+	}
+
+	// Filter all emails that are in the future (scheduled for later)
+	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("SendAt >=", time.Now()).Filter("Cancel =", false).Filter("IsSent =", true)
+	ks, err := query.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, 0, err
+	}
+
+	emails = make([]models.Email, len(ks))
+	err = nds.GetMulti(c, ks, emails)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, 0, err
+	}
+
+	for i := 0; i < len(emails); i++ {
+		emails[i].Format(ks[i], "emails")
 	}
 
 	emailIds := []int64{} // Validated email ids
