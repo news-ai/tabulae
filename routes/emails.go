@@ -49,6 +49,9 @@ func handleEmail(c context.Context, r *http.Request, id string) (interface{}, er
 		} else if id == "scheduled" {
 			val, included, count, err := controllers.GetScheduledEmails(c, r)
 			return api.BaseResponseHandler(val, included, count, err, r)
+		} else if id == "cancelscheduled" {
+			val, included, count, err := controllers.CancelAllScheduled(c, r)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		} else if id == "sent" {
 			val, included, count, err := controllers.GetSentEmails(c, r)
 			return api.BaseResponseHandler(val, included, count, err, r)
@@ -64,6 +67,9 @@ func handleEmail(c context.Context, r *http.Request, id string) (interface{}, er
 			return api.BaseSingleResponseHandler(files.HandleEmailImageActionUpload(c, r))
 		} else if id == "bulksend" {
 			val, included, count, err := controllers.BulkSendEmail(c, r)
+			return api.BaseResponseHandler(val, included, count, err, r)
+		} else if id == "bulkcancel" {
+			val, included, count, err := controllers.BulkCancelEmail(c, r)
 			return api.BaseResponseHandler(val, included, count, err, r)
 		}
 	}

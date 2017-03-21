@@ -30,6 +30,10 @@ import (
 	"github.com/news-ai/web/utilities"
 )
 
+type cancelEmailsBulk struct {
+	Emails []int64 `json:"emails"`
+}
+
 /*
 * Private methods
  */
@@ -709,6 +713,60 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, inter
 /*
 * Action methods
  */
+
+func CancelAllScheduled(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
+	emails, _, _, err := GetScheduledEmails(c, r)
+	if err != nil {
+		return []models.Email{}, nil, 0, err
+	}
+
+	emailIds := []int64{} // Validated email ids
+	for i := 0; i < len(emails); i++ {
+		// If it has not been delivered and has a sentat date then we can cancel it
+		// and that sendAt date is in the future.
+		if !emails[i].Delievered && !emails[i].SendAt.IsZero() && emails[i].SendAt.After(time.Now()) {
+			emails[i].Cancel = true
+			emails[i].Save(c)
+			emailIds = append(emailIds, emails[i].Id)
+		}
+	}
+
+	sync.EmailResourceBulkSync(r, emailIds)
+	return emails, nil, len(emails), nil
+}
+
+func BulkCancelEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var cancelEmails cancelEmailsBulk
+	err := decoder.Decode(buf, &cancelEmails)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, 0, err
+	}
+
+	emails := []models.Email{}
+	emailIds := []int64{} // Validated email ids
+	for i := 0; i < len(cancelEmails.Emails); i++ {
+		email, err := getEmail(c, r, cancelEmails.Emails[i])
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			continue
+		}
+
+		// If it has not been delivered and has a sentat date then we can cancel it
+		// and that sendAt date is in the future.
+		if !email.Delievered && !email.SendAt.IsZero() && email.SendAt.After(time.Now()) {
+			email.Cancel = true
+			email.Save(c)
+			emails = append(emails, email)
+			emailIds = append(emailIds, email.Id)
+		}
+	}
+
+	sync.EmailResourceBulkSync(r, emailIds)
+	return emails, nil, len(emails), nil
+}
 
 func CancelEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
 	email, _, err := GetEmail(c, r, id)
