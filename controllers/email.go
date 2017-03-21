@@ -436,7 +436,7 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 			keys = append(keys, emails[i].Key(c))
 		}
 
-		if len(keys) < 700 {
+		if len(keys) < 300 {
 			ks := []*datastore.Key{}
 			err = nds.RunInTransaction(c, func(ctx context.Context) error {
 				contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
@@ -458,12 +458,20 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 		} else {
 			firstHalfKeys := []*datastore.Key{}
 			secondHalfKeys := []*datastore.Key{}
+			thirdHalfKeys := []*datastore.Key{}
+			fourHalfKeys := []*datastore.Key{}
 
 			startOne := 0
-			endOne := 700
+			endOne := 100
 
-			startTwo := 700
-			endTwo := len(keys)
+			startTwo := 100
+			endTwo := 200
+
+			startThree := 200
+			endThree := 300
+
+			startFour := 300
+			endFour := len(keys)
 
 			err1 := nds.RunInTransaction(c, func(ctx context.Context) error {
 				contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
@@ -485,7 +493,29 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 				return nil
 			}, nil)
 
+			err3 := nds.RunInTransaction(c, func(ctx context.Context) error {
+				contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+				thirdHalfKeys, err = nds.PutMulti(contextWithTimeout, keys[startThree:endThree], emails[startThree:endThree])
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					return err
+				}
+				return nil
+			}, nil)
+
+			err4 := nds.RunInTransaction(c, func(ctx context.Context) error {
+				contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+				fourHalfKeys, err = nds.PutMulti(contextWithTimeout, keys[startFour:endFour], emails[startFour:endFour])
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					return err
+				}
+				return nil
+			}, nil)
+
 			firstHalfKeys = append(firstHalfKeys, secondHalfKeys...)
+			firstHalfKeys = append(firstHalfKeys, thirdHalfKeys...)
+			firstHalfKeys = append(firstHalfKeys, fourHalfKeys...)
 
 			for i := 0; i < len(firstHalfKeys); i++ {
 				emails[i].Format(firstHalfKeys[i], "emails")
@@ -498,6 +528,14 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 
 			if err2 != nil {
 				err = err2
+			}
+
+			if err3 != nil {
+				err = err3
+			}
+
+			if err4 != nil {
+				err = err4
 			}
 
 			sync.EmailResourceBulkSync(r, emailIds)
@@ -933,72 +971,72 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 		return *val, nil, nil
 	}
 
-	if user.IsAdmin {
-		// Use SparkPost
-		log.Infof(c, "%v", "Using SparkPost")
+	// if user.IsAdmin {
+	// 	// Use SparkPost
+	// 	log.Infof(c, "%v", "Using SparkPost")
 
-		// Mark email as sent again with "sparkpost" method
-		email.Method = "sparkpost"
-		val, err := email.MarkSent(c, "")
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return *val, nil, err
-		}
+	// 	// Mark email as sent again with "sparkpost" method
+	// 	email.Method = "sparkpost"
+	// 	val, err := email.MarkSent(c, "")
+	// 	if err != nil {
+	// 		log.Errorf(c, "%v", err)
+	// 		return *val, nil, err
+	// 	}
 
-		// Test if the email we are sending with is in the user's SendGridFrom or is their Email
-		if val.FromEmail != "" {
-			userEmailValid := false
-			if user.Email == val.FromEmail {
-				userEmailValid = true
-			}
+	// 	// Test if the email we are sending with is in the user's SendGridFrom or is their Email
+	// 	if val.FromEmail != "" {
+	// 		userEmailValid := false
+	// 		if user.Email == val.FromEmail {
+	// 			userEmailValid = true
+	// 		}
 
-			for i := 0; i < len(user.Emails); i++ {
-				if user.Emails[i] == val.FromEmail {
-					userEmailValid = true
-				}
-			}
+	// 		for i := 0; i < len(user.Emails); i++ {
+	// 			if user.Emails[i] == val.FromEmail {
+	// 				userEmailValid = true
+	// 			}
+	// 		}
 
-			// If this is if the email added is not valid in SendGridFrom
-			if !userEmailValid {
-				return *val, nil, errors.New("The email requested is not confirmed by the user yet")
-			}
-		}
+	// 		// If this is if the email added is not valid in SendGridFrom
+	// 		if !userEmailValid {
+	// 			return *val, nil, errors.New("The email requested is not confirmed by the user yet")
+	// 		}
+	// 	}
 
-		// Check to see if there is no sendat date or if date is in the past
-		if val.SendAt.IsZero() || val.SendAt.Before(time.Now()) {
-			emailSent, emailId, err := emails.SendSparkPostEmail(r, *val, user, files)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return *val, nil, err
-			}
+	// 	// Check to see if there is no sendat date or if date is in the past
+	// 	if val.SendAt.IsZero() || val.SendAt.Before(time.Now()) {
+	// 		emailSent, emailId, err := emails.SendSparkPostEmail(r, *val, user, files)
+	// 		if err != nil {
+	// 			log.Errorf(c, "%v", err)
+	// 			return *val, nil, err
+	// 		}
 
-			val.SparkPostId = emailId
-			val, err = email.MarkSent(c, "")
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return *val, nil, err
-			}
+	// 		val.SparkPostId = emailId
+	// 		val, err = email.MarkSent(c, "")
+	// 		if err != nil {
+	// 			log.Errorf(c, "%v", err)
+	// 			return *val, nil, err
+	// 		}
 
-			val, err = email.MarkDelivered(c)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return *val, nil, err
-			}
+	// 		val, err = email.MarkDelivered(c)
+	// 		if err != nil {
+	// 			log.Errorf(c, "%v", err)
+	// 			return *val, nil, err
+	// 		}
 
-			if emailSent {
-				// Set attachments for deletion
-				for i := 0; i < len(files); i++ {
-					files[i].Imported = true
-					files[i].Save(c)
-				}
+	// 		if emailSent {
+	// 			// Set attachments for deletion
+	// 			for i := 0; i < len(files); i++ {
+	// 				files[i].Imported = true
+	// 				files[i].Save(c)
+	// 			}
 
-				if isNotBulk {
-					sync.ResourceSync(r, val.Id, "Email", "create")
-				}
-				return *val, nil, nil
-			}
-		}
-	}
+	// 			if isNotBulk {
+	// 				sync.ResourceSync(r, val.Id, "Email", "create")
+	// 			}
+	// 			return *val, nil, nil
+	// 		}
+	// 	}
+	// }
 
 	email.Method = "sendgrid"
 	val, err := email.MarkSent(c, "")
