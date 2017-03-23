@@ -5,9 +5,9 @@ func BillingIdToPlanName(plan string) string {
 	case "bronze":
 		return "Personal"
 	case "silver", "silver-1":
-		return "Business"
+		return "Freelancer"
 	case "gold", "gold-1":
-		return "Ultimate"
+		return "Business"
 	}
 
 	return "Personal"
@@ -17,9 +17,9 @@ func UserMaximumSocialAccounts(plan string) int {
 	switch plan {
 	case "Personal":
 		return 20
-	case "Business":
+	case "Freelancer":
 		return 500
-	case "Ultimate":
+	case "Business":
 		return 100000
 	}
 
@@ -30,9 +30,9 @@ func UserMaximumEmailAccounts(plan string) int {
 	switch plan {
 	case "Personal":
 		return 0
-	case "Business":
+	case "Freelancer":
 		return 5
-	case "Ultimate":
+	case "Business":
 		return 10
 	}
 

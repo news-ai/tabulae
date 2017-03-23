@@ -76,8 +76,10 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 			// 1. If admin
 			// 2. If created by user
 			// 3. If is within the user's team
-			if mediaList.TeamId != user.TeamId && mediaList.CreatedBy != user.Id && !user.IsAdmin {
-				return models.MediaList{}, errors.New("Forbidden")
+			if mediaList.CreatedBy != user.Id && !user.IsAdmin {
+				if mediaList.TeamId == 0 || user.TeamId == 0 || mediaList.TeamId != user.TeamId {
+					return models.MediaList{}, errors.New("Forbidden")
+				}
 			}
 
 			// If it is empty but there are still contacts by this list then populate them

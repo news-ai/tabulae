@@ -27,6 +27,7 @@ func MakeUsersInactive(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < len(users); i++ {
 		billing, err := controllers.GetUserBilling(c, r, users[i])
 		if err != nil {
+			log.Errorf(c, "%v", users[i])
 			log.Errorf(c, "%v", err)
 			continue
 		}
@@ -39,6 +40,7 @@ func MakeUsersInactive(w http.ResponseWriter, r *http.Request) {
 				sync.ResourceSync(r, users[i].Id, "User", "create")
 
 				billing.IsOnTrial = false
+				billing.IsCancel = true
 				billing.Save(c)
 			}
 		}

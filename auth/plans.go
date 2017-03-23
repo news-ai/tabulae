@@ -142,9 +142,9 @@ func CancelPlanPageHandler() http.HandlerFunc {
 			case "bronze":
 				userBilling.StripePlanId = "Personal"
 			case "silver-1":
-				userBilling.StripePlanId = "Business"
+				userBilling.StripePlanId = "Freelancer"
 			case "gold-1":
-				userBilling.StripePlanId = "Ultimate"
+				userBilling.StripePlanId = "Business"
 			}
 
 			userNotActiveNonTrialPlan := true
@@ -207,9 +207,9 @@ func CancelPlanHandler() http.HandlerFunc {
 			case "bronze":
 				plan = "Personal"
 			case "silver-1":
-				plan = "Business"
+				plan = "Freelancer"
 			case "gold-1":
-				plan = "Ultimate"
+				plan = "Business"
 			}
 
 			data := map[string]interface{}{
@@ -261,9 +261,9 @@ func ChoosePlanPageHandler() http.HandlerFunc {
 			case "bronze":
 				userBilling.StripePlanId = "Personal"
 			case "silver-1":
-				userBilling.StripePlanId = "Business"
+				userBilling.StripePlanId = "Freelancer"
 			case "gold-1":
-				userBilling.StripePlanId = "Ultimate"
+				userBilling.StripePlanId = "Business"
 			}
 
 			userNotActiveNonTrialPlan := true
@@ -327,9 +327,9 @@ func ChoosePlanHandler() http.HandlerFunc {
 			case "bronze":
 				plan = "Personal"
 			case "silver-1":
-				plan = "Business"
+				plan = "Freelancer"
 			case "gold-1":
-				plan = "Ultimate"
+				plan = "Business"
 			}
 
 			missingCard := true
@@ -448,9 +448,9 @@ func ConfirmPlanHandler() http.HandlerFunc {
 			switch plan {
 			case "Personal":
 				plan = "bronze"
-			case "Business":
+			case "Freelancer":
 				plan = "silver-1"
-			case "Ultimate":
+			case "Business":
 				plan = "gold-1"
 			}
 
@@ -516,9 +516,9 @@ func BillingPageHandler() http.HandlerFunc {
 			case "bronze":
 				userBilling.StripePlanId = "Personal"
 			case "silver-1", "silver":
-				userBilling.StripePlanId = "Business"
+				userBilling.StripePlanId = "Freelancer"
 			case "gold-1", "gold":
-				userBilling.StripePlanId = "Ultimate"
+				userBilling.StripePlanId = "Business"
 			}
 
 			userPlanExpires := userBilling.Expires.AddDate(0, 0, -1).Format("2006-01-02")

@@ -825,16 +825,18 @@ func Update(c context.Context, r *http.Request, u *models.User) (*models.User, e
 				u.IsActive = false
 				u.Save(c)
 			} else {
-				// If they haven't canceled then we can add a month until they do.
-				// More sophisticated to add the amount depending on what
-				// plan they were on.
-				addAMonth := billing.Expires.AddDate(0, 1, 0)
-				billing.Expires = addAMonth
-				billing.Save(c)
+				if billing.StripePlanId != "free" {
+					// If they haven't canceled then we can add a month until they do.
+					// More sophisticated to add the amount depending on what
+					// plan they were on.
+					addAMonth := billing.Expires.AddDate(0, 1, 0)
+					billing.Expires = addAMonth
+					billing.Save(c)
 
-				// Keep the user active
-				u.IsActive = true
-				u.Save(c)
+					// Keep the user active
+					u.IsActive = true
+					u.Save(c)
+				}
 			}
 		}
 	}
