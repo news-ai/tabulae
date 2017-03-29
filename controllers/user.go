@@ -460,6 +460,88 @@ func AddUserToContext(c context.Context, r *http.Request, email string) {
 	}
 }
 
+func AddPlanToUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+	user := models.User{}
+	err := errors.New("")
+
+	switch id {
+	case "me":
+		user, err = GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(c, r, userId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	if !currentUser.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var userNewPlan models.UserNewPlan
+	err = decoder.Decode(buf, &userNewPlan)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	userBilling, err := GetUserBilling(c, r, user)
+
+	if len(userBilling.CardsOnFile) == 0 {
+		return user, userBilling, errors.New("This user has no cards on file")
+	}
+
+	originalPlan := ""
+	switch userNewPlan.Plan {
+	case "bronze":
+		originalPlan = "Personal"
+	case "silver-1":
+		originalPlan = "Freelancer"
+	case "gold-1":
+		originalPlan = "Business"
+	}
+
+	if userNewPlan.Duration != "monthly" && userNewPlan.Duration != "annually" {
+		return user, userBilling, errors.New("Duration is invalid")
+	}
+
+	if userNewPlan.Plan == "" {
+		return user, userBilling, errors.New("Plan is invalid")
+	}
+
+	if originalPlan == "" {
+		return user, userBilling, errors.New("Original Plan is invalid")
+	}
+
+	err = billing.AddPlanToUser(r, user, &userBilling, userNewPlan.Plan, userNewPlan.Duration, userNewPlan.Coupon, originalPlan)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return user, userBilling, err
+	}
+
+	return user, userBilling, nil
+}
+
 func AddEmailToUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
 	user := models.User{}
 	err := errors.New("")

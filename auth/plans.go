@@ -275,7 +275,6 @@ func ChoosePlanPageHandler() http.HandlerFunc {
 				"userNotActiveNonTrialPlan": userNotActiveNonTrialPlan,
 				"currentUserPlan":           userBilling.StripePlanId,
 				"userEmail":                 user.Email,
-				csrf.TemplateTag:            csrf.TemplateField(r),
 			}
 
 			t := template.New("plans.html")
@@ -340,12 +339,11 @@ func ChoosePlanHandler() http.HandlerFunc {
 			price := billing.PlanAndDurationToPrice(plan, duration)
 
 			data := map[string]interface{}{
-				"missingCard":    missingCard,
-				"price":          price,
-				"plan":           plan,
-				"duration":       duration,
-				"userEmail":      user.Email,
-				csrf.TemplateTag: csrf.TemplateField(r),
+				"missingCard": missingCard,
+				"price":       price,
+				"plan":        plan,
+				"duration":    duration,
+				"userEmail":   user.Email,
 			}
 
 			t := template.New("confirmation.html")
@@ -465,12 +463,11 @@ func ConfirmPlanHandler() http.HandlerFunc {
 			}
 
 			data := map[string]interface{}{
-				"plan":           originalPlan,
-				"duration":       duration,
-				"hasError":       hasError,
-				"errorMessage":   errorMessage,
-				"userEmail":      user.Email,
-				csrf.TemplateTag: csrf.TemplateField(r),
+				"plan":         originalPlan,
+				"duration":     duration,
+				"hasError":     hasError,
+				"errorMessage": errorMessage,
+				"userEmail":    user.Email,
 			}
 
 			t := template.New("receipt.html")

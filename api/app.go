@@ -45,7 +45,7 @@ func init() {
 	app.Use(c)
 
 	// Initialize CSRF
-	CSRF := csrf.Protect([]byte(os.Getenv("CSRFKEY")), csrf.Secure(false))
+	CSRF := csrf.Protect([]byte(os.Getenv("CSRFKEY")))
 
 	// Initialize the environment for a particular URL
 	utils.InitURL()
@@ -116,15 +116,15 @@ func init() {
 	router.Handler("GET", "/api/billing/plans/trial", CSRF(auth.TrialPlanPageHandler()))
 
 	// Get all the plans
-	router.Handler("GET", "/api/billing/plans", CSRF(auth.ChoosePlanPageHandler()))
+	router.Handler("GET", "/api/billing/plans", auth.ChoosePlanPageHandler())
 
 	// Add payment method
 	router.Handler("GET", "/api/billing/payment-methods", CSRF(auth.PaymentMethodsPageHandler()))
 	router.Handler("POST", "/api/billing/add-payment-method", CSRF(auth.PaymentMethodsHandler()))
 
 	// Add plan method
-	router.Handler("POST", "/api/billing/confirmation", CSRF(auth.ChoosePlanHandler()))
-	router.Handler("POST", "/api/billing/receipt", CSRF(auth.ConfirmPlanHandler()))
+	router.Handler("POST", "/api/billing/confirmation", auth.ChoosePlanHandler())
+	router.Handler("POST", "/api/billing/receipt", auth.ConfirmPlanHandler())
 
 	// Cancel plan method
 	router.Handler("GET", "/api/billing/cancel", CSRF(auth.CancelPlanPageHandler()))

@@ -21,6 +21,12 @@ type UserPlan struct {
 	OnTrial bool `json:"ontrial"`
 }
 
+type UserNewPlan struct {
+	Plan     string `json:"plan"`
+	Duration string `json:"duration"`
+	Coupon   string `json:"coupon"`
+}
+
 type User struct {
 	Base
 
