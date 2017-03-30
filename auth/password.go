@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/mail"
 	"net/url"
+	"strings"
 	"text/template"
 
 	"google.golang.org/appengine"
@@ -24,6 +25,8 @@ func PasswordLoginHandler() http.HandlerFunc {
 		// Setup to authenticate the user into the API
 		email := r.FormValue("email")
 		password := r.FormValue("password")
+
+		email = strings.ToLower(email)
 
 		// Validate email
 		validEmail, err := mail.ParseAddress(email)
@@ -138,6 +141,7 @@ func ForgetPasswordHandler() http.HandlerFunc {
 		c := appengine.NewContext(r)
 		// Forget password
 		email := r.FormValue("email")
+		email = strings.ToLower(email)
 
 		// Validate email
 		_, err := mail.ParseAddress(email)
@@ -190,6 +194,8 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 		invitationCode := r.FormValue("invitationcode")
+
+		email = strings.ToLower(email)
 
 		// Validate email
 		validEmail, err := mail.ParseAddress(email)
