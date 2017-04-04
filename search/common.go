@@ -55,6 +55,12 @@ type ElasticEmailIdQuery struct {
 	} `json:"term"`
 }
 
+type ElasticUserIdQuery struct {
+	Term struct {
+		UserId int64 `json:"data.UserId"`
+	} `json:"term"`
+}
+
 type ElasticEmailToQuery struct {
 	Term struct {
 		To string `json:"data.To"`
@@ -123,6 +129,13 @@ type ElasticSortDataCreatedQuery struct {
 		Order string `json:"order"`
 		Mode  string `json:"mode"`
 	} `json:"data.Created"`
+}
+
+type ElasticSortDataQuery struct {
+	Date struct {
+		Order string `json:"order"`
+		Mode  string `json:"mode"`
+	} `json:"data.Date"`
 }
 
 func InitializeElasticSearch() {
@@ -209,6 +222,12 @@ func InitializeElasticSearch() {
 	emailLogElastic.Index = "emails"
 	emailLogElastic.Type = "log"
 	elasticEmailLog = &emailLogElastic
+
+	emailTimeseriesElastic := elastic.Elastic{}
+	emailTimeseriesElastic.BaseURL = newBaseURL
+	emailTimeseriesElastic.Index = "timeseries"
+	emailTimeseriesElastic.Type = "useremail2"
+	elasticEmailTimeseries = &emailTimeseriesElastic
 
 	emailsElastic := elastic.Elastic{}
 	emailsElastic.BaseURL = newBaseURL

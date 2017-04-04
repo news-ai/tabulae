@@ -287,6 +287,17 @@ func GetSentEmails(c context.Context, r *http.Request) ([]models.Email, interfac
 	return emails, nil, len(emails), nil
 }
 
+func GetEmailStats(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	timeseriesData, count, err := search.SearchEmailTimeseriesByUserId(c, r, user)
+	return timeseriesData, nil, count, err
+}
+
 func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
 	emails := []models.Email{}
 

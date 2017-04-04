@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	elasticEmailLog *elastic.Elastic
-	elasticEmails   *elastic.Elastic
+	elasticEmailLog        *elastic.Elastic
+	elasticEmailTimeseries *elastic.Elastic
+	elasticEmails          *elastic.Elastic
 )
 
 type Email struct {
@@ -105,6 +106,21 @@ func searchEmail(c context.Context, elasticQuery interface{}) (interface{}, int,
 	return emailLogHits, len(emailLogHits), nil
 }
 
+func searchEmailTimeseries(c context.Context, elasticQuery interface{}) (interface{}, int, error) {
+	hits, err := elasticEmailTimeseries.QueryStruct(c, elasticQuery)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, 0, err
+	}
+
+	emailTimeseriesHits := []interface{}{}
+	for i := 0; i < len(hits.Hits); i++ {
+		emailTimeseriesHits = append(emailTimeseriesHits, hits.Hits[i].Source.Data)
+	}
+
+	return emailTimeseriesHits, len(emailTimeseriesHits), nil
+}
+
 func searchEmailQuery(c context.Context, elasticQuery interface{}) (interface{}, int, error) {
 	hits, err := elasticEmails.QueryStruct(c, elasticQuery)
 	if err != nil {
@@ -128,6 +144,26 @@ func searchEmailQuery(c context.Context, elasticQuery interface{}) (interface{},
 	}
 
 	return emailLogHits, len(emailLogHits), nil
+}
+
+func SearchEmailTimeseriesByUserId(c context.Context, r *http.Request, user models.User) (interface{}, int, error) {
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQueryWithSort{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticUserIdQuery := ElasticUserIdQuery{}
+	elasticUserIdQuery.Term.UserId = user.Id
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticUserIdQuery)
+
+	elasticDateQuery := ElasticSortDataQuery{}
+	elasticDateQuery.Date.Order = "desc"
+	elasticDateQuery.Date.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticDateQuery)
+
+	return searchEmailTimeseries(c, elasticQuery)
 }
 
 func SearchEmailLogByEmailId(c context.Context, r *http.Request, user models.User, emailId int64) (interface{}, int, error) {
