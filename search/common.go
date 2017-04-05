@@ -19,6 +19,12 @@ type ElasticCreatedByQuery struct {
 	} `json:"term"`
 }
 
+type ElasticIsSentQuery struct {
+	Term struct {
+		IsSent bool `json:"data.IsSent"`
+	} `json:"term"`
+}
+
 type ElasticClientQuery struct {
 	Term struct {
 		Client string `json:"data.Client"`

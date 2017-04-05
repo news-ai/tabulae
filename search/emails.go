@@ -200,8 +200,41 @@ func SearchEmailLogByQuery(c context.Context, r *http.Request, user models.User,
 	elasticCreatedByQuery := ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = user.Id
 
+	elasticIsSentQuery := ElasticIsSentQuery{}
+	elasticIsSentQuery.Term.IsSent = true
+
 	elasticMatchQuery := elastic.ElasticMatchQuery{}
 	elasticMatchQuery.Match.All = searchQuery
+
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsSentQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
+
+	elasticCreatedQuery := ElasticSortDataCreatedQuery{}
+	elasticCreatedQuery.DataCreated.Order = "desc"
+	elasticCreatedQuery.DataCreated.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
+
+	return searchEmailQuery(c, elasticQuery)
+}
+
+func SearchEmailLogByDate(c context.Context, r *http.Request, user models.User, emailDate string) (interface{}, int, error) {
+	if emailDate == "" {
+		return nil, 0, nil
+	}
+
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQueryWithSort{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery.Term.CreatedBy = user.Id
+
+	elasticMatchQuery := elastic.ElasticMatchQuery{}
+	elasticMatchQuery.Match.All = emailDate
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
