@@ -25,6 +25,12 @@ type ElasticIsSentQuery struct {
 	} `json:"term"`
 }
 
+type ElasticCancelQuery struct {
+	Term struct {
+		Cancel bool `json:"data.Cancel"`
+	} `json:"term"`
+}
+
 type ElasticClientQuery struct {
 	Term struct {
 		Client string `json:"data.Client"`

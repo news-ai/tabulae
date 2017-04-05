@@ -203,11 +203,15 @@ func SearchEmailsByQuery(c context.Context, r *http.Request, user models.User, s
 	elasticIsSentQuery := ElasticIsSentQuery{}
 	elasticIsSentQuery.Term.IsSent = true
 
+	elasticCancelQuery := ElasticCancelQuery{}
+	elasticCancelQuery.Term.Cancel = false
+
 	elasticMatchQuery := elastic.ElasticMatchQuery{}
 	elasticMatchQuery.Match.All = searchQuery
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsSentQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCancelQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
 
 	elasticCreatedQuery := ElasticSortDataCreatedQuery{}
@@ -236,12 +240,16 @@ func SearchEmailsByDate(c context.Context, r *http.Request, user models.User, em
 	elasticIsSentQuery := ElasticIsSentQuery{}
 	elasticIsSentQuery.Term.IsSent = true
 
+	elasticCancelQuery := ElasticCancelQuery{}
+	elasticCancelQuery.Term.Cancel = false
+
 	elasticCreatedFilterQuery := ElasticCreatedRangeQuery{}
 	elasticCreatedFilterQuery.Range.DataCreated.From = emailDate + "T00:00:00"
 	elasticCreatedFilterQuery.Range.DataCreated.To = emailDate + "T23:59:59"
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsSentQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCancelQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedFilterQuery)
 
 	elasticCreatedQuery := ElasticSortDataCreatedQuery{}
