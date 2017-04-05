@@ -116,6 +116,15 @@ type ElasticFeedUrlQuery struct {
 	} `json:"match"`
 }
 
+type ElasticCreatedRangeQuery struct {
+	Range struct {
+		DataCreated struct {
+			From string `json:"from"`
+			To   string `json:"to"`
+		} `json:"data.Created"`
+	} `json:"range"`
+}
+
 type ElasticSortDataPublishDateQuery struct {
 	DataPublishDate struct {
 		Order string `json:"order"`

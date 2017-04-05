@@ -1274,13 +1274,13 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 		emailDate := strings.Split(queryField, "date:")
 		log.Infof(c, "%v", emailDate)
 		if len(emailDate) > 1 {
-			emails, count, err := search.SearchEmailLogByDate(c, r, user, emailDate[1])
+			emails, count, err := search.SearchEmailsByDate(c, r, user, emailDate[1])
 			return emails, nil, count, err
 		} else {
 			return nil, nil, 0, errors.New("Please enter a valid date")
 		}
 	}
 
-	emails, count, err := search.SearchEmailLogByQuery(c, r, user, queryField)
+	emails, count, err := search.SearchEmailsByQuery(c, r, user, queryField)
 	return emails, nil, count, err
 }

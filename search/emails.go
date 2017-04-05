@@ -185,7 +185,7 @@ func SearchEmailLogByEmailId(c context.Context, r *http.Request, user models.Use
 	return searchEmail(c, elasticQuery)
 }
 
-func SearchEmailLogByQuery(c context.Context, r *http.Request, user models.User, searchQuery string) (interface{}, int, error) {
+func SearchEmailsByQuery(c context.Context, r *http.Request, user models.User, searchQuery string) (interface{}, int, error) {
 	if searchQuery == "" {
 		return nil, 0, nil
 	}
@@ -218,7 +218,7 @@ func SearchEmailLogByQuery(c context.Context, r *http.Request, user models.User,
 	return searchEmailQuery(c, elasticQuery)
 }
 
-func SearchEmailLogByDate(c context.Context, r *http.Request, user models.User, emailDate string) (interface{}, int, error) {
+func SearchEmailsByDate(c context.Context, r *http.Request, user models.User, emailDate string) (interface{}, int, error) {
 	if emailDate == "" {
 		return nil, 0, nil
 	}
@@ -233,11 +233,16 @@ func SearchEmailLogByDate(c context.Context, r *http.Request, user models.User, 
 	elasticCreatedByQuery := ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = user.Id
 
-	elasticMatchQuery := elastic.ElasticMatchQuery{}
-	elasticMatchQuery.Match.All = emailDate
+	elasticIsSentQuery := ElasticIsSentQuery{}
+	elasticIsSentQuery.Term.IsSent = true
+
+	elasticCreatedFilterQuery := ElasticCreatedRangeQuery{}
+	elasticCreatedFilterQuery.Range.DataCreated.From = emailDate + "T00:00:00"
+	elasticCreatedFilterQuery.Range.DataCreated.To = emailDate + "T23:59:59"
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsSentQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedFilterQuery)
 
 	elasticCreatedQuery := ElasticSortDataCreatedQuery{}
 	elasticCreatedQuery.DataCreated.Order = "desc"
