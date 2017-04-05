@@ -1001,6 +1001,15 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 		user.Employers = updatedUser.Employers
 	}
 
+	if len(updatedUser.EmailSignatures) > 0 {
+		user.EmailSignatures = updatedUser.EmailSignatures
+	}
+
+	// Special case when you want to remove all the email signatures
+	if len(user.EmailSignatures) > 0 && len(updatedUser.EmailSignatures) == 0 {
+		user.EmailSignatures = updatedUser.EmailSignatures
+	}
+
 	user.Save(c)
 	sync.ResourceSync(r, user.Id, "User", "create")
 	return user, nil, nil
