@@ -49,6 +49,9 @@ func handleEmail(c context.Context, r *http.Request, id string) (interface{}, er
 		} else if id == "scheduled" {
 			val, included, count, err := controllers.GetScheduledEmails(c, r)
 			return api.BaseResponseHandler(val, included, count, err, r)
+		} else if id == "archived" {
+			val, included, count, err := controllers.GetArchivedEmails(c, r)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		} else if id == "cancelscheduled" {
 			val, included, count, err := controllers.CancelAllScheduled(c, r)
 			return api.BaseResponseHandler(val, included, count, err, r)
