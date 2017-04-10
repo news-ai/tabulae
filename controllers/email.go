@@ -1272,6 +1272,12 @@ func MarkOpened(c context.Context, r *http.Request, e *models.Email) (*models.Em
 	return e, notification, err
 }
 
+func MarkSendgridOpen(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
+	SetUser(c, r, e.CreatedBy)
+	_, err := e.MarkSendgridOpened(c)
+	return e, err
+}
+
 func GetEmailLogs(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
 	email, _, err := GetEmail(c, r, id)
 	if err != nil {

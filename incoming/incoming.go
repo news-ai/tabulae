@@ -138,6 +138,13 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 					log.Errorf(c, "%v", singleEvent)
 					log.Errorf(c, "%v", err)
 				}
+			case "open":
+				_, err = controllers.MarkSendgridOpen(c, r, &email)
+				if err != nil {
+					hasErrors = true
+					log.Errorf(c, "%v", singleEvent)
+					log.Errorf(c, "%v", err)
+				}
 			default:
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)

@@ -97,6 +97,9 @@ type Email struct {
 	Spam          bool   `json:"spam"`
 	Cancel        bool   `json:"cancel"`
 
+	SendGridOpened  int `json:"sendgridopened"`
+	SendGridClicked int `json:"sendgridclicked"`
+
 	Archived bool `json:"archived"`
 
 	IsSent bool `json:"issent"` // Basically if the user has clicked on "/send"
@@ -213,6 +216,16 @@ func (e *Email) MarkSpam(c context.Context) (*Email, error) {
 
 func (e *Email) MarkOpened(c context.Context) (*Email, error) {
 	e.Opened += 1
+	e.Delievered = true
+	_, err := e.Save(c)
+	if err != nil {
+		return e, err
+	}
+	return e, nil
+}
+
+func (e *Email) MarkSendgridOpened(c context.Context) (*Email, error) {
+	e.SendGridOpened += 1
 	e.Delievered = true
 	_, err := e.Save(c)
 	if err != nil {
