@@ -23,6 +23,8 @@ func handleEmailSettingAction(c context.Context, r *http.Request, id string, act
 		switch action {
 		case "verify":
 			return api.BaseSingleResponseHandler(controllers.VerifyEmailSetting(c, r, id))
+		case "details":
+			return api.BaseSingleResponseHandler(controllers.GetEmailSettingDetails(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")

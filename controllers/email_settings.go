@@ -52,7 +52,7 @@ func getEmailSetting(c context.Context, r *http.Request, id int64) (models.Email
 			return models.EmailSetting{}, errors.New("Could not get user")
 		}
 
-		if !permissions.AccessToObject(emailSetting.CreatedBy, user.Id) {
+		if !permissions.AccessToObject(emailSetting.CreatedBy, user.Id) && !user.IsAdmin {
 			return models.EmailSetting{}, errors.New("Forbidden")
 		}
 
@@ -210,7 +210,18 @@ func VerifyEmailSetting(c context.Context, r *http.Request, id string) (SMTPEmai
 		return SMTPEmailResponse{}, nil, err
 	}
 
-	SMTPPassword := string(currentUser.SMTPPassword[:])
+	smtpUser, err := getUser(c, r, emailSetting.CreatedBy)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return SMTPEmailResponse{}, nil, err
+	}
+
+	if !permissions.AccessToObject(emailSetting.CreatedBy, smtpUser.Id) && !currentUser.IsAdmin {
+		log.Errorf(c, "%v", err)
+		return SMTPEmailResponse{}, nil, err
+	}
+
+	SMTPPassword := string(smtpUser.SMTPPassword[:])
 
 	contextWithTimeout, _ := context.WithTimeout(c, time.Second*30)
 	client := urlfetch.Client(contextWithTimeout)
@@ -219,7 +230,7 @@ func VerifyEmailSetting(c context.Context, r *http.Request, id string) (SMTPEmai
 	verifyEmailRequest := models.SMTPSettings{}
 
 	verifyEmailRequest.Servername = emailSetting.SMTPServer + ":" + strconv.Itoa(emailSetting.SMTPPortSSL)
-	verifyEmailRequest.EmailUser = currentUser.SMTPUsername
+	verifyEmailRequest.EmailUser = smtpUser.SMTPUsername
 	verifyEmailRequest.EmailPassword = SMTPPassword
 
 	VerifyEmailRequest, err := json.Marshal(verifyEmailRequest)
@@ -247,9 +258,45 @@ func VerifyEmailSetting(c context.Context, r *http.Request, id string) (SMTPEmai
 	}
 
 	if verifyResponse.Status {
-		currentUser.SMTPValid = true
-		SaveUser(c, r, &currentUser)
+		smtpUser.SMTPValid = true
+		SaveUser(c, r, &smtpUser)
 	}
 
 	return verifyResponse, nil, nil
+}
+
+func GetEmailSettingDetails(c context.Context, r *http.Request, id string) (SMTPEmailResponse, interface{}, error) {
+	emailSetting, _, err := GetEmailSetting(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return SMTPEmailResponse{}, nil, err
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return SMTPEmailResponse{}, nil, err
+	}
+
+	smtpUser, err := getUser(c, r, emailSetting.CreatedBy)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return SMTPEmailResponse{}, nil, err
+	}
+
+	if !permissions.AccessToObject(emailSetting.CreatedBy, smtpUser.Id) && !currentUser.IsAdmin {
+		log.Errorf(c, "%v", err)
+		return SMTPEmailResponse{}, nil, err
+	}
+
+	SMTPPassword := string(smtpUser.SMTPPassword[:])
+	userPassword, err := encrypt.DecryptString(SMTPPassword)
+	if err != nil {
+		return SMTPEmailResponse{}, nil, err
+	}
+
+	log.Infof(c, "%v", smtpUser.SMTPUsername)
+	log.Infof(c, "%v", userPassword)
+
+	return SMTPEmailResponse{}, nil, err
 }
