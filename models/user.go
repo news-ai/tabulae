@@ -81,6 +81,13 @@ type User struct {
 	RefreshToken    string    `json:"-"`
 	TokenType       string    `json:"-"`
 
+	Outlook             bool      `json:"outlook"`
+	OutlookEmail        string    `json:"outlookusername"`
+	OutlookAccessToken  string    `json:"-"`
+	OutlookExpiresIn    time.Time `json:"-"`
+	OutlookRefreshToken string    `json:"-"`
+	OutlookTokenType    string    `json:"-"`
+
 	ExternalEmail bool  `json:"externalemail"`
 	EmailSetting  int64 `json:"emailsetting"`
 

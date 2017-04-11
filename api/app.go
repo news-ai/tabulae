@@ -105,6 +105,10 @@ func init() {
 	router.GET("/api/internal_auth/instagram", auth.InstagramLoginHandler)
 	router.GET("/api/internal_auth/instagramcallback", auth.InstagramCallbackHandler)
 
+	// Login with Outlook
+	router.GET("/api/auth/outlook", auth.OutlookLoginHandler)
+	router.GET("/api/auth/outlookcallback", auth.OutlookCallbackHandler)
+
 	// Logout user
 	router.GET("/api/auth/logout", auth.LogoutHandler)
 
