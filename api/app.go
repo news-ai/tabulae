@@ -107,6 +107,7 @@ func init() {
 
 	// Login with Outlook
 	router.GET("/api/auth/outlook", auth.OutlookLoginHandler)
+	router.GET("/api/auth/remove-outlook", auth.RemoveOutlookHandler)
 	router.GET("/api/auth/outlookcallback", auth.OutlookCallbackHandler)
 
 	// Logout user

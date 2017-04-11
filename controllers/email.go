@@ -27,6 +27,7 @@ import (
 
 	"github.com/news-ai/web/emails"
 	"github.com/news-ai/web/google"
+	"github.com/news-ai/web/outlook"
 	"github.com/news-ai/web/permissions"
 	"github.com/news-ai/web/utilities"
 )
@@ -1081,6 +1082,46 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 
 			email.GmailId = gmailId
 			email.GmailThreadId = gmailThreadId
+
+			val, err = email.MarkDelivered(c)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return *val, nil, err
+			}
+		}
+
+		if isNotBulk {
+			sync.ResourceSync(r, val.Id, "Email", "create")
+		}
+		return *val, nil, nil
+	}
+
+	if user.OutlookAccessToken != "" && user.Outlook {
+		err = outlook.ValidateAccessToken(r, user)
+		// Refresh access token if err is nil
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			user, err = outlook.RefreshAccessToken(r, user)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return email, nil, errors.New("Could not refresh user token")
+			}
+		}
+
+		email.Method = "outlook"
+		val, err := email.MarkSent(c, "")
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return *val, nil, err
+		}
+
+		// Check to see if there is no sendat date or if date is in the past
+		if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
+			err := emails.SendOutlookEmail(r, user, email, files)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return email, nil, err
+			}
 
 			val, err = email.MarkDelivered(c)
 			if err != nil {

@@ -86,6 +86,33 @@ func OutlookLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	http.Redirect(w, r, url, 302)
 }
 
+// Handler to redirect user to the Google OAuth2 page
+func RemoveOutlookHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	c := appengine.NewContext(r)
+
+	// Make sure the user has been logged in when at oulook auth
+	user, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		fmt.Fprintln(w, "user not logged in")
+		return
+	}
+
+	user.Outlook = false
+	controllers.SaveUser(c, r, &user)
+
+	if r.URL.Query().Get("next") != "" {
+		returnURL := r.URL.Query().Get("next")
+		if err != nil {
+			http.Redirect(w, r, returnURL, 302)
+			return
+		}
+	}
+
+	http.Redirect(w, r, "https://tabulae.newsai.co/settings", 302)
+	return
+}
+
 func OutlookCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	c := appengine.NewContext(r)
 	session, err := Store.Get(r, "sess")
@@ -113,11 +140,6 @@ func OutlookCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 		fmt.Fprintln(w, "retreived invalid token")
 		return
 	}
-
-	log.Infof(c, "%v", tkn.AccessToken)
-	log.Infof(c, "%v", tkn.Expiry)
-	log.Infof(c, "%v", tkn.RefreshToken)
-	log.Infof(c, "%v", tkn.TokenType)
 
 	// Make sure the user has been logged in when at outlook auth
 	user, err := controllers.GetCurrentUser(c, r)

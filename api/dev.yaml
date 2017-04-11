@@ -21,6 +21,8 @@ env_variables:
   BASE_URL: 'https://dev-dot-newsai-1166.appspot.com'
   GOOGLEAUTHKEY: '66057093659-gdof2fgsc2j1e9v3ugkt5uvkek669ael.apps.googleusercontent.com'
   GOOGLEAUTHSECRET: 'JLJLL4sV8nse8AyW8qE5zxnu'
+  OUTLOOKAUTHKEY: '6c99490b-7d78-4810-baa1-e9f7ff6b2e85'
+  OUTLOOKAUTHSECRET: 'ofwJZJWE84idqpqfZwKBsEF'
   INSTAGRAMAUTHKEY: '4314d27fa90640a3a5525fa36aecac86'
   INSTAGRAMAUTHSECRET: '3a2c68c11a434e3785dd1a91e1c2b6e2'
   LINKEDINAUTHKEY: '77kb6tooljh1iw'
