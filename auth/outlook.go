@@ -1,12 +1,15 @@
 package auth
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/urlfetch"
 
 	"github.com/julienschmidt/httprouter"
 
@@ -17,6 +20,16 @@ import (
 
 	"golang.org/x/oauth2"
 )
+
+type OutlookResponse struct {
+	OdataContext string `json:"@odata.context"`
+	OdataID      string `json:"@odata.id"`
+	ID           string `json:"Id"`
+	EmailAddress string `json:"EmailAddress"`
+	DisplayName  string `json:"DisplayName"`
+	Alias        string `json:"Alias"`
+	MailboxGUID  string `json:"MailboxGuid"`
+}
 
 var (
 	outlookOauthConfig = &oauth2.Config{
@@ -89,7 +102,6 @@ func OutlookCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 	}
 
 	tkn, err := outlookOauthConfig.Exchange(c, r.URL.Query().Get("code"))
-
 	if err != nil {
 		log.Errorf(c, "%v", "there was an issue getting your token")
 		fmt.Fprintln(w, "there was an issue getting your token")
@@ -115,7 +127,48 @@ func OutlookCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 		return
 	}
 
-	log.Infof(c, "%v", user.Email)
+	client := urlfetch.Client(c)
 
-	http.Redirect(w, r, "/", 302)
+	req, _ := http.NewRequest("GET", "https://outlook.office.com/api/v2.0/me", nil)
+	req.Header.Add("Authorization", "Bearer "+tkn.AccessToken)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Errorf(c, "%v", "there was an issue getting your token "+err.Error())
+		fmt.Fprintln(w, "there was an issue getting your token")
+		return
+	}
+
+	// Decode JSON from Google
+	decoder := json.NewDecoder(resp.Body)
+	var outlookUser OutlookResponse
+	err = decoder.Decode(&outlookUser)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		fmt.Fprintln(w, err.Error())
+		return
+	}
+
+	user.OutlookEmail = outlookUser.EmailAddress
+	user.OutlookAccessToken = tkn.AccessToken
+	user.OutlookExpiresIn = tkn.Expiry
+	user.OutlookRefreshToken = tkn.RefreshToken
+	user.OutlookTokenType = tkn.TokenType
+
+	user.Outlook = true
+	user.Gmail = false
+	user.ExternalEmail = false
+
+	controllers.SaveUser(c, r, &user)
+
+	returnURL := session.Values["next"].(string)
+	u, err := url.Parse(returnURL)
+	if err != nil {
+		http.Redirect(w, r, returnURL, 302)
+		return
+	}
+
+	http.Redirect(w, r, u.String(), 302)
+	return
 }

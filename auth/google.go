@@ -210,6 +210,8 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	newUser.GoogleCode = r.URL.Query().Get("code")
 	if session.Values["gmail"] == "yes" {
 		newUser.Gmail = true
+		newUser.Outlook = false
+		newUser.ExternalEmail = false
 
 		if session.Values["gmail_email"].(string) != googleUser.Email {
 			log.Errorf(c, "%v", "Tried to login with email "+googleUser.Email+" for user "+session.Values["gmail_email"].(string))
