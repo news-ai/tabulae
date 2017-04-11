@@ -19,6 +19,7 @@ import (
 
 	"github.com/news-ai/web/emails"
 	"github.com/news-ai/web/google"
+	"github.com/news-ai/web/outlook"
 )
 
 // When the email is "Delievered == false" and has a "SendAt" date
@@ -131,6 +132,43 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 						log.Errorf(c, "%v", err)
 						hasErrors = true
 					}
+				}
+			}
+		} else if schedueled[i].Method == "outlook" {
+			if user.OutlookAccessToken != "" && user.Outlook {
+				err = outlook.ValidateAccessToken(r, user)
+				// Refresh access token if err is nil
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					user, err = outlook.RefreshAccessToken(r, user)
+					if err != nil {
+						hasErrors = true
+						log.Errorf(c, "%v", err)
+						continue
+					}
+				}
+
+				log.Infof(c, "%v", files)
+				log.Infof(c, "%v", schedueled[i])
+				err := emails.SendOutlookEmail(r, user, schedueled[i], files)
+				if err != nil {
+					hasErrors = true
+					log.Errorf(c, "%v", err)
+					continue
+				}
+
+				_, err = schedueled[i].MarkDelivered(c)
+				// sync.ResourceSync(r, schedueled[i].Id, "Email", "create")
+				if err != nil {
+					hasErrors = true
+					log.Errorf(c, "%v", err)
+					continue
+				}
+
+				// if files are present
+				for i := 0; i < len(files); i++ {
+					files[i].Imported = true
+					files[i].Save(c)
 				}
 			}
 		} else {
