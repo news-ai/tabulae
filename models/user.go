@@ -95,6 +95,8 @@ type User struct {
 	SMTPUsername string `json:"smtpusername"`
 	SMTPPassword []byte `json:"-"`
 
+	UseSparkPost bool `json:"-"`
+
 	IsAdmin  bool `json:"-"`
 	IsActive bool `json:"isactive"`
 
