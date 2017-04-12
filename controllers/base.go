@@ -36,6 +36,7 @@ var normalized = map[string]string{
 	"googleid":           "GoogleId",
 	"apikey":             "ApiKey",
 	"emailconfirmed":     "EmailConfirmed",
+	"sendat":             "SendAt",
 }
 
 func normalizeOrderQuery(order string) string {

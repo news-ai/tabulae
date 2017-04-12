@@ -60,6 +60,11 @@ func getUser(c context.Context, r *http.Request, id int64) (models.User, error) 
 			return models.User{}, err
 		}
 
+		if len(user.EmailSignatures) == 0 && user.EmailSignature != "" {
+			user.EmailSignatures = append(user.EmailSignatures, user.EmailSignature)
+			SaveUser(c, r, &user)
+		}
+
 		return user, nil
 	}
 	return models.User{}, errors.New("No user by this id")
@@ -374,6 +379,14 @@ func GetCurrentUser(c context.Context, r *http.Request) (models.User, error) {
 		return models.User{}, errors.New("No user logged in")
 	}
 	user := gcontext.Get(r, "user").(models.User)
+
+	// Extra things we should be fixing on the user end at point of loading /users/me
+	// These are just corrections needed to make on next load.
+	if len(user.EmailSignatures) == 0 && user.EmailSignature != "" {
+		user.EmailSignatures = append(user.EmailSignatures, user.EmailSignature)
+		SaveUser(c, r, &user)
+	}
+
 	return user, nil
 }
 

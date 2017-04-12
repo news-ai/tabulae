@@ -1194,13 +1194,13 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 					files[i].Imported = true
 					files[i].Save(c)
 				}
-
-				if isNotBulk {
-					sync.ResourceSync(r, val.Id, "Email", "create")
-				}
-				return *val, nil, nil
 			}
 		}
+
+		if isNotBulk {
+			sync.ResourceSync(r, val.Id, "Email", "create")
+		}
+		return *val, nil, nil
 	}
 
 	email.Method = "sendgrid"
