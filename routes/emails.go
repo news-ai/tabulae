@@ -64,6 +64,9 @@ func handleEmail(c context.Context, r *http.Request, id string) (interface{}, er
 		} else if id == "stats" {
 			val, included, count, err := controllers.GetEmailStats(c, r)
 			return api.BaseResponseHandler(val, included, count, err, r)
+		} else if id == "campaigns" {
+			val, included, count, err := controllers.GetEmailCampaigns(c, r)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		}
 		return api.BaseSingleResponseHandler(controllers.GetEmail(c, r, id))
 	case "PATCH":

@@ -1363,3 +1363,14 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 	emails, count, err := search.SearchEmailsByQuery(c, r, user, queryField)
 	return emails, nil, count, err
 }
+
+func GetEmailCampaigns(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, 0, err
+	}
+
+	emails, count, err := search.SearchEmailCampaignsByDate(c, r, user)
+	return emails, nil, count, err
+}

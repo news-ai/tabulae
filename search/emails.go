@@ -124,11 +124,11 @@ func searchEmailTimeseries(c context.Context, elasticQuery interface{}) (interfa
 	return emailTimeseriesHits, len(emailTimeseriesHits), nil
 }
 
-func searchEmailQuery(c context.Context, elasticQuery interface{}) (interface{}, int, error) {
+func searchEmailQuery(c context.Context, elasticQuery interface{}) ([]Email, int, error) {
 	hits, err := elasticEmails.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, 0, err
+		return []Email{}, 0, err
 	}
 
 	emailHits := hits.Hits
@@ -251,6 +251,45 @@ func SearchEmailsByDate(c context.Context, r *http.Request, user models.User, em
 	elasticCreatedFilterQuery.Range.DataCreated.To = emailDate + "T23:59:59"
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsSentQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCancelQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedFilterQuery)
+
+	elasticCreatedQuery := ElasticSortDataCreatedQuery{}
+	elasticCreatedQuery.DataCreated.Order = "desc"
+	elasticCreatedQuery.DataCreated.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
+
+	return searchEmailQuery(c, elasticQuery)
+}
+
+func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user models.User, emailDate string, subject string) ([]Email, int, error) {
+	if emailDate == "" {
+		return nil, 0, nil
+	}
+
+	elasticQuery := elastic.ElasticQueryWithShould{}
+	elasticQuery.Size = 10000
+	elasticQuery.From = 0
+
+	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery.Term.CreatedBy = user.Id
+
+	elasticSubjectQuery := ElasticSubjectQuery{}
+	elasticSubjectQuery.Term.Subject = subject
+
+	elasticIsSentQuery := ElasticIsSentQuery{}
+	elasticIsSentQuery.Term.IsSent = true
+
+	elasticCancelQuery := ElasticCancelQuery{}
+	elasticCancelQuery.Term.Cancel = false
+
+	elasticCreatedFilterQuery := ElasticCreatedRangeQuery{}
+	elasticCreatedFilterQuery.Range.DataCreated.From = emailDate + "T00:00:00"
+	elasticCreatedFilterQuery.Range.DataCreated.To = emailDate + "T23:59:59"
+
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
+	elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Must, elasticSubjectQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsSentQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCancelQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedFilterQuery)

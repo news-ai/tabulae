@@ -19,6 +19,12 @@ type ElasticCreatedByQuery struct {
 	} `json:"term"`
 }
 
+type ElasticSubjectQuery struct {
+	Term struct {
+		Subject string `json:"data.Subject"`
+	} `json:"term"`
+}
+
 type ElasticIsSentQuery struct {
 	Term struct {
 		IsSent bool `json:"data.IsSent"`
@@ -255,4 +261,10 @@ func InitializeElasticSearch() {
 	emailsElastic.Index = "emails"
 	emailsElastic.Type = "email"
 	elasticEmails = &emailsElastic
+
+	emailsElasticCampaign := elastic.Elastic{}
+	emailsElasticCampaign.BaseURL = newBaseURL
+	emailsElasticCampaign.Index = "emails"
+	emailsElasticCampaign.Type = "campaign1"
+	elasticEmailCampaign = &emailsElasticCampaign
 }
