@@ -97,3 +97,30 @@ func SearchContactsByList(c context.Context, r *http.Request, search string, use
 
 	return searchContact(c, elasticQuery)
 }
+
+func SearchContactsByTag(c context.Context, r *http.Request, tag string, userId int64) ([]models.Contact, error) {
+	if tag == "" {
+		return []models.Contact{}, nil
+	}
+
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery.Term.CreatedBy = userId
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
+
+	elasticTagQuery := ElasticTagQuery{}
+	elasticTagQuery.Term.Tag = tag
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticTagQuery)
+
+	return searchContact(c, elasticQuery)
+}
+
+func SearchContactsByFieldSelector(c context.Context, r *http.Request, fieldSelector string, query string, userId int64) ([]models.Contact, error) {
+	return SearchContactsByTag(c, r, query, userId)
+}

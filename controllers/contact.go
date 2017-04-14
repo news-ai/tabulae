@@ -651,12 +651,32 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 	if user.IsActive {
 		queryField := gcontext.Get(r, "q").(string)
 		if queryField != "" {
-			contacts, err := search.SearchContacts(c, r, queryField, user.Id)
-			if err != nil {
-				return []models.Contact{}, nil, 0, err
+			fieldSelector := strings.Split(queryField, ":")
+			if len(fieldSelector) != 2 {
+				contacts, err := search.SearchContacts(c, r, queryField, user.Id)
+				if err != nil {
+					return []models.Contact{}, nil, 0, err
+				}
+				includes := getIncludesForContact(c, r, contacts)
+				return contacts, includes, len(contacts), nil
 			}
-			includes := getIncludesForContact(c, r, contacts)
-			return contacts, includes, len(contacts), nil
+
+			if fieldSelector[0] == "tag" {
+				selectedContacts, err := search.SearchContactsByFieldSelector(c, r, fieldSelector[0], fieldSelector[1], user.Id)
+				if err != nil {
+					return nil, nil, 0, err
+				}
+
+				allContacts := []models.Contact{}
+				for i := 0; i < len(selectedContacts); i++ {
+					singleContact, err := getContact(c, r, selectedContacts[i].Id)
+					if err == nil {
+						allContacts = append(allContacts, singleContact)
+					}
+				}
+
+				return allContacts, nil, len(allContacts), nil
+			}
 		}
 
 		query := datastore.NewQuery("Contact").Filter("CreatedBy =", user.Id).Filter("IsMasterContact = ", false)
