@@ -6,6 +6,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	"google.golang.org/appengine/log"
+
 	"github.com/qedus/nds"
 )
 
@@ -57,6 +59,7 @@ func (f *File) Save(c context.Context) (*File, error) {
 
 	k, err := nds.Put(c, f.key(c, "File"), f)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	f.Id = k.IntID()

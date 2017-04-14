@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"google.golang.org/appengine/log"
+
 	"golang.org/x/net/context"
 
 	"github.com/qedus/nds"
@@ -46,6 +48,7 @@ func (a *Agency) Save(c context.Context) (*Agency, error) {
 
 	k, err := nds.Put(c, a.key(c, "Agency"), a)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	a.Id = k.IntID()

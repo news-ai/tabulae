@@ -7,6 +7,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	"google.golang.org/appengine/log"
+
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/web/utilities"
@@ -58,6 +60,7 @@ func (p *Publication) Save(c context.Context) (*Publication, error) {
 	// Save the object
 	k, err := nds.Put(c, p.key(c, "Publication"), p)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	p.Id = k.IntID()
@@ -74,6 +77,7 @@ func (p *Publication) Validate(c context.Context) (*Publication, error) {
 	if p.Url != "" {
 		normalizedUrl, err := utilities.NormalizeUrl(p.Url)
 		if err != nil {
+			log.Errorf(c, "%v", err)
 			return p, err
 		}
 		p.Url = normalizedUrl

@@ -6,6 +6,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	"google.golang.org/appengine/log"
+
 	"github.com/qedus/nds"
 )
 
@@ -49,6 +51,7 @@ func (uic *UserInviteCode) Save(c context.Context) (*UserInviteCode, error) {
 	uic.Updated = time.Now()
 	k, err := nds.Put(c, uic.key(c, "UserInviteCode"), uic)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	uic.Id = k.IntID()
@@ -59,6 +62,7 @@ func (uic *UserInviteCode) Save(c context.Context) (*UserInviteCode, error) {
 func (uic *UserInviteCode) Delete(c context.Context) (*UserInviteCode, error) {
 	err := nds.Delete(c, uic.key(c, "UserInviteCode"))
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	return uic, nil

@@ -8,6 +8,7 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/web/utilities"
 
@@ -111,6 +112,7 @@ func (ct *Contact) Save(c context.Context, r *http.Request) (*Contact, error) {
 
 	k, err := nds.Put(c, ct.key(c, "Contact"), ct)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	ct.Id = k.IntID()

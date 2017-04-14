@@ -6,6 +6,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	"google.golang.org/appengine/log"
+
 	"github.com/qedus/nds"
 )
 
@@ -42,6 +44,7 @@ func (ut *UserToken) Save(c context.Context) (*UserToken, error) {
 
 	k, err := nds.Put(c, ut.key(c, "UserToken"), ut)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	ut.Id = k.IntID()
@@ -52,6 +55,7 @@ func (ut *UserToken) Save(c context.Context) (*UserToken, error) {
 func (ut *UserToken) Delete(c context.Context) (*UserToken, error) {
 	err := nds.Delete(c, ut.key(c, "UserToken"))
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	return ut, nil

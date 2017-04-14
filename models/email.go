@@ -7,6 +7,7 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
 	"github.com/qedus/nds"
 )
@@ -156,6 +157,7 @@ func (e *Email) Save(c context.Context) (*Email, error) {
 
 	k, err := nds.Put(c, e.key(c, "Email"), e)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	e.Id = k.IntID()
@@ -169,6 +171,7 @@ func (es *EmailSetting) Save(c context.Context) (*EmailSetting, error) {
 
 	k, err := nds.Put(c, es.key(c, "EmailSetting"), es)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	es.Id = k.IntID()
@@ -180,6 +183,7 @@ func (e *Email) MarkSent(c context.Context, emailId string) (*Email, error) {
 	e.SendGridId = emailId
 	_, err := e.Save(c)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return e, err
 	}
 	return e, nil
@@ -191,6 +195,7 @@ func (e *Email) MarkBounced(c context.Context, reason string) (*Email, error) {
 	e.BouncedReason = reason
 	_, err := e.Save(c)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return e, err
 	}
 	return e, nil
@@ -201,6 +206,7 @@ func (e *Email) MarkClicked(c context.Context) (*Email, error) {
 	e.Delievered = true
 	_, err := e.Save(c)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return e, err
 	}
 	return e, nil
@@ -210,6 +216,7 @@ func (e *Email) MarkDelivered(c context.Context) (*Email, error) {
 	e.Delievered = true
 	_, err := e.Save(c)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return e, err
 	}
 	return e, nil
@@ -220,6 +227,7 @@ func (e *Email) MarkSpam(c context.Context) (*Email, error) {
 	e.Delievered = true
 	_, err := e.Save(c)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return e, err
 	}
 	return e, nil
@@ -230,6 +238,7 @@ func (e *Email) MarkOpened(c context.Context) (*Email, error) {
 	e.Delievered = true
 	_, err := e.Save(c)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return e, err
 	}
 	return e, nil
@@ -240,6 +249,7 @@ func (e *Email) MarkSendgridOpened(c context.Context) (*Email, error) {
 	e.Delievered = true
 	_, err := e.Save(c)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return e, err
 	}
 	return e, nil

@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"google.golang.org/appengine/log"
+
 	"golang.org/x/net/context"
 
 	"github.com/qedus/nds"
@@ -20,7 +22,7 @@ type Billing struct {
 	IsAgency     bool      `json:"-"`
 	IsCancel     bool      `json:"-"`
 
-	ReasonForCancel   string `json:"-"`
+	ReasonForCancel string `json:"-"`
 
 	ReasonNotPurchase  string `json:"-"`
 	FeedbackAfterTrial string `json:"-"`
@@ -56,6 +58,7 @@ func (bi *Billing) Save(c context.Context) (*Billing, error) {
 
 	k, err := nds.Put(c, bi.key(c, "Billing"), bi)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	bi.Id = k.IntID()

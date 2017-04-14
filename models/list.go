@@ -265,6 +265,5 @@ func (ml *MediaList) Format(key *datastore.Key, modelType string) {
 		if val, ok := fieldsMapValueToDescription[ml.FieldsMap[i].Value]; ok {
 			ml.FieldsMap[i].Description = val
 		}
-
 	}
 }

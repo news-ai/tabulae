@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"google.golang.org/appengine/log"
+
 	"golang.org/x/net/context"
 
 	"github.com/qedus/nds"
@@ -12,8 +14,8 @@ import (
 type BillingHistory struct {
 	Base
 
-	StartDate      time.Time `json:"-"`
-	EndDate        time.Time `json:"-"`
+	StartDate time.Time `json:"-"`
+	EndDate   time.Time `json:"-"`
 
 	Price int `json:"-"`
 }
@@ -44,6 +46,7 @@ func (bh *BillingHistory) Save(c context.Context) (*BillingHistory, error) {
 
 	k, err := nds.Put(c, bh.key(c, "BillingHistory"), bh)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	bh.Id = k.IntID()

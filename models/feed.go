@@ -7,6 +7,7 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 
 	"github.com/qedus/nds"
 )
@@ -56,6 +57,7 @@ func (f *Feed) Create(c context.Context, r *http.Request, currentUser User) (*Fe
 func (f *Feed) Save(c context.Context) (*Feed, error) {
 	k, err := nds.Put(c, f.key(c, "Feed"), f)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	f.Id = k.IntID()

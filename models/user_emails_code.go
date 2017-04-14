@@ -6,6 +6,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	"google.golang.org/appengine/log"
+
 	"github.com/qedus/nds"
 )
 
@@ -46,6 +48,7 @@ func (uec *UserEmailCode) Save(c context.Context) (*UserEmailCode, error) {
 	uec.Updated = time.Now()
 	k, err := nds.Put(c, uec.key(c, "UserEmailCode"), uec)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	uec.Id = k.IntID()
@@ -56,6 +59,7 @@ func (uec *UserEmailCode) Save(c context.Context) (*UserEmailCode, error) {
 func (uec *UserEmailCode) Delete(c context.Context) (*UserEmailCode, error) {
 	err := nds.Delete(c, uec.key(c, "UserEmailCode"))
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	return uec, nil

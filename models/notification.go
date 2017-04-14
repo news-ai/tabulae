@@ -6,6 +6,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	"google.golang.org/appengine/log"
+
 	"github.com/qedus/nds"
 )
 
@@ -62,6 +64,7 @@ func (n *Notification) Save(c context.Context) (*Notification, error) {
 
 	k, err := nds.Put(c, n.key(c, "Notification"), n)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	n.Id = k.IntID()
@@ -95,6 +98,7 @@ func (no *NotificationObject) Save(c context.Context) (*NotificationObject, erro
 
 	k, err := nds.Put(c, no.key(c, "NotificationObject"), no)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	no.Id = k.IntID()
@@ -129,6 +133,7 @@ func (nc *NotificationChange) Save(c context.Context) (*NotificationChange, erro
 
 	k, err := nds.Put(c, nc.key(c, "NotificationChange"), nc)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	nc.Id = k.IntID()

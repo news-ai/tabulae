@@ -7,6 +7,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	"google.golang.org/appengine/log"
+
 	"github.com/qedus/nds"
 )
 
@@ -142,6 +144,7 @@ func (u *User) Save(c context.Context) (*User, error) {
 
 	k, err := nds.Put(c, u.key(c, "User"), u)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 	u.Id = k.IntID()
@@ -153,6 +156,7 @@ func (u *User) ConfirmEmail(c context.Context) (*User, error) {
 	u.ConfirmationCode = ""
 	_, err := u.Save(c)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return u, err
 	}
 	return u, nil
@@ -162,6 +166,7 @@ func (u *User) ConfirmLoggedIn(c context.Context) (*User, error) {
 	u.LastLoggedIn = time.Now()
 	_, err := u.Save(c)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return u, err
 	}
 	return u, nil
@@ -181,6 +186,7 @@ func (u *User) SetStripeId(c context.Context, r *http.Request, currentUser User,
 
 	_, err := billing.Create(c, r, currentUser)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return u, 0, err
 	}
 
@@ -188,6 +194,7 @@ func (u *User) SetStripeId(c context.Context, r *http.Request, currentUser User,
 	u.IsActive = isActive
 	_, err = u.Save(c)
 	if err != nil {
+		log.Errorf(c, "%v", err)
 		return u, 0, err
 	}
 	return u, billing.Id, nil
