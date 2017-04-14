@@ -101,39 +101,6 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 					files[i].Save(c)
 				}
 			}
-		} else if schedueled[i].Method == "sendgrid" {
-			// If email is sent through SendGrid
-			if !schedueled[i].SendAt.IsZero() && schedueled[i].SendGridId == "" {
-				log.Infof(c, "%v", schedueled[i])
-				emailSent, emailId, err := emails.SendEmail(r, schedueled[i], user, files)
-				if err != nil {
-					hasErrors = true
-					log.Errorf(c, "%v", err)
-					continue
-				}
-
-				schedueled[i].Save(c)
-
-				if emailSent {
-					// Set attachments for deletion
-					for i := 0; i < len(files); i++ {
-						files[i].Imported = true
-						files[i].Save(c)
-					}
-
-					_, err := schedueled[i].MarkSent(c, emailId)
-					if err != nil {
-						log.Errorf(c, "%v", err)
-						hasErrors = true
-					}
-
-					_, err = schedueled[i].MarkDelivered(c)
-					if err != nil {
-						log.Errorf(c, "%v", err)
-						hasErrors = true
-					}
-				}
-			}
 		} else if schedueled[i].Method == "outlook" {
 			if user.OutlookAccessToken != "" && user.Outlook {
 				err = outlook.ValidateAccessToken(r, user)
@@ -171,7 +138,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 					files[i].Save(c)
 				}
 			}
-		} else {
+		} else if schedueled[i].Method == "smtp" {
 			// If scheduled from SMTP.
 			// If their SMTP is valid & they are using an external email.
 			// We assume all this information is correct & they can send
@@ -239,6 +206,39 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 				} else {
 					log.Errorf(c, "%v", verifyResponse)
 					hasErrors = true
+				}
+			}
+		} else {
+			// If email is sent through SendGrid
+			if !schedueled[i].SendAt.IsZero() && schedueled[i].SendGridId == "" {
+				log.Infof(c, "%v", schedueled[i])
+				emailSent, emailId, err := emails.SendEmail(r, schedueled[i], user, files)
+				if err != nil {
+					hasErrors = true
+					log.Errorf(c, "%v", err)
+					continue
+				}
+
+				schedueled[i].Save(c)
+
+				if emailSent {
+					// Set attachments for deletion
+					for i := 0; i < len(files); i++ {
+						files[i].Imported = true
+						files[i].Save(c)
+					}
+
+					_, err := schedueled[i].MarkSent(c, emailId)
+					if err != nil {
+						log.Errorf(c, "%v", err)
+						hasErrors = true
+					}
+
+					_, err = schedueled[i].MarkDelivered(c)
+					if err != nil {
+						log.Errorf(c, "%v", err)
+						hasErrors = true
+					}
 				}
 			}
 		}
