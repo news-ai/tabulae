@@ -218,6 +218,29 @@ func filterEmailbyContactId(c context.Context, r *http.Request, contactId int64)
 	return emails, nil
 }
 
+func emailsToLists(c context.Context, r *http.Request, emails []models.Email) []models.MediaList {
+	mediaListIds := []int64{}
+
+	for i := 0; i < len(emails); i++ {
+		mediaListIds = append(mediaListIds, emails[i].ListId)
+	}
+
+	// Work on includes
+	mediaLists := []models.MediaList{}
+	mediaListExists := map[int64]bool{}
+	mediaListExists = make(map[int64]bool)
+
+	for i := 0; i < len(mediaListIds); i++ {
+		if _, ok := mediaListExists[mediaListIds[i]]; !ok {
+			mediaList, _ := getMediaList(c, r, mediaListIds[i])
+			mediaLists = append(mediaLists, mediaList)
+			mediaListExists[mediaListIds[i]] = true
+		}
+	}
+
+	return mediaLists
+}
+
 /*
 * Public methods
  */
@@ -286,7 +309,8 @@ func GetSentEmails(c context.Context, r *http.Request) ([]models.Email, interfac
 		emails[i].Format(ks[i], "emails")
 	}
 
-	return emails, nil, len(emails), nil
+	mediaLists := emailsToLists(c, r, emails)
+	return emails, mediaLists, len(emails), nil
 }
 
 func GetEmailStats(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
@@ -329,7 +353,8 @@ func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, int
 		emails[i].Format(ks[i], "emails")
 	}
 
-	return emails, nil, len(emails), nil
+	mediaLists := emailsToLists(c, r, emails)
+	return emails, mediaLists, len(emails), nil
 }
 
 func GetArchivedEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
@@ -361,7 +386,8 @@ func GetArchivedEmails(c context.Context, r *http.Request) ([]models.Email, inte
 		emails[i].Format(ks[i], "emails")
 	}
 
-	return emails, nil, len(emails), nil
+	mediaLists := emailsToLists(c, r, emails)
+	return emails, mediaLists, len(emails), nil
 }
 
 func GetTeamEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
