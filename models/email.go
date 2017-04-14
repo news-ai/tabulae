@@ -11,6 +11,17 @@ import (
 	"github.com/qedus/nds"
 )
 
+type EmailProviderLimits struct {
+	SendGrid       int `json:"sendgrid"`
+	SendGridLimits int `json:"sendgridLimits"`
+	Outlook        int `json:"outlook"`
+	OutlookLimits  int `json:"outlookLimits"`
+	Gmail          int `json:"gmail"`
+	GmailLimits    int `json:"gmailLimits"`
+	SMTP           int `json:"smtp"`
+	SMTPLimits     int `json:"smtpLimits"`
+}
+
 type BulkSendEmailIds struct {
 	EmailIds []int64 `json:"emailids"`
 }

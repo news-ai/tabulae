@@ -1400,3 +1400,19 @@ func GetEmailCampaigns(c context.Context, r *http.Request) (interface{}, interfa
 	emails, count, err := search.SearchEmailCampaignsByDate(c, r, user)
 	return emails, nil, count, err
 }
+
+func GetEmailProviderLimits(c context.Context, r *http.Request) (interface{}, interface{}, error) {
+	// user, err := GetCurrentUser(c, r)
+	// if err != nil {
+	// 	log.Errorf(c, "%v", err)
+	// 	return nil, nil, err
+	// }
+
+	emailProviderLimits := models.EmailProviderLimits{}
+	emailProviderLimits.SendGridLimits = 2000
+	emailProviderLimits.OutlookLimits = 500
+	emailProviderLimits.GmailLimits = 500
+	emailProviderLimits.SMTPLimits = 2000
+
+	return emailProviderLimits, nil, nil
+}
