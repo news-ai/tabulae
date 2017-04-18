@@ -483,7 +483,8 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 
 		for i := 0; i < len(emails); i++ {
 			// Test if the email we are sending with is in the user's SendGridFrom or is their Email
-			if emails[i].FromEmail != "" {
+			// Only valid if user is not using gmail, outlook, or smtp
+			if emails[i].FromEmail != "" && !currentUser.Gmail && !currentUser.Outlook && !currentUser.ExternalEmail {
 				userEmailValid := false
 				if currentUser.Email == emails[i].FromEmail {
 					userEmailValid = true

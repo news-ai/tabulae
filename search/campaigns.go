@@ -66,6 +66,7 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 		err := emailCampaign.FillStruct(rawMap)
 		if err != nil {
 			log.Errorf(c, "%v", err)
+			continue
 		}
 
 		emailCampaigns = append(emailCampaigns, emailCampaign)
@@ -87,6 +88,10 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 
 		for x := 0; x < len(emails); x++ {
 			if emails[x].Subject == emailCampaign.Subject {
+				if emailCampaign.Subject == "" {
+					emailCampaign.Subject = "(no subject)"
+				}
+
 				emailCampaign.Delivered += 1
 				emailCampaign.Opens += emails[x].Opened
 				emailCampaign.Clicks += emails[x].Clicked
@@ -105,8 +110,10 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 			}
 		}
 
-		emailCampaign.UniqueOpensPercentage = 100 * float32(float32(emailCampaign.UniqueOpens)/float32(emailCampaign.Delivered))
-		emailCampaign.UniqueClicksPercentage = 100 * float32(float32(emailCampaign.UniqueClicks)/float32(emailCampaign.Delivered))
+		if emailCampaign.Delivered > 0 {
+			emailCampaign.UniqueOpensPercentage = 100 * float32(float32(emailCampaign.UniqueOpens)/float32(emailCampaign.Delivered))
+			emailCampaign.UniqueClicksPercentage = 100 * float32(float32(emailCampaign.UniqueClicks)/float32(emailCampaign.Delivered))
+		}
 
 		emailCampaignsResponse = append(emailCampaignsResponse, emailCampaign)
 	}

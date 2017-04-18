@@ -16,6 +16,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/emails"
 	"github.com/news-ai/web/google"
@@ -27,9 +28,7 @@ import (
 
 func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-
 	hasErrors := false
-
 	schedueled, err := controllers.GetCurrentSchedueledEmails(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -40,6 +39,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 	log.Infof(c, "%v", len(schedueled))
 
 	// Loop through the emails and send them
+	emailIds := []int64{}
 	for i := 0; i < len(schedueled); i++ {
 		user, err := controllers.GetUserByIdUnauthorized(c, r, schedueled[i].CreatedBy)
 		if err != nil {
@@ -88,7 +88,6 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 				schedueled[i].GmailThreadId = gmailThreadId
 
 				_, err = schedueled[i].MarkDelivered(c)
-				// sync.ResourceSync(r, schedueled[i].Id, "Email", "create")
 				if err != nil {
 					hasErrors = true
 					log.Errorf(c, "%v", err)
@@ -100,6 +99,9 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 					files[i].Imported = true
 					files[i].Save(c)
 				}
+
+				// Add to emailids array
+				emailIds = append(emailIds, schedueled[i].Id)
 			}
 		} else if schedueled[i].Method == "outlook" {
 			if user.OutlookAccessToken != "" && user.Outlook {
@@ -137,6 +139,9 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 					files[i].Imported = true
 					files[i].Save(c)
 				}
+
+				// Add to emailids array
+				emailIds = append(emailIds, schedueled[i].Id)
 			}
 		} else if schedueled[i].Method == "smtp" {
 			// If scheduled from SMTP.
@@ -207,6 +212,9 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 					log.Errorf(c, "%v", verifyResponse)
 					hasErrors = true
 				}
+
+				// Add to emailids array
+				emailIds = append(emailIds, schedueled[i].Id)
 			}
 		} else {
 			// If email is sent through SendGrid
@@ -240,9 +248,15 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 						hasErrors = true
 					}
 				}
+
+				// Add to emailids array
+				emailIds = append(emailIds, schedueled[i].Id)
 			}
 		}
 	}
+
+	// Sync the emails we have delivered
+	sync.EmailResourceBulkSync(r, emailIds)
 
 	if hasErrors {
 		w.WriteHeader(500)
