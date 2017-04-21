@@ -83,7 +83,7 @@ func handleEmail(c context.Context, r *http.Request, id string) (interface{}, er
 			val, included, count, err := controllers.BulkCancelEmail(c, r)
 			return api.BaseResponseHandler(val, included, count, err, r)
 		} else if id == "bulkattach" {
-			val, included, count, err := files.HandleBulkEmailAttachActionUpload(c, r, id)
+			val, included, count, err := files.HandleBulkEmailAttachActionUpload(c, r)
 			return api.BaseResponseHandler(val, included, count, err, r)
 		}
 	}

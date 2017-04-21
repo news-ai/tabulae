@@ -302,14 +302,16 @@ func CreateAttachmentFile(r *http.Request, originalFilename string, fileName str
 	}
 
 	// Attach attachment to email
-	email, err := getEmail(c, r, emailId)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.File{}, err
-	}
+	if emailId != 0 {
+		email, err := getEmail(c, r, emailId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.File{}, err
+		}
 
-	email.Attachments = append(email.Attachments, file.Id)
-	email.Save(c)
+		email.Attachments = append(email.Attachments, file.Id)
+		email.Save(c)
+	}
 
 	return file, nil
 }
