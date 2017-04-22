@@ -80,6 +80,8 @@ func handleMediaList(c context.Context, r *http.Request, id string) (interface{}
 		return api.BaseSingleResponseHandler(controllers.GetMediaList(c, r, id))
 	case "PATCH":
 		return api.BaseSingleResponseHandler(controllers.UpdateMediaList(c, r, id))
+	case "DELETE":
+		return api.BaseSingleResponseHandler(controllers.DeleteMediaList(c, r, id))
 	}
 	return nil, errors.New("method not implemented")
 }

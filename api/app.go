@@ -190,6 +190,7 @@ func init() {
 	router.POST("/api/lists", routes.MediaListsHandler)
 	router.GET("/api/lists/:id", routes.MediaListHandler)
 	router.PATCH("/api/lists/:id", routes.MediaListHandler)
+	router.DELETE("/api/lists/:id", routes.MediaListHandler)
 	router.GET("/api/lists/:id/:action", routes.MediaListActionHandler)
 	router.POST("/api/lists/:id/:action", routes.MediaListActionHandler)
 

@@ -21,6 +21,7 @@ import (
 	"github.com/news-ai/tabulae/search"
 	"github.com/news-ai/tabulae/sync"
 
+	"github.com/news-ai/web/permissions"
 	"github.com/news-ai/web/utilities"
 )
 
@@ -1129,4 +1130,39 @@ func DuplicateList(c context.Context, r *http.Request, id string) (models.MediaL
 	}
 
 	return duplicateList(c, r, id, duplicateDetails.Name)
+}
+
+func DeleteMediaList(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	mediaList, err := getMediaList(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	// Double check permissions. Admins should not be able to delete.
+	if mediaList.TeamId != user.TeamId && !permissions.AccessToObject(mediaList.CreatedBy, user.Id) {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	mediaList.IsDeleted = true
+	mediaList.Save(c)
+
+	// Pubsub to remove ES contact
+	sync.ResourceSync(r, mediaList.Id, "List", "create")
+	return nil, nil, nil
 }

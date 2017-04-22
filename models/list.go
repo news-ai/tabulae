@@ -47,6 +47,8 @@ type MediaList struct {
 	PublicList bool `json:"publiclist"`
 	Archived   bool `json:"archived"`
 	Subscribed bool `json:"subscribed"`
+
+	IsDeleted bool `json:"isdeleted"`
 }
 
 /*
