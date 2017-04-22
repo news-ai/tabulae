@@ -70,6 +70,9 @@ func handleContact(c context.Context, r *http.Request, id string) (interface{}, 
 		if id == "copy" {
 			val, included, count, err := controllers.CopyContacts(c, r)
 			return api.BaseResponseHandler(val, included, count, err, r)
+		} else if id == "bulkdelete" {
+			val, included, count, err := controllers.BulkDeleteContacts(c, r)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		}
 	case "DELETE":
 		return api.BaseSingleResponseHandler(controllers.DeleteContact(c, r, id))

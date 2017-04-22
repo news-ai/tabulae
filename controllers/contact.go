@@ -1507,16 +1507,16 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 
 func BulkDeleteContacts(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, error) {
 	// Get logged in user
-	// user, err := GetCurrentUser(c, r)
-	// if err != nil {
-	// 	log.Errorf(c, "%v", err)
-	// 	return []models.Contact{}, nil, 0, errors.New("Could not get user")
-	// }
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, nil, 0, errors.New("Could not get user")
+	}
 
 	buf, _ := ioutil.ReadAll(r.Body)
 	decoder := ffjson.NewDecoder()
 	var deleteContacts deleteContactsDetails
-	err := decoder.Decode(buf, &deleteContacts)
+	err = decoder.Decode(buf, &deleteContacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 	}
@@ -1525,10 +1525,12 @@ func BulkDeleteContacts(c context.Context, r *http.Request) ([]models.Contact, i
 	for i := 0; i < len(deleteContacts.Contacts); i++ {
 		contact, err := getContact(c, r, deleteContacts.Contacts[i])
 		if err == nil {
-			contact.IsDeleted = true
-			contact.Save(c, r)
+			if contact.CreatedBy == user.Id {
+				contact.IsDeleted = true
+				contact.Save(c, r)
 
-			contacts = append(contacts, contact)
+				contacts = append(contacts, contact)
+			}
 		}
 	}
 
