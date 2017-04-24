@@ -76,10 +76,11 @@ type Email struct {
 
 	FromEmail string `json:"fromemail"`
 
-	Sender  string `json:"sender"`
-	To      string `json:"to"`
-	Subject string `json:"subject" datastore:",noindex"`
-	Body    string `json:"body" datastore:",noindex"`
+	Sender      string `json:"sender"`
+	To          string `json:"to"`
+	Subject     string `json:"subject" datastore:",noindex"`
+	BaseSubject string `json:"baseSubject" datastore:",noindex"`
+	Body        string `json:"body" datastore:",noindex"`
 
 	CC  []string `json:"cc"`  // Carbon copy email addresses
 	BCC []string `json:"bcc"` // Blind carbon copy email addresses

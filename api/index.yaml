@@ -177,3 +177,9 @@ indexes:
     - name: IsSent
     - name: SendAt
       direction: desc
+
+- kind: Email
+  properties:
+    - name: Method
+    - name: Created
+      direction: desc

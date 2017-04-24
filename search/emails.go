@@ -32,10 +32,11 @@ type Email struct {
 
 	FromEmail string `json:"fromemail"`
 
-	Sender  string `json:"sender"`
-	To      string `json:"to"`
-	Subject string `json:"subject" datastore:",noindex"`
-	Body    string `json:"body" datastore:",noindex"`
+	Sender      string `json:"sender"`
+	To          string `json:"to"`
+	Subject     string `json:"subject" datastore:",noindex"`
+	BaseSubject string `json:"baseSubject" datastore:",noindex"`
+	Body        string `json:"body" datastore:",noindex"`
 
 	CC  []string `json:"cc"`  // Carbon copy email addresses
 	BCC []string `json:"bcc"` // Blind carbon copy email addresses
@@ -225,8 +226,8 @@ func SearchEmailsByQuery(c context.Context, r *http.Request, user models.User, s
 	return searchEmailQuery(c, elasticQuery)
 }
 
-func SearchEmailsByDate(c context.Context, r *http.Request, user models.User, emailDate string) (interface{}, int, error) {
-	if emailDate == "" {
+func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.User, emailDate []string, emailSubject []string) (interface{}, int, error) {
+	if len(emailDate) > 1 && len(emailSubject) > 1 {
 		return nil, 0, nil
 	}
 
@@ -246,14 +247,22 @@ func SearchEmailsByDate(c context.Context, r *http.Request, user models.User, em
 	elasticCancelQuery := ElasticCancelQuery{}
 	elasticCancelQuery.Term.Cancel = false
 
-	elasticCreatedFilterQuery := ElasticCreatedRangeQuery{}
-	elasticCreatedFilterQuery.Range.DataCreated.From = emailDate + "T00:00:00"
-	elasticCreatedFilterQuery.Range.DataCreated.To = emailDate + "T23:59:59"
-
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsSentQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCancelQuery)
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedFilterQuery)
+
+	if len(emailDate) > 1 {
+		elasticCreatedFilterQuery := ElasticCreatedRangeQuery{}
+		elasticCreatedFilterQuery.Range.DataCreated.From = emailDate[1] + "T00:00:00"
+		elasticCreatedFilterQuery.Range.DataCreated.To = emailDate[1] + "T23:59:59"
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedFilterQuery)
+	}
+
+	if len(emailSubject) > 1 {
+		elasticSubjectQuery := ElasticSubjectQuery{}
+		elasticSubjectQuery.Term.Subject = emailSubject[1]
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticSubjectQuery)
+	}
 
 	elasticCreatedQuery := ElasticSortDataCreatedQuery{}
 	elasticCreatedQuery.DataCreated.Order = "desc"

@@ -1376,14 +1376,17 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 		return nil, nil, 0, err
 	}
 
-	if strings.Contains(queryField, "date:") {
+	if strings.Contains(queryField, "date:") || strings.Contains(queryField, "subject:") {
+		log.Infof(c, "%v", queryField)
 		emailDate := strings.Split(queryField, "date:")
+		emailSubject := strings.Split(queryField, "subject:")
 		log.Infof(c, "%v", emailDate)
-		if len(emailDate) > 1 {
-			emails, count, err := search.SearchEmailsByDate(c, r, user, emailDate[1])
+		log.Infof(c, "%v", emailSubject)
+		if len(emailDate) > 1 || len(emailSubject) > 1 {
+			emails, count, err := search.SearchEmailsByQueryFields(c, r, user, emailDate, emailSubject)
 			return emails, nil, count, err
 		} else {
-			return nil, nil, 0, errors.New("Please enter a valid date")
+			return nil, nil, 0, errors.New("Please enter a valid date or subject")
 		}
 	}
 
@@ -1403,17 +1406,31 @@ func GetEmailCampaigns(c context.Context, r *http.Request) (interface{}, interfa
 }
 
 func GetEmailProviderLimits(c context.Context, r *http.Request) (interface{}, interface{}, error) {
-	// user, err := GetCurrentUser(c, r)
-	// if err != nil {
-	// 	log.Errorf(c, "%v", err)
-	// 	return nil, nil, err
-	// }
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
 
 	emailProviderLimits := models.EmailProviderLimits{}
 	emailProviderLimits.SendGridLimits = 2000
 	emailProviderLimits.OutlookLimits = 500
 	emailProviderLimits.GmailLimits = 500
 	emailProviderLimits.SMTPLimits = 2000
+
+	t := time.Now()
+	todayDateMorning := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
+	todayDateNight := time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 59, time.Local)
+
+	// SendGrid
+	sendGrid, err := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("Method =", "sendgrid").Filter("IsSent =", true).Filter("Delievered =", true).Filter("Created <=", todayDateNight).Filter("Created >=", todayDateMorning).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+	emailProviderLimits.SendGrid = len(sendGrid)
+
+	// Outlook
 
 	return emailProviderLimits, nil, nil
 }
