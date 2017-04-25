@@ -258,7 +258,7 @@ func InitializeElasticSearch() {
 
 	emailsElastic := elastic.Elastic{}
 	emailsElastic.BaseURL = newBaseURL
-	emailsElastic.Index = "emails"
+	emailsElastic.Index = "emails1"
 	emailsElastic.Type = "email"
 	elasticEmails = &emailsElastic
 

@@ -226,8 +226,8 @@ func SearchEmailsByQuery(c context.Context, r *http.Request, user models.User, s
 	return searchEmailQuery(c, elasticQuery)
 }
 
-func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.User, emailDate []string, emailSubject []string) (interface{}, int, error) {
-	if len(emailDate) > 1 && len(emailSubject) > 1 {
+func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.User, emailDate string, emailSubject string) (interface{}, int, error) {
+	if emailDate == "" && emailSubject == "" {
 		return nil, 0, nil
 	}
 
@@ -251,16 +251,16 @@ func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.U
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsSentQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCancelQuery)
 
-	if len(emailDate) > 1 {
+	if emailDate != "" {
 		elasticCreatedFilterQuery := ElasticCreatedRangeQuery{}
-		elasticCreatedFilterQuery.Range.DataCreated.From = emailDate[1] + "T00:00:00"
-		elasticCreatedFilterQuery.Range.DataCreated.To = emailDate[1] + "T23:59:59"
+		elasticCreatedFilterQuery.Range.DataCreated.From = emailDate + "T00:00:00"
+		elasticCreatedFilterQuery.Range.DataCreated.To = emailDate + "T23:59:59"
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedFilterQuery)
 	}
 
-	if len(emailSubject) > 1 {
+	if emailSubject != "" {
 		elasticSubjectQuery := ElasticSubjectQuery{}
-		elasticSubjectQuery.Term.Subject = emailSubject[1]
+		elasticSubjectQuery.Term.Subject = emailSubject
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticSubjectQuery)
 	}
 

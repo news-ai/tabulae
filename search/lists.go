@@ -33,6 +33,7 @@ type Lists struct {
 	Tags       []string  `json:"tags"`
 	Id         int64     `json:"id"`
 	TeamId     int64     `json:"teamid"`
+	IsDeleted  bool      `json:"isdeleted"`
 }
 
 func (l *Lists) FillStruct(m map[string]interface{}) error {
