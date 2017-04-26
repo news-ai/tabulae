@@ -183,3 +183,15 @@ indexes:
     - name: Method
     - name: Created
       direction: desc
+
+- kind: Template
+  properties:
+    - name: Archived
+    - name: Created
+      direction: desc
+
+- kind: MediaList
+  properties:
+    - name: IsDeleted
+    - name: Created
+      direction: desc

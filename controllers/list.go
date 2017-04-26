@@ -210,6 +210,9 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 	// If the user is active then we can return their media lists
 	if user.IsActive {
 		query := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id).Filter("Archived =", archived).Filter("PublicList =", false)
+		if archived {
+			query = query.Filter("IsDeleted =", false)
+		}
 		query = constructQuery(query, r)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {

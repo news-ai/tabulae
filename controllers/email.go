@@ -1385,19 +1385,35 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 			if strings.Contains(emailFilters[i], "date:") {
 				emailDateArray := strings.Split(emailFilters[i], ":")
 				if len(emailDateArray) > 1 {
-					emailDate = emailDateArray[1]
-					emailDate = strings.Replace(emailDate, "\"", "", -1)
+					emailDate = strings.Join(emailDateArray[1:], ":")
+					emailDate = strings.Replace(emailDate, "\\", "", -1)
+
+					if last := len(emailDate) - 1; last >= 0 && emailDate[last] == '"' {
+						emailDate = emailDate[:last]
+					}
+
+					if emailDate[0] == '"' {
+						emailDate = emailDate[1:]
+					}
 				}
 			} else if strings.Contains(emailFilters[i], "subject:") {
 				emailSubjectArray := strings.Split(emailFilters[i], ":")
 				if len(emailSubjectArray) > 1 {
-					emailSubject = emailSubjectArray[1]
-					emailSubject = strings.Replace(emailSubject, "\"", "", -1)
+					// Recover the pieces when split by colon
+					emailSubject = strings.Join(emailSubjectArray[1:], ":")
+					emailSubject = strings.Replace(emailSubject, "\\", "", -1)
+
+					if last := len(emailSubject) - 1; last >= 0 && emailSubject[last] == '"' {
+						emailSubject = emailSubject[:last]
+					}
+
+					if emailSubject[0] == '"' {
+						emailSubject = emailSubject[1:]
+					}
 				}
 			}
 		}
-		log.Infof(c, "%v", emailDate)
-		log.Infof(c, "%v", emailSubject)
+
 		if emailDate != "" || emailSubject != "" {
 			emails, count, err := search.SearchEmailsByQueryFields(c, r, user, emailDate, emailSubject)
 			return emails, nil, count, err
