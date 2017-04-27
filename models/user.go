@@ -73,8 +73,8 @@ type User struct {
 	TeamId    int64 `json:"teamid"`
 
 	// Email settings
-	EmailSignature  string   `json:"emailsignature"`
-	EmailSignatures []string `json:"emailsignatures"`
+	EmailSignature  string   `json:"emailsignature" datastore:",noindex"`
+	EmailSignatures []string `json:"emailsignatures" datastore:",noindex"`
 
 	Gmail           bool      `json:"gmail"`
 	AccessToken     string    `json:"-"`

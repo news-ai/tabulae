@@ -1472,6 +1472,7 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 	for i := 0; i < len(copyContacts.Contacts); i++ {
 		contact, err := getContact(c, r, copyContacts.Contacts[i])
 		if err == nil {
+			previousContactId := contact.Id
 			contact.Id = 0
 
 			contact.CreatedBy = user.Id
@@ -1481,10 +1482,29 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 
 			contact.ListId = copyContacts.ListId
 			contact.Normalize()
-			_, err = Create(c, r, &contact)
+			contact.Create(c, r, user)
 
 			newContactIds = append(newContactIds, contact.Id)
 			newContacts = append(newContacts, contact)
+
+			// Copy all of their feeds
+			feeds, err := GetFeedsByResourceId(c, r, "ContactId", previousContactId)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return nil, nil, 0, err
+			}
+
+			for x := 0; x < len(feeds); x++ {
+				feeds[i].Id = 0
+				feeds[i].CreatedBy = user.Id
+				feeds[i].Created = time.Now()
+				feeds[i].Updated = time.Now()
+
+				feeds[i].ContactId = contact.Id
+				feeds[i].ListId = copyContacts.ListId
+
+				feeds[i].Create(c, r, user)
+			}
 		}
 	}
 
@@ -1497,6 +1517,9 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 	// Append media list
 	mediaList.Contacts = append(mediaList.Contacts, newContactIds...)
 	mediaList.Save(c)
+
+	// Sync all the contacts in bulk here
+	sync.ResourceBulkSync(r, newContactIds, "Contact", "create")
 
 	return newContacts, nil, 0, nil
 }
