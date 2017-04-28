@@ -83,6 +83,10 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 			continue
 		}
 
+		if emailCampaigns[i].BaseSubject != "" {
+			log.Infof(c, "%v", len(emails))
+		}
+
 		emailCampaign := EmailCampaignResponse{}
 		emailCampaign.Date = emailCampaigns[i].Date
 		emailCampaign.UserId = emailCampaigns[i].UserId
@@ -90,7 +94,11 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 		emailCampaign.BaseSubject = emailCampaigns[i].BaseSubject
 
 		for x := 0; x < len(emails); x++ {
-			if emails[x].Subject == emailCampaign.Subject {
+			emailSubject := emails[x].Subject
+			if emails[x].BaseSubject != "" {
+				emailSubject = emails[x].BaseSubject
+			}
+			if emailSubject == emailCampaign.Subject {
 				if emailCampaign.Subject == "" {
 					emailCampaign.Subject = "(no subject)"
 				}
