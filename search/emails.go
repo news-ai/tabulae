@@ -226,7 +226,7 @@ func SearchEmailsByQuery(c context.Context, r *http.Request, user models.User, s
 	return searchEmailQuery(c, elasticQuery)
 }
 
-func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.User, emailDate string, emailSubject string) (interface{}, int, error) {
+func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.User, emailDate string, emailSubject string, emailBaseSubject string) (interface{}, int, error) {
 	if emailDate == "" && emailSubject == "" {
 		return nil, 0, nil
 	}
@@ -258,7 +258,11 @@ func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.U
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedFilterQuery)
 	}
 
-	if emailSubject != "" {
+	if emailBaseSubject != "" {
+		elasticBaseSubjectQuery := ElasticBaseSubjectQuery{}
+		elasticBaseSubjectQuery.Term.BaseSubject = emailBaseSubject
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBaseSubjectQuery)
+	} else if emailSubject != "" {
 		elasticSubjectQuery := ElasticSubjectQuery{}
 		elasticSubjectQuery.Term.Subject = emailSubject
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticSubjectQuery)
