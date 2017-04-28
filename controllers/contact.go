@@ -1509,7 +1509,7 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 	}
 
 	// Add contact to the other media list
-	mediaList, err := getMediaList(c, r, copyContacts.ListId)
+	mediaList, err := getMediaListBasic(c, r, copyContacts.ListId)
 	if err != nil {
 		return []models.Contact{}, nil, 0, err
 	}
@@ -1519,7 +1519,8 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 	mediaList.Save(c)
 
 	// Sync all the contacts in bulk here
-	sync.ResourceBulkSync(r, newContactIds, "Contact", "create")
+	sync.ResourceSync(r, mediaList.Id, "List", "create")
+	sync.ResourceBulkSync(r, mediaList.Contacts, "Contact", "create")
 
 	return newContacts, nil, 0, nil
 }

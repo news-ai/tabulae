@@ -47,6 +47,48 @@ type duplicateListDetails struct {
 * Get methods
  */
 
+func getMediaListBasic(c context.Context, r *http.Request, id int64) (models.MediaList, error) {
+	if id == 0 {
+		return models.MediaList{}, errors.New("datastore: no such entity")
+	}
+
+	// Get the MediaList by id
+	var mediaList models.MediaList
+	mediaListId := datastore.NewKey(c, "MediaList", "", id, nil)
+
+	err := nds.Get(c, mediaListId, &mediaList)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.MediaList{}, err
+	}
+
+	if !mediaList.Created.IsZero() {
+		mediaList.Format(mediaListId, "lists")
+		mediaList.AddNewCustomFieldsMapToOldLists(c)
+
+		if !mediaList.PublicList {
+			user, err := GetCurrentUser(c, r)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return models.MediaList{}, errors.New("Could not get user")
+			}
+
+			// 3 ways to check if user can access media list:
+			// 1. If admin
+			// 2. If created by user
+			// 3. If is within the user's team
+			if mediaList.CreatedBy != user.Id && !user.IsAdmin {
+				if mediaList.TeamId == 0 || user.TeamId == 0 || mediaList.TeamId != user.TeamId {
+					return models.MediaList{}, errors.New("Forbidden")
+				}
+			}
+		}
+
+		return mediaList, nil
+	}
+	return models.MediaList{}, errors.New("No media list by this id")
+}
+
 func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaList, error) {
 	if id == 0 {
 		return models.MediaList{}, errors.New("datastore: no such entity")
