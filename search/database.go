@@ -23,6 +23,10 @@ type EnhanceResponse struct {
 	Data interface{} `json:"data"`
 }
 
+type EnhanceFullContactProfileResponse struct {
+	Data interface{} `json:"data"`
+}
+
 type DatabaseResponse struct {
 	Email string      `json:"email"`
 	Data  interface{} `json:"data"`
@@ -85,7 +89,7 @@ func SearchContactDatabase(c context.Context, r *http.Request, email string) (in
 		return nil, err
 	}
 
-	var enhanceResponse EnhanceResponse
+	var enhanceResponse EnhanceFullContactProfileResponse
 	err = json.NewDecoder(resp.Body).Decode(&enhanceResponse)
 	if err != nil {
 		log.Errorf(c, "%v", err)

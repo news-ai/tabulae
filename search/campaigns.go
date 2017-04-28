@@ -20,9 +20,10 @@ var (
 )
 
 type EmailCampaignResponse struct {
-	Date    string `json:"date"`
-	Subject string `json:"subject"`
-	UserId  string `json:"userid"`
+	Date        string `json:"date"`
+	Subject     string `json:"subject"`
+	UserId      string `json:"userid"`
+	BaseSubject string `json:"baseSubject"`
 
 	Delivered              int     `json:"delivered"`
 	Opens                  int     `json:"opens"`
@@ -35,9 +36,10 @@ type EmailCampaignResponse struct {
 }
 
 type EmailCampaignRequest struct {
-	Date    string `json:"date"`
-	Subject string `json:"subject"`
-	UserId  string `json:"userid"`
+	Date        string `json:"date"`
+	Subject     string `json:"subject"`
+	UserId      string `json:"userid"`
+	BaseSubject string `json:"baseSubject"`
 }
 
 func (ec *EmailCampaignRequest) FillStruct(m map[string]interface{}) error {
@@ -85,6 +87,7 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 		emailCampaign.Date = emailCampaigns[i].Date
 		emailCampaign.UserId = emailCampaigns[i].UserId
 		emailCampaign.Subject = emailCampaigns[i].Subject
+		emailCampaign.BaseSubject = emailCampaigns[i].BaseSubject
 
 		for x := 0; x < len(emails); x++ {
 			if emails[x].Subject == emailCampaign.Subject {
