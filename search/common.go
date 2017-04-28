@@ -25,6 +25,12 @@ type ElasticSubjectQuery struct {
 	} `json:"term"`
 }
 
+type ElasticBaseSubjectQuery struct {
+	Term struct {
+		BaseSubject string `json:"data.BaseSubject"`
+	} `json:"term"`
+}
+
 type ElasticIsSentQuery struct {
 	Term struct {
 		IsSent bool `json:"data.IsSent"`

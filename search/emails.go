@@ -272,7 +272,7 @@ func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.U
 	return searchEmailQuery(c, elasticQuery)
 }
 
-func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user models.User, emailDate string, subject string) ([]Email, int, error) {
+func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user models.User, emailDate string, subject string, baseSubject string) ([]Email, int, error) {
 	if emailDate == "" {
 		return nil, 0, nil
 	}
@@ -283,9 +283,6 @@ func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user model
 
 	elasticCreatedByQuery := ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = user.Id
-
-	elasticSubjectQuery := ElasticSubjectQuery{}
-	elasticSubjectQuery.Term.Subject = subject
 
 	elasticIsSentQuery := ElasticIsSentQuery{}
 	elasticIsSentQuery.Term.IsSent = true
@@ -298,7 +295,17 @@ func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user model
 	elasticCreatedFilterQuery.Range.DataCreated.To = emailDate + "T23:59:59"
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
-	elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Must, elasticSubjectQuery)
+
+	if baseSubject == "" {
+		elasticSubjectQuery := ElasticSubjectQuery{}
+		elasticSubjectQuery.Term.Subject = subject
+		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Must, elasticSubjectQuery)
+	} else {
+		elasticBaseSubjectQuery := ElasticBaseSubjectQuery{}
+		elasticBaseSubjectQuery.Term.BaseSubject = baseSubject
+		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Must, elasticBaseSubjectQuery)
+	}
+
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsSentQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCancelQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedFilterQuery)

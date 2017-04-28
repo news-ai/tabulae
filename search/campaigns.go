@@ -77,7 +77,7 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 	// Get all emails for each of the campaigns
 	emailCampaignsResponse := []EmailCampaignResponse{}
 	for i := 0; i < len(emailCampaigns); i++ {
-		emails, _, err := SearchEmailsByDateAndSubject(c, r, user, emailCampaigns[i].Date, emailCampaigns[i].Subject)
+		emails, _, err := SearchEmailsByDateAndSubject(c, r, user, emailCampaigns[i].Date, emailCampaigns[i].Subject, emailCampaigns[i].BaseSubject)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			continue
