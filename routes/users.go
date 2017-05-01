@@ -28,6 +28,9 @@ func handleUserActions(c context.Context, r *http.Request, id string, action str
 			return api.BaseSingleResponseHandler(controllers.ConfirmAddEmailToUser(c, r, id))
 		case "plan-details":
 			return api.BaseSingleResponseHandler(controllers.GetUserPlanDetails(c, r, id))
+		case "campaigns":
+			val, included, count, err := controllers.GetEmailCampaignsForUser(c, r, id)
+			return api.BaseResponseHandler(val, included, count, err, r)
 		}
 	case "POST":
 		switch action {

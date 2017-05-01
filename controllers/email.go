@@ -996,6 +996,10 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 		}
 	}
 
+	if email.Subject == "" {
+		email.Subject = "(no subject)"
+	}
+
 	emailId := strconv.FormatInt(email.Id, 10)
 	email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
 	email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
@@ -1398,6 +1402,11 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 					}
 				}
 			} else if strings.Contains(emailFilters[i], "subject:") {
+				log.Infof(c, "%v", emailFilters)
+				if len(emailFilters) > 2 {
+					emailSubjectSplit := strings.Split(queryField, "subject:")
+					emailFilters[i] = "subject:" + emailSubjectSplit[len(emailSubjectSplit)-1]
+				}
 				emailSubjectArray := strings.Split(emailFilters[i], ":")
 				if len(emailSubjectArray) > 1 {
 					// Recover the pieces when split by colon
@@ -1447,6 +1456,46 @@ func GetEmailCampaigns(c context.Context, r *http.Request) (interface{}, interfa
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, err
+	}
+
+	emails, count, err := search.SearchEmailCampaignsByDate(c, r, user)
+	return emails, nil, count, err
+}
+
+func GetEmailCampaignsForUser(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+	user := models.User{}
+	err := errors.New("")
+
+	switch id {
+	case "me":
+		user, err = GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return []models.Email{}, nil, 0, err
+		}
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return []models.Email{}, nil, 0, err
+		}
+		user, err = getUser(c, r, userId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return []models.Email{}, nil, 0, err
+		}
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, 0, err
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, 0, err
 	}
 
 	emails, count, err := search.SearchEmailCampaignsByDate(c, r, user)

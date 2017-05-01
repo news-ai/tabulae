@@ -55,6 +55,12 @@ type ElasticTagQuery struct {
 	} `json:"match"`
 }
 
+type ElasticEmployersQuery struct {
+	Term struct {
+		Employers string `json:"data.Employers"`
+	} `json:"match"`
+}
+
 type ElasticAllQuery struct {
 	Term struct {
 		All string `json:"_all"`

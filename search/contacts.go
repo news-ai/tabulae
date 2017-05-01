@@ -121,6 +121,35 @@ func SearchContactsByTag(c context.Context, r *http.Request, tag string, userId 
 	return searchContact(c, elasticQuery)
 }
 
+func SearchContactsByPublicationId(c context.Context, r *http.Request, publicationId string, userId int64) ([]models.Contact, error) {
+	if publicationId == "" {
+		return []models.Contact{}, nil
+	}
+
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery.Term.CreatedBy = userId
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
+
+	elasticEmployersQuery := ElasticEmployersQuery{}
+	elasticEmployersQuery.Term.Employers = publicationId
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticEmployersQuery)
+
+	return searchContact(c, elasticQuery)
+}
+
 func SearchContactsByFieldSelector(c context.Context, r *http.Request, fieldSelector string, query string, userId int64) ([]models.Contact, error) {
-	return SearchContactsByTag(c, r, query, userId)
+	if fieldSelector == "tag" {
+		return SearchContactsByTag(c, r, query, userId)
+	} else if fieldSelector == "publication" {
+		return SearchContactsByPublicationId(c, r, query, userId)
+	}
+
+	return []models.Contact{}, nil
 }

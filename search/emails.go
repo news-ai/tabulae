@@ -281,7 +281,7 @@ func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user model
 		return nil, 0, nil
 	}
 
-	elasticQuery := elastic.ElasticQueryWithShould{}
+	elasticQuery := elastic.ElasticQueryWithMust{}
 	elasticQuery.Size = 10000
 	elasticQuery.From = 0
 
@@ -303,11 +303,11 @@ func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user model
 	if baseSubject == "" {
 		elasticSubjectQuery := ElasticSubjectQuery{}
 		elasticSubjectQuery.Term.Subject = subject
-		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Must, elasticSubjectQuery)
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticSubjectQuery)
 	} else {
 		elasticBaseSubjectQuery := ElasticBaseSubjectQuery{}
 		elasticBaseSubjectQuery.Term.BaseSubject = baseSubject
-		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Must, elasticBaseSubjectQuery)
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBaseSubjectQuery)
 	}
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsSentQuery)

@@ -659,9 +659,7 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 				}
 				includes := getIncludesForContact(c, r, contacts)
 				return contacts, includes, len(contacts), nil
-			}
-
-			if fieldSelector[0] == "tag" {
+			} else {
 				selectedContacts, err := search.SearchContactsByFieldSelector(c, r, fieldSelector[0], fieldSelector[1], user.Id)
 				if err != nil {
 					return nil, nil, 0, err
