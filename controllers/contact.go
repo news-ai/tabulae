@@ -665,15 +665,16 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 					return nil, nil, 0, err
 				}
 
-				allContacts := []models.Contact{}
+				contacts := []models.Contact{}
 				for i := 0; i < len(selectedContacts); i++ {
 					singleContact, err := getContact(c, r, selectedContacts[i].Id)
 					if err == nil {
-						allContacts = append(allContacts, singleContact)
+						contacts = append(contacts, singleContact)
 					}
 				}
 
-				return allContacts, nil, len(allContacts), nil
+				includes := getIncludesForContact(c, r, contacts)
+				return contacts, includes, len(contacts), nil
 			}
 		}
 
