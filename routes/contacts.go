@@ -55,6 +55,8 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 			return api.BaseResponseHandler(val, included, count, err, r)
 		case "database-profile":
 			return api.BaseSingleResponseHandler(controllers.GetEnrichProfile(c, r, id))
+		case "enrich":
+			return api.BaseSingleResponseHandler(controllers.EnrichProfile(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")

@@ -671,14 +671,6 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 		}
 	}
 
-	// Edge case for when you want to empty the list
-	contactsInList, err := filterContactsForListId(c, r, mediaList.Id)
-	if err == nil && len(contactsInList) == 0 {
-		mediaList.Contacts = []int64{}
-	} else {
-		log.Infof(c, "%v", err)
-	}
-
 	// Edge case for when you want to empty the list & there's only 1 contact
 	if len(mediaList.Contacts) == 1 {
 		// Get the single contact that the mediaList has
@@ -690,6 +682,12 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 				mediaList.Contacts = []int64{}
 			}
 		}
+	}
+
+	// Edge case for when you want to empty the list
+	contactsInList, err := filterContactsForListId(c, r, mediaList.Id)
+	if len(contactsInList) == 0 {
+		mediaList.Contacts = []int64{}
 	}
 
 	if len(updatedMediaList.FieldsMap) > 0 {

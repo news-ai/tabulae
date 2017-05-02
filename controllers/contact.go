@@ -724,6 +724,152 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 	return contact, includes, nil
 }
 
+func EnrichProfile(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, err
+	}
+
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, err
+	}
+
+	contactDetail, err := search.SearchContactDatabase(c, r, contact.Email)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, err
+	}
+
+	if contactDetail.Data.Likelihood > 0.75 {
+		// Add social profiles
+		if len(contactDetail.Data.SocialProfiles) > 0 {
+			for i := 0; i < len(contactDetail.Data.SocialProfiles); i++ {
+				if contactDetail.Data.SocialProfiles[i].TypeID == "linkedin" {
+					if contact.LinkedIn == "" {
+						contact.LinkedIn = contactDetail.Data.SocialProfiles[i].URL
+					}
+				}
+
+				if contactDetail.Data.SocialProfiles[i].TypeID == "twitter" {
+					if contact.Twitter == "" {
+						contact.Twitter = contactDetail.Data.SocialProfiles[i].Username
+					}
+				}
+
+				if contactDetail.Data.SocialProfiles[i].TypeID == "instagram" {
+					if contact.Instagram == "" {
+						contact.Instagram = contactDetail.Data.SocialProfiles[i].URL
+					}
+				}
+			}
+		}
+
+		// Add jobs
+		if len(contactDetail.Data.Organizations) > 0 {
+			for i := 0; i < len(contactDetail.Data.Organizations); i++ {
+				if contactDetail.Data.Organizations[i].Name != "" {
+					// Get which publication it is in our database
+					publication, err := FindOrCreatePublication(c, r, contactDetail.Data.Organizations[i].Name, "")
+					if err != nil {
+						log.Errorf(c, "%v", err)
+						continue
+					}
+
+					previousJob := false
+
+					// Check if this position was in the past or current
+					if contactDetail.Data.Organizations[i].EndDate != "" {
+						previousJob = true
+					}
+
+					alreadyExists := false
+					for x := 0; x < len(contact.Employers); x++ {
+						currentPublication, err := getPublication(c, contact.Employers[x])
+						if err != nil {
+							log.Errorf(c, "%v", err)
+							continue
+						}
+
+						if currentPublication.Name == publication.Name {
+							alreadyExists = true
+						}
+
+						if currentPublication.Id == publication.Id {
+							alreadyExists = true
+						}
+					}
+
+					for x := 0; x < len(contact.PastEmployers); x++ {
+						currentPublication, err := getPublication(c, contact.PastEmployers[x])
+						if err != nil {
+							log.Errorf(c, "%v", err)
+							continue
+						}
+
+						if currentPublication.Name == publication.Name {
+							alreadyExists = true
+						}
+
+						if currentPublication.Id == publication.Id {
+							alreadyExists = true
+						}
+					}
+
+					// Add to list
+					if !alreadyExists {
+						if previousJob {
+							contact.PastEmployers = append(contact.PastEmployers, publication.Id)
+						} else {
+							contact.Employers = append(contact.Employers, publication.Id)
+						}
+					}
+
+				}
+			}
+		}
+
+		// Add location
+		contact.Location = contactDetail.Data.Demographics.LocationDeduced.NormalizedLocation
+
+		// Add website
+		if len(contactDetail.Data.ContactInfo.Websites) > 0 {
+			contact.Website = contactDetail.Data.ContactInfo.Websites[0].URL
+		}
+
+		// Add tags
+		if len(contactDetail.Data.DigitalFootprint.Topics) > 0 {
+			tags := []string{}
+			for i := 0; i < len(contactDetail.Data.DigitalFootprint.Topics); i++ {
+				if contactDetail.Data.DigitalFootprint.Topics[i].Value != "" {
+					tags = append(tags, contactDetail.Data.DigitalFootprint.Topics[i].Value)
+				}
+			}
+
+			contact.Tags = append(contact.Tags, tags...)
+
+			// Remove duplicates from tags
+			found := make(map[string]bool)
+			j := 0
+			for i, x := range contact.Tags {
+				if !found[x] {
+					found[x] = true
+					contact.Tags[j] = contact.Tags[i]
+					j++
+				}
+			}
+			contact.Tags = contact.Tags[:j]
+		}
+
+		_, err = Save(c, r, &contact)
+	}
+
+	return contact, nil, nil
+}
+
 func GetEnrichProfile(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
@@ -744,7 +890,7 @@ func GetEnrichProfile(c context.Context, r *http.Request, id string) (interface{
 		return nil, nil, err
 	}
 
-	return contactDetail, nil, nil
+	return contactDetail.Data, nil, nil
 }
 
 func GetTweetsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
@@ -1468,6 +1614,21 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 	newContacts := []models.Contact{}
 	newContactIds := []int64{}
 
+	// Add contact to the other media list
+	mediaList, err := getMediaListBasic(c, r, copyContacts.ListId)
+	if err != nil {
+		return []models.Contact{}, nil, 0, err
+	}
+
+	mediaListFields := map[string]bool{}
+	for i := 0; i < len(mediaList.FieldsMap); i++ {
+		if mediaList.FieldsMap[i].CustomField && !mediaList.FieldsMap[i].ReadOnly {
+			if _, ok := mediaListFields[mediaList.FieldsMap[i].Value]; !ok {
+				mediaListFields[mediaList.FieldsMap[i].Value] = true
+			}
+		}
+	}
+
 	for i := 0; i < len(copyContacts.Contacts); i++ {
 		contact, err := getContact(c, r, copyContacts.Contacts[i])
 		if err == nil {
@@ -1477,7 +1638,18 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 			contact.CreatedBy = user.Id
 			contact.Created = time.Now()
 			contact.Updated = time.Now()
+
+			previousCustomFields := contact.CustomFields
 			contact.CustomFields = []models.CustomContactField{}
+
+			for x := 0; x < len(previousCustomFields); x++ {
+				customFieldName := previousCustomFields[x].Name
+				if _, ok := mediaListFields[customFieldName]; ok {
+					contact.CustomFields = append(contact.CustomFields, previousCustomFields[x])
+				}
+			}
+
+			log.Infof(c, "%v", contact.CustomFields)
 
 			contact.ListId = copyContacts.ListId
 			contact.Normalize()
@@ -1505,12 +1677,6 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 				feeds[i].Create(c, r, user)
 			}
 		}
-	}
-
-	// Add contact to the other media list
-	mediaList, err := getMediaListBasic(c, r, copyContacts.ListId)
-	if err != nil {
-		return []models.Contact{}, nil, 0, err
 	}
 
 	// Append media list
@@ -1545,6 +1711,7 @@ func BulkDeleteContacts(c context.Context, r *http.Request) ([]models.Contact, i
 	}
 
 	contacts := []models.Contact{}
+	contactIds := []int64{}
 	for i := 0; i < len(deleteContacts.Contacts); i++ {
 		contact, err := getContact(c, r, deleteContacts.Contacts[i])
 		if err == nil {
@@ -1552,11 +1719,13 @@ func BulkDeleteContacts(c context.Context, r *http.Request) ([]models.Contact, i
 				contact.IsDeleted = true
 				contact.Save(c, r)
 
+				contactIds = append(contactIds, contact.Id)
 				contacts = append(contacts, contact)
 			}
 		}
 	}
 
+	sync.ResourceBulkSync(r, contactIds, "Contact", "create")
 	return contacts, nil, len(contacts), nil
 }
 
