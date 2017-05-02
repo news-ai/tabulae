@@ -255,3 +255,13 @@ func (e *Email) MarkSendgridOpened(c context.Context) (*Email, error) {
 	}
 	return e, nil
 }
+
+func (e *Email) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := SetField(e, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

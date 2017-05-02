@@ -1537,14 +1537,40 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 
 		if emailDate != "" || emailSubject != "" {
 			emails, count, err := search.SearchEmailsByQueryFields(c, r, user, emailDate, emailSubject, emailBaseSubject)
-			return emails, nil, count, err
+
+			// Add includes
+			mediaLists := emailsToLists(c, r, emails)
+			contacts := emailsToContacts(c, r, emails)
+			includes := make([]interface{}, len(mediaLists)+len(contacts))
+			for i := 0; i < len(mediaLists); i++ {
+				includes[i] = mediaLists[i]
+			}
+
+			for i := 0; i < len(contacts); i++ {
+				includes[i+len(mediaLists)] = contacts[i]
+			}
+
+			return emails, includes, count, err
 		} else {
 			return nil, nil, 0, errors.New("Please enter a valid date or subject")
 		}
 	}
 
 	emails, count, err := search.SearchEmailsByQuery(c, r, user, queryField)
-	return emails, nil, count, err
+
+	// Add includes
+	mediaLists := emailsToLists(c, r, emails)
+	contacts := emailsToContacts(c, r, emails)
+	includes := make([]interface{}, len(mediaLists)+len(contacts))
+	for i := 0; i < len(mediaLists); i++ {
+		includes[i] = mediaLists[i]
+	}
+
+	for i := 0; i < len(contacts); i++ {
+		includes[i+len(mediaLists)] = contacts[i]
+	}
+
+	return emails, includes, count, err
 }
 
 func GetEmailCampaigns(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
