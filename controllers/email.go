@@ -222,7 +222,9 @@ func emailsToLists(c context.Context, r *http.Request, emails []models.Email) []
 	mediaListIds := []int64{}
 
 	for i := 0; i < len(emails); i++ {
-		mediaListIds = append(mediaListIds, emails[i].ListId)
+		if emails[i].ListId != 0 {
+			mediaListIds = append(mediaListIds, emails[i].ListId)
+		}
 	}
 
 	// Work on includes
@@ -232,13 +234,42 @@ func emailsToLists(c context.Context, r *http.Request, emails []models.Email) []
 
 	for i := 0; i < len(mediaListIds); i++ {
 		if _, ok := mediaListExists[mediaListIds[i]]; !ok {
-			mediaList, _ := getMediaList(c, r, mediaListIds[i])
-			mediaLists = append(mediaLists, mediaList)
-			mediaListExists[mediaListIds[i]] = true
+			if mediaListIds[i] != 0 {
+				mediaList, _ := getMediaList(c, r, mediaListIds[i])
+				mediaLists = append(mediaLists, mediaList)
+				mediaListExists[mediaListIds[i]] = true
+			}
 		}
 	}
 
 	return mediaLists
+}
+
+func emailsToContacts(c context.Context, r *http.Request, emails []models.Email) []models.Contact {
+	contactIds := []int64{}
+
+	for i := 0; i < len(emails); i++ {
+		if emails[i].ContactId != 0 {
+			contactIds = append(contactIds, emails[i].ContactId)
+		}
+	}
+
+	// Work on includes
+	contacts := []models.Contact{}
+	contactExists := map[int64]bool{}
+	contactExists = make(map[int64]bool)
+
+	for i := 0; i < len(contactIds); i++ {
+		if _, ok := contactExists[contactIds[i]]; !ok {
+			if contactIds[i] != 0 {
+				contact, _ := getContact(c, r, contactIds[i])
+				contacts = append(contacts, contact)
+				contactExists[contactIds[i]] = true
+			}
+		}
+	}
+
+	return contacts
 }
 
 /*
@@ -277,7 +308,19 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 		emails[i].Format(ks[i], "emails")
 	}
 
-	return emails, nil, len(emails), nil
+	// Add includes
+	mediaLists := emailsToLists(c, r, emails)
+	contacts := emailsToContacts(c, r, emails)
+	includes := make([]interface{}, len(mediaLists)+len(contacts))
+	for i := 0; i < len(mediaLists); i++ {
+		includes[i] = mediaLists[i]
+	}
+
+	for i := 0; i < len(contacts); i++ {
+		includes[i+len(mediaLists)] = contacts[i]
+	}
+
+	return emails, includes, len(emails), nil
 }
 
 func GetSentEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
@@ -309,8 +352,19 @@ func GetSentEmails(c context.Context, r *http.Request) ([]models.Email, interfac
 		emails[i].Format(ks[i], "emails")
 	}
 
+	// Add includes
 	mediaLists := emailsToLists(c, r, emails)
-	return emails, mediaLists, len(emails), nil
+	contacts := emailsToContacts(c, r, emails)
+	includes := make([]interface{}, len(mediaLists)+len(contacts))
+	for i := 0; i < len(mediaLists); i++ {
+		includes[i] = mediaLists[i]
+	}
+
+	for i := 0; i < len(contacts); i++ {
+		includes[i+len(mediaLists)] = contacts[i]
+	}
+
+	return emails, includes, len(emails), nil
 }
 
 func GetEmailStats(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
@@ -353,8 +407,19 @@ func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, int
 		emails[i].Format(ks[i], "emails")
 	}
 
+	// Add includes
 	mediaLists := emailsToLists(c, r, emails)
-	return emails, mediaLists, len(emails), nil
+	contacts := emailsToContacts(c, r, emails)
+	includes := make([]interface{}, len(mediaLists)+len(contacts))
+	for i := 0; i < len(mediaLists); i++ {
+		includes[i] = mediaLists[i]
+	}
+
+	for i := 0; i < len(contacts); i++ {
+		includes[i+len(mediaLists)] = contacts[i]
+	}
+
+	return emails, includes, len(emails), nil
 }
 
 func GetArchivedEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
@@ -386,8 +451,19 @@ func GetArchivedEmails(c context.Context, r *http.Request) ([]models.Email, inte
 		emails[i].Format(ks[i], "emails")
 	}
 
+	// Add includes
 	mediaLists := emailsToLists(c, r, emails)
-	return emails, mediaLists, len(emails), nil
+	contacts := emailsToContacts(c, r, emails)
+	includes := make([]interface{}, len(mediaLists)+len(contacts))
+	for i := 0; i < len(mediaLists); i++ {
+		includes[i] = mediaLists[i]
+	}
+
+	for i := 0; i < len(contacts); i++ {
+		includes[i+len(mediaLists)] = contacts[i]
+	}
+
+	return emails, includes, len(emails), nil
 }
 
 func GetTeamEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
@@ -435,6 +511,7 @@ func GetEmail(c context.Context, r *http.Request, id string) (models.Email, inte
 	}
 
 	includedFiles := []models.File{}
+	includedContact := []models.Contact{}
 	if len(email.Attachments) > 0 {
 		for i := 0; i < len(email.Attachments); i++ {
 			file, err := getFile(c, r, email.Attachments[i])
@@ -446,7 +523,26 @@ func GetEmail(c context.Context, r *http.Request, id string) (models.Email, inte
 		}
 	}
 
-	return email, includedFiles, nil
+	if email.ContactId != 0 {
+		contact, err := getContact(c, r, email.ContactId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.Email{}, nil, err
+		}
+		includedContact = append(includedContact, contact)
+	}
+
+	includes := make([]interface{}, len(includedFiles)+len(includedContact))
+
+	for i := 0; i < len(includedFiles); i++ {
+		includes[i] = includedFiles[i]
+	}
+
+	for i := 0; i < len(includedContact); i++ {
+		includes[i+len(includedFiles)] = includedContact[i]
+	}
+
+	return email, includes, nil
 }
 
 /*
