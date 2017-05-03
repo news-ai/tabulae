@@ -25,6 +25,7 @@ type EmailCampaignResponse struct {
 	UserId      string `json:"userid"`
 	BaseSubject string `json:"baseSubject"`
 
+	pastDelivered          int
 	Delivered              int     `json:"delivered"`
 	Opens                  int     `json:"opens"`
 	UniqueOpens            int     `json:"uniqueOpens"`
@@ -118,10 +119,15 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 				if emails[x].Bounced {
 					emailCampaign.Bounces += 1
 				}
+
+				// All emails that are delivered in the past
+				if emails[x].IsSent && emails[x].Delievered {
+					emailCampaign.pastDelivered += 1
+				}
 			}
 		}
 
-		if emailCampaign.Delivered > 0 {
+		if emailCampaign.Delivered > 0 && emailCampaign.pastDelivered > 0 {
 			emailCampaign.UniqueOpensPercentage = 100 * float32(float32(emailCampaign.UniqueOpens)/float32(emailCampaign.Delivered))
 			emailCampaign.UniqueClicksPercentage = 100 * float32(float32(emailCampaign.UniqueClicks)/float32(emailCampaign.Delivered))
 

@@ -745,6 +745,16 @@ func EnrichProfile(c context.Context, r *http.Request, id string) (models.Contac
 	}
 
 	if contactDetail.Data.Likelihood > 0.75 {
+		// Add first name
+		if contact.FirstName == "" && contactDetail.Data.ContactInfo.GivenName != "" {
+			contact.FirstName = contactDetail.Data.ContactInfo.GivenName
+		}
+
+		// Add last name
+		if contact.LastName == "" && contactDetail.Data.ContactInfo.FamilyName != "" {
+			contact.LastName = contactDetail.Data.ContactInfo.FamilyName
+		}
+
 		// Add social profiles
 		if len(contactDetail.Data.SocialProfiles) > 0 {
 			for i := 0; i < len(contactDetail.Data.SocialProfiles); i++ {
