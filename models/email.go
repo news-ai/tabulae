@@ -203,12 +203,14 @@ func (e *Email) MarkBounced(c context.Context, reason string) (*Email, error) {
 }
 
 func (e *Email) MarkClicked(c context.Context) (*Email, error) {
-	e.Clicked += 1
-	e.Delievered = true
-	_, err := e.Save(c)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return e, err
+	if e.SendAt.IsZero() || e.SendAt.Before(time.Now()) {
+		e.Clicked += 1
+		e.Delievered = true
+		_, err := e.Save(c)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return e, err
+		}
 	}
 	return e, nil
 }
@@ -235,12 +237,16 @@ func (e *Email) MarkSpam(c context.Context) (*Email, error) {
 }
 
 func (e *Email) MarkOpened(c context.Context) (*Email, error) {
-	e.Opened += 1
-	e.Delievered = true
-	_, err := e.Save(c)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return e, err
+	// If already sent (sendAt is 0 or before current time)
+	if e.SendAt.IsZero() || e.SendAt.Before(time.Now()) {
+		log.Infof(c, "%v", "hello")
+		e.Opened += 1
+		e.Delievered = true
+		_, err := e.Save(c)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return e, err
+		}
 	}
 	return e, nil
 }

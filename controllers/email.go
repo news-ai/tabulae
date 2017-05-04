@@ -944,9 +944,9 @@ func BulkCancelEmail(c context.Context, r *http.Request) ([]models.Email, interf
 			continue
 		}
 
-		// If it has not been delivered and has a sentat date then we can cancel it
+		// If it has not have a sentat date then we can cancel it
 		// and that sendAt date is in the future.
-		if !email.Delievered && !email.SendAt.IsZero() && email.SendAt.After(time.Now()) {
+		if !email.SendAt.IsZero() && email.SendAt.After(time.Now()) {
 			email.Cancel = true
 			email.Save(c)
 			emails = append(emails, email)
@@ -965,9 +965,9 @@ func CancelEmail(c context.Context, r *http.Request, id string) (models.Email, i
 		return models.Email{}, nil, err
 	}
 
-	// If it has not been delivered and has a sentat date then we can cancel it
+	// If it has a sentat date then we can cancel it
 	// and that sendAt date is in the future.
-	if !email.Delievered && !email.SendAt.IsZero() && email.SendAt.After(time.Now()) {
+	if !email.SendAt.IsZero() && email.SendAt.After(time.Now()) {
 		email.Cancel = true
 		email.Save(c)
 		sync.ResourceSync(r, email.Id, "Email", "create")
