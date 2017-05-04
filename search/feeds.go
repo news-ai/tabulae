@@ -61,11 +61,11 @@ func (f *Feed) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchFeed(c context.Context, elasticQuery interface{}, contacts []models.Contact, feedUrls []models.Feed) ([]Feed, error) {
+func searchFeed(c context.Context, elasticQuery interface{}, contacts []models.Contact, feedUrls []models.Feed) ([]Feed, int, error) {
 	hits, err := elasticFeed.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []Feed{}, err
+		return []Feed{}, 0, err
 	}
 
 	feedsMap := map[string]bool{}
@@ -117,13 +117,13 @@ func searchFeed(c context.Context, elasticQuery interface{}, contacts []models.C
 		feeds = append(feeds, feed)
 	}
 
-	return feeds, nil
+	return feeds, hits.Total, nil
 }
 
-func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models.Contact, feeds []models.Feed) ([]Feed, error) {
+func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models.Contact, feeds []models.Feed) ([]Feed, int, error) {
 	// If contacts or feeds are empty return right away
 	if len(contacts) == 0 && len(feeds) == 0 {
-		return []Feed{}, nil
+		return []Feed{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -156,7 +156,7 @@ func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models
 	}
 
 	if len(elasticQuery.Query.Bool.Should) == 0 {
-		return []Feed{}, nil
+		return []Feed{}, 0, nil
 	}
 
 	minMatch := "50%"

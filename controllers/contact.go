@@ -1114,13 +1114,13 @@ func GetHeadlinesForContactById(c context.Context, r *http.Request, currentId in
 		return nil, nil, 0, 0, err
 	}
 
-	headlines, err := search.SearchHeadlinesByResourceId(c, r, feeds)
+	headlines, total, err := search.SearchHeadlinesByResourceId(c, r, feeds)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
 	}
 
-	return headlines, nil, len(headlines), 0, nil
+	return headlines, nil, len(headlines), total, nil
 }
 
 func GetHeadlinesForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {
@@ -1154,13 +1154,13 @@ func GetFeedForContact(c context.Context, r *http.Request, id string) (interface
 		return nil, nil, 0, 0, err
 	}
 
-	feed, err := search.SearchFeedForContacts(c, r, []models.Contact{contact}, feeds)
+	feed, total, err := search.SearchFeedForContacts(c, r, []models.Contact{contact}, feeds)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
 	}
 
-	return feed, nil, len(feed), 0, nil
+	return feed, nil, len(feed), total, nil
 }
 
 func GetFeedsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {

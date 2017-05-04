@@ -156,13 +156,13 @@ func GetHeadlinesForPublication(c context.Context, r *http.Request, id string) (
 		return nil, nil, 0, 0, err
 	}
 
-	headlines, err := search.SearchHeadlinesByPublicationId(c, r, currentId)
+	headlines, total, err := search.SearchHeadlinesByPublicationId(c, r, currentId)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
 	}
 
-	return headlines, nil, len(headlines), 0, nil
+	return headlines, nil, len(headlines), total, nil
 }
 
 func GetEnrichCompanyProfile(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {

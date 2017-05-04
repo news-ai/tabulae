@@ -44,11 +44,11 @@ func (h *Headline) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchHeadline(c context.Context, elasticQuery interface{}, feedUrls []models.Feed, checkMap bool) ([]Headline, error) {
+func searchHeadline(c context.Context, elasticQuery interface{}, feedUrls []models.Feed, checkMap bool) ([]Headline, int, error) {
 	hits, err := elasticHeadline.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []Headline{}, err
+		return []Headline{}, 0, err
 	}
 
 	feedsMap := map[string]bool{}
@@ -81,12 +81,12 @@ func searchHeadline(c context.Context, elasticQuery interface{}, feedUrls []mode
 		headlines = append(headlines, headline)
 	}
 
-	return headlines, nil
+	return headlines, hits.Total, nil
 }
 
-func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []models.Feed) ([]Headline, error) {
+func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []models.Feed) ([]Headline, int, error) {
 	if len(feeds) == 0 {
-		return []Headline{}, nil
+		return []Headline{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -104,7 +104,7 @@ func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []mod
 	}
 
 	if len(elasticQuery.Query.Bool.Should) == 0 {
-		return []Headline{}, nil
+		return []Headline{}, 0, nil
 	}
 
 	minMatch := "100%"
@@ -124,9 +124,9 @@ func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []mod
 	return searchHeadline(c, elasticQuery, feeds, true)
 }
 
-func SearchHeadlinesByPublicationId(c context.Context, r *http.Request, publicationId int64) ([]Headline, error) {
+func SearchHeadlinesByPublicationId(c context.Context, r *http.Request, publicationId int64) ([]Headline, int, error) {
 	if publicationId == 0 {
-		return []Headline{}, nil
+		return []Headline{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
