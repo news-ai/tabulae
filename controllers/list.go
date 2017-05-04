@@ -985,7 +985,19 @@ func GetEmailsForList(c context.Context, r *http.Request, id string) ([]models.E
 		return []models.Email{}, nil, 0, err
 	}
 
-	return emails, nil, count, nil
+	// Add includes
+	mediaLists := emailsToLists(c, r, emails)
+	contacts := emailsToContacts(c, r, emails)
+	includes := make([]interface{}, len(mediaLists)+len(contacts))
+	for i := 0; i < len(mediaLists); i++ {
+		includes[i] = mediaLists[i]
+	}
+
+	for i := 0; i < len(contacts); i++ {
+		includes[i+len(mediaLists)] = contacts[i]
+	}
+
+	return emails, includes, count, nil
 }
 
 func GetHeadlinesForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
