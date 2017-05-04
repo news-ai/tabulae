@@ -56,11 +56,11 @@ func (ip *InstagramPost) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchInstagramPost(c context.Context, elasticQuery interface{}, usernames []string) ([]InstagramPost, error) {
+func searchInstagramPost(c context.Context, elasticQuery interface{}, usernames []string) ([]InstagramPost, int, error) {
 	hits, err := elasticInstagram.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []InstagramPost{}, err
+		return []InstagramPost{}, 0, err
 	}
 
 	usernamesMap := map[string]bool{}
@@ -87,7 +87,7 @@ func searchInstagramPost(c context.Context, elasticQuery interface{}, usernames 
 		instagramPosts = append(instagramPosts, instagramPost)
 	}
 
-	return instagramPosts, nil
+	return instagramPosts, hits.Total, nil
 }
 
 func searchInstagramProfile(c context.Context, elasticQuery interface{}, username string) (interface{}, error) {
@@ -107,9 +107,9 @@ func searchInstagramProfile(c context.Context, elasticQuery interface{}, usernam
 	return instagramProfileHits[0].Source.Data, nil
 }
 
-func SearchInstagramPostsByUsername(c context.Context, r *http.Request, username string) ([]InstagramPost, error) {
+func SearchInstagramPostsByUsername(c context.Context, r *http.Request, username string) ([]InstagramPost, int, error) {
 	if username == "" {
-		return []InstagramPost{}, nil
+		return []InstagramPost{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)

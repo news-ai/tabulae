@@ -46,11 +46,11 @@ func (l *Lists) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchList(c context.Context, elasticQuery elastic.ElasticQueryMust) ([]Lists, error) {
+func searchList(c context.Context, elasticQuery elastic.ElasticQueryMust) ([]Lists, int, error) {
 	hits, err := elasticList.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []Lists{}, err
+		return []Lists{}, 0, err
 	}
 
 	listHits := hits.Hits
@@ -68,12 +68,12 @@ func searchList(c context.Context, elasticQuery elastic.ElasticQueryMust) ([]Lis
 		lists = append(lists, contact)
 	}
 
-	return lists, nil
+	return lists, hits.Total, nil
 }
 
-func SearchListsByClientName(c context.Context, r *http.Request, clientName string, userId int64) ([]Lists, error) {
+func SearchListsByClientName(c context.Context, r *http.Request, clientName string, userId int64) ([]Lists, int, error) {
 	if clientName == "" {
-		return []Lists{}, nil
+		return []Lists{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -99,9 +99,9 @@ func SearchListsByClientName(c context.Context, r *http.Request, clientName stri
 	return searchList(c, elasticQuery)
 }
 
-func SearchListsByTag(c context.Context, r *http.Request, tag string, userId int64) ([]Lists, error) {
+func SearchListsByTag(c context.Context, r *http.Request, tag string, userId int64) ([]Lists, int, error) {
 	if tag == "" {
-		return []Lists{}, nil
+		return []Lists{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -127,9 +127,9 @@ func SearchListsByTag(c context.Context, r *http.Request, tag string, userId int
 	return searchList(c, elasticQuery)
 }
 
-func SearchListsByAll(c context.Context, r *http.Request, query string, userId int64) ([]Lists, error) {
+func SearchListsByAll(c context.Context, r *http.Request, query string, userId int64) ([]Lists, int, error) {
 	if query == "" {
-		return []Lists{}, nil
+		return []Lists{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -155,7 +155,7 @@ func SearchListsByAll(c context.Context, r *http.Request, query string, userId i
 	return searchList(c, elasticQuery)
 }
 
-func SearchListsByFieldSelector(c context.Context, r *http.Request, fieldSelector string, query string, userId int64) ([]Lists, error) {
+func SearchListsByFieldSelector(c context.Context, r *http.Request, fieldSelector string, query string, userId int64) ([]Lists, int, error) {
 	if fieldSelector == "client" {
 		return SearchListsByClientName(c, r, query, userId)
 	}

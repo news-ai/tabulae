@@ -59,18 +59,18 @@ func (it *InstagramTimeseries) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchTwitterTimeseries(c context.Context, elasticQuery interface{}) (interface{}, error) {
+func searchTwitterTimeseries(c context.Context, elasticQuery interface{}) (interface{}, int, error) {
 	hits, err := elasticTwitterTimeseries.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, err
+		return nil, 0, err
 	}
 
 	profileHits := hits.Hits
 
 	if len(profileHits) == 0 {
 		log.Infof(c, "%v", profileHits)
-		return nil, errors.New("No Twitter profile for this username")
+		return nil, 0, errors.New("No Twitter profile for this username")
 	}
 
 	var interfaceSlice = make([]interface{}, len(profileHits))
@@ -79,21 +79,21 @@ func searchTwitterTimeseries(c context.Context, elasticQuery interface{}) (inter
 		interfaceSlice[i] = profileHits[i].Source.Data
 	}
 
-	return interfaceSlice, nil
+	return interfaceSlice, hits.Total, nil
 }
 
-func searchInstagramTimeseries(c context.Context, elasticQuery interface{}) (interface{}, error) {
+func searchInstagramTimeseries(c context.Context, elasticQuery interface{}) (interface{}, int, error) {
 	hits, err := elasticInstagramTimeseries.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, err
+		return nil, 0, err
 	}
 
 	profileHits := hits.Hits
 
 	if len(profileHits) == 0 {
 		log.Infof(c, "%v", profileHits)
-		return nil, errors.New("No Instagram profile for this username")
+		return nil, 0, errors.New("No Instagram profile for this username")
 	}
 
 	var interfaceSlice = make([]interface{}, len(profileHits))
@@ -102,7 +102,7 @@ func searchInstagramTimeseries(c context.Context, elasticQuery interface{}) (int
 		interfaceSlice[i] = profileHits[i].Source.Data
 	}
 
-	return interfaceSlice, nil
+	return interfaceSlice, hits.Total, nil
 }
 
 func searchInstagramTimeseriesByUsernames(c context.Context, elasticQuery interface{}) ([]InstagramTimeseries, error) {
@@ -229,9 +229,9 @@ func SearchTwitterTimeseriesByUsernamesWithDays(c context.Context, r *http.Reque
 	return searchTwitterTimeseriesByUsernames(c, elasticQuery)
 }
 
-func SearchInstagramTimeseriesByUsername(c context.Context, r *http.Request, username string) (interface{}, error) {
+func SearchInstagramTimeseriesByUsername(c context.Context, r *http.Request, username string) (interface{}, int, error) {
 	if username == "" {
-		return nil, errors.New("Contact does not have a instagram username")
+		return nil, 0, errors.New("Contact does not have a instagram username")
 	}
 
 	offset := 0
@@ -253,9 +253,9 @@ func SearchInstagramTimeseriesByUsername(c context.Context, r *http.Request, use
 	return searchInstagramTimeseries(c, elasticQuery)
 }
 
-func SearchTwitterTimeseriesByUsername(c context.Context, r *http.Request, username string) (interface{}, error) {
+func SearchTwitterTimeseriesByUsername(c context.Context, r *http.Request, username string) (interface{}, int, error) {
 	if username == "" {
-		return nil, errors.New("Contact does not have a twitter username")
+		return nil, 0, errors.New("Contact does not have a twitter username")
 	}
 
 	offset := 0

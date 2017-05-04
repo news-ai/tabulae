@@ -963,13 +963,13 @@ func GetInstagramPostsForContact(c context.Context, r *http.Request, id string) 
 		return nil, nil, 0, 0, err
 	}
 
-	instagramPosts, err := search.SearchInstagramPostsByUsername(c, r, contact.Instagram)
+	instagramPosts, total, err := search.SearchInstagramPostsByUsername(c, r, contact.Instagram)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
 	}
 
-	return instagramPosts, nil, len(instagramPosts), 0, nil
+	return instagramPosts, nil, len(instagramPosts), total, nil
 }
 
 func GetInstagramProfileForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
@@ -1009,7 +1009,7 @@ func GetInstagramTimeseriesForContact(c context.Context, r *http.Request, id str
 		return nil, nil, err
 	}
 
-	instagramTimeseries, err := search.SearchInstagramTimeseriesByUsername(c, r, contact.Instagram)
+	instagramTimeseries, _, err := search.SearchInstagramTimeseriesByUsername(c, r, contact.Instagram)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
@@ -1032,7 +1032,7 @@ func GetTwitterTimeseriesForContact(c context.Context, r *http.Request, id strin
 		return nil, nil, err
 	}
 
-	twitterTimeseries, err := search.SearchTwitterTimeseriesByUsername(c, r, contact.Twitter)
+	twitterTimeseries, _, err := search.SearchTwitterTimeseriesByUsername(c, r, contact.Twitter)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err

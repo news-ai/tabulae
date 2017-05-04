@@ -92,11 +92,11 @@ func GetPublications(c context.Context, r *http.Request) ([]models.Publication, 
 	// If user is querying then it is not denied by the server
 	queryField := gcontext.Get(r, "q").(string)
 	if queryField != "" {
-		publications, err := search.SearchPublication(c, r, queryField)
+		publications, total, err := search.SearchPublication(c, r, queryField)
 		if err != nil {
 			return []models.Publication{}, nil, 0, 0, err
 		}
-		return publications, nil, len(publications), 0, nil
+		return publications, nil, len(publications), total, nil
 	}
 
 	// Now if user is not querying then check

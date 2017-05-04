@@ -290,7 +290,7 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 		if queryField != "" {
 			fieldSelector := strings.Split(queryField, ":")
 			if len(fieldSelector) != 2 {
-				selectedLists, err := search.SearchListsByAll(c, r, queryField, user.Id)
+				selectedLists, total, err := search.SearchListsByAll(c, r, queryField, user.Id)
 				if err != nil {
 					return nil, nil, 0, 0, err
 				}
@@ -303,11 +303,11 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 					}
 				}
 
-				return selectedMediaLists, nil, len(selectedMediaLists), 0, nil
+				return selectedMediaLists, nil, len(selectedMediaLists), total, nil
 			}
 
 			if fieldSelector[0] == "client" || fieldSelector[0] == "tag" {
-				selectedLists, err := search.SearchListsByFieldSelector(c, r, fieldSelector[0], fieldSelector[1], user.Id)
+				selectedLists, total, err := search.SearchListsByFieldSelector(c, r, fieldSelector[0], fieldSelector[1], user.Id)
 				if err != nil {
 					return nil, nil, 0, 0, err
 				}
@@ -320,7 +320,7 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 					}
 				}
 
-				return selectedMediaLists, nil, len(selectedMediaLists), 0, nil
+				return selectedMediaLists, nil, len(selectedMediaLists), total, nil
 			}
 		}
 	}
@@ -1016,13 +1016,13 @@ func GetHeadlinesForList(c context.Context, r *http.Request, id string) (interfa
 		return nil, nil, 0, 0, err
 	}
 
-	headlines, err := search.SearchHeadlinesByResourceId(c, r, feeds)
+	headlines, total, err := search.SearchHeadlinesByResourceId(c, r, feeds)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
 	}
 
-	return headlines, nil, len(headlines), 0, nil
+	return headlines, nil, len(headlines), total, nil
 }
 
 func GetFeedForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {
@@ -1054,13 +1054,13 @@ func GetFeedForList(c context.Context, r *http.Request, id string) (interface{},
 		return nil, nil, 0, 0, err
 	}
 
-	feed, err := search.SearchFeedForContacts(c, r, contacts, feeds)
+	feed, total, err := search.SearchFeedForContacts(c, r, contacts, feeds)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
 	}
 
-	return feed, nil, len(feed), 0, nil
+	return feed, nil, len(feed), total, nil
 }
 
 func GetTweetsForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {

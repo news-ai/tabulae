@@ -18,7 +18,7 @@ var (
 	elasticPublication *elastic.Elastic
 )
 
-func SearchPublication(c context.Context, r *http.Request, search string) ([]models.Publication, error) {
+func SearchPublication(c context.Context, r *http.Request, search string) ([]models.Publication, int, error) {
 	search = url.QueryEscape(search)
 	search = "q=data.Name:" + search
 
@@ -28,7 +28,7 @@ func SearchPublication(c context.Context, r *http.Request, search string) ([]mod
 	hits, err := elasticPublication.Query(c, offset, limit, search)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Publication{}, err
+		return []models.Publication{}, 0, err
 	}
 
 	publicationHits := hits.Hits
@@ -46,5 +46,5 @@ func SearchPublication(c context.Context, r *http.Request, search string) ([]mod
 		publications = append(publications, publication)
 	}
 
-	return publications, nil
+	return publications, hits.Total, nil
 }
