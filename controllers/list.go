@@ -794,13 +794,13 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 
 	queryField := gcontext.Get(r, "q").(string)
 	if queryField != "" {
-		contacts, err := search.SearchContactsByList(c, r, queryField, user, mediaList.CreatedBy, mediaList.Id)
+		contacts, total, err := search.SearchContactsByList(c, r, queryField, user, mediaList.CreatedBy, mediaList.Id)
 		if err != nil {
 			return []models.Contact{}, nil, 0, 0, err
 		}
 
 		publications := contactsToPublications(c, contacts)
-		return contacts, publications, len(contacts), 0, nil
+		return contacts, publications, len(contacts), total, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)

@@ -19,11 +19,11 @@ var (
 	elasticContact *elastic.Elastic
 )
 
-func searchContact(c context.Context, elasticQuery elastic.ElasticQuery) ([]models.Contact, error) {
+func searchContact(c context.Context, elasticQuery elastic.ElasticQuery) ([]models.Contact, int, error) {
 	hits, err := elasticContact.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Contact{}, err
+		return []models.Contact{}, 0, err
 	}
 
 	contactHits := hits.Hits
@@ -41,12 +41,12 @@ func searchContact(c context.Context, elasticQuery elastic.ElasticQuery) ([]mode
 		contacts = append(contacts, contact)
 	}
 
-	return contacts, nil
+	return contacts, hits.Total, nil
 }
 
-func SearchContacts(c context.Context, r *http.Request, search string, userId int64) ([]models.Contact, error) {
+func SearchContacts(c context.Context, r *http.Request, search string, userId int64) ([]models.Contact, int, error) {
 	if userId == 0 || search == "" {
-		return []models.Contact{}, nil
+		return []models.Contact{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -68,9 +68,9 @@ func SearchContacts(c context.Context, r *http.Request, search string, userId in
 	return searchContact(c, elasticQuery)
 }
 
-func SearchContactsByList(c context.Context, r *http.Request, search string, user models.User, userId int64, listId int64) ([]models.Contact, error) {
+func SearchContactsByList(c context.Context, r *http.Request, search string, user models.User, userId int64, listId int64) ([]models.Contact, int, error) {
 	if listId == 0 || search == "" {
-		return []models.Contact{}, nil
+		return []models.Contact{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -98,9 +98,9 @@ func SearchContactsByList(c context.Context, r *http.Request, search string, use
 	return searchContact(c, elasticQuery)
 }
 
-func SearchContactsByTag(c context.Context, r *http.Request, tag string, userId int64) ([]models.Contact, error) {
+func SearchContactsByTag(c context.Context, r *http.Request, tag string, userId int64) ([]models.Contact, int, error) {
 	if tag == "" {
-		return []models.Contact{}, nil
+		return []models.Contact{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -121,9 +121,9 @@ func SearchContactsByTag(c context.Context, r *http.Request, tag string, userId 
 	return searchContact(c, elasticQuery)
 }
 
-func SearchContactsByPublicationId(c context.Context, r *http.Request, publicationId string, userId int64) ([]models.Contact, error) {
+func SearchContactsByPublicationId(c context.Context, r *http.Request, publicationId string, userId int64) ([]models.Contact, int, error) {
 	if publicationId == "" {
-		return []models.Contact{}, nil
+		return []models.Contact{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -144,12 +144,12 @@ func SearchContactsByPublicationId(c context.Context, r *http.Request, publicati
 	return searchContact(c, elasticQuery)
 }
 
-func SearchContactsByFieldSelector(c context.Context, r *http.Request, fieldSelector string, query string, userId int64) ([]models.Contact, error) {
+func SearchContactsByFieldSelector(c context.Context, r *http.Request, fieldSelector string, query string, userId int64) ([]models.Contact, int, error) {
 	if fieldSelector == "tag" {
 		return SearchContactsByTag(c, r, query, userId)
 	} else if fieldSelector == "publication" {
 		return SearchContactsByPublicationId(c, r, query, userId)
 	}
 
-	return []models.Contact{}, nil
+	return []models.Contact{}, 0, nil
 }

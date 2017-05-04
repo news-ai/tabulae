@@ -653,14 +653,14 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 		if queryField != "" {
 			fieldSelector := strings.Split(queryField, ":")
 			if len(fieldSelector) != 2 {
-				contacts, err := search.SearchContacts(c, r, queryField, user.Id)
+				contacts, total, err := search.SearchContacts(c, r, queryField, user.Id)
 				if err != nil {
 					return []models.Contact{}, nil, 0, 0, err
 				}
 				includes := getIncludesForContact(c, r, contacts)
-				return contacts, includes, len(contacts), 0, nil
+				return contacts, includes, len(contacts), total, nil
 			} else {
-				selectedContacts, err := search.SearchContactsByFieldSelector(c, r, fieldSelector[0], fieldSelector[1], user.Id)
+				selectedContacts, total, err := search.SearchContactsByFieldSelector(c, r, fieldSelector[0], fieldSelector[1], user.Id)
 				if err != nil {
 					return nil, nil, 0, 0, err
 				}
@@ -674,7 +674,7 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 				}
 
 				includes := getIncludesForContact(c, r, contacts)
-				return contacts, includes, len(contacts), 0, nil
+				return contacts, includes, len(contacts), total, nil
 			}
 		}
 
