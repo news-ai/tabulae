@@ -110,11 +110,11 @@ func GetFeedById(c context.Context, r *http.Request, id int64) (models.Feed, int
 	return feed, nil, nil
 }
 
-func GetFeeds(c context.Context, r *http.Request) ([]models.Feed, interface{}, int, error) {
+func GetFeeds(c context.Context, r *http.Request) ([]models.Feed, interface{}, int, int, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Feed{}, nil, 0, err
+		return []models.Feed{}, nil, 0, 0, err
 	}
 
 	query := datastore.NewQuery("Feed").Filter("CreatedBy =", user.Id)
@@ -122,7 +122,7 @@ func GetFeeds(c context.Context, r *http.Request) ([]models.Feed, interface{}, i
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Feed{}, nil, 0, err
+		return []models.Feed{}, nil, 0, 0, err
 	}
 
 	var feeds []models.Feed
@@ -131,14 +131,14 @@ func GetFeeds(c context.Context, r *http.Request) ([]models.Feed, interface{}, i
 	err = nds.GetMulti(c, ks, feeds)
 	if err != nil {
 		log.Infof(c, "%v", err)
-		return []models.Feed{}, nil, 0, err
+		return []models.Feed{}, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(feeds); i++ {
 		feeds[i].Format(ks[i], "feeds")
 	}
 
-	return feeds, nil, len(feeds), nil
+	return feeds, nil, len(feeds), 0, nil
 }
 
 func GetFeedsByResourceId(c context.Context, r *http.Request, resouceName string, resourceId int64) ([]models.Feed, error) {

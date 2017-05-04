@@ -29,8 +29,8 @@ func handleUserActions(c context.Context, r *http.Request, id string, action str
 		case "plan-details":
 			return api.BaseSingleResponseHandler(controllers.GetUserPlanDetails(c, r, id))
 		case "campaigns":
-			val, included, count, err := controllers.GetEmailCampaignsForUser(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetEmailCampaignsForUser(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		}
 	case "POST":
 		switch action {
@@ -60,8 +60,8 @@ func handleUser(c context.Context, r *http.Request, id string) (interface{}, err
 func handleUsers(c context.Context, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		val, included, count, err := controllers.GetUsers(c, r)
-		return api.BaseResponseHandler(val, included, count, err, r)
+		val, included, count, total, err := controllers.GetUsers(c, r)
+		return api.BaseResponseHandler(val, included, count, total, err, r)
 	}
 	return nil, errors.New("method not implemented")
 }

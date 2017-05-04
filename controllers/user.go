@@ -252,15 +252,15 @@ func filterUserConfirmed(c context.Context, queryType, query string) (models.Use
 * Get methods
  */
 
-func GetUsers(c context.Context, r *http.Request) ([]models.User, interface{}, int, error) {
+func GetUsers(c context.Context, r *http.Request) ([]models.User, interface{}, int, int, error) {
 	// Get the current user
 	users, err := getUsers(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.User{}, nil, 0, err
+		return []models.User{}, nil, 0, 0, err
 	}
 
-	return users, nil, len(users), nil
+	return users, nil, len(users), 0, nil
 }
 
 func GetUsersUnauthorized(c context.Context, r *http.Request) ([]models.User, error) {

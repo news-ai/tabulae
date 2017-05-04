@@ -8,10 +8,10 @@ import (
 	"github.com/news-ai/tabulae/search"
 )
 
-func GetAllContacts(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
+func GetAllContacts(c context.Context, r *http.Request) (interface{}, interface{}, int, int, error) {
 	contacts, count, err := search.SearchESContactsDatabase(c, r)
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
-	return contacts, nil, count, nil
+	return contacts, nil, count, 0, nil
 }

@@ -47,8 +47,8 @@ func handleFile(c context.Context, r *http.Request, id string) (interface{}, err
 func handleFiles(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		val, included, count, err := controllers.GetFiles(c, r)
-		return api.BaseResponseHandler(val, included, count, err, r)
+		val, included, count, total, err := controllers.GetFiles(c, r)
+		return api.BaseResponseHandler(val, included, count, total, err, r)
 	}
 	return nil, errors.New("method not implemented")
 }

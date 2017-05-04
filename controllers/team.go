@@ -57,16 +57,16 @@ func getTeam(c context.Context, id int64) (models.Team, error) {
 * Get methods
  */
 
-func GetTeams(c context.Context, r *http.Request) ([]models.Team, interface{}, int, error) {
+func GetTeams(c context.Context, r *http.Request) ([]models.Team, interface{}, int, int, error) {
 	// Now if user is not querying then check
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Team{}, nil, 0, err
+		return []models.Team{}, nil, 0, 0, err
 	}
 
 	if !user.IsAdmin {
-		return []models.Team{}, nil, 0, errors.New("Forbidden")
+		return []models.Team{}, nil, 0, 0, errors.New("Forbidden")
 	}
 
 	query := datastore.NewQuery("Team")
@@ -74,7 +74,7 @@ func GetTeams(c context.Context, r *http.Request) ([]models.Team, interface{}, i
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Team{}, nil, 0, err
+		return []models.Team{}, nil, 0, 0, err
 	}
 
 	var teams []models.Team
@@ -82,14 +82,14 @@ func GetTeams(c context.Context, r *http.Request) ([]models.Team, interface{}, i
 	err = nds.GetMulti(c, ks, teams)
 	if err != nil {
 		log.Infof(c, "%v", err)
-		return teams, nil, 0, err
+		return teams, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(teams); i++ {
 		teams[i].Format(ks[i], "teams")
 	}
 
-	return teams, nil, len(teams), nil
+	return teams, nil, len(teams), 0, nil
 }
 
 func GetTeam(c context.Context, id string) (models.Team, interface{}, error) {

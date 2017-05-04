@@ -22,37 +22,37 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 	case "GET":
 		switch action {
 		case "feed":
-			val, included, count, err := controllers.GetFeedForContact(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetFeedForContact(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "headlines":
-			val, included, count, err := controllers.GetHeadlinesForContact(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetHeadlinesForContact(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "tweets":
-			val, included, count, err := controllers.GetTweetsForContact(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetTweetsForContact(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "twitterprofile":
 			return api.BaseSingleResponseHandler(controllers.GetTwitterProfileForContact(c, r, id))
 		case "twittertimeseries":
 			return api.BaseSingleResponseHandler(controllers.GetTwitterTimeseriesForContact(c, r, id))
 		case "instagrams":
-			val, included, count, err := controllers.GetInstagramPostsForContact(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetInstagramPostsForContact(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "instagramprofile":
 			return api.BaseSingleResponseHandler(controllers.GetInstagramProfileForContact(c, r, id))
 		case "instagramtimeseries":
 			return api.BaseSingleResponseHandler(controllers.GetInstagramTimeseriesForContact(c, r, id))
 		case "similar":
-			val, included, count, err := controllers.GetSimilarContacts(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetSimilarContacts(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "feeds":
-			val, included, count, err := controllers.GetFeedsForContact(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetFeedsForContact(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "emails":
-			val, included, count, err := controllers.GetEmailsForContact(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetEmailsForContact(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "lists":
-			val, included, count, err := controllers.GetListsForContact(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetListsForContact(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "database-profile":
 			return api.BaseSingleResponseHandler(controllers.GetEnrichProfile(c, r, id))
 		case "enrich":
@@ -70,11 +70,11 @@ func handleContact(c context.Context, r *http.Request, id string) (interface{}, 
 		return api.BaseSingleResponseHandler(controllers.UpdateSingleContact(c, r, id))
 	case "POST":
 		if id == "copy" {
-			val, included, count, err := controllers.CopyContacts(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.CopyContacts(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "bulkdelete" {
-			val, included, count, err := controllers.BulkDeleteContacts(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.BulkDeleteContacts(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		}
 	case "DELETE":
 		return api.BaseSingleResponseHandler(controllers.DeleteContact(c, r, id))
@@ -85,14 +85,14 @@ func handleContact(c context.Context, r *http.Request, id string) (interface{}, 
 func handleContacts(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		val, included, count, err := controllers.GetContacts(c, r)
-		return api.BaseResponseHandler(val, included, count, err, r)
+		val, included, count, total, err := controllers.GetContacts(c, r)
+		return api.BaseResponseHandler(val, included, count, total, err, r)
 	case "POST":
-		val, included, count, err := controllers.CreateContact(c, r)
-		return api.BaseResponseHandler(val, included, count, err, r)
+		val, included, count, total, err := controllers.CreateContact(c, r)
+		return api.BaseResponseHandler(val, included, count, total, err, r)
 	case "PATCH":
-		val, included, count, err := controllers.UpdateBatchContact(c, r)
-		return api.BaseResponseHandler(val, included, count, err, r)
+		val, included, count, total, err := controllers.UpdateBatchContact(c, r)
+		return api.BaseResponseHandler(val, included, count, total, err, r)
 	}
 	return nil, errors.New("method not implemented")
 }

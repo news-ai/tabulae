@@ -17,10 +17,10 @@ import (
 	"github.com/news-ai/web/utilities"
 )
 
-func HandleBulkEmailAttachActionUpload(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
+func HandleBulkEmailAttachActionUpload(c context.Context, r *http.Request) (interface{}, interface{}, int, int, error) {
 	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
 	userId := strconv.FormatInt(user.Id, 10)
@@ -34,7 +34,7 @@ func HandleBulkEmailAttachActionUpload(c context.Context, r *http.Request) (inte
 		defer f.Close()
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return nil, nil, 0, err
+			return nil, nil, 0, 0, err
 		}
 
 		noSpaceFileName := ""
@@ -46,13 +46,13 @@ func HandleBulkEmailAttachActionUpload(c context.Context, r *http.Request) (inte
 		val, err := UploadAttachment(r, fh.Filename, fileName, f, userId, "0", fh.Header.Get("Content-Type"))
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return nil, nil, 0, err
+			return nil, nil, 0, 0, err
 		}
 
 		files = append(files, val)
 	}
 
-	return files, nil, len(files), nil
+	return files, nil, len(files), 0, nil
 }
 
 func HandleEmailAttachActionUpload(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {

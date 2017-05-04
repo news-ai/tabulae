@@ -89,26 +89,26 @@ func filterAgency(c context.Context, queryType, query string) (models.Agency, er
  */
 
 // Gets every single agency
-func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface{}, int, error) {
+func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface{}, int, int, error) {
 	// If user is querying then it is not denied by the server
 	queryField := gcontext.Get(r, "q").(string)
 	if queryField != "" {
 		agencies, err := search.SearchAgency(c, r, queryField)
 		if err != nil {
-			return []models.Agency{}, nil, 0, err
+			return []models.Agency{}, nil, 0, 0, err
 		}
-		return agencies, nil, len(agencies), nil
+		return agencies, nil, len(agencies), 0, nil
 	}
 
 	// Now if user is not querying then check
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Agency{}, nil, 0, err
+		return []models.Agency{}, nil, 0, 0, err
 	}
 
 	if !user.IsAdmin {
-		return []models.Agency{}, nil, 0, errors.New("Forbidden")
+		return []models.Agency{}, nil, 0, 0, errors.New("Forbidden")
 	}
 
 	query := datastore.NewQuery("Agency")
@@ -117,7 +117,7 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Agency{}, nil, 0, err
+		return []models.Agency{}, nil, 0, 0, err
 	}
 
 	var agencies []models.Agency
@@ -125,14 +125,14 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface
 	err = nds.GetMulti(c, ks, agencies)
 	if err != nil {
 		log.Infof(c, "%v", err)
-		return agencies, nil, 0, err
+		return agencies, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(agencies); i++ {
 		agencies[i].Format(ks[i], "agencies")
 	}
 
-	return agencies, nil, len(agencies), nil
+	return agencies, nil, len(agencies), 0, nil
 }
 
 func GetAgency(c context.Context, id string) (models.Agency, interface{}, error) {

@@ -44,29 +44,29 @@ func handleEmail(c context.Context, r *http.Request, id string) (interface{}, er
 	switch r.Method {
 	case "GET":
 		if id == "team" {
-			val, included, count, err := controllers.GetTeamEmails(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetTeamEmails(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "scheduled" {
-			val, included, count, err := controllers.GetScheduledEmails(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetScheduledEmails(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "archived" {
-			val, included, count, err := controllers.GetArchivedEmails(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetArchivedEmails(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "cancelscheduled" {
-			val, included, count, err := controllers.CancelAllScheduled(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.CancelAllScheduled(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "sent" {
-			val, included, count, err := controllers.GetSentEmails(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetSentEmails(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "search" {
-			val, included, count, err := controllers.GetEmailSearch(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetEmailSearch(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "stats" {
-			val, included, count, err := controllers.GetEmailStats(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetEmailStats(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "campaigns" {
-			val, included, count, err := controllers.GetEmailCampaigns(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetEmailCampaigns(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "limits" {
 			return api.BaseSingleResponseHandler(controllers.GetEmailProviderLimits(c, r))
 		}
@@ -77,14 +77,14 @@ func handleEmail(c context.Context, r *http.Request, id string) (interface{}, er
 		if id == "upload" {
 			return api.BaseSingleResponseHandler(files.HandleEmailImageActionUpload(c, r))
 		} else if id == "bulksend" {
-			val, included, count, err := controllers.BulkSendEmail(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.BulkSendEmail(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "bulkcancel" {
-			val, included, count, err := controllers.BulkCancelEmail(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.BulkCancelEmail(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "bulkattach" {
-			val, included, count, err := files.HandleBulkEmailAttachActionUpload(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := files.HandleBulkEmailAttachActionUpload(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		}
 	}
 	return nil, errors.New("method not implemented")
@@ -93,8 +93,8 @@ func handleEmail(c context.Context, r *http.Request, id string) (interface{}, er
 func handleEmails(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		val, included, count, err := controllers.GetEmails(c, r)
-		return api.BaseResponseHandler(val, included, count, err, r)
+		val, included, count, total, err := controllers.GetEmails(c, r)
+		return api.BaseResponseHandler(val, included, count, total, err, r)
 	case "POST":
 		return api.BaseSingleResponseHandler(controllers.CreateEmailTransition(c, r))
 	case "PATCH":

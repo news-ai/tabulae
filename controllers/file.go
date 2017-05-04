@@ -81,13 +81,13 @@ func getFileUnauthorized(c context.Context, r *http.Request, id int64) (models.F
  */
 
 // Gets every single file by the user
-func GetFiles(c context.Context, r *http.Request) ([]models.File, interface{}, int, error) {
+func GetFiles(c context.Context, r *http.Request) ([]models.File, interface{}, int, int, error) {
 	files := []models.File{}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.File{}, nil, 0, err
+		return []models.File{}, nil, 0, 0, err
 	}
 
 	query := datastore.NewQuery("File").Filter("CreatedBy =", user.Id)
@@ -95,20 +95,20 @@ func GetFiles(c context.Context, r *http.Request) ([]models.File, interface{}, i
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.File{}, nil, 0, err
+		return []models.File{}, nil, 0, 0, err
 	}
 
 	files = make([]models.File, len(ks))
 	err = nds.GetMulti(c, ks, files)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.File{}, nil, 0, err
+		return []models.File{}, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(files); i++ {
 		files[i].Format(ks[i], "files")
 	}
-	return files, nil, len(files), nil
+	return files, nil, len(files), 0, nil
 }
 
 func GetFile(c context.Context, r *http.Request, id string) (models.File, interface{}, error) {

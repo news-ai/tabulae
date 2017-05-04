@@ -22,8 +22,8 @@ func handlePublicationActions(c context.Context, r *http.Request, id string, act
 	case "GET":
 		switch action {
 		case "headlines":
-			val, included, count, err := controllers.GetHeadlinesForPublication(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetHeadlinesForPublication(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "database-profile":
 			return api.BaseSingleResponseHandler(controllers.GetEnrichCompanyProfile(c, r, id))
 		case "verify":
@@ -51,14 +51,14 @@ func handlePublications(c context.Context, w http.ResponseWriter, r *http.Reques
 				return api.BaseSingleResponseHandler(controllers.FilterPublicationByNameAndUrl(c, val[0], ""))
 			}
 		}
-		val, included, count, err := controllers.GetPublications(c, r)
-		return api.BaseResponseHandler(val, included, count, err, r)
+		val, included, count, total, err := controllers.GetPublications(c, r)
+		return api.BaseResponseHandler(val, included, count, total, err, r)
 	case "POST":
-		val, included, count, err := controllers.CreatePublication(c, w, r)
+		val, included, count, total, err := controllers.CreatePublication(c, w, r)
 		if count == 1 {
 			return api.BaseSingleResponseHandler(val, included, err)
 		}
-		return api.BaseResponseHandler(val, included, count, err, r)
+		return api.BaseResponseHandler(val, included, count, total, err, r)
 	}
 	return nil, errors.New("method not implemented")
 }

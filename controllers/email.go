@@ -280,13 +280,13 @@ func emailsToContacts(c context.Context, r *http.Request, emails []models.Email)
 * Get methods
  */
 
-func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
+func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
 	emails := []models.Email{}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id)
@@ -294,14 +294,14 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	emails = make([]models.Email, len(ks))
 	err = nds.GetMulti(c, ks, emails)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(emails); i++ {
@@ -320,32 +320,32 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 		includes[i+len(mediaLists)] = contacts[i]
 	}
 
-	return emails, includes, len(emails), nil
+	return emails, includes, len(emails), 0, nil
 }
 
-func GetSentEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
+func GetSentEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
 	emails := []models.Email{}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	// Filter all emails that are in the future (scheduled for later)
-	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("IsSent =", true).Filter("Cancel =", false).Filter("Delievered =", true)
+	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("IsSent =", true).Filter("Cancel =", false).Filter("Delievered =", true).Filter("Archived =", false)
 	query = constructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	emails = make([]models.Email, len(ks))
 	err = nds.GetMulti(c, ks, emails)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(emails); i++ {
@@ -364,27 +364,27 @@ func GetSentEmails(c context.Context, r *http.Request) ([]models.Email, interfac
 		includes[i+len(mediaLists)] = contacts[i]
 	}
 
-	return emails, includes, len(emails), nil
+	return emails, includes, len(emails), 0, nil
 }
 
-func GetEmailStats(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
+func GetEmailStats(c context.Context, r *http.Request) (interface{}, interface{}, int, int, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
 	timeseriesData, count, err := search.SearchEmailTimeseriesByUserId(c, r, user)
-	return timeseriesData, nil, count, err
+	return timeseriesData, nil, count, 0, err
 }
 
-func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
+func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
 	emails := []models.Email{}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	// Filter all emails that are in the future (scheduled for later)
@@ -393,14 +393,14 @@ func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, int
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	emails = make([]models.Email, len(ks))
 	err = nds.GetMulti(c, ks, emails)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(emails); i++ {
@@ -419,16 +419,16 @@ func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, int
 		includes[i+len(mediaLists)] = contacts[i]
 	}
 
-	return emails, includes, len(emails), nil
+	return emails, includes, len(emails), 0, nil
 }
 
-func GetArchivedEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
+func GetArchivedEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
 	emails := []models.Email{}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	// Filter all emails that are in the future (scheduled for later)
@@ -437,14 +437,14 @@ func GetArchivedEmails(c context.Context, r *http.Request) ([]models.Email, inte
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	emails = make([]models.Email, len(ks))
 	err = nds.GetMulti(c, ks, emails)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(emails); i++ {
@@ -463,11 +463,11 @@ func GetArchivedEmails(c context.Context, r *http.Request) ([]models.Email, inte
 		includes[i+len(mediaLists)] = contacts[i]
 	}
 
-	return emails, includes, len(emails), nil
+	return emails, includes, len(emails), 0, nil
 }
 
-func GetTeamEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
-	return []models.Email{}, nil, 0, nil
+func GetTeamEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
+	return []models.Email{}, nil, 0, 0, nil
 }
 
 func GetEmailById(c context.Context, r *http.Request, id int64) (models.Email, error) {
@@ -882,13 +882,13 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, inter
 * Action methods
  */
 
-func CancelAllScheduled(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
+func CancelAllScheduled(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
 	emails := []models.Email{}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	// Filter all emails that are in the future (scheduled for later)
@@ -896,14 +896,14 @@ func CancelAllScheduled(c context.Context, r *http.Request) ([]models.Email, int
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	emails = make([]models.Email, len(ks))
 	err = nds.GetMulti(c, ks, emails)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(emails); i++ {
@@ -922,17 +922,17 @@ func CancelAllScheduled(c context.Context, r *http.Request) ([]models.Email, int
 	}
 
 	sync.EmailResourceBulkSync(r, emailIds)
-	return emails, nil, len(emails), nil
+	return emails, nil, len(emails), 0, nil
 }
 
-func BulkCancelEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
+func BulkCancelEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 	decoder := ffjson.NewDecoder()
 	var cancelEmails cancelEmailsBulk
 	err := decoder.Decode(buf, &cancelEmails)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	emails := []models.Email{}
@@ -955,7 +955,7 @@ func BulkCancelEmail(c context.Context, r *http.Request) ([]models.Email, interf
 	}
 
 	sync.EmailResourceBulkSync(r, emailIds)
-	return emails, nil, len(emails), nil
+	return emails, nil, len(emails), 0, nil
 }
 
 func CancelEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
@@ -1026,14 +1026,14 @@ func GetCurrentSchedueledEmails(c context.Context, r *http.Request) ([]models.Em
 	return emailsToSend, nil
 }
 
-func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, int, error) {
+func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 	decoder := ffjson.NewDecoder()
 	var bulkEmailIds models.BulkSendEmailIds
 	err := decoder.Decode(buf, &bulkEmailIds)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	emails := []models.Email{}
@@ -1049,7 +1049,7 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 	}
 
 	sync.EmailResourceBulkSync(r, emailIds)
-	return emails, nil, len(emails), nil
+	return emails, nil, len(emails), 0, nil
 }
 
 func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (models.Email, interface{}, error) {
@@ -1463,17 +1463,17 @@ func GetEmailLogs(c context.Context, r *http.Request, id string) (interface{}, i
 	return logs, nil, err
 }
 
-func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
+func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{}, int, int, error) {
 	queryField := gcontext.Get(r, "q").(string)
 
 	if queryField == "" {
-		return nil, nil, 0, nil
+		return nil, nil, 0, 0, nil
 	}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
 	if strings.Contains(queryField, "date:") || strings.Contains(queryField, "subject:") {
@@ -1550,9 +1550,9 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 				includes[i+len(mediaLists)] = contacts[i]
 			}
 
-			return emails, includes, count, err
+			return emails, includes, count, 0, err
 		} else {
-			return nil, nil, 0, errors.New("Please enter a valid date or subject")
+			return nil, nil, 0, 0, errors.New("Please enter a valid date or subject")
 		}
 	}
 
@@ -1570,21 +1570,21 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 		includes[i+len(mediaLists)] = contacts[i]
 	}
 
-	return emails, includes, count, err
+	return emails, includes, count, 0, err
 }
 
-func GetEmailCampaigns(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
+func GetEmailCampaigns(c context.Context, r *http.Request) (interface{}, interface{}, int, int, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
 	emails, count, err := search.SearchEmailCampaignsByDate(c, r, user)
-	return emails, nil, count, err
+	return emails, nil, count, 0, err
 }
 
-func GetEmailCampaignsForUser(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+func GetEmailCampaignsForUser(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {
 	user := models.User{}
 	err := errors.New("")
 
@@ -1593,35 +1593,35 @@ func GetEmailCampaignsForUser(c context.Context, r *http.Request, id string) (in
 		user, err = GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return []models.Email{}, nil, 0, err
+			return []models.Email{}, nil, 0, 0, err
 		}
 	default:
 		userId, err := utilities.StringIdToInt(id)
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return []models.Email{}, nil, 0, err
+			return []models.Email{}, nil, 0, 0, err
 		}
 		user, err = getUser(c, r, userId)
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return []models.Email{}, nil, 0, err
+			return []models.Email{}, nil, 0, 0, err
 		}
 	}
 
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.IsAdmin {
 		err = errors.New("Forbidden")
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	emails, count, err := search.SearchEmailCampaignsByDate(c, r, user)
-	return emails, nil, count, err
+	return emails, nil, count, 0, err
 }
 
 func GetEmailProviderLimits(c context.Context, r *http.Request) (interface{}, interface{}, error) {

@@ -135,11 +135,11 @@ func filterNotificationObject(c context.Context, r *http.Request, resourceName s
 * Get methods
  */
 
-func GetNotificationChangesForUser(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
+func GetNotificationChangesForUser(c context.Context, r *http.Request) (interface{}, interface{}, int, int, error) {
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.NotificationChange{}, nil, 0, err
+		return []models.NotificationChange{}, nil, 0, 0, err
 	}
 
 	query := datastore.NewQuery("NotificationChange").Filter("CreatedBy =", currentUser.Id).Order("-Created")
@@ -147,7 +147,7 @@ func GetNotificationChangesForUser(c context.Context, r *http.Request) (interfac
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.NotificationChange{}, nil, 0, err
+		return []models.NotificationChange{}, nil, 0, 0, err
 	}
 
 	notificationChanges := []models.NotificationChange{}
@@ -155,14 +155,14 @@ func GetNotificationChangesForUser(c context.Context, r *http.Request) (interfac
 	err = nds.GetMulti(c, ks, notificationChanges)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return notificationChanges, nil, 0, err
+		return notificationChanges, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(notificationChanges); i++ {
 		notificationChanges[i].Format(ks[i], "notificationchanges")
 	}
 
-	return notificationChanges, nil, len(notificationChanges), nil
+	return notificationChanges, nil, len(notificationChanges), 0, nil
 }
 
 func GetUnreadNotificationsForUser(c context.Context, r *http.Request, userId int64) ([]models.NotificationChange, error) {

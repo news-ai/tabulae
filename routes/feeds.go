@@ -30,8 +30,8 @@ func handleFeed(c context.Context, r *http.Request, id string) (interface{}, err
 func handleFeeds(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		val, included, count, err := controllers.GetFeeds(c, r)
-		return api.BaseResponseHandler(val, included, count, err, r)
+		val, included, count, total, err := controllers.GetFeeds(c, r)
+		return api.BaseResponseHandler(val, included, count, total, err, r)
 	case "POST":
 		return api.BaseSingleResponseHandler(controllers.CreateFeed(c, r))
 	}

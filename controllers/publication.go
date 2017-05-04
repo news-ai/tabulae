@@ -88,26 +88,26 @@ func filterPublication(c context.Context, queryType, query string) (models.Publi
 * Get methods
  */
 
-func GetPublications(c context.Context, r *http.Request) ([]models.Publication, interface{}, int, error) {
+func GetPublications(c context.Context, r *http.Request) ([]models.Publication, interface{}, int, int, error) {
 	// If user is querying then it is not denied by the server
 	queryField := gcontext.Get(r, "q").(string)
 	if queryField != "" {
 		publications, err := search.SearchPublication(c, r, queryField)
 		if err != nil {
-			return []models.Publication{}, nil, 0, err
+			return []models.Publication{}, nil, 0, 0, err
 		}
-		return publications, nil, len(publications), nil
+		return publications, nil, len(publications), 0, nil
 	}
 
 	// Now if user is not querying then check
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Publication{}, nil, 0, err
+		return []models.Publication{}, nil, 0, 0, err
 	}
 
 	if !user.IsAdmin {
-		return []models.Publication{}, nil, 0, errors.New("Forbidden")
+		return []models.Publication{}, nil, 0, 0, errors.New("Forbidden")
 	}
 
 	query := datastore.NewQuery("Publication")
@@ -115,7 +115,7 @@ func GetPublications(c context.Context, r *http.Request) ([]models.Publication, 
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Publication{}, nil, 0, err
+		return []models.Publication{}, nil, 0, 0, err
 	}
 
 	var publications []models.Publication
@@ -123,13 +123,13 @@ func GetPublications(c context.Context, r *http.Request) ([]models.Publication, 
 	err = nds.GetMulti(c, ks, publications)
 	if err != nil {
 		log.Infof(c, "%v", err)
-		return publications, nil, 0, err
+		return publications, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(publications); i++ {
 		publications[i].Format(ks[i], "publications")
 	}
-	return publications, nil, len(publications), nil
+	return publications, nil, len(publications), 0, nil
 }
 
 func GetPublication(c context.Context, id string) (models.Publication, interface{}, error) {
@@ -148,21 +148,21 @@ func GetPublication(c context.Context, id string) (models.Publication, interface
 	return publication, nil, nil
 }
 
-func GetHeadlinesForPublication(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+func GetHeadlinesForPublication(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
 	headlines, err := search.SearchHeadlinesByPublicationId(c, r, currentId)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
-	return headlines, nil, len(headlines), nil
+	return headlines, nil, len(headlines), 0, nil
 }
 
 func GetEnrichCompanyProfile(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
@@ -201,7 +201,7 @@ func GetEnrichCompanyProfile(c context.Context, r *http.Request, id string) (int
 * Create methods
  */
 
-func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, interface{}, int, error) {
+func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, interface{}, int, int, error) {
 	// Parse JSON
 	buf, _ := ioutil.ReadAll(r.Body)
 
@@ -213,7 +213,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 		currentUser, err := GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return []models.Publication{}, nil, 0, err
+			return []models.Publication{}, nil, 0, 0, err
 		}
 
 		var publications []models.Publication
@@ -222,7 +222,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return []models.Publication{}, nil, 0, err
+			return []models.Publication{}, nil, 0, 0, err
 		}
 
 		newPublications := []models.Publication{}
@@ -230,7 +230,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 			_, err = publications[i].Validate(c)
 			if err != nil {
 				log.Errorf(c, "%v", err)
-				return []models.Publication{}, nil, 0, err
+				return []models.Publication{}, nil, 0, 0, err
 			}
 
 			presentPublication, _, err := FilterPublicationByNameAndUrl(c, publications[i].Name, publications[i].Url)
@@ -238,7 +238,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 				_, err = publications[i].Create(c, r, currentUser)
 				if err != nil {
 					log.Errorf(c, "%v", err)
-					return []models.Publication{}, nil, 0, err
+					return []models.Publication{}, nil, 0, 0, err
 				}
 				sync.ResourceSync(r, publications[i].Id, "Publication", "create")
 				newPublications = append(newPublications, publications[i])
@@ -246,13 +246,13 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 				newPublications = append(newPublications, presentPublication)
 			}
 		}
-		return newPublications, nil, len(newPublications), err
+		return newPublications, nil, len(newPublications), 0, err
 	}
 
 	_, err = publication.Validate(c)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return models.Publication{}, nil, 0, err
+		return models.Publication{}, nil, 0, 0, err
 	}
 
 	presentPublication, _, err := FilterPublicationByNameAndUrl(c, publication.Name, publication.Url)
@@ -260,18 +260,18 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 		currentUser, err := GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return models.Publication{}, nil, 0, err
+			return models.Publication{}, nil, 0, 0, err
 		}
 		// Create publication
 		_, err = publication.Create(c, r, currentUser)
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return models.Publication{}, nil, 0, err
+			return models.Publication{}, nil, 0, 0, err
 		}
 		sync.ResourceSync(r, publication.Id, "Publication", "create")
-		return publication, nil, 1, nil
+		return publication, nil, 1, 0, nil
 	}
-	return presentPublication, nil, 1, nil
+	return presentPublication, nil, 1, 0, nil
 }
 
 /*

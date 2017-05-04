@@ -46,8 +46,8 @@ func handleEmailSetting(c context.Context, r *http.Request, id string) (interfac
 func handleEmailSettings(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		val, included, count, err := controllers.GetEmailSettings(c, r)
-		return api.BaseResponseHandler(val, included, count, err, r)
+		val, included, count, total, err := controllers.GetEmailSettings(c, r)
+		return api.BaseResponseHandler(val, included, count, total, err, r)
 	case "POST":
 		return api.BaseSingleResponseHandler(controllers.CreateEmailSettings(c, r))
 	}

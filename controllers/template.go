@@ -74,11 +74,11 @@ func GetTemplate(c context.Context, r *http.Request, id string) (models.Template
 	return template, nil, nil
 }
 
-func GetTemplates(c context.Context, r *http.Request) ([]models.Template, interface{}, int, error) {
+func GetTemplates(c context.Context, r *http.Request) ([]models.Template, interface{}, int, int, error) {
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Template{}, nil, 0, err
+		return []models.Template{}, nil, 0, 0, err
 	}
 
 	query := datastore.NewQuery("Template").Filter("CreatedBy =", user.Id).Filter("Archived =", false)
@@ -86,7 +86,7 @@ func GetTemplates(c context.Context, r *http.Request) ([]models.Template, interf
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Template{}, nil, 0, err
+		return []models.Template{}, nil, 0, 0, err
 	}
 
 	var templates []models.Template
@@ -95,14 +95,14 @@ func GetTemplates(c context.Context, r *http.Request) ([]models.Template, interf
 	err = nds.GetMulti(c, ks, templates)
 	if err != nil {
 		log.Infof(c, "%v", err)
-		return []models.Template{}, nil, 0, err
+		return []models.Template{}, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(templates); i++ {
 		templates[i].Format(ks[i], "templates")
 	}
 
-	return templates, nil, len(templates), nil
+	return templates, nil, len(templates), 0, nil
 }
 
 /*

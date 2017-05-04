@@ -240,13 +240,13 @@ func duplicateList(c context.Context, r *http.Request, id string, name string) (
  */
 
 // Gets every single media list
-func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.MediaList, interface{}, int, error) {
+func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.MediaList, interface{}, int, int, error) {
 	mediaLists := []models.MediaList{}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.MediaList{}, nil, 0, err
+		return []models.MediaList{}, nil, 0, 0, err
 	}
 
 	// If the user is active then we can return their media lists
@@ -261,14 +261,14 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return []models.MediaList{}, nil, 0, err
+			return []models.MediaList{}, nil, 0, 0, err
 		}
 
 		mediaLists = make([]models.MediaList, len(ks))
 		err = nds.GetMulti(c, ks, mediaLists)
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return []models.MediaList{}, nil, 0, err
+			return []models.MediaList{}, nil, 0, 0, err
 		}
 
 		for i := 0; i < len(mediaLists); i++ {
@@ -292,7 +292,7 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 			if len(fieldSelector) != 2 {
 				selectedLists, err := search.SearchListsByAll(c, r, queryField, user.Id)
 				if err != nil {
-					return nil, nil, 0, err
+					return nil, nil, 0, 0, err
 				}
 
 				selectedMediaLists := []models.MediaList{}
@@ -303,13 +303,13 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 					}
 				}
 
-				return selectedMediaLists, nil, len(selectedMediaLists), nil
+				return selectedMediaLists, nil, len(selectedMediaLists), 0, nil
 			}
 
 			if fieldSelector[0] == "client" || fieldSelector[0] == "tag" {
 				selectedLists, err := search.SearchListsByFieldSelector(c, r, fieldSelector[0], fieldSelector[1], user.Id)
 				if err != nil {
-					return nil, nil, 0, err
+					return nil, nil, 0, 0, err
 				}
 
 				selectedMediaLists := []models.MediaList{}
@@ -320,16 +320,16 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 					}
 				}
 
-				return selectedMediaLists, nil, len(selectedMediaLists), nil
+				return selectedMediaLists, nil, len(selectedMediaLists), 0, nil
 			}
 		}
 	}
 
 	// If the user is not active then we block their media lists
-	return mediaLists, nil, len(mediaLists), nil
+	return mediaLists, nil, len(mediaLists), 0, nil
 }
 
-func GetMediaListsClients(c context.Context, r *http.Request) (interface{}, interface{}, int, error) {
+func GetMediaListsClients(c context.Context, r *http.Request) (interface{}, interface{}, int, int, error) {
 	clients := struct {
 		Clients []string `json:"clients"`
 	}{
@@ -339,21 +339,21 @@ func GetMediaListsClients(c context.Context, r *http.Request) (interface{}, inte
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return clients, nil, 0, err
+		return clients, nil, 0, 0, err
 	}
 
 	query := datastore.NewQuery("MediaList").Filter("CreatedBy =", user.Id).Filter("Archived =", false)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return clients, nil, 0, err
+		return clients, nil, 0, 0, err
 	}
 
 	mediaLists := make([]models.MediaList, len(ks))
 	err = nds.GetMulti(c, ks, mediaLists)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return clients, nil, 0, err
+		return clients, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(mediaLists); i++ {
@@ -373,7 +373,7 @@ func GetMediaListsClients(c context.Context, r *http.Request) (interface{}, inte
 	}
 
 	clients.Clients = keys
-	return clients, nil, len(clients.Clients), nil
+	return clients, nil, len(clients.Clients), 0, nil
 }
 
 func GetAllMediaLists(c context.Context, r *http.Request) ([]models.MediaList, error) {
@@ -399,13 +399,13 @@ func GetAllMediaLists(c context.Context, r *http.Request) ([]models.MediaList, e
 }
 
 // Gets every single media list
-func GetPublicMediaLists(c context.Context, r *http.Request) ([]models.MediaList, interface{}, int, error) {
+func GetPublicMediaLists(c context.Context, r *http.Request) ([]models.MediaList, interface{}, int, int, error) {
 	mediaLists := []models.MediaList{}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.MediaList{}, nil, 0, err
+		return []models.MediaList{}, nil, 0, 0, err
 	}
 
 	query := datastore.NewQuery("MediaList").Filter("PublicList =", true).Filter("Archived =", false)
@@ -413,14 +413,14 @@ func GetPublicMediaLists(c context.Context, r *http.Request) ([]models.MediaList
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.MediaList{}, nil, 0, err
+		return []models.MediaList{}, nil, 0, 0, err
 	}
 
 	mediaLists = make([]models.MediaList, len(ks))
 	err = nds.GetMulti(c, ks, mediaLists)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.MediaList{}, nil, 0, err
+		return []models.MediaList{}, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(mediaLists); i++ {
@@ -431,22 +431,22 @@ func GetPublicMediaLists(c context.Context, r *http.Request) ([]models.MediaList
 		}
 	}
 
-	return mediaLists, nil, len(mediaLists), nil
+	return mediaLists, nil, len(mediaLists), 0, nil
 }
 
 // Gets all of the team media lists
 // Excludes any media list that is logged in users
-func GetTeamMediaLists(c context.Context, r *http.Request) ([]models.MediaList, interface{}, int, error) {
+func GetTeamMediaLists(c context.Context, r *http.Request) ([]models.MediaList, interface{}, int, int, error) {
 	mediaLists := []models.MediaList{}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.MediaList{}, nil, 0, err
+		return []models.MediaList{}, nil, 0, 0, err
 	}
 
 	if user.TeamId == 0 {
-		return []models.MediaList{}, nil, 0, errors.New("You are not a part of a team")
+		return []models.MediaList{}, nil, 0, 0, errors.New("You are not a part of a team")
 	}
 
 	query := datastore.NewQuery("MediaList").Filter("TeamId =", user.TeamId).Filter("Archived =", false)
@@ -454,14 +454,14 @@ func GetTeamMediaLists(c context.Context, r *http.Request) ([]models.MediaList, 
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.MediaList{}, nil, 0, err
+		return []models.MediaList{}, nil, 0, 0, err
 	}
 
 	mediaLists = make([]models.MediaList, len(ks))
 	err = nds.GetMulti(c, ks, mediaLists)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.MediaList{}, nil, 0, err
+		return []models.MediaList{}, nil, 0, 0, err
 	}
 
 	mediaListsOthers := []models.MediaList{}
@@ -473,7 +473,7 @@ func GetTeamMediaLists(c context.Context, r *http.Request) ([]models.MediaList, 
 		}
 	}
 
-	return mediaListsOthers, nil, len(mediaListsOthers), nil
+	return mediaListsOthers, nil, len(mediaListsOthers), 0, nil
 }
 
 func GetMediaList(c context.Context, r *http.Request, id string) (models.MediaList, interface{}, error) {
@@ -660,14 +660,16 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	if len(updatedMediaList.Contacts) > 0 {
 		mediaList.Contacts = updatedMediaList.Contacts
 	} else {
-		utilities.UpdateIfNotBlank(&mediaList.Client, updatedMediaList.Client)
-		if len(updatedMediaList.Tags) > 0 {
-			mediaList.Tags = updatedMediaList.Tags
-		}
+		if len(updatedMediaList.FieldsMap) == 0 {
+			utilities.UpdateIfNotBlank(&mediaList.Client, updatedMediaList.Client)
+			if len(updatedMediaList.Tags) > 0 {
+				mediaList.Tags = updatedMediaList.Tags
+			}
 
-		// If you want to empty a list
-		if len(mediaList.Tags) > 0 && len(updatedMediaList.Tags) == 0 {
-			mediaList.Tags = updatedMediaList.Tags
+			// If you want to empty a list
+			if len(mediaList.Tags) > 0 && len(updatedMediaList.Tags) == 0 {
+				mediaList.Tags = updatedMediaList.Tags
+			}
 		}
 	}
 
@@ -776,29 +778,29 @@ func ReSyncMediaList(c context.Context, r *http.Request, id string) (models.Medi
 * Action methods
  */
 
-func GetContactsForList(c context.Context, r *http.Request, id string) ([]models.Contact, interface{}, int, error) {
+func GetContactsForList(c context.Context, r *http.Request, id string) ([]models.Contact, interface{}, int, int, error) {
 	// Get the details of the current media list
 	mediaList, _, err := GetMediaList(c, r, id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Contact{}, nil, 0, err
+		return []models.Contact{}, nil, 0, 0, err
 	}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Contact{}, nil, 0, err
+		return []models.Contact{}, nil, 0, 0, err
 	}
 
 	queryField := gcontext.Get(r, "q").(string)
 	if queryField != "" {
 		contacts, err := search.SearchContactsByList(c, r, queryField, user, mediaList.CreatedBy, mediaList.Id)
 		if err != nil {
-			return []models.Contact{}, nil, 0, err
+			return []models.Contact{}, nil, 0, 0, err
 		}
 
 		publications := contactsToPublications(c, contacts)
-		return contacts, publications, len(contacts), nil
+		return contacts, publications, len(contacts), 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -808,7 +810,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 	endPosition := startPosition + limit
 
 	if len(mediaList.Contacts) < startPosition {
-		return []models.Contact{}, nil, 0, err
+		return []models.Contact{}, nil, 0, 0, err
 	}
 
 	if len(mediaList.Contacts) < endPosition {
@@ -827,7 +829,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 	err = nds.GetMulti(c, subsetKeyIds, contacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Contact{}, nil, 0, err
+		return []models.Contact{}, nil, 0, 0, err
 	}
 
 	instagramUsers := []string{}
@@ -936,7 +938,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 
 				if customField.Name == "latestheadline" {
 					// Get the feed of the contact
-					headlines, _, _, err := GetHeadlinesForContactById(c, r, contacts[i].Id)
+					headlines, _, _, _, err := GetHeadlinesForContactById(c, r, contacts[i].Id)
 
 					// Set the value of the post name to the user
 					if err == nil && len(headlines) > 0 {
@@ -968,21 +970,21 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 
 	// Add includes
 	publications := contactsToPublications(c, contacts)
-	return contacts, publications, len(contacts), nil
+	return contacts, publications, len(contacts), 0, nil
 }
 
-func GetEmailsForList(c context.Context, r *http.Request, id string) ([]models.Email, interface{}, int, error) {
+func GetEmailsForList(c context.Context, r *http.Request, id string) ([]models.Email, interface{}, int, int, error) {
 	// Get the details of the current media list
 	mediaList, _, err := GetMediaList(c, r, id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	emails, count, err := filterEmailbyListId(c, r, mediaList.Id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, nil, 0, err
+		return []models.Email{}, nil, 0, 0, err
 	}
 
 	// Add includes
@@ -997,38 +999,38 @@ func GetEmailsForList(c context.Context, r *http.Request, id string) ([]models.E
 		includes[i+len(mediaLists)] = contacts[i]
 	}
 
-	return emails, includes, count, nil
+	return emails, includes, count, 0, nil
 }
 
-func GetHeadlinesForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+func GetHeadlinesForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
 	feeds, err := GetFeedsByResourceId(c, r, "ListId", currentId)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
 	headlines, err := search.SearchHeadlinesByResourceId(c, r, feeds)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
-	return headlines, nil, len(headlines), nil
+	return headlines, nil, len(headlines), 0, nil
 }
 
-func GetFeedForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+func GetFeedForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
 	mediaList, err := getMediaList(c, r, currentId)
@@ -1043,30 +1045,30 @@ func GetFeedForList(c context.Context, r *http.Request, id string) (interface{},
 	err = nds.GetMulti(c, contactIds, contacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Contact{}, nil, 0, err
+		return []models.Contact{}, nil, 0, 0, err
 	}
 
 	feeds, err := GetFeedsByResourceId(c, r, "ListId", currentId)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
 	feed, err := search.SearchFeedForContacts(c, r, contacts, feeds)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
-	return feed, nil, len(feed), nil
+	return feed, nil, len(feed), 0, nil
 }
 
-func GetTweetsForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, error) {
+func GetTweetsForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
 	mediaList, err := getMediaList(c, r, currentId)
@@ -1081,7 +1083,7 @@ func GetTweetsForList(c context.Context, r *http.Request, id string) (interface{
 	err = nds.GetMulti(c, contactIds, contacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Contact{}, nil, 0, err
+		return []models.Contact{}, nil, 0, 0, err
 	}
 
 	usernames := []string{}
@@ -1094,10 +1096,10 @@ func GetTweetsForList(c context.Context, r *http.Request, id string) (interface{
 	tweets, err := search.SearchTweetsByUsernames(c, r, usernames)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, nil, 0, err
+		return nil, nil, 0, 0, err
 	}
 
-	return tweets, nil, len(tweets), nil
+	return tweets, nil, len(tweets), 0, nil
 }
 
 func GetTwitterTimeseriesForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {

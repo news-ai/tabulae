@@ -99,17 +99,17 @@ func generateTokenAndEmail(c context.Context, r *http.Request, invite models.Inv
 * Get methods
  */
 
-func GetInvites(c context.Context, r *http.Request) ([]models.UserInviteCode, interface{}, int, error) {
+func GetInvites(c context.Context, r *http.Request) ([]models.UserInviteCode, interface{}, int, int, error) {
 	currentUser, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.UserInviteCode{}, nil, 0, err
+		return []models.UserInviteCode{}, nil, 0, 0, err
 	}
 
 	ks, err := datastore.NewQuery("UserInviteCode").Filter("CreatedBy =", currentUser.Id).Filter("IsUsed =", true).KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.UserInviteCode{}, nil, 0, err
+		return []models.UserInviteCode{}, nil, 0, 0, err
 	}
 
 	var userInviteCodes []models.UserInviteCode
@@ -117,14 +117,14 @@ func GetInvites(c context.Context, r *http.Request) ([]models.UserInviteCode, in
 	err = nds.GetMulti(c, ks, userInviteCodes)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.UserInviteCode{}, nil, 0, err
+		return []models.UserInviteCode{}, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(userInviteCodes); i++ {
 		userInviteCodes[i].Format(ks[i], "invites")
 	}
 
-	return userInviteCodes, nil, len(userInviteCodes), nil
+	return userInviteCodes, nil, len(userInviteCodes), 0, nil
 }
 
 func GetInviteFromInvitationCode(c context.Context, r *http.Request, invitationCode string) (models.UserInviteCode, error) {

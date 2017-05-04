@@ -101,13 +101,13 @@ func GetEmailSettingById(c context.Context, r *http.Request, id int64) (models.E
 	return models.EmailSetting{}, errors.New("No email setting by this id")
 }
 
-func GetEmailSettings(c context.Context, r *http.Request) ([]models.EmailSetting, interface{}, int, error) {
+func GetEmailSettings(c context.Context, r *http.Request) ([]models.EmailSetting, interface{}, int, int, error) {
 	emailSettings := []models.EmailSetting{}
 
 	user, err := GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.EmailSetting{}, nil, 0, err
+		return []models.EmailSetting{}, nil, 0, 0, err
 	}
 
 	query := datastore.NewQuery("EmailSetting").Filter("CreatedBy =", user.Id)
@@ -115,21 +115,21 @@ func GetEmailSettings(c context.Context, r *http.Request) ([]models.EmailSetting
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.EmailSetting{}, nil, 0, err
+		return []models.EmailSetting{}, nil, 0, 0, err
 	}
 
 	emailSettings = make([]models.EmailSetting, len(ks))
 	err = nds.GetMulti(c, ks, emailSettings)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.EmailSetting{}, nil, 0, err
+		return []models.EmailSetting{}, nil, 0, 0, err
 	}
 
 	for i := 0; i < len(emailSettings); i++ {
 		emailSettings[i].Format(ks[i], "emailsettings")
 	}
 
-	return emailSettings, nil, len(emailSettings), nil
+	return emailSettings, nil, len(emailSettings), 0, nil
 }
 
 /*

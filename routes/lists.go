@@ -27,20 +27,20 @@ func handleMediaListActions(c context.Context, r *http.Request, id string, actio
 	case "GET":
 		switch action {
 		case "contacts":
-			val, included, count, err := controllers.GetContactsForList(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetContactsForList(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "headlines":
-			val, included, count, err := controllers.GetHeadlinesForList(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetHeadlinesForList(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "tweets":
-			val, included, count, err := controllers.GetTweetsForList(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetTweetsForList(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "feed":
-			val, included, count, err := controllers.GetFeedForList(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetFeedForList(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "emails":
-			val, included, count, err := controllers.GetEmailsForList(c, r, id)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetEmailsForList(c, r, id)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "public":
 			return api.BaseSingleResponseHandler(controllers.UpdateMediaListToPublic(c, r, id))
 		case "resync":
@@ -65,17 +65,17 @@ func handleMediaList(c context.Context, r *http.Request, id string) (interface{}
 	switch r.Method {
 	case "GET":
 		if id == "archived" {
-			val, included, count, err := controllers.GetMediaLists(c, r, true)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetMediaLists(c, r, true)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "clients" {
-			val, included, count, err := controllers.GetMediaListsClients(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetMediaListsClients(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "public" {
-			val, included, count, err := controllers.GetPublicMediaLists(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetPublicMediaLists(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		} else if id == "team" {
-			val, included, count, err := controllers.GetTeamMediaLists(c, r)
-			return api.BaseResponseHandler(val, included, count, err, r)
+			val, included, count, total, err := controllers.GetTeamMediaLists(c, r)
+			return api.BaseResponseHandler(val, included, count, total, err, r)
 		}
 		return api.BaseSingleResponseHandler(controllers.GetMediaList(c, r, id))
 	case "PATCH":
@@ -89,8 +89,8 @@ func handleMediaList(c context.Context, r *http.Request, id string) (interface{}
 func handleMediaLists(c context.Context, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		val, included, count, err := controllers.GetMediaLists(c, r, false)
-		return api.BaseResponseHandler(val, included, count, err, r)
+		val, included, count, total, err := controllers.GetMediaLists(c, r, false)
+		return api.BaseResponseHandler(val, included, count, total, err, r)
 	case "POST":
 		return api.BaseSingleResponseHandler(controllers.CreateMediaList(c, w, r))
 	}
