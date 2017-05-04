@@ -104,11 +104,11 @@ type DatabaseResponse struct {
 	Data  interface{} `json:"data"`
 }
 
-func searchESContactsDatabase(c context.Context, elasticQuery elastic.ElasticQuery) (interface{}, int, error) {
+func searchESContactsDatabase(c context.Context, elasticQuery elastic.ElasticQuery) (interface{}, int, int, error) {
 	hits, err := elasticContactDatabase.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 
 	contactHits := hits.Hits
@@ -122,7 +122,7 @@ func searchESContactsDatabase(c context.Context, elasticQuery elastic.ElasticQue
 		contacts = append(contacts, contactData)
 	}
 
-	return contacts, len(contactHits), nil
+	return contacts, len(contactHits), hits.Total, nil
 }
 
 func SearchCompanyDatabase(c context.Context, r *http.Request, url string) (interface{}, error) {
@@ -171,7 +171,7 @@ func SearchContactDatabase(c context.Context, r *http.Request, email string) (En
 	return enhanceResponse, nil
 }
 
-func SearchESContactsDatabase(c context.Context, r *http.Request) (interface{}, int, error) {
+func SearchESContactsDatabase(c context.Context, r *http.Request) (interface{}, int, int, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 

@@ -19,28 +19,26 @@ var (
 	elasticEmails          *elastic.Elastic
 )
 
-func searchEmail(c context.Context, elasticQuery interface{}) (interface{}, int, error) {
+func searchEmail(c context.Context, elasticQuery interface{}) (interface{}, int, int, error) {
 	hits, err := elasticEmailLog.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
-
-	log.Infof(c, "%v", hits)
 
 	emailLogHits := []interface{}{}
 	for i := 0; i < len(hits.Hits); i++ {
 		emailLogHits = append(emailLogHits, hits.Hits[i].Source.Data)
 	}
 
-	return emailLogHits, len(emailLogHits), nil
+	return emailLogHits, len(emailLogHits), hits.Total, nil
 }
 
-func searchEmailTimeseries(c context.Context, elasticQuery interface{}) (interface{}, int, error) {
+func searchEmailTimeseries(c context.Context, elasticQuery interface{}) (interface{}, int, int, error) {
 	hits, err := elasticEmailTimeseries.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 
 	emailTimeseriesHits := []interface{}{}
@@ -48,14 +46,14 @@ func searchEmailTimeseries(c context.Context, elasticQuery interface{}) (interfa
 		emailTimeseriesHits = append(emailTimeseriesHits, hits.Hits[i].Source.Data)
 	}
 
-	return emailTimeseriesHits, len(emailTimeseriesHits), nil
+	return emailTimeseriesHits, len(emailTimeseriesHits), hits.Total, nil
 }
 
-func searchEmailQuery(c context.Context, elasticQuery interface{}) ([]models.Email, int, error) {
+func searchEmailQuery(c context.Context, elasticQuery interface{}) ([]models.Email, int, int, error) {
 	hits, err := elasticEmails.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Email{}, 0, err
+		return []models.Email{}, 0, 0, err
 	}
 
 	emailHits := hits.Hits
@@ -73,10 +71,10 @@ func searchEmailQuery(c context.Context, elasticQuery interface{}) ([]models.Ema
 		emailLogHits = append(emailLogHits, email)
 	}
 
-	return emailLogHits, len(emailLogHits), nil
+	return emailLogHits, len(emailLogHits), hits.Total, nil
 }
 
-func SearchEmailTimeseriesByUserId(c context.Context, r *http.Request, user models.User) (interface{}, int, error) {
+func SearchEmailTimeseriesByUserId(c context.Context, r *http.Request, user models.User) (interface{}, int, int, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
@@ -96,9 +94,9 @@ func SearchEmailTimeseriesByUserId(c context.Context, r *http.Request, user mode
 	return searchEmailTimeseries(c, elasticQuery)
 }
 
-func SearchEmailLogByEmailId(c context.Context, r *http.Request, user models.User, emailId int64) (interface{}, int, error) {
+func SearchEmailLogByEmailId(c context.Context, r *http.Request, user models.User, emailId int64) (interface{}, int, int, error) {
 	if emailId == 0 {
-		return nil, 0, nil
+		return nil, 0, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -115,9 +113,9 @@ func SearchEmailLogByEmailId(c context.Context, r *http.Request, user models.Use
 	return searchEmail(c, elasticQuery)
 }
 
-func SearchEmailsByQuery(c context.Context, r *http.Request, user models.User, searchQuery string) ([]models.Email, int, error) {
+func SearchEmailsByQuery(c context.Context, r *http.Request, user models.User, searchQuery string) ([]models.Email, int, int, error) {
 	if searchQuery == "" {
-		return nil, 0, nil
+		return nil, 0, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -152,9 +150,9 @@ func SearchEmailsByQuery(c context.Context, r *http.Request, user models.User, s
 	return searchEmailQuery(c, elasticQuery)
 }
 
-func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.User, emailDate string, emailSubject string, emailBaseSubject string) ([]models.Email, int, error) {
+func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.User, emailDate string, emailSubject string, emailBaseSubject string) ([]models.Email, int, int, error) {
 	if emailDate == "" && emailSubject == "" {
-		return nil, 0, nil
+		return nil, 0, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -202,9 +200,9 @@ func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.U
 	return searchEmailQuery(c, elasticQuery)
 }
 
-func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user models.User, emailDate string, subject string, baseSubject string) ([]models.Email, int, error) {
+func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user models.User, emailDate string, subject string, baseSubject string) ([]models.Email, int, int, error) {
 	if emailDate == "" {
-		return nil, 0, nil
+		return nil, 0, 0, nil
 	}
 
 	elasticQuery := elastic.ElasticQueryWithMust{}

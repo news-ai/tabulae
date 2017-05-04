@@ -53,11 +53,11 @@ func (ec *EmailCampaignRequest) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery interface{}, user models.User) (interface{}, int, error) {
+func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery interface{}, user models.User) (interface{}, int, int, error) {
 	hits, err := elasticEmailCampaign.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 
 	// Get all email campaigns
@@ -78,7 +78,7 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 	// Get all emails for each of the campaigns
 	emailCampaignsResponse := []EmailCampaignResponse{}
 	for i := 0; i < len(emailCampaigns); i++ {
-		emails, _, err := SearchEmailsByDateAndSubject(c, r, user, emailCampaigns[i].Date, emailCampaigns[i].Subject, emailCampaigns[i].BaseSubject)
+		emails, _, _, err := SearchEmailsByDateAndSubject(c, r, user, emailCampaigns[i].Date, emailCampaigns[i].Subject, emailCampaigns[i].BaseSubject)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			continue
@@ -135,10 +135,10 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 		}
 	}
 
-	return emailCampaignsResponse, len(emailCampaignsResponse), nil
+	return emailCampaignsResponse, len(emailCampaignsResponse), hits.Total, nil
 }
 
-func SearchEmailCampaignsByDate(c context.Context, r *http.Request, user models.User) (interface{}, int, error) {
+func SearchEmailCampaignsByDate(c context.Context, r *http.Request, user models.User) (interface{}, int, int, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 

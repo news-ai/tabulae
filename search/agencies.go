@@ -18,7 +18,7 @@ var (
 	elasticAgency *elastic.Elastic
 )
 
-func SearchAgency(c context.Context, r *http.Request, search string) ([]models.Agency, error) {
+func SearchAgency(c context.Context, r *http.Request, search string) ([]models.Agency, int, error) {
 	search = url.QueryEscape(search)
 	search = "q=data.Name:" + search
 
@@ -28,7 +28,7 @@ func SearchAgency(c context.Context, r *http.Request, search string) ([]models.A
 	hits, err := elasticAgency.Query(c, offset, limit, search)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.Agency{}, err
+		return []models.Agency{}, 0, err
 	}
 
 	agencyHits := hits.Hits
@@ -46,5 +46,5 @@ func SearchAgency(c context.Context, r *http.Request, search string) ([]models.A
 		agencies = append(agencies, agency)
 	}
 
-	return agencies, nil
+	return agencies, hits.Total, nil
 }

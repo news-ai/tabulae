@@ -374,8 +374,8 @@ func GetEmailStats(c context.Context, r *http.Request) (interface{}, interface{}
 		return nil, nil, 0, 0, err
 	}
 
-	timeseriesData, count, err := search.SearchEmailTimeseriesByUserId(c, r, user)
-	return timeseriesData, nil, count, 0, err
+	timeseriesData, count, total, err := search.SearchEmailTimeseriesByUserId(c, r, user)
+	return timeseriesData, nil, count, total, err
 }
 
 func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
@@ -1459,7 +1459,7 @@ func GetEmailLogs(c context.Context, r *http.Request, id string) (interface{}, i
 		return email, nil, err
 	}
 
-	logs, _, err := search.SearchEmailLogByEmailId(c, r, user, email.Id)
+	logs, _, _, err := search.SearchEmailLogByEmailId(c, r, user, email.Id)
 	return logs, nil, err
 }
 
@@ -1536,7 +1536,7 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 		}
 
 		if emailDate != "" || emailSubject != "" {
-			emails, count, err := search.SearchEmailsByQueryFields(c, r, user, emailDate, emailSubject, emailBaseSubject)
+			emails, count, total, err := search.SearchEmailsByQueryFields(c, r, user, emailDate, emailSubject, emailBaseSubject)
 
 			// Add includes
 			mediaLists := emailsToLists(c, r, emails)
@@ -1550,13 +1550,13 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 				includes[i+len(mediaLists)] = contacts[i]
 			}
 
-			return emails, includes, count, 0, err
+			return emails, includes, count, total, err
 		} else {
 			return nil, nil, 0, 0, errors.New("Please enter a valid date or subject")
 		}
 	}
 
-	emails, count, err := search.SearchEmailsByQuery(c, r, user, queryField)
+	emails, count, total, err := search.SearchEmailsByQuery(c, r, user, queryField)
 
 	// Add includes
 	mediaLists := emailsToLists(c, r, emails)
@@ -1570,7 +1570,7 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 		includes[i+len(mediaLists)] = contacts[i]
 	}
 
-	return emails, includes, count, 0, err
+	return emails, includes, count, total, err
 }
 
 func GetEmailCampaigns(c context.Context, r *http.Request) (interface{}, interface{}, int, int, error) {
@@ -1580,8 +1580,8 @@ func GetEmailCampaigns(c context.Context, r *http.Request) (interface{}, interfa
 		return nil, nil, 0, 0, err
 	}
 
-	emails, count, err := search.SearchEmailCampaignsByDate(c, r, user)
-	return emails, nil, count, 0, err
+	emails, count, total, err := search.SearchEmailCampaignsByDate(c, r, user)
+	return emails, nil, count, total, err
 }
 
 func GetEmailCampaignsForUser(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {
@@ -1620,8 +1620,8 @@ func GetEmailCampaignsForUser(c context.Context, r *http.Request, id string) (in
 		return []models.Email{}, nil, 0, 0, err
 	}
 
-	emails, count, err := search.SearchEmailCampaignsByDate(c, r, user)
-	return emails, nil, count, 0, err
+	emails, count, total, err := search.SearchEmailCampaignsByDate(c, r, user)
+	return emails, nil, count, total, err
 }
 
 func GetEmailProviderLimits(c context.Context, r *http.Request) (interface{}, interface{}, error) {
