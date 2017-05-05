@@ -47,11 +47,11 @@ func (t *Tweet) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchTweet(c context.Context, elasticQuery interface{}, usernames []string) ([]Tweet, error) {
+func searchTweet(c context.Context, elasticQuery interface{}, usernames []string) ([]Tweet, int, error) {
 	hits, err := elasticTweet.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []Tweet{}, err
+		return []Tweet{}, 0, err
 	}
 
 	usernamesMap := map[string]bool{}
@@ -78,7 +78,7 @@ func searchTweet(c context.Context, elasticQuery interface{}, usernames []string
 		tweets = append(tweets, tweet)
 	}
 
-	return tweets, nil
+	return tweets, hits.Total, nil
 }
 
 func searchTwitterProfile(c context.Context, elasticQuery interface{}, username string) (interface{}, error) {
@@ -117,9 +117,9 @@ func SearchProfileByUsername(c context.Context, r *http.Request, username string
 	return searchTwitterProfile(c, elasticQuery, username)
 }
 
-func SearchTweetsByUsername(c context.Context, r *http.Request, username string) ([]Tweet, error) {
+func SearchTweetsByUsername(c context.Context, r *http.Request, username string) ([]Tweet, int, error) {
 	if username == "" {
-		return []Tweet{}, nil
+		return []Tweet{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -144,9 +144,9 @@ func SearchTweetsByUsername(c context.Context, r *http.Request, username string)
 	return searchTweet(c, elasticQuery, []string{username})
 }
 
-func SearchTweetsByUsernames(c context.Context, r *http.Request, usernames []string) ([]Tweet, error) {
+func SearchTweetsByUsernames(c context.Context, r *http.Request, usernames []string) ([]Tweet, int, error) {
 	if len(usernames) == 0 {
-		return []Tweet{}, nil
+		return []Tweet{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -165,7 +165,7 @@ func SearchTweetsByUsernames(c context.Context, r *http.Request, usernames []str
 	}
 
 	if len(elasticQuery.Query.Bool.Should) == 0 {
-		return []Tweet{}, nil
+		return []Tweet{}, 0, nil
 	}
 
 	elasticQuery.Query.Bool.MinimumShouldMatch = "0"

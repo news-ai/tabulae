@@ -1093,13 +1093,13 @@ func GetTweetsForList(c context.Context, r *http.Request, id string) (interface{
 		}
 	}
 
-	tweets, err := search.SearchTweetsByUsernames(c, r, usernames)
+	tweets, total, err := search.SearchTweetsByUsernames(c, r, usernames)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
 	}
 
-	return tweets, nil, len(tweets), 0, nil
+	return tweets, nil, len(tweets), total, nil
 }
 
 func GetTwitterTimeseriesForList(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {

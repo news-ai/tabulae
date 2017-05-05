@@ -917,13 +917,13 @@ func GetTweetsForContact(c context.Context, r *http.Request, id string) (interfa
 		return nil, nil, 0, 0, err
 	}
 
-	tweets, err := search.SearchTweetsByUsername(c, r, contact.Twitter)
+	tweets, total, err := search.SearchTweetsByUsername(c, r, contact.Twitter)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
 	}
 
-	return tweets, nil, len(tweets), 0, nil
+	return tweets, nil, len(tweets), total, nil
 }
 
 func GetTwitterProfileForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
