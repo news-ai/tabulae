@@ -9,23 +9,20 @@ import (
 )
 
 var (
-	PubsubClient         *pubsub.Client
-	InfluencerTopicID    = "influencer"
-	ContactsTopicID      = "datastore-sync-contacts-functions"
-	PublicationsTopicID  = "datastore-sync-publications-functions"
-	ListsTopicID         = "datastore-sync-lists-functions"
-	ListChangeTopicId    = "process-list-change"
-	EmailChangeTopicID   = "process-email-change"
-	EmailBulkTopicID     = "process-email-change-bulk"
-	ContactChangeTopicID = "process-contact-change"
-	UsersTopicID         = "datastore-sync-users-functions"
-	UserChangeTopicID    = "process-user-change"
-	TwitterTopicID       = "process-twitter-feed"
-	InstagramTopicID     = "process-instagram-feed"
-	EnhanceTopicID       = "process-enhance"
-	RSSFeedTopicID       = "process-rss-feed"
-	ListUploadTopicID    = "process-new-list-upload"
-	projectID            = "newsai-1166"
+	PubsubClient             *pubsub.Client
+	InfluencerTopicID        = "influencer"
+	ListChangeTopicId        = "process-list-change"
+	EmailChangeTopicID       = "process-email-change"
+	EmailBulkTopicID         = "process-email-change-bulk"
+	ContactChangeTopicID     = "process-contact-change"
+	UserChangeTopicID        = "process-user-change"
+	PublicationChangeTopicID = "process-new-publication-upload"
+	TwitterTopicID           = "process-twitter-feed"
+	InstagramTopicID         = "process-instagram-feed"
+	EnhanceTopicID           = "process-enhance"
+	RSSFeedTopicID           = "process-rss-feed"
+	ListUploadTopicID        = "process-new-list-upload"
+	projectID                = "newsai-1166"
 )
 
 func configurePubsub(r *http.Request) (*pubsub.Client, error) {
@@ -45,39 +42,6 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		return nil, err
 	} else if !exists {
 		if _, err := PubsubClient.CreateTopic(c, InfluencerTopicID); err != nil {
-			log.Errorf(c, "%v", err)
-			return nil, err
-		}
-	}
-
-	// Create the topic for contacts if it doesn't exist.
-	if exists, err := PubsubClient.Topic(ContactsTopicID).Exists(c); err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, err
-	} else if !exists {
-		if _, err := PubsubClient.CreateTopic(c, ContactsTopicID); err != nil {
-			log.Errorf(c, "%v", err)
-			return nil, err
-		}
-	}
-
-	// Create the topic for publications if it doesn't exist.
-	if exists, err := PubsubClient.Topic(PublicationsTopicID).Exists(c); err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, err
-	} else if !exists {
-		if _, err := PubsubClient.CreateTopic(c, PublicationsTopicID); err != nil {
-			log.Errorf(c, "%v", err)
-			return nil, err
-		}
-	}
-
-	// Create the topic for publications if it doesn't exist.
-	if exists, err := PubsubClient.Topic(ListsTopicID).Exists(c); err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, err
-	} else if !exists {
-		if _, err := PubsubClient.CreateTopic(c, ListsTopicID); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}

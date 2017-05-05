@@ -226,8 +226,7 @@ func duplicateList(c context.Context, r *http.Request, id string, name string) (
 	mediaList.Contacts = newContacts
 	mediaList.Save(c)
 
-	sync.ResourceSync(r, mediaList.Id, "List", "create")
-	sync.ResourceBulkSync(r, mediaList.Contacts, "Contact", "create")
+	sync.ListUploadResourceBulkSync(r, mediaList.Id, mediaList.Contacts, []int64{})
 	return mediaList, nil, nil
 }
 

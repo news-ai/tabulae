@@ -127,46 +127,6 @@ func ListUploadResourceBulkSync(r *http.Request, listId int64, contactIds []int6
 	return nil
 }
 
-func ResourceBulkSync(r *http.Request, resourceIds []int64, resource string, method string) error {
-	topicName := ""
-	if resource == "Contact" {
-		topicName = ContactsTopicID
-	} else {
-		return nil
-	}
-
-	tempStringResourceIds := []string{}
-	stringResourceIds := []string{}
-
-	for i := 0; i < len(resourceIds); i++ {
-		if i > 0 && i%75 == 0 {
-			stringResourceIds = append(stringResourceIds, strings.Join(tempStringResourceIds, ","))
-			tempStringResourceIds = []string{}
-		} else {
-			stringResouceId := strconv.FormatInt(resourceIds[i], 10)
-			tempStringResourceIds = append(tempStringResourceIds, stringResouceId)
-		}
-	}
-
-	// Leftover tempStringResourceIds
-	if len(tempStringResourceIds) > 0 {
-		stringResourceIds = append(stringResourceIds, strings.Join(tempStringResourceIds, ","))
-	}
-
-	for i := 0; i < len(stringResourceIds); i++ {
-		data := map[string]string{
-			"Id":     stringResourceIds[i],
-			"Method": method,
-		}
-		err := sync(r, data, topicName)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func EmailSync(r *http.Request, email string) error {
 	data := map[string]string{
 		"email": email,
@@ -186,7 +146,7 @@ func ResourceSync(r *http.Request, resourceId int64, resource string, method str
 	if resource == "Contact" {
 		topicName = ContactChangeTopicID
 	} else if resource == "Publication" {
-		topicName = PublicationsTopicID
+		topicName = PublicationChangeTopicID
 	} else if resource == "List" {
 		topicName = ListChangeTopicId
 	} else if resource == "User" {

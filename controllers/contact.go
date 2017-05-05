@@ -1722,23 +1722,33 @@ func BulkDeleteContacts(c context.Context, r *http.Request) ([]models.Contact, i
 		log.Errorf(c, "%v", err)
 	}
 
-	contacts := []models.Contact{}
-	contactIds := []int64{}
-	for i := 0; i < len(deleteContacts.Contacts); i++ {
-		contact, err := getContact(c, r, deleteContacts.Contacts[i])
-		if err == nil {
-			if contact.CreatedBy == user.Id {
-				contact.IsDeleted = true
-				contact.Save(c, r)
+	if len(deleteContacts.Contacts) > 0 {
+		var listId int64
 
-				contactIds = append(contactIds, contact.Id)
-				contacts = append(contacts, contact)
+		contacts := []models.Contact{}
+		contactIds := []int64{}
+		for i := 0; i < len(deleteContacts.Contacts); i++ {
+			contact, err := getContact(c, r, deleteContacts.Contacts[i])
+			if err == nil {
+				if contact.CreatedBy == user.Id {
+					if contact.ListId != 0 {
+						listId = contact.ListId
+					}
+
+					contact.IsDeleted = true
+					contact.Save(c, r)
+
+					contactIds = append(contactIds, contact.Id)
+					contacts = append(contacts, contact)
+				}
 			}
 		}
+
+		sync.ListUploadResourceBulkSync(r, listId, contactIds, []int64{})
+		return contacts, nil, len(contacts), 0, nil
 	}
 
-	sync.ResourceBulkSync(r, contactIds, "Contact", "create")
-	return contacts, nil, len(contacts), 0, nil
+	return []models.Contact{}, nil, 0, 0, nil
 }
 
 func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
