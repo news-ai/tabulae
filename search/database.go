@@ -69,8 +69,8 @@ type EnhanceFullContactProfileResponse struct {
 					Code string `json:"code"`
 					Name string `json:"name"`
 				} `json:"state"`
-				NormalizedLocation string `json:"normalizedLocation"`
-				Likelihood         int    `json:"likelihood"`
+				NormalizedLocation string  `json:"normalizedLocation"`
+				Likelihood         float64 `json:"likelihood"`
 				Continent          struct {
 					Name    string `json:"name"`
 					Deduced bool   `json:"deduced"`

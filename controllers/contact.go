@@ -738,6 +738,10 @@ func EnrichProfile(c context.Context, r *http.Request, id string) (models.Contac
 		return models.Contact{}, nil, err
 	}
 
+	if contact.Email == "" {
+		return models.Contact{}, nil, errors.New("Contact does not have an email")
+	}
+
 	contactDetail, err := search.SearchContactDatabase(c, r, contact.Email)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -1694,9 +1698,7 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 	mediaList.Save(c)
 
 	// Sync all the contacts in bulk here
-	sync.ResourceSync(r, mediaList.Id, "List", "create")
-	sync.ResourceBulkSync(r, mediaList.Contacts, "Contact", "create")
-
+	sync.ListUploadResourceBulkSync(r, mediaList.Id, mediaList.Contacts, []int64{})
 	return newContacts, nil, 0, 0, nil
 }
 
@@ -1815,5 +1817,7 @@ func UnSubscribeContact(c context.Context, r *http.Request, id string) (interfac
 		return nil, nil, err
 	}
 
-	contact.Email
+	// contact.Email
+
+	return nil, nil, nil
 }
