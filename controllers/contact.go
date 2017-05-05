@@ -1780,3 +1780,40 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 	sync.ResourceSync(r, contact.Id, "Contact", "delete")
 	return nil, nil, nil
 }
+
+func UnSubscribeContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	// Get the details of the current user
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	// Update contact
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	mediaList, err := getMediaList(c, r, contact.ListId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	user, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	// Double check permissions. Admins should not be able to delete.
+	if mediaList.TeamId != user.TeamId && !permissions.AccessToObject(contact.CreatedBy, user.Id) {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return nil, nil, err
+	}
+
+	contact.Email
+}
