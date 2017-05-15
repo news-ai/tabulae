@@ -1680,15 +1680,15 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 			}
 
 			for x := 0; x < len(feeds); x++ {
-				feeds[i].Id = 0
-				feeds[i].CreatedBy = user.Id
-				feeds[i].Created = time.Now()
-				feeds[i].Updated = time.Now()
+				feeds[x].Id = 0
+				feeds[x].CreatedBy = user.Id
+				feeds[x].Created = time.Now()
+				feeds[x].Updated = time.Now()
 
-				feeds[i].ContactId = contact.Id
-				feeds[i].ListId = copyContacts.ListId
+				feeds[x].ContactId = contact.Id
+				feeds[x].ListId = copyContacts.ListId
 
-				feeds[i].Create(c, r, user)
+				feeds[x].Create(c, r, user)
 			}
 		}
 	}
