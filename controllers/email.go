@@ -1482,6 +1482,8 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 		emailDate := ""
 		emailSubject := ""
 		emailBaseSubject := ""
+		emailFilter := ""
+
 		for i := 0; i < len(emailFilters); i++ {
 			if strings.Contains(emailFilters[i], "date:") {
 				emailDateArray := strings.Split(emailFilters[i], ":")
@@ -1495,6 +1497,20 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 
 					if emailDate[0] == '"' {
 						emailDate = emailDate[1:]
+					}
+				}
+			} else if strings.Contains(emailFilters[i], "filter:") {
+				emailFilterArray := strings.Split(emailFilters[i], ":")
+				if len(emailFilterArray) > 1 {
+					emailFilter = strings.Join(emailFilterArray[1:], ":")
+					emailFilter = strings.Replace(emailFilter, "\\", "", -1)
+
+					if last := len(emailFilter) - 1; last >= 0 && emailFilter[last] == '"' {
+						emailFilter = emailFilter[:last]
+					}
+
+					if emailFilter[0] == '"' {
+						emailFilter = emailFilter[1:]
 					}
 				}
 			} else if strings.Contains(emailFilters[i], "subject:") {
@@ -1536,7 +1552,7 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 		}
 
 		if emailDate != "" || emailSubject != "" {
-			emails, count, total, err := search.SearchEmailsByQueryFields(c, r, user, emailDate, emailSubject, emailBaseSubject)
+			emails, count, total, err := search.SearchEmailsByQueryFields(c, r, user, emailDate, emailSubject, emailBaseSubject, emailFilter)
 
 			// Add includes
 			mediaLists := emailsToLists(c, r, emails)

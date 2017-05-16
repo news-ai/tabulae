@@ -140,12 +140,34 @@ type ElasticFeedUrlQuery struct {
 	} `json:"match"`
 }
 
+type ElasticBounceQuery struct {
+	Term struct {
+		BaseBounced bool `json:"data.Bounced"`
+	} `json:"term"`
+}
+
 type ElasticCreatedRangeQuery struct {
 	Range struct {
 		DataCreated struct {
 			From string `json:"from"`
 			To   string `json:"to"`
 		} `json:"data.Created"`
+	} `json:"range"`
+}
+
+type ElasticOpenedRangeQuery struct {
+	Range struct {
+		DataOpened struct {
+			GTE int64 `json:"gte"`
+		} `json:"data.Opened"`
+	} `json:"range"`
+}
+
+type ElasticClickedRangeQuery struct {
+	Range struct {
+		DataClicked struct {
+			GTE int64 `json:"gte"`
+		} `json:"data.Clicked"`
 	} `json:"range"`
 }
 

@@ -150,7 +150,7 @@ func SearchEmailsByQuery(c context.Context, r *http.Request, user models.User, s
 	return searchEmailQuery(c, elasticQuery)
 }
 
-func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.User, emailDate string, emailSubject string, emailBaseSubject string) ([]models.Email, int, int, error) {
+func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.User, emailDate string, emailSubject string, emailBaseSubject string, filter string) ([]models.Email, int, int, error) {
 	if emailDate == "" && emailSubject == "" {
 		return nil, 0, 0, nil
 	}
@@ -190,6 +190,20 @@ func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.U
 		elasticSubjectQuery := ElasticSubjectQuery{}
 		elasticSubjectQuery.Term.Subject = emailSubject
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticSubjectQuery)
+	}
+
+	if filter == "open" {
+		elasticOpenedRangeQuery := ElasticOpenedRangeQuery{}
+		elasticOpenedRangeQuery.Range.DataOpened.GTE = 1
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticOpenedRangeQuery)
+	} else if filter == "click" {
+		elasticClickedRangeQuery := ElasticClickedRangeQuery{}
+		elasticClickedRangeQuery.Range.DataClicked.GTE = 1
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticClickedRangeQuery)
+	} else if filter == "bounce" {
+		elasticBounceQuery := ElasticBounceQuery{}
+		elasticBounceQuery.Term.BaseBounced = true
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBounceQuery)
 	}
 
 	elasticCreatedQuery := ElasticSortDataCreatedQuery{}
