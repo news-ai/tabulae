@@ -1476,8 +1476,7 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 		return nil, nil, 0, 0, err
 	}
 
-	if strings.Contains(queryField, "date:") || strings.Contains(queryField, "subject:") {
-		log.Infof(c, "%v", queryField)
+	if strings.Contains(queryField, "date:") || strings.Contains(queryField, "subject:") || strings.Contains(queryField, "filter:") || strings.Contains(queryField, "baseSubject:") {
 		emailFilters := strings.Split(queryField, ",")
 		emailDate := ""
 		emailSubject := ""
@@ -1514,7 +1513,6 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 					}
 				}
 			} else if strings.Contains(emailFilters[i], "subject:") {
-				log.Infof(c, "%v", emailFilters)
 				if len(emailFilters) > 2 {
 					emailSubjectSplit := strings.Split(queryField, "subject:")
 					emailFilters[i] = "subject:" + emailSubjectSplit[len(emailSubjectSplit)-1]
@@ -1551,7 +1549,7 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 			}
 		}
 
-		if emailDate != "" || emailSubject != "" {
+		if emailDate != "" || emailSubject != "" || emailFilter != "" || emailBaseSubject != "" {
 			emails, count, total, err := search.SearchEmailsByQueryFields(c, r, user, emailDate, emailSubject, emailBaseSubject, emailFilter)
 
 			// Add includes

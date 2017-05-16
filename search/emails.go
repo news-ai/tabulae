@@ -151,7 +151,7 @@ func SearchEmailsByQuery(c context.Context, r *http.Request, user models.User, s
 }
 
 func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.User, emailDate string, emailSubject string, emailBaseSubject string, filter string) ([]models.Email, int, int, error) {
-	if emailDate == "" && emailSubject == "" {
+	if emailDate == "" && emailSubject == "" && emailBaseSubject == "" && filter == "" {
 		return nil, 0, 0, nil
 	}
 
