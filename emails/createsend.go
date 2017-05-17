@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/news-ai/tabulae/models"
@@ -40,6 +41,18 @@ type CampaignMonitorAddUserEmail struct {
 	To   []string `json:"To"`
 	Data struct {
 		ADD_EMAIL_CODE string `json:"ADD_EMAIL_CODE"`
+	} `json:"Data"`
+	AddRecipientsToList bool `json:"AddRecipientsToList"`
+}
+
+type CampaignMonitorInviteUserEmail struct {
+	To   []string `json:"To"`
+	Data struct {
+		INVITE_EMAIL_CODE     string `json:"INVITE_EMAIL_CODE"`
+		NEWUSER_EMAIL         string `json:"NEWUSER_EMAIL"`
+		PERSONAL_MESSAGE      string `json:"PERSONAL_MESSAGE"`
+		CURRENTUSER_FULL_NAME string `json:"CURRENTUSER_FULL_NAME"`
+		CURRENTUSER_EMAIL     string `json:"CURRENTUSER_EMAIL"`
 	} `json:"Data"`
 	AddRecipientsToList bool `json:"AddRecipientsToList"`
 }
@@ -147,7 +160,7 @@ func ResetUserPassword(c context.Context, user models.User, resetPasswordCode st
 	return errors.New("Error happened when sending email")
 }
 
-func AddUserToTabulaePremiumList(c context.Context, user models.User, plan string, duration string, billDate string, billAmount string, paidAmount string) error {
+func AddUserToTabulaePremiumList(c context.Context, user models.User, plan, duration, billDate, billAmount, paidAmount string) error {
 	apiKey := os.Getenv("CAMPAIGNMONITOR_API_KEY")
 	premiumEmailId := "62b31c10-4e4d-4d9f-8442-8834427b2040"
 
@@ -254,6 +267,51 @@ func AddEmailToUser(c context.Context, user models.User, userToEmail, userEmailC
 	postUrl := "https://api.createsend.com/api/v3.1/transactional/smartEmail/" + addEmailCodeId + "/send"
 
 	req, _ := http.NewRequest("POST", postUrl, addUserEmailJson)
+	req.SetBasicAuth(apiKey, "x")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return err
+	}
+
+	if resp.StatusCode == 201 || resp.StatusCode == 202 || resp.StatusCode == 200 {
+		return nil
+	}
+
+	return errors.New("Error happened when sending email")
+}
+
+func InviteUser(c context.Context, currentUser models.User, userEmail, userReferralCode, personalMessage string) error {
+	apiKey := os.Getenv("CAMPAIGNMONITOR_API_KEY")
+	inviteUserCodeId := ""
+
+	contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
+	client := urlfetch.Client(contextWithTimeout)
+
+	inviteEmail := CampaignMonitorInviteUserEmail{}
+	inviteEmail.To = append(inviteEmail.To, userEmail)
+	inviteEmail.AddRecipientsToList = false
+
+	t := &url.URL{Path: userReferralCode}
+	encodedUserInviteCode := t.String()
+	inviteEmail.Data.INVITE_EMAIL_CODE = encodedUserInviteCode
+
+	inviteEmail.Data.CURRENTUSER_EMAIL = currentUser.Email
+	inviteEmail.Data.CURRENTUSER_FULL_NAME = strings.Join([]string{currentUser.FirstName, currentUser.LastName}, " ")
+	inviteEmail.Data.PERSONAL_MESSAGE = personalMessage
+	inviteEmail.Data.NEWUSER_EMAIL = userEmail
+
+	InviteUserEmail, err := json.Marshal(inviteEmail)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return err
+	}
+	inviteUserEmailJson := bytes.NewReader(InviteUserEmail)
+
+	postUrl := "https://api.createsend.com/api/v3.1/transactional/smartEmail/" + inviteUserCodeId + "/send"
+
+	req, _ := http.NewRequest("POST", postUrl, inviteUserEmailJson)
 	req.SetBasicAuth(apiKey, "x")
 
 	resp, err := client.Do(req)
