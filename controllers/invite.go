@@ -54,9 +54,29 @@ func generateTokenAndEmail(c context.Context, r *http.Request, invite models.Inv
 	}
 
 	if len(ks) > 0 {
-		invitedAlreadyError := errors.New("User has already been invited to the NewsAI platform")
-		log.Errorf(c, "%v", invitedAlreadyError)
-		return models.UserInviteCode{}, invitedAlreadyError
+		hasBeenUsed := false
+
+		var invites []models.UserInviteCode
+		invites = make([]models.UserInviteCode, len(ks))
+		err = nds.GetMulti(c, ks, invites)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.UserInviteCode{}, err
+		}
+
+		for i := 0; i < len(invites); i++ {
+			invites[i].Format(ks[i], "invites")
+
+			if invites[i].IsUsed {
+				hasBeenUsed = true
+			}
+		}
+
+		if hasBeenUsed {
+			invitedAlreadyError := errors.New("User has already been invited to the NewsAI platform")
+			log.Errorf(c, "%v", invitedAlreadyError)
+			return models.UserInviteCode{}, invitedAlreadyError
+		}
 	}
 
 	// Check if the user is already a part of the platform
