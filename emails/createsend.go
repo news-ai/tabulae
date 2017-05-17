@@ -284,7 +284,7 @@ func AddEmailToUser(c context.Context, user models.User, userToEmail, userEmailC
 
 func InviteUser(c context.Context, currentUser models.User, userEmail, userReferralCode, personalMessage string) error {
 	apiKey := os.Getenv("CAMPAIGNMONITOR_API_KEY")
-	inviteUserCodeId := ""
+	inviteUserCodeId := "e5665b9e-668e-4e6a-8bc1-69c40167b941"
 
 	contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
 	client := urlfetch.Client(contextWithTimeout)

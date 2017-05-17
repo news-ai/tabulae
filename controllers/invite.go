@@ -97,9 +97,8 @@ func generateTokenAndEmail(c context.Context, r *http.Request, invite models.Inv
 	}
 
 	// Email this person with the referral code
-	emailInvitaiton, _ := CreateEmailInternal(r, validEmail.Address, "", "")
-	emailSent, emailId, err := emails.SendInvitationEmail(r, emailInvitaiton, currentUser, referralCode.InviteCode, invite.PersonalNote)
-	if !emailSent || err != nil {
+	inviteUserEmailErr := emails.InviteUser(c, currentUser, validEmail.Address, referralCode.InviteCode, invite.PersonalNote)
+	if inviteUserEmailErr != nil {
 		// Redirect user back to login page
 		log.Errorf(c, "%v", "Invite email was not sent for "+validEmail.Address)
 		log.Errorf(c, "%v", err)
@@ -107,7 +106,6 @@ func generateTokenAndEmail(c context.Context, r *http.Request, invite models.Inv
 		return models.UserInviteCode{}, inviteEmailError
 	}
 
-	emailInvitaiton.MarkSent(c, emailId)
 	return referralCode, nil
 }
 
