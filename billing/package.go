@@ -2,11 +2,13 @@ package billing
 
 func BillingIdToPlanName(plan string) string {
 	switch plan {
-	case "bronze":
+	case "bronze": // now "Personal"
 		return "Personal"
-	case "silver", "silver-1":
+	case "aluminum": // now "Consultant"
+		return "Consultant"
+	case "silver", "silver-1": // now "Business"
 		return "Freelancer"
-	case "gold", "gold-1":
+	case "gold", "gold-1": // now "Growing Business"
 		return "Business"
 	}
 
@@ -15,11 +17,13 @@ func BillingIdToPlanName(plan string) string {
 
 func UserMaximumSocialAccounts(plan string) int {
 	switch plan {
-	case "Personal":
-		return 20
-	case "Freelancer":
+	case "Personal": // now "Personal"
+		return 100
+	case "Consultant": // now "Consultant"
+		return 250
+	case "Freelancer": // now "Business"
 		return 500
-	case "Business":
+	case "Business": // now "Growing Business"
 		return 100000
 	}
 
@@ -28,11 +32,13 @@ func UserMaximumSocialAccounts(plan string) int {
 
 func UserMaximumEmailAccounts(plan string) int {
 	switch plan {
-	case "Personal":
+	case "Personal": // now "Personal"
 		return 0
-	case "Freelancer":
+	case "Consultant": // now "Consultant"
+		return 2
+	case "Freelancer": // now "Business"
 		return 5
-	case "Business":
+	case "Business": // now "Growing Business"
 		return 10
 	}
 

@@ -60,6 +60,7 @@ function changePricingClass() {
 
         // Update prices
         document.getElementById("personalPrice").innerHTML = "9.99";
+        document.getElementById("consultantPrice").innerHTML = "18.99";
         document.getElementById("businessPrice").innerHTML = "35.99";
         document.getElementById("ultimatePrice").innerHTML = "54.99";
 
@@ -72,6 +73,7 @@ function changePricingClass() {
 
         // Update prices
         document.getElementById("personalPrice").innerHTML = "7.99";
+        document.getElementById("consultantPrice").innerHTML = "15.99";
         document.getElementById("businessPrice").innerHTML = "29.99";
         document.getElementById("ultimatePrice").innerHTML = "43.99";
 

@@ -17,20 +17,24 @@ func PlanAndDurationToPrice(plan string, duration string) float64 {
 	price := float64(0.00)
 	if duration == "monthly" {
 		switch plan {
-		case "Personal":
+		case "Personal": // now "Personal"
 			price = 9.99 * 1
-		case "Freelancer":
+		case "Consultant": // now "Consultant"
+			price = 18.99 * 1
+		case "Freelancer": // now "Business"
 			price = 35.99 * 1
-		case "Business":
+		case "Business": // now "Growing Business"
 			price = 54.99 * 1
 		}
 	} else {
 		switch plan {
-		case "Personal":
+		case "Personal": // now "Personal"
 			price = 7.99 * 12
-		case "Freelancer":
+		case "Consultant": // now "Consultant"
+			price = 15.99 * 12
+		case "Freelancer": // now "Business"
 			price = 29.99 * 12
-		case "Business":
+		case "Business": // now "Growing Business"
 			price = 43.99 * 12
 		}
 	}

@@ -141,6 +141,8 @@ func CancelPlanPageHandler() http.HandlerFunc {
 			switch userBilling.StripePlanId {
 			case "bronze":
 				userBilling.StripePlanId = "Personal"
+			case "aluminum":
+				userBilling.StripePlanId = "Consultant"
 			case "silver-1":
 				userBilling.StripePlanId = "Freelancer"
 			case "gold-1":
@@ -206,6 +208,8 @@ func CancelPlanHandler() http.HandlerFunc {
 			switch userBilling.StripePlanId {
 			case "bronze":
 				plan = "Personal"
+			case "aluminum":
+				plan = "Consultant"
 			case "silver-1":
 				plan = "Freelancer"
 			case "gold-1":
@@ -260,6 +264,8 @@ func ChoosePlanPageHandler() http.HandlerFunc {
 			switch userBilling.StripePlanId {
 			case "bronze":
 				userBilling.StripePlanId = "Personal"
+			case "aluminum":
+				userBilling.StripePlanId = "Consultant"
 			case "silver-1":
 				userBilling.StripePlanId = "Freelancer"
 			case "gold-1":
@@ -325,6 +331,8 @@ func ChoosePlanHandler() http.HandlerFunc {
 			switch plan {
 			case "bronze":
 				plan = "Personal"
+			case "aluminum":
+				plan = "Consultant"
 			case "silver-1":
 				plan = "Freelancer"
 			case "gold-1":
@@ -446,6 +454,8 @@ func ConfirmPlanHandler() http.HandlerFunc {
 			switch plan {
 			case "Personal":
 				plan = "bronze"
+			case "Consultant":
+				plan = "aluminum"
 			case "Freelancer":
 				plan = "silver-1"
 			case "Business":
@@ -512,6 +522,8 @@ func BillingPageHandler() http.HandlerFunc {
 			switch userBilling.StripePlanId {
 			case "bronze":
 				userBilling.StripePlanId = "Personal"
+			case "aluminum":
+				userBilling.StripePlanId = "Consultant"
 			case "silver-1", "silver":
 				userBilling.StripePlanId = "Freelancer"
 			case "gold-1", "gold":

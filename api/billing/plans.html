@@ -52,16 +52,15 @@
                 <p>Save 20% off by signing up with our annual package!</p>
             </div>
             <div class="row">
-                <div class="col-md-4 col-sm-4">  
+                <div class="col-md-3 col-sm-3">  
                     <div class="single-package">
-                        <h3 class="package-heading main-color">
-                        Personal </h3>
+                        <h3 class="package-heading main-color">Personal</h3>
                         <form role="form" method="post" action="confirmation">
                             {{ .csrfField }}
                             <input type="hidden" id="code" name="code" />
                             <input type="hidden" class="duration" id="duration" name="duration" value="annually">
                             <button type="submit" class="btn btn-primary" name="plan" id="plan" value="bronze">
-                              Try this plan
+                              Purchase this plan
                             </button>
                         </form>
                         <div class="price">
@@ -71,63 +70,88 @@
                         </div>
                         <ul class="package-feature">
                             <b>Basic Features</b>
-                            <li><span class="main-color icon_check_alt2"></span>20 contacts social media sync</li>
-                            <li><span class="main-color icon_check_alt2"></span>Send emails from 1 email address</li>
-                            <li><span class="main-color icon_check_alt2"></span>Unlimited contacts & media lists</li>
-                            <li><span class="main-color icon_check_alt2"></span>Email tracking &amp; performance reports</li>
-                            <li><span class="main-color icon_check_alt2"></span>Outreach templates</li>
-                            <li><span class="main-color icon_check_alt2"></span>Unlimited RSS feeds</li>
-                            <li><span class="main-color icon_check_alt2"></span>Search across media lists</li>
+                            <li>Send upto 150 emails per day</li>
+                            <li>Send emails from 1 email address</li>
+                            <li>100 contacts integrated with social media</li>
+                            <li>Unlimited contacts & media lists</li>
+                            <li>Email tracking &amp; performance reports</li>
+                            <li>Outreach templates</li>
+                            <li>Unlimited RSS feeds</li>
+                            <li>Search across media lists</li>
                         </ul>
                     </div>
                 </div>
-                <div class="col-md-4 col-sm-4 single-service"">
+                <div class="col-md-3 col-sm-3">
                     <div class="single-package">
-                        <h3 class="package-heading main-color">
-                        Freelancer </h3>
+                        <h3 class="package-heading main-color">Consultant</h3>
+                        <form role="form" method="post" action="confirmation">
+                            {{ .csrfField }}
+                            <input type="hidden" id="code" name="code" />
+                            <input type="hidden" class="duration" id="duration" name="duration" value="annually">
+                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="aluminum">
+                              Purchase this plan
+                            </button>
+                        </form>
+                        <div class="price">
+                            <div id="consultantPackage" {{if eq .currentUserPlan "Consultant" }} class="color-bg" {{end}}>
+                                <h2><span class="sign">$</span><span id="consultantPrice">15.99</span> <span class="month">/month</span></h2>
+                            </div>
+                        </div>
+                        <ul class="package-feature">
+                            <b>Includes everything in Personal +</b>
+                            <li>Send upto 400 emails per day</li>
+                            <li>Send emails from 2 email addresses</li>
+                            <li>250 contacts integrated with social media</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-3">
+                    <div class="single-package">
+                        <h3 class="package-heading main-color">Business</h3>
                         <form role="form" method="post" action="confirmation">
                             {{ .csrfField }}
                             <input type="hidden" id="code" name="code" />
                             <input type="hidden" class="duration" id="duration" name="duration" value="annually">
                             <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver-1">
-                              Try this plan
+                              Purchase this plan
                             </button>
                         </form>
                         <div class="price">
-                            <div id="businessPackage" {{if eq .currentUserPlan "Business" }} class="color-bg" {{end}}>
+                            <div id="businessPackage" {{if eq .currentUserPlan "Freelancer" }} class="color-bg" {{end}}>
                                 <h2><span class="sign">$</span><span id="businessPrice">29.99</span> <span class="month">/month</span></h2>
                             </div>
                         </div>
                         <ul class="package-feature">
-                            <b>Includes everything in Personal +</b>
-                            <li><span class="main-color icon_check_alt2"></span>500 contacts social media sync</li>
-                            <li><span class="main-color icon_check_alt2"></span>Send emails from 5 email addresses</li>
+                            <b>Includes everything in Consultant +</b>
+                            <li>Send upto 1,000 emails per day</li>
+                            <li>Send emails from 5 email addresses</li>
+                            <li>500 contacts integrated with social media</li>
+                            <li>Advanced Analytics Reports</li>
                         </ul>
                     </div>
                 </div>
-                <div class="col-md-4 col-sm-4 single-service">
+                <div class="col-md-3 col-sm-3">
                     <div class="single-package">
-                        <h3 class="package-heading main-color">
-                        Business </h3>
+                        <h3 class="package-heading main-color">Growing Business</h3>
                         <form role="form" method="post" action="confirmation">
                             {{ .csrfField }}
                             <input type="hidden" id="code" name="code" />
                             <input type="hidden" class="duration" id="duration" name="duration" value="annually">
                             <button type="submit" class="btn btn-primary" name="plan" id="plan" value="gold-1">
-                              Try this plan
+                              Purchase this plan
                             </button>
                         </form>
                         <div class="price">
-                            <div id="ultimatePackage" {{if eq .currentUserPlan "Ultimate" }} class="color-bg" {{end}}>
+                            <div id="ultimatePackage" {{if eq .currentUserPlan "Business" }} class="color-bg" {{end}}>
                                 <h2><span class="sign">$</span><span id="ultimatePrice">43.99</span> <span class="month">/month</span></h2>
                             </div>
                         </div>
                         <ul class="package-feature">
-                            <b>Includes everything in Freelancer +</b>
-                            <li><span class="main-color icon_check_alt2"></span>Unlimited contacts social media sync</li>
-                            <li><span class="main-color icon_check_alt2"></span>Send emails from 10 email addresses</li>
-                            <li><span class="main-color icon_check_alt2"></span>Advanced Analytics Reports</li>
-                            <li><span class="main-color icon_check_alt2"></span>Priority support</li>
+                            <b>Includes everything in Business +</b>
+                            <li>Send upto 5,000 emails per day</li>
+                            <li>Send emails from 10 email addresses</li>
+                            <li>Unlimited contacts integrated with social media</li>
+                            <li>Priority support</li>
                         </ul>
                     </div>
                 </div>
