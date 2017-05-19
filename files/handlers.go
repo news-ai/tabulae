@@ -187,7 +187,7 @@ func HandleFileUploadHeaders(c context.Context, r *http.Request, id string) (int
 	}
 
 	// Import the file
-	_, err = parse.ExcelHeadersToListModel(r, byteFile, file.Order, file.ListId, contentType)
+	_, err = parse.ExcelHeadersToListModel(r, byteFile, file.FileName, file.Order, file.ListId, contentType)
 	if err != nil {
 		return nil, nil, err
 	}
