@@ -24,7 +24,7 @@ func FileToExcelHeader(r *http.Request, file []byte, contentType string) ([]goex
 	return goexcel.FileToExcelHeader(c, r, file, contentType)
 }
 
-func ExcelHeadersToListModel(r *http.Request, file []byte, fileName, string, headers []string, mediaListid int64, contentType string) (models.MediaList, error) {
+func ExcelHeadersToListModel(r *http.Request, file []byte, fileName string, headers []string, mediaListid int64, contentType string) (models.MediaList, error) {
 	c := appengine.NewContext(r)
 
 	// Batch get all the contacts

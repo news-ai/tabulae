@@ -130,6 +130,10 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 		return errors.New("Sorry - you can't use this coupon code on a yearly plan. Please switch the monthly one to use this!")
 	}
 
+	if strings.ToLower(coupon) == "curious" && duration == "annually" {
+		return errors.New("Sorry - you can't use this coupon code on a yearly plan. Please switch the monthly one to use this!")
+	}
+
 	if strings.ToLower(coupon) == "prconsultants" && duration == "annually" {
 		return errors.New("Sorry - you can't use this coupon code on a yearly plan. Please switch the monthly one to use this!")
 	}

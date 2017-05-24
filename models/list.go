@@ -142,7 +142,6 @@ func (ml *MediaList) AddNewCustomFieldsMapToOldLists(c context.Context) {
 		"website":       "Website",
 		"blog":          "Blog",
 		"phonenumber":   "Phone #",
-		"tags":          "Tags",
 	}
 
 	isChanged := false
