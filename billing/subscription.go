@@ -181,3 +181,24 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 
 	return nil
 }
+
+func SwitchUserPlan(r *http.Request, user models.User, userBilling *models.Billing, newPlan string) error {
+	c := appengine.NewContext(r)
+	httpClient := urlfetch.Client(c)
+	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
+
+	customer, err := sc.Customers.Get(userBilling.StripeId, nil)
+	if err != nil {
+		var stripeError StripeError
+		err = json.Unmarshal([]byte(err.Error()), &stripeError)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return errors.New("We had an error getting your user")
+		}
+
+		log.Errorf(c, "%v", err)
+		return errors.New(stripeError.Message)
+	}
+
+	return nil
+}

@@ -44,3 +44,18 @@ func UserMaximumEmailAccounts(plan string) int {
 
 	return 0
 }
+
+func UserMaximumEmailSent(plan string) int {
+	switch plan {
+	case "Personal": // now "Personal"
+		return 100
+	case "Consultant": // now "Consultant"
+		return 400
+	case "Freelancer": // now "Business"
+		return 1000
+	case "Business": // now "Growing Business"
+		return 5000
+	}
+
+	return 0
+}
