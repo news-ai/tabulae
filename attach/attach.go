@@ -36,8 +36,11 @@ func ReadAttachment(r *http.Request, file models.File) ([]byte, string, string, 
 }
 
 func GetAttachmentsForEmail(r *http.Request, email models.Email, files []models.File) ([][]byte, []string, []string, error) {
-	c := appengine.NewContext(r)
+	if len(files) == 0 {
+		return [][]byte{}, []string{}, []string{}, nil
+	}
 
+	c := appengine.NewContext(r)
 	bytesArray := [][]byte{}
 	attachmentTypes := []string{}
 	fileNames := []string{}

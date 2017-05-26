@@ -1384,6 +1384,11 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interf
 		return []models.Contact{}, nil, 0, 0, err
 	}
 
+	if contact.Email != "" {
+		conctactURLArray := strings.Split(contact.Email, "@")
+		search.SearchCompanyDatabase(c, r, conctactURLArray[1])
+	}
+
 	return []models.Contact{contact}, nil, 0, 0, nil
 }
 
