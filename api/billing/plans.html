@@ -47,117 +47,222 @@
         <div class="container">
             <div class="pricing-section-header">
                 <h2 class="dark-text">Plans</h2>
-            {{if .userNotActiveNonTrialPlan}}
                 <div class="annually-monthly-switch" onclick="changePricingClass()"><label id="annuallyLabel" class="active">Annually</label><div id="pricingClass" class="annually"><span></span></div><label id="monthlyLabel">Monthly</label></div>
                 <p>Save 20% off by signing up with our annual package!</p>
             </div>
-            <div class="row">
-                <div class="col-md-3 col-sm-3">  
-                    <div class="single-package">
-                        <h3 class="package-heading main-color">Personal</h3>
-                        <form role="form" method="post" action="confirmation">
-                            {{ .csrfField }}
-                            <input type="hidden" id="code" name="code" />
-                            <input type="hidden" class="duration" id="duration" name="duration" value="annually">
-                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="bronze">
-                              Purchase this plan
-                            </button>
-                        </form>
-                        <div class="price">
-                            <div id="personalPackage" {{if eq .currentUserPlan "Personal" }} class="color-bg" {{end}}>
-                                <h2><span class="sign">$</span><span id="personalPrice">7.99</span> <span class="month">/month</span></h2>
+            {{if .userNotActiveNonTrialPlan}}
+                <div class="row">
+                    <div class="col-md-3 col-sm-3">  
+                        <div class="single-package">
+                            <h3 class="package-heading main-color">Personal</h3>
+                            <form role="form" method="post" action="confirmation">
+                                {{ .csrfField }}
+                                <input type="hidden" id="code" name="code" />
+                                <input type="hidden" class="duration" id="duration" name="duration" value="annually">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="bronze">
+                                  Purchase this plan
+                                </button>
+                            </form>
+                            <div class="price">
+                                <div id="personalPackage" {{if eq .currentUserPlan "Personal" }} class="color-bg" {{end}}>
+                                    <h2><span class="sign">$</span><span id="personalPrice">7.99</span> <span class="month">/month</span></h2>
+                                </div>
                             </div>
+                            <ul class="package-feature">
+                                <b>Basic Features</b>
+                                <li>Send upto 100 emails per day</li>
+                                <li>Send emails from 1 email address</li>
+                                <li>100 contacts integrated with social media</li>
+                                <li>Unlimited contacts & media lists</li>
+                                <li>Email tracking &amp; performance reports</li>
+                                <li>Outreach templates</li>
+                                <li>Unlimited RSS feeds</li>
+                                <li>Search across media lists</li>
+                            </ul>
                         </div>
-                        <ul class="package-feature">
-                            <b>Basic Features</b>
-                            <li>Send upto 100 emails per day</li>
-                            <li>Send emails from 1 email address</li>
-                            <li>100 contacts integrated with social media</li>
-                            <li>Unlimited contacts & media lists</li>
-                            <li>Email tracking &amp; performance reports</li>
-                            <li>Outreach templates</li>
-                            <li>Unlimited RSS feeds</li>
-                            <li>Search across media lists</li>
-                        </ul>
+                    </div>
+                    <div class="col-md-3 col-sm-3">
+                        <div class="single-package">
+                            <h3 class="package-heading main-color">Consultant</h3>
+                            <form role="form" method="post" action="confirmation">
+                                {{ .csrfField }}
+                                <input type="hidden" id="code" name="code" />
+                                <input type="hidden" class="duration" id="duration" name="duration" value="annually">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="aluminum">
+                                  Purchase this plan
+                                </button>
+                            </form>
+                            <div class="price">
+                                <div id="consultantPackage" {{if eq .currentUserPlan "Consultant" }} class="color-bg" {{end}}>
+                                    <h2><span class="sign">$</span><span id="consultantPrice">15.99</span> <span class="month">/month</span></h2>
+                                </div>
+                            </div>
+                            <ul class="package-feature">
+                                <b>Includes everything in Personal +</b>
+                                <li>Send upto 400 emails per day</li>
+                                <li>Send emails from 2 email addresses</li>
+                                <li>250 contacts integrated with social media</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-3">
+                        <div class="single-package">
+                            <h3 class="package-heading main-color">Business</h3>
+                            <form role="form" method="post" action="confirmation">
+                                {{ .csrfField }}
+                                <input type="hidden" id="code" name="code" />
+                                <input type="hidden" class="duration" id="duration" name="duration" value="annually">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver-1">
+                                  Purchase this plan
+                                </button>
+                            </form>
+                            <div class="price">
+                                <div id="businessPackage" {{if eq .currentUserPlan "Business" }} class="color-bg" {{end}}>
+                                    <h2><span class="sign">$</span><span id="businessPrice">29.99</span> <span class="month">/month</span></h2>
+                                </div>
+                            </div>
+                            <ul class="package-feature">
+                                <b>Includes everything in Consultant +</b>
+                                <li>Send upto 1,000 emails per day</li>
+                                <li>Send emails from 5 email addresses</li>
+                                <li>500 contacts integrated with social media</li>
+                                <li>Advanced Analytics Reports</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-3">
+                        <div class="single-package">
+                            <h3 class="package-heading main-color">Growing Business</h3>
+                            <form role="form" method="post" action="confirmation">
+                                {{ .csrfField }}
+                                <input type="hidden" id="code" name="code" />
+                                <input type="hidden" class="duration" id="duration" name="duration" value="annually">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="gold-1">
+                                  Purchase this plan
+                                </button>
+                            </form>
+                            <div class="price">
+                                <div id="ultimatePackage" {{if eq .currentUserPlan "Growing Business" }} class="color-bg" {{end}}>
+                                    <h2><span class="sign">$</span><span id="ultimatePrice">43.99</span> <span class="month">/month</span></h2>
+                                </div>
+                            </div>
+                            <ul class="package-feature">
+                                <b>Includes everything in Business +</b>
+                                <li>Send upto 5,000 emails per day</li>
+                                <li>Send emails from 10 email addresses</li>
+                                <li>Unlimited contacts integrated with social media</li>
+                                <li>Priority support</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-3 col-sm-3">
-                    <div class="single-package">
-                        <h3 class="package-heading main-color">Consultant</h3>
-                        <form role="form" method="post" action="confirmation">
-                            {{ .csrfField }}
-                            <input type="hidden" id="code" name="code" />
-                            <input type="hidden" class="duration" id="duration" name="duration" value="annually">
-                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="aluminum">
-                              Purchase this plan
-                            </button>
-                        </form>
-                        <div class="price">
-                            <div id="consultantPackage" {{if eq .currentUserPlan "Consultant" }} class="color-bg" {{end}}>
-                                <h2><span class="sign">$</span><span id="consultantPrice">15.99</span> <span class="month">/month</span></h2>
-                            </div>
-                        </div>
-                        <ul class="package-feature">
-                            <b>Includes everything in Personal +</b>
-                            <li>Send upto 400 emails per day</li>
-                            <li>Send emails from 2 email addresses</li>
-                            <li>250 contacts integrated with social media</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-3">
-                    <div class="single-package">
-                        <h3 class="package-heading main-color">Business</h3>
-                        <form role="form" method="post" action="confirmation">
-                            {{ .csrfField }}
-                            <input type="hidden" id="code" name="code" />
-                            <input type="hidden" class="duration" id="duration" name="duration" value="annually">
-                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver-1">
-                              Purchase this plan
-                            </button>
-                        </form>
-                        <div class="price">
-                            <div id="businessPackage" {{if eq .currentUserPlan "Freelancer" }} class="color-bg" {{end}}>
-                                <h2><span class="sign">$</span><span id="businessPrice">29.99</span> <span class="month">/month</span></h2>
-                            </div>
-                        </div>
-                        <ul class="package-feature">
-                            <b>Includes everything in Consultant +</b>
-                            <li>Send upto 1,000 emails per day</li>
-                            <li>Send emails from 5 email addresses</li>
-                            <li>500 contacts integrated with social media</li>
-                            <li>Advanced Analytics Reports</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-3">
-                    <div class="single-package">
-                        <h3 class="package-heading main-color">Growing Business</h3>
-                        <form role="form" method="post" action="confirmation">
-                            {{ .csrfField }}
-                            <input type="hidden" id="code" name="code" />
-                            <input type="hidden" class="duration" id="duration" name="duration" value="annually">
-                            <button type="submit" class="btn btn-primary" name="plan" id="plan" value="gold-1">
-                              Purchase this plan
-                            </button>
-                        </form>
-                        <div class="price">
-                            <div id="ultimatePackage" {{if eq .currentUserPlan "Business" }} class="color-bg" {{end}}>
-                                <h2><span class="sign">$</span><span id="ultimatePrice">43.99</span> <span class="month">/month</span></h2>
-                            </div>
-                        </div>
-                        <ul class="package-feature">
-                            <b>Includes everything in Business +</b>
-                            <li>Send upto 5,000 emails per day</li>
-                            <li>Send emails from 10 email addresses</li>
-                            <li>Unlimited contacts integrated with social media</li>
-                            <li>Priority support</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
             {{else}}
-                <p>You already have an active paid plan!</p>
+                <p>You already have an active paid plan! You can switch to one of these other plans below. You are currently on the {{.currentUserPlan}} plan.</p>
+                <div class="row">
+                    <div class="col-md-3 col-sm-3">  
+                        <div class="single-package">
+                            <h3 class="package-heading main-color">Personal</h3>
+                            <form role="form" method="post" action="switch-confirmation">
+                                {{ .csrfField }}
+                                <input type="hidden" id="code" name="code" />
+                                <input type="hidden" class="duration" id="duration" name="duration" value="annually">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="bronze">
+                                  Switch to this plan
+                                </button>
+                            </form>
+                            <div class="price">
+                                <div id="personalPackage" {{if eq .currentUserPlan "Personal" }} class="color-bg" {{end}}>
+                                    <h2><span class="sign">$</span><span id="personalPrice">7.99</span> <span class="month">/month</span></h2>
+                                </div>
+                            </div>
+                            <ul class="package-feature">
+                                <b>Basic Features</b>
+                                <li>Send upto 100 emails per day</li>
+                                <li>Send emails from 1 email address</li>
+                                <li>100 contacts integrated with social media</li>
+                                <li>Unlimited contacts & media lists</li>
+                                <li>Email tracking &amp; performance reports</li>
+                                <li>Outreach templates</li>
+                                <li>Unlimited RSS feeds</li>
+                                <li>Search across media lists</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-3">
+                        <div class="single-package">
+                            <h3 class="package-heading main-color">Consultant</h3>
+                            <form role="form" method="post" action="switch-confirmation">
+                                {{ .csrfField }}
+                                <input type="hidden" id="code" name="code" />
+                                <input type="hidden" class="duration" id="duration" name="duration" value="annually">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="aluminum">
+                                  Switch to this plan
+                                </button>
+                            </form>
+                            <div class="price">
+                                <div id="consultantPackage" {{if eq .currentUserPlan "Consultant" }} class="color-bg" {{end}}>
+                                    <h2><span class="sign">$</span><span id="consultantPrice">15.99</span> <span class="month">/month</span></h2>
+                                </div>
+                            </div>
+                            <ul class="package-feature">
+                                <b>Includes everything in Personal +</b>
+                                <li>Send upto 400 emails per day</li>
+                                <li>Send emails from 2 email addresses</li>
+                                <li>250 contacts integrated with social media</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-3">
+                        <div class="single-package">
+                            <h3 class="package-heading main-color">Business</h3>
+                            <form role="form" method="post" action="switch-confirmation">
+                                {{ .csrfField }}
+                                <input type="hidden" id="code" name="code" />
+                                <input type="hidden" class="duration" id="duration" name="duration" value="annually">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver-1">
+                                  Switch to this plan
+                                </button>
+                            </form>
+                            <div class="price">
+                                <div id="businessPackage" {{if eq .currentUserPlan "Business" }} class="color-bg" {{end}}>
+                                    <h2><span class="sign">$</span><span id="businessPrice">29.99</span> <span class="month">/month</span></h2>
+                                </div>
+                            </div>
+                            <ul class="package-feature">
+                                <b>Includes everything in Consultant +</b>
+                                <li>Send upto 1,000 emails per day</li>
+                                <li>Send emails from 5 email addresses</li>
+                                <li>500 contacts integrated with social media</li>
+                                <li>Advanced Analytics Reports</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-3">
+                        <div class="single-package">
+                            <h3 class="package-heading main-color">Growing Business</h3>
+                            <form role="form" method="post" action="switch-confirmation">
+                                {{ .csrfField }}
+                                <input type="hidden" id="code" name="code" />
+                                <input type="hidden" class="duration" id="duration" name="duration" value="annually">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="gold-1" {{if eq .currentUserPlan "Growing Business" }} disabled{{end}}>
+                                  Switch to this plan
+                                </button>
+                            </form>
+                            <div class="price">
+                                <div id="ultimatePackage" {{if eq .currentUserPlan "Growing Business" }} class="color-bg" {{end}}>
+                                    <h2><span class="sign">$</span><span id="ultimatePrice">43.99</span> <span class="month">/month</span></h2>
+                                </div>
+                            </div>
+                            <ul class="package-feature">
+                                <b>Includes everything in Business +</b>
+                                <li>Send upto 5,000 emails per day</li>
+                                <li>Send emails from 10 email addresses</li>
+                                <li>Unlimited contacts integrated with social media</li>
+                                <li>Priority support</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             {{end}}
         </div>
     </section>
