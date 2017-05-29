@@ -158,7 +158,7 @@
                 </div>
             {{else}}
                 <p>You already have an active paid plan! You can switch to one of these other plans below. You are currently on the {{.currentUserPlan}} plan.</p>
-                <div class="row">
+                <!-- <div class="row">
                     <div class="col-md-3 col-sm-3">  
                         <div class="single-package">
                             <h3 class="package-heading main-color">Personal</h3>
@@ -166,7 +166,7 @@
                                 {{ .csrfField }}
                                 <input type="hidden" id="code" name="code" />
                                 <input type="hidden" class="duration" id="duration" name="duration" value="annually">
-                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="bronze">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="bronze" {{if eq .currentUserPlan "Personal" }} disabled{{end}}>
                                   Switch to this plan
                                 </button>
                             </form>
@@ -195,7 +195,7 @@
                                 {{ .csrfField }}
                                 <input type="hidden" id="code" name="code" />
                                 <input type="hidden" class="duration" id="duration" name="duration" value="annually">
-                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="aluminum">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="aluminum" {{if eq .currentUserPlan "Consultant" }} disabled{{end}}>
                                   Switch to this plan
                                 </button>
                             </form>
@@ -219,7 +219,7 @@
                                 {{ .csrfField }}
                                 <input type="hidden" id="code" name="code" />
                                 <input type="hidden" class="duration" id="duration" name="duration" value="annually">
-                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver-1">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver-1" {{if eq .currentUserPlan "Business" }} disabled{{end}}>
                                   Switch to this plan
                                 </button>
                             </form>
@@ -262,7 +262,7 @@
                             </ul>
                         </div>
                     </div>
-                </div>
+                </div> -->
             {{end}}
         </div>
     </section>
