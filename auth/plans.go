@@ -600,6 +600,7 @@ func BillingPageHandler() http.HandlerFunc {
 				userBilling.StripePlanId = "Growing Business"
 			}
 
+			customerBalance, _ := billing.GetCustomerBalance(r, user, &userBilling)
 			userPlanExpires := userBilling.Expires.AddDate(0, 0, -1).Format("2006-01-02")
 
 			data := map[string]interface{}{
@@ -607,6 +608,7 @@ func BillingPageHandler() http.HandlerFunc {
 				"userBilling":            userBilling,
 				"userEmail":              user.Email,
 				"userActive":             user.IsActive,
+				"userBalance":            customerBalance,
 				csrf.TemplateTag:         csrf.TemplateField(r),
 			}
 

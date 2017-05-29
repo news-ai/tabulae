@@ -55,6 +55,7 @@
                     {{else}}
                         {{if .userActive}}
                             <p>You have an active plan! You are on the {{.userBilling.StripePlanId}} plan. Your membership ends on the night of {{.userBillingPlanExpires}}. Thanks for using our platform :)</p>
+                            {{if gt .userBalance 0}}<p>Your account has a current balance of ${{.userBalance}}.</p>{{end}}
                         {{else}}
                             {{if .userBilling.HasTrial}}
                                 <p>Your subscription has ended. You were on the {{.userBilling.StripePlanId}} plan. Please visit the <a href="/api/billing/plans">Plans</a> tab on the top of the page to begin a new plan.</p>
