@@ -144,9 +144,9 @@ func CancelPlanPageHandler() http.HandlerFunc {
 			case "aluminum":
 				userBilling.StripePlanId = "Consultant"
 			case "silver-1":
-				userBilling.StripePlanId = "Freelancer"
-			case "gold-1":
 				userBilling.StripePlanId = "Business"
+			case "gold-1":
+				userBilling.StripePlanId = "Growing Business"
 			}
 
 			userNotActiveNonTrialPlan := true
@@ -211,9 +211,9 @@ func CancelPlanHandler() http.HandlerFunc {
 			case "aluminum":
 				plan = "Consultant"
 			case "silver-1":
-				plan = "Freelancer"
-			case "gold-1":
 				plan = "Business"
+			case "gold-1":
+				plan = "Growing Business"
 			}
 
 			data := map[string]interface{}{
@@ -261,16 +261,7 @@ func ChoosePlanPageHandler() http.HandlerFunc {
 
 		// If the user has a billing profile
 		if err == nil {
-			switch userBilling.StripePlanId {
-			case "bronze":
-				userBilling.StripePlanId = "Personal"
-			case "aluminum":
-				userBilling.StripePlanId = "Consultant"
-			case "silver-1":
-				userBilling.StripePlanId = "Freelancer"
-			case "gold-1":
-				userBilling.StripePlanId = "Business"
-			}
+			userBilling.StripePlanId = billing.BillingIdToPlanName(userBilling.StripePlanId)
 
 			userNotActiveNonTrialPlan := true
 			if user.IsActive && !userBilling.IsOnTrial {
@@ -334,9 +325,9 @@ func ChoosePlanHandler() http.HandlerFunc {
 			case "aluminum":
 				plan = "Consultant"
 			case "silver-1":
-				plan = "Freelancer"
-			case "gold-1":
 				plan = "Business"
+			case "gold-1":
+				plan = "Growing Business"
 			}
 
 			missingCard := true
@@ -391,10 +382,10 @@ func CheckCouponValid() http.HandlerFunc {
 			return
 		}
 
-        if coupon == "CURIOUS" && duration == "annually" {
-            nError.ReturnError(w, http.StatusInternalServerError, "Coupon error", "Sorry - you can't use this coupon code on a yearly plan. Please switch the monthly one to use this!")
-            return
-        }
+		if coupon == "CURIOUS" && duration == "annually" {
+			nError.ReturnError(w, http.StatusInternalServerError, "Coupon error", "Sorry - you can't use this coupon code on a yearly plan. Please switch the monthly one to use this!")
+			return
+		}
 
 		if coupon == "PRCONSULTANTS" && duration == "annually" {
 			nError.ReturnError(w, http.StatusInternalServerError, "Coupon error", "Sorry - you can't use this coupon code on a yearly plan. Please switch the monthly one to use this!")
@@ -461,9 +452,9 @@ func ConfirmPlanHandler() http.HandlerFunc {
 				plan = "bronze"
 			case "Consultant":
 				plan = "aluminum"
-			case "Freelancer":
-				plan = "silver-1"
 			case "Business":
+				plan = "silver-1"
+			case "Growing Business":
 				plan = "gold-1"
 			}
 
@@ -530,9 +521,9 @@ func BillingPageHandler() http.HandlerFunc {
 			case "aluminum":
 				userBilling.StripePlanId = "Consultant"
 			case "silver-1", "silver":
-				userBilling.StripePlanId = "Freelancer"
-			case "gold-1", "gold":
 				userBilling.StripePlanId = "Business"
+			case "gold-1", "gold":
+				userBilling.StripePlanId = "Growing Business"
 			}
 
 			userPlanExpires := userBilling.Expires.AddDate(0, 0, -1).Format("2006-01-02")

@@ -187,7 +187,7 @@ func SwitchUserPlan(r *http.Request, user models.User, userBilling *models.Billi
 	httpClient := urlfetch.Client(c)
 	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
 
-	customer, err := sc.Customers.Get(userBilling.StripeId, nil)
+	_, err := sc.Customers.Get(userBilling.StripeId, nil)
 	if err != nil {
 		var stripeError StripeError
 		err = json.Unmarshal([]byte(err.Error()), &stripeError)

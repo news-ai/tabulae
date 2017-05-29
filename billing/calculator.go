@@ -21,9 +21,9 @@ func PlanAndDurationToPrice(plan string, duration string) float64 {
 			price = 9.99 * 1
 		case "Consultant": // now "Consultant"
 			price = 18.99 * 1
-		case "Freelancer": // now "Business"
+		case "Business": // now "Business"
 			price = 35.99 * 1
-		case "Business": // now "Growing Business"
+		case "Growing Business": // now "Growing Business"
 			price = 54.99 * 1
 		}
 	} else {
@@ -32,9 +32,9 @@ func PlanAndDurationToPrice(plan string, duration string) float64 {
 			price = 7.99 * 12
 		case "Consultant": // now "Consultant"
 			price = 15.99 * 12
-		case "Freelancer": // now "Business"
+		case "Business": // now "Business"
 			price = 29.99 * 12
-		case "Business": // now "Growing Business"
+		case "Growing Business": // now "Growing Business"
 			price = 43.99 * 12
 		}
 	}

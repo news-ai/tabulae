@@ -7,9 +7,9 @@ func BillingIdToPlanName(plan string) string {
 	case "aluminum": // now "Consultant"
 		return "Consultant"
 	case "silver", "silver-1": // now "Business"
-		return "Freelancer"
-	case "gold", "gold-1": // now "Growing Business"
 		return "Business"
+	case "gold", "gold-1": // now "Growing Business"
+		return "Growing Business"
 	}
 
 	return "Personal"
@@ -21,9 +21,9 @@ func UserMaximumSocialAccounts(plan string) int {
 		return 100
 	case "Consultant": // now "Consultant"
 		return 250
-	case "Freelancer": // now "Business"
+	case "Business": // now "Business"
 		return 500
-	case "Business": // now "Growing Business"
+	case "Growing Business": // now "Growing Business"
 		return 100000
 	}
 
@@ -36,9 +36,9 @@ func UserMaximumEmailAccounts(plan string) int {
 		return 0
 	case "Consultant": // now "Consultant"
 		return 2
-	case "Freelancer": // now "Business"
+	case "Business": // now "Business"
 		return 5
-	case "Business": // now "Growing Business"
+	case "Growing Business": // now "Growing Business"
 		return 10
 	}
 
@@ -51,9 +51,9 @@ func UserMaximumEmailSent(plan string) int {
 		return 100
 	case "Consultant": // now "Consultant"
 		return 400
-	case "Freelancer": // now "Business"
+	case "Business": // now "Business"
 		return 1000
-	case "Business": // now "Growing Business"
+	case "Growing Business": // now "Growing Business"
 		return 5000
 	}
 
