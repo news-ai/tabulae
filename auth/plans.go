@@ -286,6 +286,80 @@ func ChoosePlanPageHandler() http.HandlerFunc {
 	}
 }
 
+func ChooseSwitchPlanHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c := appengine.NewContext(r)
+		plan := r.FormValue("plan")
+		duration := r.FormValue("duration")
+
+		// To check if there is a user logged in
+		user, err := controllers.GetCurrentUser(c, r)
+
+		if r.URL.Query().Get("next") != "" {
+			session, _ := Store.Get(r, "sess")
+			session.Values["next"] = r.URL.Query().Get("next")
+			session.Save(r, w)
+
+			// If there is a next and the user has not been logged in
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				http.Redirect(w, r, r.URL.Query().Get("next"), 302)
+				return
+			}
+		}
+
+		// If there is no next and the user is not logged in
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			http.Redirect(w, r, "https://tabulae.newsai.co/", 302)
+			return
+		}
+
+		userBilling, err := controllers.GetUserBilling(c, r, user)
+
+		// If the user has a billing profile
+		if err == nil {
+			originalPlan := plan
+			switch plan {
+			case "bronze":
+				plan = "Personal"
+			case "aluminum":
+				plan = "Consultant"
+			case "silver-1":
+				plan = "Business"
+			case "gold-1":
+				plan = "Growing Business"
+			}
+
+			missingCard := true
+			if len(userBilling.CardsOnFile) > 0 {
+				missingCard = false
+			}
+
+			price := billing.PlanAndDurationToPrice(plan, duration)
+			cost, _ := billing.SwitchUserPlanPreview(r, user, &userBilling, duration, originalPlan)
+
+			data := map[string]interface{}{
+				"missingCard": missingCard,
+				"price":       price,
+				"plan":        plan,
+				"duration":    duration,
+				"userEmail":   user.Email,
+				"difference":  cost,
+			}
+
+			t := template.New("switch-confirmation.html")
+			t, _ = t.ParseFiles("billing/switch-confirmation.html")
+			t.Execute(w, data)
+		} else {
+			// If the user does not have billing profile that means that they
+			// have not started their trial yet.
+			http.Redirect(w, r, "/api/billing/plans/trial", 302)
+			return
+		}
+	}
+}
+
 func ChoosePlanHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)

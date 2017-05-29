@@ -129,6 +129,7 @@ func init() {
 
 	// Add plan method
 	router.Handler("POST", "/api/billing/confirmation", auth.ChoosePlanHandler())
+	router.Handler("POST", "/api/billing/switch-confirmation", auth.ChooseSwitchPlanHandler())
 	router.Handler("POST", "/api/billing/receipt", auth.ConfirmPlanHandler())
 
 	// Cancel plan method
