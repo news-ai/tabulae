@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
@@ -31,6 +32,7 @@ type StripeError struct {
 type StripeBillingHistory struct {
 	Amount  uint64    `json:"amount"`
 	Created time.Time `json:"created"`
+	Paid    bool      `json:"paid"`
 }
 
 func GetCustomerBalance(r *http.Request, user models.User, userBilling *models.Billing) (int64, error) {
@@ -53,7 +55,7 @@ func GetCustomerBalance(r *http.Request, user models.User, userBilling *models.B
 	return customer.Balance, nil
 }
 
-func GetCustomerBillingHistory(r *http.Request, user models.User, userBilling *models.Billing) (int64, error) {
+func GetCustomerBillingHistory(r *http.Request, user models.User, userBilling *models.Billing) ([]StripeBillingHistory, error) {
 	c := appengine.NewContext(r)
 	httpClient := urlfetch.Client(c)
 	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
@@ -63,24 +65,31 @@ func GetCustomerBillingHistory(r *http.Request, user models.User, userBilling *m
 		var stripeError StripeError
 		err = json.Unmarshal([]byte(err.Error()), &stripeError)
 		if err != nil {
-			return 0.0, errors.New("We had an error getting your user")
+			return []StripeBillingHistory{}, errors.New("We had an error getting your user")
 		}
 
 		log.Errorf(c, "%v", err)
-		return 0.0, errors.New(stripeError.Message)
+		return []StripeBillingHistory{}, errors.New(stripeError.Message)
 	}
 
 	params := &stripe.ChargeListParams{}
-	params.Filters.AddFilter("customer", "", customer.ID)
+	params.Customer = customer.ID
 	i := sc.Charges.List(params)
+
+	billingHistory := []StripeBillingHistory{}
+
 	for i.Next() {
 		singleCharge := i.Charge()
-		history := StripeBillingHistory
+
+		history := StripeBillingHistory{}
 		history.Amount = singleCharge.Amount
-		singleCharge.Created
+		history.Created = time.Unix(singleCharge.Created, 0)
+		history.Paid = singleCharge.Paid
+
+		billingHistory = append(billingHistory, history)
 	}
 
-	return customer.Balance, nil
+	return billingHistory, nil
 }
 
 func GetCoupon(r *http.Request, coupon string) (uint64, error) {

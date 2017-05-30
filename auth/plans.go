@@ -603,6 +603,9 @@ func BillingPageHandler() http.HandlerFunc {
 			customerBalance, _ := billing.GetCustomerBalance(r, user, &userBilling)
 			userPlanExpires := userBilling.Expires.AddDate(0, 0, -1).Format("2006-01-02")
 
+			userbillingHistory, _ := billing.GetCustomerBillingHistory(r, user, &userBilling)
+			log.Infof(c, "%v", userbillingHistory)
+
 			data := map[string]interface{}{
 				"userBillingPlanExpires": userPlanExpires,
 				"userBilling":            userBilling,
