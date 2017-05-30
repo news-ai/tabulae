@@ -28,6 +28,11 @@ type StripeError struct {
 	Message string `json:"message"`
 }
 
+type StripeBillingHistory struct {
+	Amount  uint64    `json:"amount"`
+	Created time.Time `json:"created"`
+}
+
 func GetCustomerBalance(r *http.Request, user models.User, userBilling *models.Billing) (int64, error) {
 	c := appengine.NewContext(r)
 	httpClient := urlfetch.Client(c)
@@ -70,6 +75,9 @@ func GetCustomerBillingHistory(r *http.Request, user models.User, userBilling *m
 	i := sc.Charges.List(params)
 	for i.Next() {
 		singleCharge := i.Charge()
+		history := StripeBillingHistory
+		history.Amount = singleCharge.Amount
+		singleCharge.Created
 	}
 
 	return customer.Balance, nil
