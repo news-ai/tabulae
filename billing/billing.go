@@ -30,9 +30,9 @@ type StripeError struct {
 }
 
 type StripeBillingHistory struct {
-	Amount  uint64    `json:"amount"`
-	Created time.Time `json:"created"`
-	Paid    bool      `json:"paid"`
+	Amount  float64 `json:"amount"`
+	Created string  `json:"created"`
+	Paid    bool    `json:"paid"`
 }
 
 func GetCustomerBalance(r *http.Request, user models.User, userBilling *models.Billing) (int64, error) {
@@ -82,8 +82,8 @@ func GetCustomerBillingHistory(r *http.Request, user models.User, userBilling *m
 		singleCharge := i.Charge()
 
 		history := StripeBillingHistory{}
-		history.Amount = singleCharge.Amount
-		history.Created = time.Unix(singleCharge.Created, 0)
+		history.Amount = float64(float64(singleCharge.Amount) / float64(100))
+		history.Created = time.Unix(singleCharge.Created, 0).Format("2006-01-02")
 		history.Paid = singleCharge.Paid
 
 		billingHistory = append(billingHistory, history)

@@ -612,6 +612,7 @@ func BillingPageHandler() http.HandlerFunc {
 				"userEmail":              user.Email,
 				"userActive":             user.IsActive,
 				"userBalance":            customerBalance,
+				"userbillingHistory":     userbillingHistory,
 				csrf.TemplateTag:         csrf.TemplateField(r),
 			}
 
