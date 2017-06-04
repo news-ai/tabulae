@@ -26,14 +26,14 @@ type ContactUnsubscribe struct {
  */
 
 func (cu *ContactUnsubscribe) Key(c context.Context) *datastore.Key {
-	return cu.key(c, "ContactUnsubscribe")
+	return cu.BaseKey(c, "ContactUnsubscribe")
 }
 
 /*
 * Create methods
  */
 
-func (cu *ContactUnsubscribe) Create(c context.Context, r *http.Request, currentUser User) (*ContactUnsubscribe, error) {
+func (cu *ContactUnsubscribe) Create(c context.Context, r *http.Request, currentUser apiModels.User) (*ContactUnsubscribe, error) {
 	cu.CreatedBy = currentUser.Id
 	cu.Created = time.Now()
 
@@ -50,7 +50,7 @@ func (cu *ContactUnsubscribe) Save(c context.Context, r *http.Request) (*Contact
 	// Update the Updated time
 	cu.Updated = time.Now()
 
-	k, err := nds.Put(c, cu.key(c, "ContactUnsubscribe"), cu)
+	k, err := nds.Put(c, cu.BaseKey(c, "ContactUnsubscribe"), cu)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err

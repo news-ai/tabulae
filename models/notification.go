@@ -47,7 +47,7 @@ type NotificationChange struct {
 * Create methods
  */
 
-func (n *Notification) Create(c context.Context, currentUser User) (*Notification, error) {
+func (n *Notification) Create(c context.Context, currentUser apiModels.User) (*Notification, error) {
 	n.CreatedBy = currentUser.Id
 	n.Created = time.Now()
 
@@ -64,7 +64,7 @@ func (n *Notification) Save(c context.Context) (*Notification, error) {
 	// Update the Updated time
 	n.Updated = time.Now()
 
-	k, err := nds.Put(c, n.key(c, "Notification"), n)
+	k, err := nds.Put(c, n.BaseKey(c, "Notification"), n)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
@@ -81,7 +81,7 @@ func (n *Notification) Save(c context.Context) (*Notification, error) {
 * Create methods
  */
 
-func (no *NotificationObject) Create(c context.Context, currentUser User) (*NotificationObject, error) {
+func (no *NotificationObject) Create(c context.Context, currentUser apiModels.User) (*NotificationObject, error) {
 	no.CreatedBy = currentUser.Id
 	no.Created = time.Now()
 
@@ -98,7 +98,7 @@ func (no *NotificationObject) Save(c context.Context) (*NotificationObject, erro
 	// Update the Updated time
 	no.Updated = time.Now()
 
-	k, err := nds.Put(c, no.key(c, "NotificationObject"), no)
+	k, err := nds.Put(c, no.BaseKey(c, "NotificationObject"), no)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
@@ -115,7 +115,7 @@ func (no *NotificationObject) Save(c context.Context) (*NotificationObject, erro
 * Create methods
  */
 
-func (nc *NotificationChange) Create(c context.Context, r *http.Request, currentUser User) (*NotificationChange, error) {
+func (nc *NotificationChange) Create(c context.Context, r *http.Request, currentUser apiModels.User) (*NotificationChange, error) {
 	nc.CreatedBy = currentUser.Id
 	nc.Created = time.Now()
 	nc.Read = false
@@ -133,7 +133,7 @@ func (nc *NotificationChange) Save(c context.Context) (*NotificationChange, erro
 	// Update the Updated time
 	nc.Updated = time.Now()
 
-	k, err := nds.Put(c, nc.key(c, "NotificationChange"), nc)
+	k, err := nds.Put(c, nc.BaseKey(c, "NotificationChange"), nc)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err

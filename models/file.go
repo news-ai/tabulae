@@ -42,7 +42,7 @@ type FileOrder struct {
 * Create methods
  */
 
-func (f *File) Create(c context.Context, r *http.Request, currentUser User) (*File, error) {
+func (f *File) Create(c context.Context, r *http.Request, currentUser apiModels.User) (*File, error) {
 	f.CreatedBy = currentUser.Id
 	f.Created = time.Now()
 
@@ -59,7 +59,7 @@ func (f *File) Save(c context.Context) (*File, error) {
 	// Update the Updated time
 	f.Updated = time.Now()
 
-	k, err := nds.Put(c, f.key(c, "File"), f)
+	k, err := nds.Put(c, f.BaseKey(c, "File"), f)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err

@@ -81,7 +81,7 @@ var fieldsMapValueToDescription = map[string]string{
 * Create methods
  */
 
-func (ml *MediaList) Create(c context.Context, r *http.Request, currentUser User) (*MediaList, error) {
+func (ml *MediaList) Create(c context.Context, r *http.Request, currentUser apiModels.User) (*MediaList, error) {
 	ml.CreatedBy = currentUser.Id
 	ml.Created = time.Now()
 
@@ -230,7 +230,7 @@ func (ml *MediaList) Save(c context.Context) (*MediaList, error) {
 	// Update the Updated time
 	ml.Updated = time.Now()
 
-	k, err := nds.Put(c, ml.key(c, "MediaList"), ml)
+	k, err := nds.Put(c, ml.BaseKey(c, "MediaList"), ml)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err

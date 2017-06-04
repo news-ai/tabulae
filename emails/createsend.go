@@ -12,6 +12,8 @@ import (
 
 	"github.com/news-ai/tabulae/models"
 
+	apiModels "github.com/news-ai/api/models"
+
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/log"
@@ -76,7 +78,7 @@ type CampaignMonitorPremiumEmail struct {
 	AddRecipientsToList bool `json:"AddRecipientsToList"`
 }
 
-func ConfirmUserAccount(c context.Context, user models.User, confirmationCode string) error {
+func ConfirmUserAccount(c context.Context, user apiModels.User, confirmationCode string) error {
 	apiKey := os.Getenv("CAMPAIGNMONITOR_API_KEY")
 	confirmationEmailId := "a609aac8-cde6-4830-92ba-215ee48c4195"
 
@@ -118,7 +120,7 @@ func ConfirmUserAccount(c context.Context, user models.User, confirmationCode st
 	return errors.New("Error happened when sending email")
 }
 
-func ResetUserPassword(c context.Context, user models.User, resetPasswordCode string) error {
+func ResetUserPassword(c context.Context, user apiModels.User, resetPasswordCode string) error {
 	apiKey := os.Getenv("CAMPAIGNMONITOR_API_KEY")
 	resetEmailId := "b85b1152-5665-46ff-ada8-a5720b730a51"
 
@@ -160,7 +162,7 @@ func ResetUserPassword(c context.Context, user models.User, resetPasswordCode st
 	return errors.New("Error happened when sending email")
 }
 
-func AddUserToTabulaePremiumList(c context.Context, user models.User, plan, duration, billDate, billAmount, paidAmount string) error {
+func AddUserToTabulaePremiumList(c context.Context, user apiModels.User, plan, duration, billDate, billAmount, paidAmount string) error {
 	apiKey := os.Getenv("CAMPAIGNMONITOR_API_KEY")
 	premiumEmailId := "62b31c10-4e4d-4d9f-8442-8834427b2040"
 
@@ -203,7 +205,7 @@ func AddUserToTabulaePremiumList(c context.Context, user models.User, plan, dura
 	return errors.New("Error happened when sending email")
 }
 
-func AddUserToTabulaeTrialList(c context.Context, user models.User) error {
+func AddUserToTabulaeTrialList(c context.Context, user apiModels.User) error {
 	apiKey := os.Getenv("CAMPAIGNMONITOR_API_KEY")
 	trialListId := "7dc0d29f2d1ba1c0bda15e74f57599bc"
 
@@ -240,7 +242,7 @@ func AddUserToTabulaeTrialList(c context.Context, user models.User) error {
 	return errors.New("Error happened when sending email")
 }
 
-func AddEmailToUser(c context.Context, user models.User, userToEmail, userEmailCode string) error {
+func AddEmailToUser(c context.Context, user apiModels.User, userToEmail, userEmailCode string) error {
 	apiKey := os.Getenv("CAMPAIGNMONITOR_API_KEY")
 	addEmailCodeId := "3cf262ae-51aa-4735-a163-c570a8e861b3"
 
@@ -282,7 +284,7 @@ func AddEmailToUser(c context.Context, user models.User, userToEmail, userEmailC
 	return errors.New("Error happened when sending email")
 }
 
-func InviteUser(c context.Context, currentUser models.User, userEmail, userReferralCode, personalMessage string) error {
+func InviteUser(c context.Context, currentUser apiModels.User, userEmail, userReferralCode, personalMessage string) error {
 	apiKey := os.Getenv("CAMPAIGNMONITOR_API_KEY")
 	inviteUserCodeId := "e5665b9e-668e-4e6a-8bc1-69c40167b941"
 

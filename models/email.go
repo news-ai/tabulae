@@ -129,10 +129,10 @@ type Email struct {
  */
 
 func (e *Email) Key(c context.Context) *datastore.Key {
-	return e.key(c, "Email")
+	return e.BaseKey(c, "Email")
 }
 
-func (e *Email) Create(c context.Context, r *http.Request, currentUser User) (*Email, error) {
+func (e *Email) Create(c context.Context, r *http.Request, currentUser apiModels.User) (*Email, error) {
 	e.IsSent = false
 	e.CreatedBy = currentUser.Id
 	e.Created = time.Now()
@@ -141,7 +141,7 @@ func (e *Email) Create(c context.Context, r *http.Request, currentUser User) (*E
 	return e, err
 }
 
-func (es *EmailSetting) Create(c context.Context, r *http.Request, currentUser User) (*EmailSetting, error) {
+func (es *EmailSetting) Create(c context.Context, r *http.Request, currentUser apiModels.User) (*EmailSetting, error) {
 	es.CreatedBy = currentUser.Id
 	es.Created = time.Now()
 
@@ -158,7 +158,7 @@ func (e *Email) Save(c context.Context) (*Email, error) {
 	// Update the Updated time
 	e.Updated = time.Now()
 
-	k, err := nds.Put(c, e.key(c, "Email"), e)
+	k, err := nds.Put(c, e.BaseKey(c, "Email"), e)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
@@ -172,7 +172,7 @@ func (es *EmailSetting) Save(c context.Context) (*EmailSetting, error) {
 	// Update the Updated time
 	es.Updated = time.Now()
 
-	k, err := nds.Put(c, es.key(c, "EmailSetting"), es)
+	k, err := nds.Put(c, es.BaseKey(c, "EmailSetting"), es)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
@@ -266,7 +266,7 @@ func (e *Email) MarkSendgridOpened(c context.Context) (*Email, error) {
 
 func (e *Email) FillStruct(m map[string]interface{}) error {
 	for k, v := range m {
-		err := SetField(e, k, v)
+		err := apiModels.SetField(e, k, v)
 		if err != nil {
 			return err
 		}

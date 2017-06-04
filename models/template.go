@@ -32,7 +32,7 @@ type Template struct {
  */
 
 // Function to create a new team into App Engine
-func (tpl *Template) Create(c context.Context, r *http.Request, currentUser User) (*Template, error) {
+func (tpl *Template) Create(c context.Context, r *http.Request, currentUser apiModels.User) (*Template, error) {
 	tpl.CreatedBy = currentUser.Id
 	tpl.Created = time.Now()
 
@@ -50,7 +50,7 @@ func (tpl *Template) Save(c context.Context) (*Template, error) {
 	tpl.Updated = time.Now()
 
 	// Save the object
-	k, err := nds.Put(c, tpl.key(c, "Template"), tpl)
+	k, err := nds.Put(c, tpl.BaseKey(c, "Template"), tpl)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err

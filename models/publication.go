@@ -42,7 +42,7 @@ type Publication struct {
  */
 
 // Function to create a new publication into App Engine
-func (p *Publication) Create(c context.Context, r *http.Request, currentUser User) (*Publication, error) {
+func (p *Publication) Create(c context.Context, r *http.Request, currentUser apiModels.User) (*Publication, error) {
 	p.CreatedBy = currentUser.Id
 	p.Created = time.Now()
 
@@ -60,7 +60,7 @@ func (p *Publication) Save(c context.Context) (*Publication, error) {
 	p.Updated = time.Now()
 
 	// Save the object
-	k, err := nds.Put(c, p.key(c, "Publication"), p)
+	k, err := nds.Put(c, p.BaseKey(c, "Publication"), p)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
@@ -89,7 +89,7 @@ func (p *Publication) Validate(c context.Context) (*Publication, error) {
 
 func (p *Publication) FillStruct(m map[string]interface{}) error {
 	for k, v := range m {
-		err := SetField(p, k, v)
+		err := apiModels.SetField(p, k, v)
 		if err != nil {
 			return err
 		}

@@ -84,14 +84,14 @@ type Contact struct {
  */
 
 func (ct *Contact) Key(c context.Context) *datastore.Key {
-	return ct.key(c, "Contact")
+	return ct.BaseKey(c, "Contact")
 }
 
 /*
 * Create methods
  */
 
-func (ct *Contact) Create(c context.Context, r *http.Request, currentUser User) (*Contact, error) {
+func (ct *Contact) Create(c context.Context, r *http.Request, currentUser apiModels.User) (*Contact, error) {
 	ct.CreatedBy = currentUser.Id
 	ct.Created = time.Now()
 	ct.Normalize()
@@ -112,7 +112,7 @@ func (ct *Contact) Save(c context.Context, r *http.Request) (*Contact, error) {
 	ct.Normalize()
 	ct.FormatName()
 
-	k, err := nds.Put(c, ct.key(c, "Contact"), ct)
+	k, err := nds.Put(c, ct.BaseKey(c, "Contact"), ct)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err

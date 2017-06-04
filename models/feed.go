@@ -32,14 +32,14 @@ type Feed struct {
  */
 
 func (f *Feed) Key(c context.Context) *datastore.Key {
-	return f.key(c, "Feed")
+	return f.BaseKey(c, "Feed")
 }
 
 /*
 * Create methods
  */
 
-func (f *Feed) Create(c context.Context, r *http.Request, currentUser User) (*Feed, error) {
+func (f *Feed) Create(c context.Context, r *http.Request, currentUser apiModels.User) (*Feed, error) {
 	f.CreatedBy = currentUser.Id
 	f.Created = time.Now()
 
@@ -57,7 +57,7 @@ func (f *Feed) Create(c context.Context, r *http.Request, currentUser User) (*Fe
 
 // Function to save a new email into App Engine
 func (f *Feed) Save(c context.Context) (*Feed, error) {
-	k, err := nds.Put(c, f.key(c, "Feed"), f)
+	k, err := nds.Put(c, f.BaseKey(c, "Feed"), f)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
