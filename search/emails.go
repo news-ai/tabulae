@@ -204,6 +204,14 @@ func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.U
 		elasticBounceQuery := ElasticBounceQuery{}
 		elasticBounceQuery.Term.BaseBounced = true
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBounceQuery)
+	} else if filter == "unopen" {
+		elasticOpenedQuery := ElasticBaseOpenedQuery{}
+		elasticOpenedQuery.Term.Opened = 0
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticOpenedQuery)
+	} else if filter == "unclick" {
+		elasticClickedQuery := ElasticBaseClickedQuery{}
+		elasticClickedQuery.Term.Clicked = 0
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticClickedQuery)
 	}
 
 	elasticCreatedQuery := ElasticSortDataCreatedQuery{}

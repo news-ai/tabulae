@@ -54,7 +54,7 @@
                         <p>You are currently on a trial membership. You are on the {{.userBilling.StripePlanId}} plan. Your trial membership ends on the night of {{.userBillingPlanExpires}}.</p>
                     {{else}}
                         {{if .userActive}}
-                            <p>You have an active plan! You are on the {{.userBilling.StripePlanId}} plan. Your membership ends on the night of {{.userBillingPlanExpires}}. Thanks for using our platform :)</p>
+                            <p>You have an active plan! You are on the {{.userBilling.StripePlanId}} plan. Your membership will renew on the night of {{.userBillingPlanExpires}}. Thanks for using our platform :)</p>
                             {{if gt .userBalance 0}}<p>Your account has a current balance of ${{.userBalance}}.</p>{{end}}
 
                             {{ if gt (len .userbillingHistory) 0 }}

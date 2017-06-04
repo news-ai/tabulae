@@ -517,7 +517,12 @@ func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Initial values for fieldsmap
-	medialist.FieldsMap = getFieldsMap()
+	if len(medialist.FieldsMap) > 0 {
+		medialist.FieldsMap = append(getFieldsMap(), medialist.FieldsMap...)
+	} else {
+		medialist.FieldsMap = getFieldsMap()
+	}
+
 	medialist.TeamId = currentUser.TeamId
 
 	// Create media list

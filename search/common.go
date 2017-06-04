@@ -31,6 +31,18 @@ type ElasticBaseSubjectQuery struct {
 	} `json:"term"`
 }
 
+type ElasticBaseOpenedQuery struct {
+	Term struct {
+		Opened int64 `json:"data.Opened"`
+	} `json:"term"`
+}
+
+type ElasticBaseClickedQuery struct {
+	Term struct {
+		Clicked int64 `json:"data.Clicked"`
+	} `json:"term"`
+}
+
 type ElasticIsSentQuery struct {
 	Term struct {
 		IsSent bool `json:"data.IsSent"`
