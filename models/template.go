@@ -8,11 +8,13 @@ import (
 
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/qedus/nds"
 )
 
 type Template struct {
-	Base
+	apiModels.Base
 
 	Name    string `json:"name"`
 	Subject string `json:"subject" datastore:",noindex"`

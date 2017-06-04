@@ -9,6 +9,8 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/qedus/nds"
 )
 
@@ -51,7 +53,7 @@ type UserEmailSetting struct {
 }
 
 type EmailSetting struct {
-	Base
+	apiModels.Base
 
 	SMTPServer  string `json:"SMTPServer"`
 	SMTPPortTLS int    `json:"SMTPPortTLS"`
@@ -65,7 +67,7 @@ type EmailSetting struct {
 }
 
 type Email struct {
-	Base
+	apiModels.Base
 
 	Method string `json:"method"`
 

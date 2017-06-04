@@ -9,11 +9,13 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/qedus/nds"
 )
 
 type Feed struct {
-	Base
+	apiModels.Base
 
 	FeedURL string `json:"url"`
 

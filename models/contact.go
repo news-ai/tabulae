@@ -12,6 +12,8 @@ import (
 
 	"github.com/news-ai/web/utilities"
 
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/qedus/nds"
 )
 
@@ -21,7 +23,7 @@ type CustomContactField struct {
 }
 
 type Contact struct {
-	Base
+	apiModels.Base
 
 	// Contact information
 	FirstName string `json:"firstname"`
@@ -168,7 +170,7 @@ func (ct *Contact) Normalize() (*Contact, error) {
 
 func (c *Contact) FillStruct(m map[string]interface{}) error {
 	for k, v := range m {
-		err := SetField(c, k, v)
+		err := apiModels.SetField(c, k, v)
 		if err != nil {
 			return err
 		}

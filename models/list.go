@@ -10,6 +10,8 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/qedus/nds"
 )
 
@@ -25,7 +27,7 @@ type CustomFieldsMap struct {
 }
 
 type MediaList struct {
-	Base
+	apiModels.Base
 
 	Name   string `json:"name"`
 	Client string `json:"client"`

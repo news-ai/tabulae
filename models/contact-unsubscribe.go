@@ -9,11 +9,13 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/qedus/nds"
 )
 
 type ContactUnsubscribe struct {
-	Base
+	apiModels.Base
 
 	Email        string `json:"email"`
 	Unsubscribed bool   `json:"unsubscribed"`

@@ -8,11 +8,13 @@ import (
 
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/qedus/nds"
 )
 
 type File struct {
-	Base
+	apiModels.Base
 
 	OriginalName string `json:"originalname"`
 	FileName     string `json:"filename"`

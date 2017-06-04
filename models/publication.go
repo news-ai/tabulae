@@ -11,11 +11,13 @@ import (
 
 	"github.com/qedus/nds"
 
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/news-ai/web/utilities"
 )
 
 type Publication struct {
-	Base
+	apiModels.Base
 
 	Name string `json:"name"`
 	Url  string `json:"url"`

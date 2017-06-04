@@ -8,15 +8,17 @@ import (
 
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/qedus/nds"
 )
 
 type Notification struct {
-	Base
+	apiModels.Base
 }
 
 type NotificationObject struct {
-	Base
+	apiModels.Base
 
 	NoticationId int64
 
@@ -25,7 +27,7 @@ type NotificationObject struct {
 }
 
 type NotificationChange struct {
-	Base
+	apiModels.Base
 
 	NoticationObjectId int64
 
