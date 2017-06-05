@@ -12,6 +12,8 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
 
+	apiControllers "github.com/news-ai/api/controllers"
+
 	"github.com/news-ai/tabulae/controllers"
 	"google.golang.org/appengine/log"
 
@@ -41,7 +43,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 	// Loop through the emails and send them
 	emailIds := []int64{}
 	for i := 0; i < len(schedueled); i++ {
-		user, err := controllers.GetUserByIdUnauthorized(c, r, schedueled[i].CreatedBy)
+		user, err := apiControllers.GetUserByIdUnauthorized(c, r, schedueled[i].CreatedBy)
 		if err != nil {
 			hasErrors = true
 			log.Errorf(c, "%v", err)

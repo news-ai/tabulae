@@ -21,6 +21,9 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/api/controllers"
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/news-ai/tabulae/attach"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/search"
@@ -61,7 +64,7 @@ func getEmail(c context.Context, r *http.Request, id int64) (models.Email, error
 	if !email.Created.IsZero() {
 		email.Format(emailId, "emails")
 
-		user, err := GetCurrentUser(c, r)
+		user, err := controllers.GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return models.Email{}, errors.New("Could not get user")
@@ -130,7 +133,7 @@ func filterEmail(c context.Context, queryType, query string) (models.Email, erro
 func filterEmailbyListId(c context.Context, r *http.Request, listId int64) ([]models.Email, int, error) {
 	emails := []models.Email{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, 0, err
@@ -161,7 +164,7 @@ func filterEmailbyListId(c context.Context, r *http.Request, listId int64) ([]mo
 func filterOrderedEmailbyContactId(c context.Context, r *http.Request, contactId int64) ([]models.Email, error) {
 	emails := []models.Email{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, err
@@ -191,7 +194,7 @@ func filterOrderedEmailbyContactId(c context.Context, r *http.Request, contactId
 func filterEmailbyContactId(c context.Context, r *http.Request, contactId int64) ([]models.Email, error) {
 	emails := []models.Email{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, err
@@ -284,7 +287,7 @@ func emailsToContacts(c context.Context, r *http.Request, emails []models.Email)
 func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
 	emails := []models.Email{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, 0, 0, err
@@ -327,7 +330,7 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 func GetSentEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
 	emails := []models.Email{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, 0, 0, err
@@ -369,7 +372,7 @@ func GetSentEmails(c context.Context, r *http.Request) ([]models.Email, interfac
 }
 
 func GetEmailStats(c context.Context, r *http.Request) (interface{}, interface{}, int, int, error) {
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
@@ -382,7 +385,7 @@ func GetEmailStats(c context.Context, r *http.Request) (interface{}, interface{}
 func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
 	emails := []models.Email{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, 0, 0, err
@@ -426,7 +429,7 @@ func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, int
 func GetArchivedEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
 	emails := []models.Email{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, 0, 0, err
@@ -553,7 +556,7 @@ func GetEmail(c context.Context, r *http.Request, id string) (models.Email, inte
 func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, interface{}, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, err
@@ -779,7 +782,7 @@ func FilterEmailBySendGridID(c context.Context, sendGridId string) (models.Email
 * Update methods
  */
 
-func UpdateEmail(c context.Context, r *http.Request, currentUser models.User, email *models.Email, updatedEmail models.Email) (models.Email, interface{}, error) {
+func UpdateEmail(c context.Context, r *http.Request, currentUser apiModels.User, email *models.Email, updatedEmail models.Email) (models.Email, interface{}, error) {
 	if email.CreatedBy != currentUser.Id {
 		return *email, nil, errors.New("You don't have permissions to edit this object")
 	}
@@ -812,7 +815,7 @@ func UpdateSingleEmail(c context.Context, r *http.Request, id string) (models.Em
 		return models.Email{}, nil, err
 	}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Email{}, nil, errors.New("Could not get user")
@@ -845,7 +848,7 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, inter
 	}
 
 	// Get logged in user
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, errors.New("Could not get user")
@@ -886,7 +889,7 @@ func UpdateBatchEmail(c context.Context, r *http.Request) ([]models.Email, inter
 func CancelAllScheduled(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
 	emails := []models.Email{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, 0, 0, err
@@ -1087,7 +1090,7 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 		return models.Email{}, nil, err
 	}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return email, nil, err
@@ -1431,7 +1434,7 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 		return models.Email{}, nil, err
 	}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return email, nil, err
@@ -1739,7 +1742,7 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 }
 
 func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason string) (*models.Email, models.NotificationChange, error) {
-	SetUser(c, r, e.CreatedBy)
+	controllers.SetUser(c, r, e.CreatedBy)
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "BOUNCED", "")
 
 	contacts, err := filterContactByEmail(c, e.To)
@@ -1757,14 +1760,14 @@ func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason str
 }
 
 func MarkSpam(c context.Context, r *http.Request, e *models.Email) (*models.Email, models.NotificationChange, error) {
-	SetUser(c, r, e.CreatedBy)
+	controllers.SetUser(c, r, e.CreatedBy)
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "SPAM", "")
 	_, err := e.MarkSpam(c)
 	return e, notification, err
 }
 
 func MarkClicked(c context.Context, r *http.Request, e *models.Email) (*models.Email, models.NotificationChange, error) {
-	SetUser(c, r, e.CreatedBy)
+	controllers.SetUser(c, r, e.CreatedBy)
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "CLICKED", "")
 	_, err := e.MarkClicked(c)
 	return e, notification, err
@@ -1776,14 +1779,14 @@ func MarkDelivered(c context.Context, r *http.Request, e *models.Email) (*models
 }
 
 func MarkOpened(c context.Context, r *http.Request, e *models.Email) (*models.Email, models.NotificationChange, error) {
-	SetUser(c, r, e.CreatedBy)
+	controllers.SetUser(c, r, e.CreatedBy)
 	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "OPENED", "")
 	_, err := e.MarkOpened(c)
 	return e, notification, err
 }
 
 func MarkSendgridOpen(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
-	SetUser(c, r, e.CreatedBy)
+	controllers.SetUser(c, r, e.CreatedBy)
 	_, err := e.MarkSendgridOpened(c)
 	return e, err
 }
@@ -1795,7 +1798,7 @@ func GetEmailLogs(c context.Context, r *http.Request, id string) (interface{}, i
 		return models.Email{}, nil, err
 	}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return email, nil, err
@@ -1812,7 +1815,7 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 		return nil, nil, 0, 0, nil
 	}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
@@ -1930,7 +1933,7 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 }
 
 func GetEmailCampaigns(c context.Context, r *http.Request) (interface{}, interface{}, int, int, error) {
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
@@ -1941,12 +1944,12 @@ func GetEmailCampaigns(c context.Context, r *http.Request) (interface{}, interfa
 }
 
 func GetEmailCampaignsForUser(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {
-	user := models.User{}
+	user := apiModels.User{}
 	err := errors.New("")
 
 	switch id {
 	case "me":
-		user, err = GetCurrentUser(c, r)
+		user, err = controllers.GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return []models.Email{}, nil, 0, 0, err
@@ -1957,14 +1960,14 @@ func GetEmailCampaignsForUser(c context.Context, r *http.Request, id string) (in
 			log.Errorf(c, "%v", err)
 			return []models.Email{}, nil, 0, 0, err
 		}
-		user, err = getUser(c, r, userId)
+		user, _, err = controllers.GetUserById(c, r, userId)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return []models.Email{}, nil, 0, 0, err
 		}
 	}
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, nil, 0, 0, err
@@ -1981,7 +1984,7 @@ func GetEmailCampaignsForUser(c context.Context, r *http.Request, id string) (in
 }
 
 func GetEmailProviderLimits(c context.Context, r *http.Request) (interface{}, interface{}, error) {
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err

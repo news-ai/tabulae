@@ -17,6 +17,9 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/api/controllers"
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/search"
 	"github.com/news-ai/tabulae/sync"
@@ -67,7 +70,7 @@ func getMediaListBasic(c context.Context, r *http.Request, id int64) (models.Med
 		mediaList.AddNewCustomFieldsMapToOldLists(c)
 
 		if !mediaList.PublicList {
-			user, err := GetCurrentUser(c, r)
+			user, err := controllers.GetCurrentUser(c, r)
 			if err != nil {
 				log.Errorf(c, "%v", err)
 				return models.MediaList{}, errors.New("Could not get user")
@@ -109,7 +112,7 @@ func getMediaList(c context.Context, r *http.Request, id int64) (models.MediaLis
 		mediaList.AddNewCustomFieldsMapToOldLists(c)
 
 		if !mediaList.PublicList {
-			user, err := GetCurrentUser(c, r)
+			user, err := controllers.GetCurrentUser(c, r)
 			if err != nil {
 				log.Errorf(c, "%v", err)
 				return models.MediaList{}, errors.New("Could not get user")
@@ -183,7 +186,7 @@ func duplicateList(c context.Context, r *http.Request, id string, name string) (
 	}
 
 	// Checking if the current user logged in can edit this particular id
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
@@ -242,7 +245,7 @@ func duplicateList(c context.Context, r *http.Request, id string, name string) (
 func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.MediaList, interface{}, int, int, error) {
 	mediaLists := []models.MediaList{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.MediaList{}, nil, 0, 0, err
@@ -335,7 +338,7 @@ func GetMediaListsClients(c context.Context, r *http.Request) (interface{}, inte
 		[]string{},
 	}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return clients, nil, 0, 0, err
@@ -401,7 +404,7 @@ func GetAllMediaLists(c context.Context, r *http.Request) ([]models.MediaList, e
 func GetPublicMediaLists(c context.Context, r *http.Request) ([]models.MediaList, interface{}, int, int, error) {
 	mediaLists := []models.MediaList{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.MediaList{}, nil, 0, 0, err
@@ -438,7 +441,7 @@ func GetPublicMediaLists(c context.Context, r *http.Request) ([]models.MediaList
 func GetTeamMediaLists(c context.Context, r *http.Request) ([]models.MediaList, interface{}, int, int, error) {
 	mediaLists := []models.MediaList{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.MediaList{}, nil, 0, 0, err
@@ -510,7 +513,7 @@ func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) 
 		return models.MediaList{}, nil, err
 	}
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return medialist, nil, err
@@ -536,7 +539,7 @@ func CreateMediaList(c context.Context, w http.ResponseWriter, r *http.Request) 
 	return medialist, nil, nil
 }
 
-func CreateSampleMediaList(c context.Context, r *http.Request, user models.User) (models.MediaList, interface{}, error) {
+func CreateSampleMediaList(c context.Context, r *http.Request, user apiModels.User) (models.MediaList, interface{}, error) {
 	// Create a fake media list
 	mediaList := models.MediaList{}
 	mediaList.Name = "My first list!"
@@ -640,7 +643,7 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	}
 
 	// Checking if the current user logged in can edit this particular id
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
@@ -739,7 +742,7 @@ func UpdateMediaListToPublic(c context.Context, r *http.Request, id string) (mod
 	}
 
 	// Checking if the current user logged in can edit this particular id
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
@@ -764,7 +767,7 @@ func ReSyncMediaList(c context.Context, r *http.Request, id string) (models.Medi
 	}
 
 	// Checking if the current user logged in can edit this particular id
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.MediaList{}, nil, err
@@ -790,7 +793,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 		return []models.Contact{}, nil, 0, 0, err
 	}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, 0, err
@@ -1209,7 +1212,7 @@ func DeleteMediaList(c context.Context, r *http.Request, id string) (interface{}
 		return nil, nil, err
 	}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err

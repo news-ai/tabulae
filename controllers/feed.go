@@ -13,6 +13,8 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/api/controllers"
+
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/sync"
 
@@ -111,7 +113,7 @@ func GetFeedById(c context.Context, r *http.Request, id int64) (models.Feed, int
 }
 
 func GetFeeds(c context.Context, r *http.Request) ([]models.Feed, interface{}, int, int, error) {
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Feed{}, nil, 0, 0, err
@@ -167,7 +169,7 @@ func GetFeedsByResourceId(c context.Context, r *http.Request, resouceName string
 
 func FilterFeeds(c context.Context, r *http.Request, queryType, query string) ([]models.Feed, error) {
 	// User has to be logged in
-	_, err := GetCurrentUser(c, r)
+	_, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		return []models.Feed{}, err
 	}
@@ -189,7 +191,7 @@ func CreateFeed(c context.Context, r *http.Request) (models.Feed, interface{}, e
 		return models.Feed{}, nil, err
 	}
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return feed, nil, err

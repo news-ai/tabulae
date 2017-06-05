@@ -16,6 +16,8 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/api/controllers"
+
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/search"
 	"github.com/news-ai/tabulae/sync"
@@ -100,7 +102,7 @@ func GetPublications(c context.Context, r *http.Request) ([]models.Publication, 
 	}
 
 	// Now if user is not querying then check
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Publication{}, nil, 0, 0, err
@@ -210,7 +212,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 	err := decoder.Decode(buf, &publication)
 
 	if err != nil {
-		currentUser, err := GetCurrentUser(c, r)
+		currentUser, err := controllers.GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return []models.Publication{}, nil, 0, 0, err
@@ -257,7 +259,7 @@ func CreatePublication(c context.Context, w http.ResponseWriter, r *http.Request
 
 	presentPublication, _, err := FilterPublicationByNameAndUrl(c, publication.Name, publication.Url)
 	if err != nil {
-		currentUser, err := GetCurrentUser(c, r)
+		currentUser, err := controllers.GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return models.Publication{}, nil, 0, 0, err
@@ -329,7 +331,7 @@ func VerifyPublication(c context.Context, r *http.Request, id string) (models.Pu
 		return models.Publication{}, nil, err
 	}
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Publication{}, nil, err
@@ -350,7 +352,7 @@ func UploadFindOrCreatePublication(c context.Context, r *http.Request, name stri
 	name = strings.Trim(name, " ")
 	publication, _, err := FilterPublicationByNameAndUrl(c, name, url)
 	if err != nil {
-		currentUser, err := GetCurrentUser(c, r)
+		currentUser, err := controllers.GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return models.Publication{}, err
@@ -374,7 +376,7 @@ func FindOrCreatePublication(c context.Context, r *http.Request, name string, ur
 	name = strings.Trim(name, " ")
 	publication, _, err := FilterPublicationByNameAndUrl(c, name, url)
 	if err != nil {
-		currentUser, err := GetCurrentUser(c, r)
+		currentUser, err := controllers.GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return models.Publication{}, err

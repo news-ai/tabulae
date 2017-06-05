@@ -11,6 +11,8 @@ import (
 
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/api/controllers"
+
 	"github.com/news-ai/tabulae/models"
 )
 
@@ -25,7 +27,7 @@ import (
 // Get a user notification
 func getUserNotification(c context.Context, r *http.Request) (models.Notification, error) {
 	notifications := []models.Notification{}
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Notification{}, err
@@ -55,7 +57,7 @@ func getUserNotification(c context.Context, r *http.Request) (models.Notificatio
 func getUserNotificationObjects(c context.Context, r *http.Request) ([]models.NotificationObject, error) {
 	notificationObjects := []models.NotificationObject{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.NotificationObject{}, err
@@ -90,7 +92,7 @@ func createNotificationChange(c context.Context, r *http.Request, notificationOb
 	notificationChange.Verb = verb
 	notificationChange.Actor = actor
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.NotificationChange{}, err
@@ -109,7 +111,7 @@ func filterNotificationObject(c context.Context, r *http.Request, resourceName s
 	// Get notification by resource name
 	notificationObjects := []models.NotificationObject{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.NotificationObject{}, err
@@ -136,7 +138,7 @@ func filterNotificationObject(c context.Context, r *http.Request, resourceName s
  */
 
 func GetNotificationChangesForUser(c context.Context, r *http.Request) (interface{}, interface{}, int, int, error) {
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.NotificationChange{}, nil, 0, 0, err
@@ -208,7 +210,7 @@ func GetNotificationObjectById(c context.Context, r *http.Request, id int64) (mo
 func CreateNotificationForUser(c context.Context, r *http.Request) (models.Notification, error) {
 	notification := models.Notification{}
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Notification{}, err
@@ -225,7 +227,7 @@ func CreateNotificationForUser(c context.Context, r *http.Request) (models.Notif
 func CreateNotificationObjectForUser(c context.Context, r *http.Request, resourceName string, resourceId int64) (models.NotificationObject, error) {
 	notificationObject := models.NotificationObject{}
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.NotificationObject{}, err

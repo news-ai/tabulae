@@ -6,6 +6,8 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 
+	apiControllers "github.com/news-ai/api/controllers"
+
 	"github.com/news-ai/tabulae/controllers"
 
 	"github.com/news-ai/web/errors"
@@ -22,7 +24,7 @@ func ListsToIncludeTeamId(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for i := 0; i < len(allMediaLists); i++ {
-		mediaListUser, err := controllers.GetUserByIdUnauthorized(c, r, allMediaLists[i].CreatedBy)
+		mediaListUser, err := apiControllers.GetUserByIdUnauthorized(c, r, allMediaLists[i].CreatedBy)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			errors.ReturnError(w, http.StatusInternalServerError, "Could not get user", err.Error())

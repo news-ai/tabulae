@@ -20,6 +20,8 @@ import (
 	"github.com/news-ai/web/permissions"
 	"github.com/news-ai/web/utilities"
 
+	"github.com/news-ai/api/controllers"
+
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/search"
 	"github.com/news-ai/tabulae/sync"
@@ -58,7 +60,7 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 	if !contact.Created.IsZero() {
 		contact.Format(contactId, "contacts")
 
-		user, err := GetCurrentUser(c, r)
+		user, err := controllers.GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return models.Contact{}, err
@@ -137,7 +139,7 @@ func updateSameEmailContacts(c context.Context, r *http.Request, contact *models
 }
 
 func updateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, interface{}, error) {
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return *contact, nil, err
@@ -407,7 +409,7 @@ func filterContact(c context.Context, r *http.Request, queryType, query string) 
 	}
 
 	if len(contacts) > 0 {
-		user, err := GetCurrentUser(c, r)
+		user, err := controllers.GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return models.Contact{}, err
@@ -431,7 +433,7 @@ func filterContact(c context.Context, r *http.Request, queryType, query string) 
 }
 
 func filterListsbyContactEmail(c context.Context, r *http.Request, email string) ([]models.MediaList, error) {
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.MediaList{}, err
@@ -531,7 +533,7 @@ func filterContactByEmail(c context.Context, email string) ([]models.Contact, er
 }
 
 func filterContactByEmailForUser(c context.Context, r *http.Request, id int64) ([]models.Contact, error) {
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, err
@@ -641,7 +643,7 @@ func getIncludesForContact(c context.Context, r *http.Request, contacts []models
 
 // Gets every single contact
 func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, int, error) {
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, 0, err
@@ -1198,7 +1200,7 @@ func GetSimilarContacts(c context.Context, r *http.Request, id string) (interfac
 		return nil, nil, 0, 0, err
 	}
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
@@ -1308,7 +1310,7 @@ func GetSimilarContacts(c context.Context, r *http.Request, id string) (interfac
 
 func FilterContacts(c context.Context, r *http.Request, queryType, query string) ([]models.Contact, error) {
 	// User has to be logged in
-	_, err := GetCurrentUser(c, r)
+	_, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		return []models.Contact{}, err
 	}
@@ -1321,7 +1323,7 @@ func FilterContacts(c context.Context, r *http.Request, queryType, query string)
  */
 
 func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return ct, err
@@ -1398,7 +1400,7 @@ func BatchCreateContactsForDuplicateList(c context.Context, r *http.Request, con
 	var keys []*datastore.Key
 	var contactIds []int64
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []int64{}, err
@@ -1462,7 +1464,7 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 	var contactIds []int64
 	var publicationIds []int64
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []int64{}, []int64{}, err
@@ -1531,7 +1533,7 @@ func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.
 		return models.Contact{}, nil, err
 	}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Contact{}, nil, errors.New("Could not get user")
@@ -1570,7 +1572,7 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, i
 	}
 
 	// Get logged in user
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, 0, errors.New("Could not get user")
@@ -1615,7 +1617,7 @@ func UpdateBatchContact(c context.Context, r *http.Request) ([]models.Contact, i
 
 func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, int, error) {
 	// Get logged in user
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, 0, errors.New("Could not get user")
@@ -1713,7 +1715,7 @@ func CopyContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 
 func BulkDeleteContacts(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, int, error) {
 	// Get logged in user
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, 0, errors.New("Could not get user")
@@ -1777,7 +1779,7 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 		return nil, nil, err
 	}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
@@ -1819,7 +1821,7 @@ func UnSubscribeContact(c context.Context, r *http.Request, id string) (interfac
 		return nil, nil, err
 	}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err

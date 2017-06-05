@@ -18,6 +18,9 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/api/controllers"
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/news-ai/tabulae/models"
 
 	"github.com/news-ai/web/encrypt"
@@ -46,7 +49,7 @@ func getEmailSetting(c context.Context, r *http.Request, id int64) (models.Email
 	if !emailSetting.Created.IsZero() {
 		emailSetting.Format(emailSettingId, "emailsettings")
 
-		user, err := GetCurrentUser(c, r)
+		user, err := controllers.GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return models.EmailSetting{}, errors.New("Could not get user")
@@ -104,7 +107,7 @@ func GetEmailSettingById(c context.Context, r *http.Request, id int64) (models.E
 func GetEmailSettings(c context.Context, r *http.Request) ([]models.EmailSetting, interface{}, int, int, error) {
 	emailSettings := []models.EmailSetting{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.EmailSetting{}, nil, 0, 0, err
@@ -136,31 +139,31 @@ func GetEmailSettings(c context.Context, r *http.Request) ([]models.EmailSetting
 * Create methods
  */
 
-func AddUserEmail(c context.Context, r *http.Request) (models.User, interface{}, error) {
+func AddUserEmail(c context.Context, r *http.Request) (apiModels.User, interface{}, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return models.User{}, nil, err
+		return apiModels.User{}, nil, err
 	}
 
 	decoder := ffjson.NewDecoder()
 	var userEmailSettings models.UserEmailSetting
 	err = decoder.Decode(buf, &userEmailSettings)
 	if err != nil {
-		return models.User{}, nil, err
+		return apiModels.User{}, nil, err
 	}
 
 	userPw, err := encrypt.EncryptString(userEmailSettings.SMTPPassword)
 	if err != nil {
-		return models.User{}, nil, err
+		return apiModels.User{}, nil, err
 	}
 
 	currentUser.SMTPUsername = userEmailSettings.SMTPUsername
 	currentUser.SMTPPassword = []byte(userPw)
 	currentUser.SMTPValid = false
-	SaveUser(c, r, &currentUser)
+	controllers.SaveUser(c, r, &currentUser)
 
 	return currentUser, nil, nil
 }
@@ -168,7 +171,7 @@ func AddUserEmail(c context.Context, r *http.Request) (models.User, interface{},
 func CreateEmailSettings(c context.Context, r *http.Request) (models.EmailSetting, interface{}, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.EmailSetting{}, nil, err
@@ -192,7 +195,7 @@ func CreateEmailSettings(c context.Context, r *http.Request) (models.EmailSettin
 
 	currentUser.EmailSetting = emailSettings.Id
 	currentUser.SMTPValid = false
-	SaveUser(c, r, &currentUser)
+	controllers.SaveUser(c, r, &currentUser)
 
 	return emailSettings, nil, nil
 }
@@ -204,13 +207,13 @@ func VerifyEmailSetting(c context.Context, r *http.Request, id string) (SMTPEmai
 		return SMTPEmailResponse{}, nil, err
 	}
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return SMTPEmailResponse{}, nil, err
 	}
 
-	smtpUser, err := getUser(c, r, emailSetting.CreatedBy)
+	smtpUser, _, err := controllers.GetUserById(c, r, emailSetting.CreatedBy)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return SMTPEmailResponse{}, nil, err
@@ -259,7 +262,7 @@ func VerifyEmailSetting(c context.Context, r *http.Request, id string) (SMTPEmai
 
 	if verifyResponse.Status {
 		smtpUser.SMTPValid = true
-		SaveUser(c, r, &smtpUser)
+		controllers.SaveUser(c, r, &smtpUser)
 	}
 
 	return verifyResponse, nil, nil
@@ -272,13 +275,13 @@ func GetEmailSettingDetails(c context.Context, r *http.Request, id string) (SMTP
 		return SMTPEmailResponse{}, nil, err
 	}
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return SMTPEmailResponse{}, nil, err
 	}
 
-	smtpUser, err := getUser(c, r, emailSetting.CreatedBy)
+	smtpUser, _, err := controllers.GetUserById(c, r, emailSetting.CreatedBy)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return SMTPEmailResponse{}, nil, err

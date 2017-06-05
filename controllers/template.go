@@ -14,6 +14,8 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/api/controllers"
+
 	"github.com/news-ai/tabulae/models"
 
 	"github.com/news-ai/web/utilities"
@@ -75,7 +77,7 @@ func GetTemplate(c context.Context, r *http.Request, id string) (models.Template
 }
 
 func GetTemplates(c context.Context, r *http.Request) ([]models.Template, interface{}, int, int, error) {
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Template{}, nil, 0, 0, err
@@ -119,7 +121,7 @@ func CreateTemplate(c context.Context, r *http.Request) (models.Template, interf
 		return models.Template{}, nil, err
 	}
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return template, nil, err
@@ -160,7 +162,7 @@ func UpdateTemplate(c context.Context, r *http.Request, id string) (models.Templ
 	}
 
 	// Checking if the current user logged in can edit this particular id
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Template{}, nil, err

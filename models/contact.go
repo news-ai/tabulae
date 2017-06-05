@@ -17,6 +17,11 @@ import (
 	"github.com/qedus/nds"
 )
 
+type ContactIdsArray struct {
+	ContactIds []int64 `json:"ids"`
+	Days       int     `json:"days"`
+}
+
 type CustomContactField struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`

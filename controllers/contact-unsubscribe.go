@@ -11,6 +11,8 @@ import (
 
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/api/controllers"
+
 	"github.com/news-ai/tabulae/models"
 )
 
@@ -55,7 +57,7 @@ func getUnsubscribedContact(c context.Context, id int64) (models.ContactUnsubscr
 // Gets every single agency
 func GetUnsubscribedContacts(c context.Context, r *http.Request) ([]models.ContactUnsubscribe, interface{}, int, int, error) {
 	// Now if user is not querying then check
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.ContactUnsubscribe{}, nil, 0, 0, err

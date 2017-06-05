@@ -11,6 +11,9 @@ import (
 	"google.golang.org/appengine/channel"
 	"google.golang.org/appengine/log"
 
+	apiControllers "github.com/news-ai/api/controllers"
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/web/utilities"
@@ -51,10 +54,10 @@ func (n *Notification) generateNotificationMessage(c context.Context, r *http.Re
 func SendNotification(r *http.Request, notificationChanges []models.NotificationChange, userId int64) error {
 	c := appengine.NewContext(r)
 	// Set the current user logged in
-	controllers.SetUser(c, r, userId)
+	apiControllers.SetUser(c, r, userId)
 
 	// Grab the user's tokens
-	userTokens, err := controllers.GetTokensForUser(c, r, userId, true)
+	userTokens, err := apiControllers.GetTokensForUser(c, r, userId, true)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return err
@@ -107,7 +110,7 @@ func UserConnect(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	// When user connects send them notifications from the past
 	token := r.FormValue("from")
-	validToken, err := controllers.GetToken(c, r, token)
+	validToken, err := apiControllers.GetToken(c, r, token)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		w.WriteHeader(500)
@@ -140,7 +143,7 @@ func UserDisconnect(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
 	token := r.FormValue("from")
-	validToken, err := controllers.GetToken(c, r, token)
+	validToken, err := apiControllers.GetToken(c, r, token)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		w.WriteHeader(500)
@@ -152,7 +155,7 @@ func UserDisconnect(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func generateChannelToken(c context.Context, currentUser models.User) (string, string, error) {
+func generateChannelToken(c context.Context, currentUser apiModels.User) (string, string, error) {
 	randomString := strconv.FormatInt(currentUser.Id, 10)
 	randomString = randomString + utilities.RandToken()
 
@@ -166,13 +169,13 @@ func generateChannelToken(c context.Context, currentUser models.User) (string, s
 }
 
 func GetUserToken(c context.Context, r *http.Request) (interface{}, error) {
-	currentUser, err := controllers.GetCurrentUser(c, r)
+	currentUser, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 
-	userTokens, err := controllers.GetTokensForUser(c, r, currentUser.Id, false)
+	userTokens, err := apiControllers.GetTokensForUser(c, r, currentUser.Id, false)
 	if err != nil {
 		log.Errorf(c, "channel.Create: %v", err)
 		return nil, err
@@ -203,7 +206,7 @@ func GetUserToken(c context.Context, r *http.Request) (interface{}, error) {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}
-		userToken := models.UserToken{}
+		userToken := apiModels.UserToken{}
 		userToken.CreatedBy = currentUser.Id
 		userToken.Token = randomString
 		userToken.ChannelToken = channelToken

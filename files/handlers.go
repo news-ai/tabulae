@@ -10,6 +10,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	apiControllers "github.com/news-ai/api/controllers"
+
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/parse"
@@ -18,7 +20,7 @@ import (
 )
 
 func HandleBulkEmailAttachActionUpload(c context.Context, r *http.Request) (interface{}, interface{}, int, int, error) {
-	user, err := controllers.GetCurrentUser(c, r)
+	user, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		return nil, nil, 0, 0, err
 	}
@@ -56,7 +58,7 @@ func HandleBulkEmailAttachActionUpload(c context.Context, r *http.Request) (inte
 }
 
 func HandleEmailAttachActionUpload(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
-	user, err := controllers.GetCurrentUser(c, r)
+	user, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -94,7 +96,7 @@ func HandleEmailAttachActionUpload(c context.Context, r *http.Request, id string
 }
 
 func HandleMediaListActionUpload(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
-	user, err := controllers.GetCurrentUser(c, r)
+	user, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -123,7 +125,7 @@ func HandleMediaListActionUpload(c context.Context, r *http.Request, id string) 
 }
 
 func HandleEmailImageActionUpload(c context.Context, r *http.Request) (interface{}, interface{}, error) {
-	user, err := controllers.GetCurrentUser(c, r)
+	user, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		return nil, nil, err
 	}

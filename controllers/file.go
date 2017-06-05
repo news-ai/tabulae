@@ -13,6 +13,8 @@ import (
 
 	"github.com/qedus/nds"
 
+	"github.com/news-ai/api/controllers"
+
 	"github.com/news-ai/tabulae/models"
 
 	"github.com/news-ai/web/utilities"
@@ -40,7 +42,7 @@ func getFile(c context.Context, r *http.Request, id int64) (models.File, error) 
 	if !file.Created.IsZero() {
 		file.Format(fileId, "files")
 
-		user, err := GetCurrentUser(c, r)
+		user, err := controllers.GetCurrentUser(c, r)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return models.File{}, errors.New("Could not get user")
@@ -84,7 +86,7 @@ func getFileUnauthorized(c context.Context, r *http.Request, id int64) (models.F
 func GetFiles(c context.Context, r *http.Request) ([]models.File, interface{}, int, int, error) {
 	files := []models.File{}
 
-	user, err := GetCurrentUser(c, r)
+	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.File{}, nil, 0, 0, err
@@ -202,7 +204,7 @@ func CreateFile(r *http.Request, fileName string, listid string, createdby strin
 	file.CreatedBy = createdBy
 	file.FileExists = true
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return file, err
@@ -248,7 +250,7 @@ func CreateImageFile(r *http.Request, originalFilename string, fileName string, 
 	file.FileExists = true
 	file.Url = fmt.Sprintf(publicURL, bucket, fileName)
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return file, err
@@ -288,7 +290,7 @@ func CreateAttachmentFile(r *http.Request, originalFilename string, fileName str
 	file.CreatedBy = createdBy
 	file.FileExists = true
 
-	currentUser, err := GetCurrentUser(c, r)
+	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return file, err

@@ -10,6 +10,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pquerna/ffjson/ffjson"
 
+	apiControllers "github.com/news-ai/api/controllers"
+
 	"github.com/news-ai/tabulae/controllers"
 )
 
@@ -21,7 +23,7 @@ func FeedInvalid(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	c := appengine.NewContext(r)
 
 	// User has to be logged in
-	user, err := controllers.GetCurrentUser(c, r)
+	user, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		w.WriteHeader(500)
