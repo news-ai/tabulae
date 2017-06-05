@@ -9,6 +9,8 @@ import (
 
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	elastic "github.com/news-ai/elastic-appengine"
 	"github.com/news-ai/tabulae/models"
 )
@@ -74,7 +76,7 @@ func searchEmailQuery(c context.Context, elasticQuery interface{}) ([]models.Ema
 	return emailLogHits, len(emailLogHits), hits.Total, nil
 }
 
-func SearchEmailTimeseriesByUserId(c context.Context, r *http.Request, user models.User) (interface{}, int, int, error) {
+func SearchEmailTimeseriesByUserId(c context.Context, r *http.Request, user apiModels.User) (interface{}, int, int, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
@@ -94,7 +96,7 @@ func SearchEmailTimeseriesByUserId(c context.Context, r *http.Request, user mode
 	return searchEmailTimeseries(c, elasticQuery)
 }
 
-func SearchEmailLogByEmailId(c context.Context, r *http.Request, user models.User, emailId int64) (interface{}, int, int, error) {
+func SearchEmailLogByEmailId(c context.Context, r *http.Request, user apiModels.User, emailId int64) (interface{}, int, int, error) {
 	if emailId == 0 {
 		return nil, 0, 0, nil
 	}
@@ -113,7 +115,7 @@ func SearchEmailLogByEmailId(c context.Context, r *http.Request, user models.Use
 	return searchEmail(c, elasticQuery)
 }
 
-func SearchEmailsByQuery(c context.Context, r *http.Request, user models.User, searchQuery string) ([]models.Email, int, int, error) {
+func SearchEmailsByQuery(c context.Context, r *http.Request, user apiModels.User, searchQuery string) ([]models.Email, int, int, error) {
 	if searchQuery == "" {
 		return nil, 0, 0, nil
 	}
@@ -150,7 +152,7 @@ func SearchEmailsByQuery(c context.Context, r *http.Request, user models.User, s
 	return searchEmailQuery(c, elasticQuery)
 }
 
-func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.User, emailDate string, emailSubject string, emailBaseSubject string, filter string) ([]models.Email, int, int, error) {
+func SearchEmailsByQueryFields(c context.Context, r *http.Request, user apiModels.User, emailDate string, emailSubject string, emailBaseSubject string, filter string) ([]models.Email, int, int, error) {
 	if emailDate == "" && emailSubject == "" && emailBaseSubject == "" && filter == "" {
 		return nil, 0, 0, nil
 	}
@@ -222,7 +224,7 @@ func SearchEmailsByQueryFields(c context.Context, r *http.Request, user models.U
 	return searchEmailQuery(c, elasticQuery)
 }
 
-func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user models.User, emailDate string, subject string, baseSubject string) ([]models.Email, int, int, error) {
+func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user apiModels.User, emailDate string, subject string, baseSubject string) ([]models.Email, int, int, error) {
 	if emailDate == "" {
 		return nil, 0, 0, nil
 	}

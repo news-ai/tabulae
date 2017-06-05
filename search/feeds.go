@@ -12,6 +12,8 @@ import (
 
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	elastic "github.com/news-ai/elastic-appengine"
 	"github.com/news-ai/tabulae/models"
 )
@@ -53,7 +55,7 @@ type Feed struct {
 
 func (f *Feed) FillStruct(m map[string]interface{}) error {
 	for k, v := range m {
-		err := models.SetField(f, k, v)
+		err := apiModels.SetField(f, k, v)
 		if err != nil {
 			return err
 		}

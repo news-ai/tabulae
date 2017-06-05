@@ -12,8 +12,9 @@ import (
 
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	elastic "github.com/news-ai/elastic-appengine"
-	"github.com/news-ai/tabulae/models"
 )
 
 var (
@@ -39,7 +40,7 @@ type Tweet struct {
 
 func (t *Tweet) FillStruct(m map[string]interface{}) error {
 	for k, v := range m {
-		err := models.SetField(t, k, v)
+		err := apiModels.SetField(t, k, v)
 		if err != nil {
 			// return err
 		}

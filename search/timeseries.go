@@ -10,8 +10,9 @@ import (
 
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	elastic "github.com/news-ai/elastic-appengine"
-	"github.com/news-ai/tabulae/models"
 )
 
 var (
@@ -41,7 +42,7 @@ type InstagramTimeseries struct {
 
 func (tt *TwitterTimeseries) FillStruct(m map[string]interface{}) error {
 	for k, v := range m {
-		err := models.SetField(tt, k, v)
+		err := apiModels.SetField(tt, k, v)
 		if err != nil {
 			return err
 		}
@@ -51,7 +52,7 @@ func (tt *TwitterTimeseries) FillStruct(m map[string]interface{}) error {
 
 func (it *InstagramTimeseries) FillStruct(m map[string]interface{}) error {
 	for k, v := range m {
-		err := models.SetField(it, k, v)
+		err := apiModels.SetField(it, k, v)
 		if err != nil {
 			return err
 		}

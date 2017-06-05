@@ -10,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/news-ai/tabulae/models"
-
 	apiModels "github.com/news-ai/api/models"
 
 	"golang.org/x/net/context"

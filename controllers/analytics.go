@@ -8,13 +8,15 @@ import (
 
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
+
+	apiControllers "github.com/news-ai/api/controllers"
 )
 
 /*
 * Analytics methods
  */
 func GetNumberOfEmailsCreatedMonth(c context.Context, r *http.Request) (int, error) {
-	_, err := GetCurrentUser(c, r)
+	_, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return 0, err
@@ -36,7 +38,7 @@ func GetNumberOfEmailsCreatedMonth(c context.Context, r *http.Request) (int, err
 }
 
 func GetNumberOfEmailsCreatedToday(c context.Context, r *http.Request) (int, error) {
-	_, err := GetCurrentUser(c, r)
+	_, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return 0, err
@@ -58,7 +60,7 @@ func GetNumberOfEmailsCreatedToday(c context.Context, r *http.Request) (int, err
 }
 
 func GetNumberOfScheduledEmails(c context.Context, r *http.Request) (int, error) {
-	_, err := GetCurrentUser(c, r)
+	_, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return 0, err

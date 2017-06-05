@@ -10,8 +10,9 @@ import (
 
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	elastic "github.com/news-ai/elastic-appengine"
-	"github.com/news-ai/tabulae/models"
 )
 
 var (
@@ -38,7 +39,7 @@ type Lists struct {
 
 func (l *Lists) FillStruct(m map[string]interface{}) error {
 	for k, v := range m {
-		err := models.SetField(l, k, v)
+		err := apiModels.SetField(l, k, v)
 		if err != nil {
 			return err
 		}

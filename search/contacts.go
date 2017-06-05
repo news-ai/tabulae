@@ -11,6 +11,8 @@ import (
 
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	elastic "github.com/news-ai/elastic-appengine"
 	"github.com/news-ai/tabulae/models"
 )
@@ -68,7 +70,7 @@ func SearchContacts(c context.Context, r *http.Request, search string, userId in
 	return searchContact(c, elasticQuery)
 }
 
-func SearchContactsByList(c context.Context, r *http.Request, search string, user models.User, userId int64, listId int64) ([]models.Contact, int, error) {
+func SearchContactsByList(c context.Context, r *http.Request, search string, user apiModels.User, userId int64, listId int64) ([]models.Contact, int, error) {
 	if listId == 0 || search == "" {
 		return []models.Contact{}, 0, nil
 	}
