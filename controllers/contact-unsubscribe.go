@@ -68,7 +68,7 @@ func GetUnsubscribedContacts(c context.Context, r *http.Request) ([]models.Conta
 	}
 
 	query := datastore.NewQuery("ContactUnsubscribe")
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {

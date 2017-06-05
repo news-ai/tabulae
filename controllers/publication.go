@@ -113,7 +113,7 @@ func GetPublications(c context.Context, r *http.Request) ([]models.Publication, 
 	}
 
 	query := datastore.NewQuery("Publication")
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)

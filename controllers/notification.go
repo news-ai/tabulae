@@ -145,7 +145,7 @@ func GetNotificationChangesForUser(c context.Context, r *http.Request) (interfac
 	}
 
 	query := datastore.NewQuery("NotificationChange").Filter("CreatedBy =", currentUser.Id).Order("-Created")
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)

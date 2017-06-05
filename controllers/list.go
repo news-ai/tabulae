@@ -259,7 +259,7 @@ func GetMediaLists(c context.Context, r *http.Request, archived bool) ([]models.
 		// }
 		query = query.Filter("PublicList =", false)
 
-		query = constructQuery(query, r)
+		query = controllers.ConstructQuery(query, r)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -411,7 +411,7 @@ func GetPublicMediaLists(c context.Context, r *http.Request) ([]models.MediaList
 	}
 
 	query := datastore.NewQuery("MediaList").Filter("PublicList =", true).Filter("Archived =", false)
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -452,7 +452,7 @@ func GetTeamMediaLists(c context.Context, r *http.Request) ([]models.MediaList, 
 	}
 
 	query := datastore.NewQuery("MediaList").Filter("TeamId =", user.TeamId).Filter("Archived =", false)
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)

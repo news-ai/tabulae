@@ -140,7 +140,7 @@ func filterEmailbyListId(c context.Context, r *http.Request, listId int64) ([]mo
 	}
 
 	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("ListId =", listId)
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -201,7 +201,7 @@ func filterEmailbyContactId(c context.Context, r *http.Request, contactId int64)
 	}
 
 	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("ContactId =", contactId).Filter("IsSent =", true)
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -294,7 +294,7 @@ func GetEmails(c context.Context, r *http.Request) ([]models.Email, interface{},
 	}
 
 	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id)
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -338,7 +338,7 @@ func GetSentEmails(c context.Context, r *http.Request) ([]models.Email, interfac
 
 	// Filter all emails that are in the future (scheduled for later)
 	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("IsSent =", true).Filter("Cancel =", false).Filter("Delievered =", true).Filter("Archived =", false)
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -393,7 +393,7 @@ func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, int
 
 	// Filter all emails that are in the future (scheduled for later)
 	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("SendAt >=", time.Now()).Filter("Cancel =", false).Filter("IsSent =", true)
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -437,7 +437,7 @@ func GetArchivedEmails(c context.Context, r *http.Request) ([]models.Email, inte
 
 	// Filter all emails that are in the future (scheduled for later)
 	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("Cancel =", false).Filter("IsSent =", true).Filter("Archived =", true)
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)

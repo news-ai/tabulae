@@ -120,7 +120,7 @@ func GetFeeds(c context.Context, r *http.Request) ([]models.Feed, interface{}, i
 	}
 
 	query := datastore.NewQuery("Feed").Filter("CreatedBy =", user.Id)
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)

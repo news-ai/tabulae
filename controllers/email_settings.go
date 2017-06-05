@@ -114,7 +114,7 @@ func GetEmailSettings(c context.Context, r *http.Request) ([]models.EmailSetting
 	}
 
 	query := datastore.NewQuery("EmailSetting").Filter("CreatedBy =", user.Id)
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)

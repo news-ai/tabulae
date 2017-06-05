@@ -84,7 +84,7 @@ func GetTemplates(c context.Context, r *http.Request) ([]models.Template, interf
 	}
 
 	query := datastore.NewQuery("Template").Filter("CreatedBy =", user.Id).Filter("Archived =", false)
-	query = constructQuery(query, r)
+	query = controllers.ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
