@@ -727,7 +727,13 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 }
 
 func EnrichProfile(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
-	// Get the details of the current user
+	currentUser, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, err
+	}
+
+	// Get the details of the current contact
 	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -773,12 +779,14 @@ func EnrichProfile(c context.Context, r *http.Request, id string) (models.Contac
 				if contactDetail.Data.SocialProfiles[i].TypeID == "twitter" {
 					if contact.Twitter == "" {
 						contact.Twitter = contactDetail.Data.SocialProfiles[i].Username
+						sync.TwitterSync(r, contact.Twitter)
 					}
 				}
 
 				if contactDetail.Data.SocialProfiles[i].TypeID == "instagram" {
 					if contact.Instagram == "" {
 						contact.Instagram = contactDetail.Data.SocialProfiles[i].URL
+						sync.InstagramSync(r, contact.Instagram, currentUser.InstagramAuthKey)
 					}
 				}
 			}
