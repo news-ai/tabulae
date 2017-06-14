@@ -99,6 +99,69 @@ type EnhanceFullContactProfileResponse struct {
 	} `json:"data"`
 }
 
+type EnhanceFullContactCompanyResponse struct {
+	Data struct {
+		Status    int    `json:"status"`
+		RequestID string `json:"requestId"`
+		Category  []struct {
+			Name string `json:"name"`
+			Code string `json:"code"`
+		} `json:"category"`
+		Logo           string `json:"logo"`
+		Website        string `json:"website"`
+		LanguageLocale string `json:"languageLocale"`
+		OnlineSince    string `json:"onlineSince"`
+		Organization   struct {
+			Name            string `json:"name"`
+			ApproxEmployees int    `json:"approxEmployees"`
+			Founded         string `json:"founded"`
+			ContactInfo     struct {
+				EmailAddresses []struct {
+					Value string `json:"value"`
+					Label string `json:"label"`
+				} `json:"emailAddresses"`
+				PhoneNumbers []struct {
+					Number string `json:"number"`
+					Label  string `json:"label"`
+				} `json:"phoneNumbers"`
+				Addresses []struct {
+					AddressLine1 string `json:"addressLine1"`
+					Locality     string `json:"locality"`
+					Region       struct {
+						Name string `json:"name"`
+						Code string `json:"code"`
+					} `json:"region"`
+					Country struct {
+						Name string `json:"name"`
+						Code string `json:"code"`
+					} `json:"country"`
+					PostalCode string `json:"postalCode"`
+					Label      string `json:"label"`
+				} `json:"addresses"`
+			} `json:"contactInfo"`
+			Links []struct {
+				URL   string `json:"url"`
+				Label string `json:"label"`
+			} `json:"links"`
+			Images []struct {
+				URL   string `json:"url"`
+				Label string `json:"label"`
+			} `json:"images"`
+			Keywords []string `json:"keywords"`
+		} `json:"organization"`
+		SocialProfiles []struct {
+			TypeID    string `json:"typeId"`
+			TypeName  string `json:"typeName"`
+			URL       string `json:"url"`
+			Bio       string `json:"bio,omitempty"`
+			Followers int    `json:"followers,omitempty"`
+			Following int    `json:"following,omitempty"`
+			Username  string `json:"username,omitempty"`
+			ID        string `json:"id,omitempty"`
+		} `json:"socialProfiles"`
+	} `json:"data"`
+}
+
 type DatabaseResponse struct {
 	Email string      `json:"email"`
 	Data  interface{} `json:"data"`
@@ -125,7 +188,7 @@ func searchESContactsDatabase(c context.Context, elasticQuery elastic.ElasticQue
 	return contacts, len(contactHits), hits.Total, nil
 }
 
-func SearchCompanyDatabase(c context.Context, r *http.Request, url string) (interface{}, error) {
+func SearchCompanyDatabase(c context.Context, r *http.Request, url string) (EnhanceFullContactCompanyResponse, error) {
 	contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
 	client := urlfetch.Client(contextWithTimeout)
 	getUrl := "https://enhance.newsai.org/company/" + url
@@ -135,17 +198,17 @@ func SearchCompanyDatabase(c context.Context, r *http.Request, url string) (inte
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, err
+		return EnhanceFullContactCompanyResponse{}, err
 	}
 
-	var enhanceResponse EnhanceResponse
+	var enhanceResponse EnhanceFullContactCompanyResponse
 	err = json.NewDecoder(resp.Body).Decode(&enhanceResponse)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return nil, err
+		return EnhanceFullContactCompanyResponse{}, err
 	}
 
-	return enhanceResponse.Data, nil
+	return enhanceResponse, nil
 }
 
 func SearchContactDatabase(c context.Context, r *http.Request, email string) (EnhanceFullContactProfileResponse, error) {

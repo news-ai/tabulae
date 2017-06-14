@@ -1337,6 +1337,23 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 		return ct, err
 	}
 
+	if ct.Email != "" && len(ct.Employers) == 0 {
+		contactURLArray := strings.Split(ct.Email, "@")
+		companyData, err := search.SearchCompanyDatabase(c, r, contactURLArray[1])
+		if err == nil {
+			publication, err := UploadFindOrCreatePublication(c, r, companyData.Data.Organization.Name, companyData.Data.Website)
+			if err == nil {
+				ct.Employers = append(ct.Employers, publication.Id)
+			} else {
+				log.Errorf(c, "%v", err)
+				log.Infof(c, "%v", companyData)
+			}
+		} else {
+			log.Errorf(c, "%v", err)
+			log.Infof(c, "%v", contactURLArray)
+		}
+	}
+
 	ct.Create(c, r, currentUser)
 	_, err = Save(c, r, ct)
 
@@ -1392,11 +1409,6 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interf
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, 0, err
-	}
-
-	if contact.Email != "" {
-		conctactURLArray := strings.Split(contact.Email, "@")
-		search.SearchCompanyDatabase(c, r, conctactURLArray[1])
 	}
 
 	return []models.Contact{contact}, nil, 0, 0, nil

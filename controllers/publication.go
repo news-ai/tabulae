@@ -196,7 +196,7 @@ func GetEnrichCompanyProfile(c context.Context, r *http.Request, id string) (int
 		return nil, nil, err
 	}
 
-	return publicationDetail, nil, nil
+	return publicationDetail.Data, nil, nil
 }
 
 /*
@@ -360,6 +360,8 @@ func UploadFindOrCreatePublication(c context.Context, r *http.Request, name stri
 
 		var newPublication models.Publication
 		newPublication.Name = name
+		newPublication.Url = url
+
 		_, err = newPublication.Create(c, r, currentUser)
 		if err != nil {
 			log.Errorf(c, "%v", err)
