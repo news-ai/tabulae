@@ -10,6 +10,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	apiModels "github.com/news-ai/api/models"
+	apiSearch "github.com/news-ai/api/search"
 
 	elastic "github.com/news-ai/elastic-appengine"
 	"github.com/news-ai/tabulae/models"
@@ -84,11 +85,11 @@ func SearchEmailTimeseriesByUserId(c context.Context, r *http.Request, user apiM
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticUserIdQuery := ElasticUserIdQuery{}
+	elasticUserIdQuery := apiSearch.ElasticUserIdQuery{}
 	elasticUserIdQuery.Term.UserId = user.Id
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticUserIdQuery)
 
-	elasticDateQuery := ElasticSortDataQuery{}
+	elasticDateQuery := apiSearch.ElasticSortDataQuery{}
 	elasticDateQuery.Date.Order = "desc"
 	elasticDateQuery.Date.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticDateQuery)
@@ -108,7 +109,7 @@ func SearchEmailLogByEmailId(c context.Context, r *http.Request, user apiModels.
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticEmailIdQuery := ElasticEmailIdQuery{}
+	elasticEmailIdQuery := apiSearch.ElasticEmailIdQuery{}
 	elasticEmailIdQuery.Term.EmailId = emailId
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticEmailIdQuery)
 
@@ -127,13 +128,13 @@ func SearchEmailsByQuery(c context.Context, r *http.Request, user apiModels.User
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery := apiSearch.ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = user.Id
 
-	elasticIsSentQuery := ElasticIsSentQuery{}
+	elasticIsSentQuery := apiSearch.ElasticIsSentQuery{}
 	elasticIsSentQuery.Term.IsSent = true
 
-	elasticCancelQuery := ElasticCancelQuery{}
+	elasticCancelQuery := apiSearch.ElasticCancelQuery{}
 	elasticCancelQuery.Term.Cancel = false
 
 	elasticMatchQuery := elastic.ElasticMatchQuery{}
@@ -144,7 +145,7 @@ func SearchEmailsByQuery(c context.Context, r *http.Request, user apiModels.User
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCancelQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
 
-	elasticCreatedQuery := ElasticSortDataCreatedQuery{}
+	elasticCreatedQuery := apiSearch.ElasticSortDataCreatedQuery{}
 	elasticCreatedQuery.DataCreated.Order = "desc"
 	elasticCreatedQuery.DataCreated.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
@@ -164,13 +165,13 @@ func SearchEmailsByQueryFields(c context.Context, r *http.Request, user apiModel
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery := apiSearch.ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = user.Id
 
-	elasticIsSentQuery := ElasticIsSentQuery{}
+	elasticIsSentQuery := apiSearch.ElasticIsSentQuery{}
 	elasticIsSentQuery.Term.IsSent = true
 
-	elasticCancelQuery := ElasticCancelQuery{}
+	elasticCancelQuery := apiSearch.ElasticCancelQuery{}
 	elasticCancelQuery.Term.Cancel = false
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
@@ -178,45 +179,45 @@ func SearchEmailsByQueryFields(c context.Context, r *http.Request, user apiModel
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCancelQuery)
 
 	if emailDate != "" {
-		elasticCreatedFilterQuery := ElasticCreatedRangeQuery{}
+		elasticCreatedFilterQuery := apiSearch.ElasticCreatedRangeQuery{}
 		elasticCreatedFilterQuery.Range.DataCreated.From = emailDate + "T00:00:00"
 		elasticCreatedFilterQuery.Range.DataCreated.To = emailDate + "T23:59:59"
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedFilterQuery)
 	}
 
 	if emailBaseSubject != "" {
-		elasticBaseSubjectQuery := ElasticBaseSubjectQuery{}
+		elasticBaseSubjectQuery := apiSearch.ElasticBaseSubjectQuery{}
 		elasticBaseSubjectQuery.Term.BaseSubject = emailBaseSubject
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBaseSubjectQuery)
 	} else if emailSubject != "" {
-		elasticSubjectQuery := ElasticSubjectQuery{}
+		elasticSubjectQuery := apiSearch.ElasticSubjectQuery{}
 		elasticSubjectQuery.Term.Subject = emailSubject
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticSubjectQuery)
 	}
 
 	if filter == "open" {
-		elasticOpenedRangeQuery := ElasticOpenedRangeQuery{}
+		elasticOpenedRangeQuery := apiSearch.ElasticOpenedRangeQuery{}
 		elasticOpenedRangeQuery.Range.DataOpened.GTE = 1
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticOpenedRangeQuery)
 	} else if filter == "click" {
-		elasticClickedRangeQuery := ElasticClickedRangeQuery{}
+		elasticClickedRangeQuery := apiSearch.ElasticClickedRangeQuery{}
 		elasticClickedRangeQuery.Range.DataClicked.GTE = 1
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticClickedRangeQuery)
 	} else if filter == "bounce" {
-		elasticBounceQuery := ElasticBounceQuery{}
+		elasticBounceQuery := apiSearch.ElasticBounceQuery{}
 		elasticBounceQuery.Term.BaseBounced = true
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBounceQuery)
 	} else if filter == "unopen" {
-		elasticOpenedQuery := ElasticBaseOpenedQuery{}
+		elasticOpenedQuery := apiSearch.ElasticBaseOpenedQuery{}
 		elasticOpenedQuery.Term.Opened = 0
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticOpenedQuery)
 	} else if filter == "unclick" {
-		elasticClickedQuery := ElasticBaseClickedQuery{}
+		elasticClickedQuery := apiSearch.ElasticBaseClickedQuery{}
 		elasticClickedQuery.Term.Clicked = 0
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticClickedQuery)
 	}
 
-	elasticCreatedQuery := ElasticSortDataCreatedQuery{}
+	elasticCreatedQuery := apiSearch.ElasticSortDataCreatedQuery{}
 	elasticCreatedQuery.DataCreated.Order = "desc"
 	elasticCreatedQuery.DataCreated.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
@@ -233,27 +234,27 @@ func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user apiMo
 	elasticQuery.Size = 10000
 	elasticQuery.From = 0
 
-	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery := apiSearch.ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = user.Id
 
-	elasticIsSentQuery := ElasticIsSentQuery{}
+	elasticIsSentQuery := apiSearch.ElasticIsSentQuery{}
 	elasticIsSentQuery.Term.IsSent = true
 
-	elasticCancelQuery := ElasticCancelQuery{}
+	elasticCancelQuery := apiSearch.ElasticCancelQuery{}
 	elasticCancelQuery.Term.Cancel = false
 
-	elasticCreatedFilterQuery := ElasticCreatedRangeQuery{}
+	elasticCreatedFilterQuery := apiSearch.ElasticCreatedRangeQuery{}
 	elasticCreatedFilterQuery.Range.DataCreated.From = emailDate + "T00:00:00"
 	elasticCreatedFilterQuery.Range.DataCreated.To = emailDate + "T23:59:59"
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 
 	if baseSubject == "" {
-		elasticSubjectQuery := ElasticSubjectQuery{}
+		elasticSubjectQuery := apiSearch.ElasticSubjectQuery{}
 		elasticSubjectQuery.Term.Subject = subject
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticSubjectQuery)
 	} else {
-		elasticBaseSubjectQuery := ElasticBaseSubjectQuery{}
+		elasticBaseSubjectQuery := apiSearch.ElasticBaseSubjectQuery{}
 		elasticBaseSubjectQuery.Term.BaseSubject = baseSubject
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBaseSubjectQuery)
 	}
@@ -262,7 +263,7 @@ func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user apiMo
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCancelQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedFilterQuery)
 
-	elasticCreatedQuery := ElasticSortDataCreatedQuery{}
+	elasticCreatedQuery := apiSearch.ElasticSortDataCreatedQuery{}
 	elasticCreatedQuery.DataCreated.Order = "desc"
 	elasticCreatedQuery.DataCreated.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)

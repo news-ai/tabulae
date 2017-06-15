@@ -11,6 +11,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	apiModels "github.com/news-ai/api/models"
+	apiSearch "github.com/news-ai/api/search"
 
 	elastic "github.com/news-ai/elastic-appengine"
 )
@@ -84,15 +85,15 @@ func SearchListsByClientName(c context.Context, r *http.Request, clientName stri
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery := apiSearch.ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = userId
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 
-	elasticArchivedQuery := ElasticArchivedQuery{}
+	elasticArchivedQuery := apiSearch.ElasticArchivedQuery{}
 	elasticArchivedQuery.Term.Archived = false
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticArchivedQuery)
 
-	elasticClientQuery := ElasticClientQuery{}
+	elasticClientQuery := apiSearch.ElasticClientQuery{}
 	elasticClientQuery.Term.Client = clientName
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticClientQuery)
 
@@ -112,15 +113,15 @@ func SearchListsByTag(c context.Context, r *http.Request, tag string, userId int
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery := apiSearch.ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = userId
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 
-	elasticArchivedQuery := ElasticArchivedQuery{}
+	elasticArchivedQuery := apiSearch.ElasticArchivedQuery{}
 	elasticArchivedQuery.Term.Archived = false
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticArchivedQuery)
 
-	elasticTagQuery := ElasticTagQuery{}
+	elasticTagQuery := apiSearch.ElasticTagQuery{}
 	elasticTagQuery.Term.Tag = tag
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticTagQuery)
 
@@ -140,15 +141,15 @@ func SearchListsByAll(c context.Context, r *http.Request, query string, userId i
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery := apiSearch.ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = userId
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 
-	elasticArchivedQuery := ElasticArchivedQuery{}
+	elasticArchivedQuery := apiSearch.ElasticArchivedQuery{}
 	elasticArchivedQuery.Term.Archived = false
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticArchivedQuery)
 
-	elasticAllQuery := ElasticAllQuery{}
+	elasticAllQuery := apiSearch.ElasticAllQuery{}
 	elasticAllQuery.Term.All = query
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticAllQuery)
 

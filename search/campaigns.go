@@ -12,6 +12,8 @@ import (
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/api/models"
+	apiSearch "github.com/news-ai/api/search"
+
 	elastic "github.com/news-ai/elastic-appengine"
 )
 
@@ -149,12 +151,12 @@ func SearchEmailCampaignsByDate(c context.Context, r *http.Request, user models.
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticUserIdQuery := ElasticUserIdQuery{}
+	elasticUserIdQuery := apiSearch.ElasticUserIdQuery{}
 	elasticUserIdQuery.Term.UserId = user.Id
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticUserIdQuery)
 
-	elasticDateQuery := ElasticSortDataQuery{}
+	elasticDateQuery := apiSearch.ElasticSortDataQuery{}
 	elasticDateQuery.Date.Order = "desc"
 	elasticDateQuery.Date.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticDateQuery)

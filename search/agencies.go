@@ -11,6 +11,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	"github.com/news-ai/api/models"
+
 	elastic "github.com/news-ai/elastic-appengine"
 )
 

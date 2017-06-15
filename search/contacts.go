@@ -12,6 +12,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	apiModels "github.com/news-ai/api/models"
+	apiSearch "github.com/news-ai/api/search"
 
 	elastic "github.com/news-ai/elastic-appengine"
 	"github.com/news-ai/tabulae/models"
@@ -58,7 +59,7 @@ func SearchContacts(c context.Context, r *http.Request, search string, userId in
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery := apiSearch.ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = userId
 
 	elasticMatchQuery := elastic.ElasticMatchQuery{}
@@ -83,12 +84,12 @@ func SearchContactsByList(c context.Context, r *http.Request, search string, use
 	elasticQuery.From = offset
 
 	if !user.IsAdmin {
-		elasticCreatedByQuery := ElasticCreatedByQuery{}
+		elasticCreatedByQuery := apiSearch.ElasticCreatedByQuery{}
 		elasticCreatedByQuery.Term.CreatedBy = userId
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 	}
 
-	elasticListIdQuery := ElasticListIdQuery{}
+	elasticListIdQuery := apiSearch.ElasticListIdQuery{}
 	elasticListIdQuery.Term.ListId = listId
 
 	elasticMatchQuery := elastic.ElasticMatchQuery{}
@@ -112,11 +113,11 @@ func SearchContactsByTag(c context.Context, r *http.Request, tag string, userId 
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery := apiSearch.ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = userId
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 
-	elasticTagQuery := ElasticTagQuery{}
+	elasticTagQuery := apiSearch.ElasticTagQuery{}
 	elasticTagQuery.Term.Tag = tag
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticTagQuery)
 
@@ -135,11 +136,11 @@ func SearchContactsByPublicationId(c context.Context, r *http.Request, publicati
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticCreatedByQuery := ElasticCreatedByQuery{}
+	elasticCreatedByQuery := apiSearch.ElasticCreatedByQuery{}
 	elasticCreatedByQuery.Term.CreatedBy = userId
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 
-	elasticEmployersQuery := ElasticEmployersQuery{}
+	elasticEmployersQuery := apiSearch.ElasticEmployersQuery{}
 	elasticEmployersQuery.Term.Employers = publicationId
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticEmployersQuery)
 
