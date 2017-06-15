@@ -862,8 +862,8 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 	}
 
 	readOnlyPresent := []string{}
-	instagramTimeseries := []search.InstagramTimeseries{}
-	twitterTimeseries := []search.TwitterTimeseries{}
+	instagramTimeseries := []apiSearch.InstagramTimeseries{}
+	twitterTimeseries := []apiSearch.TwitterTimeseries{}
 
 	// Check if there are special fields we need to get data for
 	for i := 0; i < len(mediaList.FieldsMap); i++ {
@@ -871,20 +871,20 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 			readOnlyPresent = append(readOnlyPresent, mediaList.FieldsMap[i].Value)
 			if strings.Contains(mediaList.FieldsMap[i].Value, "instagram") {
 				if len(instagramTimeseries) == 0 {
-					instagramTimeseries, _ = search.SearchInstagramTimeseriesByUsernames(c, r, instagramUsers)
+					instagramTimeseries, _ = apiSearch.SearchInstagramTimeseriesByUsernames(c, r, instagramUsers)
 				}
 			}
 			if strings.Contains(mediaList.FieldsMap[i].Value, "twitter") {
 				if len(twitterTimeseries) == 0 {
-					twitterTimeseries, _ = search.SearchTwitterTimeseriesByUsernames(c, r, twitterUsers)
+					twitterTimeseries, _ = apiSearch.SearchTwitterTimeseriesByUsernames(c, r, twitterUsers)
 				}
 			}
 		}
 	}
 
 	if len(readOnlyPresent) > 0 {
-		customFieldInstagramUsernameToValue := map[string]search.InstagramTimeseries{}
-		customFieldTwitterUsernameToValue := map[string]search.TwitterTimeseries{}
+		customFieldInstagramUsernameToValue := map[string]apiSearch.InstagramTimeseries{}
+		customFieldTwitterUsernameToValue := map[string]apiSearch.TwitterTimeseries{}
 
 		if len(instagramTimeseries) > 0 {
 			for i := 0; i < len(instagramTimeseries); i++ {
@@ -1024,7 +1024,7 @@ func GetHeadlinesForList(c context.Context, r *http.Request, id string) (interfa
 		return nil, nil, 0, 0, err
 	}
 
-	headlines, total, err := search.SearchHeadlinesByResourceId(c, r, feeds)
+	headlines, total, err := apiSearch.SearchHeadlinesByResourceId(c, r, feeds)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
@@ -1062,7 +1062,7 @@ func GetFeedForList(c context.Context, r *http.Request, id string) (interface{},
 		return nil, nil, 0, 0, err
 	}
 
-	feed, total, err := search.SearchFeedForContacts(c, r, contacts, feeds)
+	feed, total, err := apiSearch.SearchFeedForContacts(c, r, contacts, feeds)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
@@ -1139,7 +1139,7 @@ func GetTwitterTimeseriesForList(c context.Context, r *http.Request, id string) 
 		defaultDate = contactIds.Days
 	}
 
-	twitterTimeseries, err := search.SearchTwitterTimeseriesByUsernamesWithDays(c, r, twitterUsernames, defaultDate)
+	twitterTimeseries, err := apiSearch.SearchTwitterTimeseriesByUsernamesWithDays(c, r, twitterUsernames, defaultDate)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
@@ -1177,7 +1177,7 @@ func GetInstagramTimeseriesForList(c context.Context, r *http.Request, id string
 		defaultDate = contactIds.Days
 	}
 
-	instagramTimeseries, err := search.SearchInstagramTimeseriesByUsernamesWithDays(c, r, instagramUsernames, defaultDate)
+	instagramTimeseries, err := apiSearch.SearchInstagramTimeseriesByUsernamesWithDays(c, r, instagramUsernames, defaultDate)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err

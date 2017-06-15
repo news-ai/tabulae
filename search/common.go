@@ -229,53 +229,11 @@ func InitializeElasticSearch() {
 	contactElastic.Type = "contact"
 	elasticContact = &contactElastic
 
-	headlineElastic := elastic.Elastic{}
-	headlineElastic.BaseURL = newBaseURL
-	headlineElastic.Index = "headlines"
-	headlineElastic.Type = "headline"
-	elasticHeadline = &headlineElastic
-
-	feedElastic := elastic.Elastic{}
-	feedElastic.BaseURL = newBaseURL
-	feedElastic.Index = "feeds"
-	feedElastic.Type = "feed"
-	elasticFeed = &feedElastic
-
-	instagramElastic := elastic.Elastic{}
-	instagramElastic.BaseURL = newBaseURL
-	instagramElastic.Index = "instagrams"
-	instagramElastic.Type = "instagram"
-	elasticInstagram = &instagramElastic
-
-	instagramUserElastic := elastic.Elastic{}
-	instagramUserElastic.BaseURL = newBaseURL
-	instagramUserElastic.Index = "instagrams"
-	instagramUserElastic.Type = "user"
-	elasticInstagramUser = &instagramUserElastic
-
-	instagramTimeseriesElastic := elastic.Elastic{}
-	instagramTimeseriesElastic.BaseURL = newBaseURL
-	instagramTimeseriesElastic.Index = "timeseries"
-	instagramTimeseriesElastic.Type = "instagram"
-	elasticInstagramTimeseries = &instagramTimeseriesElastic
-
-	twitterTimeseriesElastic := elastic.Elastic{}
-	twitterTimeseriesElastic.BaseURL = newBaseURL
-	twitterTimeseriesElastic.Index = "timeseries"
-	twitterTimeseriesElastic.Type = "twitter"
-	elasticTwitterTimeseries = &twitterTimeseriesElastic
-
 	listTimeseriesElastic := elastic.Elastic{}
 	listTimeseriesElastic.BaseURL = newBaseURL
 	listTimeseriesElastic.Index = "lists"
 	listTimeseriesElastic.Type = "list"
 	elasticList = &listTimeseriesElastic
-
-	contactDatabaseElastic := elastic.Elastic{}
-	contactDatabaseElastic.BaseURL = newBaseURL
-	contactDatabaseElastic.Index = "database"
-	contactDatabaseElastic.Type = "contacts"
-	elasticContactDatabase = &contactDatabaseElastic
 
 	emailLogElastic := elastic.Elastic{}
 	emailLogElastic.BaseURL = newBaseURL

@@ -243,8 +243,8 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 
 	if contact.Instagram != "" || contact.Twitter != "" {
 		readOnlyPresent := []string{}
-		instagramTimeseries := []search.InstagramTimeseries{}
-		twitterTimeseries := []search.TwitterTimeseries{}
+		instagramTimeseries := []apiSearch.InstagramTimeseries{}
+		twitterTimeseries := []apiSearch.TwitterTimeseries{}
 
 		// Check if there are special fields we need to get data for
 		for i := 0; i < len(mediaList.FieldsMap); i++ {
@@ -252,20 +252,20 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 				readOnlyPresent = append(readOnlyPresent, mediaList.FieldsMap[i].Value)
 				if strings.Contains(mediaList.FieldsMap[i].Value, "instagram") {
 					if len(instagramTimeseries) == 0 {
-						instagramTimeseries, _ = search.SearchInstagramTimeseriesByUsernames(c, r, []string{contact.Instagram})
+						instagramTimeseries, _ = apiSearch.SearchInstagramTimeseriesByUsernames(c, r, []string{contact.Instagram})
 					}
 				}
 				if strings.Contains(mediaList.FieldsMap[i].Value, "twitter") {
 					if len(twitterTimeseries) == 0 {
-						twitterTimeseries, _ = search.SearchTwitterTimeseriesByUsernames(c, r, []string{contact.Twitter})
+						twitterTimeseries, _ = apiSearch.SearchTwitterTimeseriesByUsernames(c, r, []string{contact.Twitter})
 					}
 				}
 			}
 		}
 
 		if len(readOnlyPresent) > 0 {
-			customFieldInstagramUsernameToValue := map[string]search.InstagramTimeseries{}
-			customFieldTwitterUsernameToValue := map[string]search.TwitterTimeseries{}
+			customFieldInstagramUsernameToValue := map[string]apiSearch.InstagramTimeseries{}
+			customFieldTwitterUsernameToValue := map[string]apiSearch.TwitterTimeseries{}
 
 			if len(instagramTimeseries) > 0 {
 				for i := 0; i < len(instagramTimeseries); i++ {
@@ -751,7 +751,7 @@ func EnrichProfile(c context.Context, r *http.Request, id string) (models.Contac
 		return models.Contact{}, nil, errors.New("Contact does not have an email")
 	}
 
-	contactDetail, err := search.SearchContactDatabase(c, r, contact.Email)
+	contactDetail, err := apiSearch.SearchContactDatabase(c, r, contact.Email)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Contact{}, nil, err
@@ -909,7 +909,7 @@ func GetEnrichProfile(c context.Context, r *http.Request, id string) (interface{
 		return nil, nil, err
 	}
 
-	contactDetail, err := search.SearchContactDatabase(c, r, contact.Email)
+	contactDetail, err := apiSearch.SearchContactDatabase(c, r, contact.Email)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
@@ -978,7 +978,7 @@ func GetInstagramPostsForContact(c context.Context, r *http.Request, id string) 
 		return nil, nil, 0, 0, err
 	}
 
-	instagramPosts, total, err := search.SearchInstagramPostsByUsername(c, r, contact.Instagram)
+	instagramPosts, total, err := apiSearch.SearchInstagramPostsByUsername(c, r, contact.Instagram)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
@@ -1001,7 +1001,7 @@ func GetInstagramProfileForContact(c context.Context, r *http.Request, id string
 		return nil, nil, err
 	}
 
-	instagramProfile, err := search.SearchInstagramProfileByUsername(c, r, contact.Instagram)
+	instagramProfile, err := apiSearch.SearchInstagramProfileByUsername(c, r, contact.Instagram)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
@@ -1024,7 +1024,7 @@ func GetInstagramTimeseriesForContact(c context.Context, r *http.Request, id str
 		return nil, nil, err
 	}
 
-	instagramTimeseries, _, err := search.SearchInstagramTimeseriesByUsername(c, r, contact.Instagram)
+	instagramTimeseries, _, err := apiSearch.SearchInstagramTimeseriesByUsername(c, r, contact.Instagram)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
@@ -1047,7 +1047,7 @@ func GetTwitterTimeseriesForContact(c context.Context, r *http.Request, id strin
 		return nil, nil, err
 	}
 
-	twitterTimeseries, _, err := search.SearchTwitterTimeseriesByUsername(c, r, contact.Twitter)
+	twitterTimeseries, _, err := apiSearch.SearchTwitterTimeseriesByUsername(c, r, contact.Twitter)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
@@ -1121,7 +1121,7 @@ func GetListsForContact(c context.Context, r *http.Request, id string) (interfac
 	return mediaLists, nil, len(mediaLists), 0, nil
 }
 
-func GetHeadlinesForContactById(c context.Context, r *http.Request, currentId int64) ([]search.Headline, interface{}, int, int, error) {
+func GetHeadlinesForContactById(c context.Context, r *http.Request, currentId int64) ([]apiSearch.Headline, interface{}, int, int, error) {
 	// Get the details of the current user
 	feeds, err := GetFeedsByResourceId(c, r, "ContactId", currentId)
 	if err != nil {
@@ -1129,7 +1129,7 @@ func GetHeadlinesForContactById(c context.Context, r *http.Request, currentId in
 		return nil, nil, 0, 0, err
 	}
 
-	headlines, total, err := search.SearchHeadlinesByResourceId(c, r, feeds)
+	headlines, total, err := apiSearch.SearchHeadlinesByResourceId(c, r, feeds)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
@@ -1169,7 +1169,7 @@ func GetFeedForContact(c context.Context, r *http.Request, id string) (interface
 		return nil, nil, 0, 0, err
 	}
 
-	feed, total, err := search.SearchFeedForContacts(c, r, []models.Contact{contact}, feeds)
+	feed, total, err := apiSearch.SearchFeedForContacts(c, r, []models.Contact{contact}, feeds)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
@@ -1340,7 +1340,7 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 
 	if ct.Email != "" && len(ct.Employers) == 0 {
 		contactURLArray := strings.Split(ct.Email, "@")
-		companyData, err := search.SearchCompanyDatabase(c, r, contactURLArray[1])
+		companyData, err := apiSearch.SearchCompanyDatabase(c, r, contactURLArray[1])
 		if err == nil {
 			publication, err := UploadFindOrCreatePublication(c, r, companyData.Data.Organization.Name, companyData.Data.Website)
 			if err == nil {

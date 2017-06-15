@@ -17,6 +17,7 @@ import (
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/api/controllers"
+	apiSearch "github.com/news-ai/api/search"
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/search"
@@ -158,7 +159,7 @@ func GetHeadlinesForPublication(c context.Context, r *http.Request, id string) (
 		return nil, nil, 0, 0, err
 	}
 
-	headlines, total, err := search.SearchHeadlinesByPublicationId(c, r, currentId)
+	headlines, total, err := apiSearch.SearchHeadlinesByPublicationId(c, r, currentId)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
@@ -190,7 +191,7 @@ func GetEnrichCompanyProfile(c context.Context, r *http.Request, id string) (int
 		return nil, nil, err
 	}
 
-	publicationDetail, err := search.SearchCompanyDatabase(c, r, publicationUrl.Host)
+	publicationDetail, err := apiSearch.SearchCompanyDatabase(c, r, publicationUrl.Host)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
