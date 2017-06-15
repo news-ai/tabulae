@@ -418,7 +418,7 @@ func FilterPublicationByNameAndUrl(c context.Context, name string, url string) (
 	publication, err := filterPublication(c, "Name", name)
 	if err != nil {
 		// This means there's no name or url that matches that publication object
-		log.Errorf(c, "%v", err)
+		log.Infof(c, "%v", err)
 		return models.Publication{}, nil, err
 	}
 

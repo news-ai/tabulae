@@ -5,7 +5,6 @@ import (
 )
 
 var (
-	baseURL    = "https://search.newsai.org"
 	newBaseURL = "https://search1.newsai.org"
 )
 
@@ -235,18 +234,6 @@ func InitializeElasticSearch() {
 	headlineElastic.Index = "headlines"
 	headlineElastic.Type = "headline"
 	elasticHeadline = &headlineElastic
-
-	tweetElastic := elastic.Elastic{}
-	tweetElastic.BaseURL = newBaseURL
-	tweetElastic.Index = "tweets"
-	tweetElastic.Type = "tweet"
-	elasticTweet = &tweetElastic
-
-	twitterUserElastic := elastic.Elastic{}
-	twitterUserElastic.BaseURL = newBaseURL
-	twitterUserElastic.Index = "tweets"
-	twitterUserElastic.Type = "user"
-	elasticTwitterUser = &twitterUserElastic
 
 	feedElastic := elastic.Elastic{}
 	feedElastic.BaseURL = newBaseURL

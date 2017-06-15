@@ -116,8 +116,9 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 			}
 
 			// Add to appropriate Email model
+			// https://sendgrid.com/docs/API_Reference/Webhooks/event.html
 			switch singleEvent.Event {
-			case "bounce", "dropped":
+			case "bounce":
 				_, notification, err = controllers.MarkBounced(c, r, &email, singleEvent.Reason)
 				if err != nil {
 					hasErrors = true
@@ -140,6 +141,13 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 				}
 			case "open":
 				_, err = controllers.MarkSendgridOpen(c, r, &email)
+				if err != nil {
+					hasErrors = true
+					log.Errorf(c, "%v", singleEvent)
+					log.Errorf(c, "%v", err)
+				}
+			case "dropped":
+				_, err = controllers.MarkSendgridDrop(c, r, &email)
 				if err != nil {
 					hasErrors = true
 					log.Errorf(c, "%v", singleEvent)

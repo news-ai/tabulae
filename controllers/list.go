@@ -19,6 +19,7 @@ import (
 
 	"github.com/news-ai/api/controllers"
 	apiModels "github.com/news-ai/api/models"
+	apiSearch "github.com/news-ai/api/search"
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/search"
@@ -1100,7 +1101,7 @@ func GetTweetsForList(c context.Context, r *http.Request, id string) (interface{
 		}
 	}
 
-	tweets, total, err := search.SearchTweetsByUsernames(c, r, usernames)
+	tweets, total, err := apiSearch.SearchTweetsByUsernames(c, r, usernames)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err

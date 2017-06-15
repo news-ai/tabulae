@@ -21,6 +21,7 @@ import (
 	"github.com/news-ai/web/utilities"
 
 	"github.com/news-ai/api/controllers"
+	apiSearch "github.com/news-ai/api/search"
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/search"
@@ -931,7 +932,7 @@ func GetTweetsForContact(c context.Context, r *http.Request, id string) (interfa
 		return nil, nil, 0, 0, err
 	}
 
-	tweets, total, err := search.SearchTweetsByUsername(c, r, contact.Twitter)
+	tweets, total, err := apiSearch.SearchTweetsByUsername(c, r, contact.Twitter)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
@@ -954,7 +955,7 @@ func GetTwitterProfileForContact(c context.Context, r *http.Request, id string) 
 		return nil, nil, err
 	}
 
-	twitterProfile, err := search.SearchProfileByUsername(c, r, contact.Twitter)
+	twitterProfile, err := apiSearch.SearchProfileByUsername(c, r, contact.Twitter)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
