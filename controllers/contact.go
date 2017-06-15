@@ -1338,23 +1338,6 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 		return ct, err
 	}
 
-	if ct.Email != "" && len(ct.Employers) == 0 {
-		contactURLArray := strings.Split(ct.Email, "@")
-		companyData, err := apiSearch.SearchCompanyDatabase(c, r, contactURLArray[1])
-		if err == nil {
-			publication, err := UploadFindOrCreatePublication(c, r, companyData.Data.Organization.Name, companyData.Data.Website)
-			if err == nil {
-				ct.Employers = append(ct.Employers, publication.Id)
-			} else {
-				log.Errorf(c, "%v", err)
-				log.Infof(c, "%v", companyData)
-			}
-		} else {
-			log.Errorf(c, "%v", err)
-			log.Infof(c, "%v", contactURLArray)
-		}
-	}
-
 	ct.Create(c, r, currentUser)
 	_, err = Save(c, r, ct)
 
@@ -1402,7 +1385,8 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interf
 			newContacts = append(newContacts, contacts[i])
 		}
 
-		return newContacts, nil, len(newContacts), 0, nil
+		includes := getIncludesForContact(c, r, newContacts)
+		return newContacts, includes, len(newContacts), 0, nil
 	}
 
 	// Create contact
@@ -1412,7 +1396,10 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interf
 		return []models.Contact{}, nil, 0, 0, err
 	}
 
-	return []models.Contact{contact}, nil, 0, 0, nil
+	contacts := []models.Contact{contact}
+	includes := getIncludesForContact(c, r, contacts)
+
+	return contacts, includes, 0, 0, nil
 }
 
 // Does a ES sync in parse package & Twitter sync here
@@ -1539,7 +1526,35 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 
 // Function to save a new contact into App Engine
 func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
-	// Update the Updated time
+	ct.Normalize()
+
+	if ct.Email != "" && len(ct.Employers) == 0 {
+		contactURLArray := strings.Split(ct.Email, "@")
+		companyData, err := apiSearch.SearchCompanyDatabase(c, r, contactURLArray[1])
+		if err == nil {
+			isEmailProvider := false
+
+			for i := 0; i < len(companyData.Data.Category); i++ {
+				if companyData.Data.Category[i].Code == "EMAIL_PROVIDER" {
+					isEmailProvider = true
+				}
+			}
+
+			if !isEmailProvider {
+				publication, err := UploadFindOrCreatePublication(c, r, companyData.Data.Organization.Name, companyData.Data.Website)
+				if err == nil {
+					ct.Employers = append(ct.Employers, publication.Id)
+				} else {
+					log.Errorf(c, "%v", err)
+					log.Infof(c, "%v", companyData)
+				}
+			}
+		} else {
+			log.Errorf(c, "%v", err)
+			log.Infof(c, "%v", contactURLArray)
+		}
+	}
+
 	ct.Normalize()
 	ct.Save(c, r)
 	sync.ResourceSync(r, ct.Id, "Contact", "create")
