@@ -335,7 +335,7 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 				}
 
 				if customField.Name == "lastcontacted" {
-					emails, _, _, err := GetOrderedEmailsForContactById(c, r, contact.Id)
+					emails, _, _, err := GetOrderedEmailsForContact(c, r, *contact)
 
 					// Set the value of the post name to the user
 					if err == nil && len(emails) > 0 {
@@ -1056,9 +1056,9 @@ func GetTwitterTimeseriesForContact(c context.Context, r *http.Request, id strin
 	return twitterTimeseries, nil, nil
 }
 
-func GetOrderedEmailsForContactById(c context.Context, r *http.Request, currentId int64) ([]models.Email, interface{}, int, error) {
+func GetOrderedEmailsForContact(c context.Context, r *http.Request, contact models.Contact) ([]models.Email, interface{}, int, error) {
 	// To check if the user can access it
-	emails, err := filterOrderedEmailbyContactId(c, r, currentId)
+	emails, err := filterOrderedEmailbyContactId(c, r, contact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, err

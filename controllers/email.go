@@ -161,7 +161,7 @@ func filterEmailbyListId(c context.Context, r *http.Request, listId int64) ([]mo
 	return emails, len(emails), nil
 }
 
-func filterOrderedEmailbyContactId(c context.Context, r *http.Request, contactId int64) ([]models.Email, error) {
+func filterOrderedEmailbyContactId(c context.Context, r *http.Request, contact models.Contact) ([]models.Email, error) {
 	emails := []models.Email{}
 
 	user, err := controllers.GetCurrentUser(c, r)
@@ -170,7 +170,7 @@ func filterOrderedEmailbyContactId(c context.Context, r *http.Request, contactId
 		return []models.Email{}, err
 	}
 
-	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("ContactId =", contactId).Filter("IsSent =", true).Order("-Created")
+	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("To =", contact.Email).Filter("IsSent =", true).Order("-Created")
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
