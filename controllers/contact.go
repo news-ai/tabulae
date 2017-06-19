@@ -727,34 +727,21 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 	return contact, includes, nil
 }
 
-func EnrichProfile(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
+func EnrichContact(c context.Context, r *http.Request, contact *models.Contact) (interface{}, error) {
+	if contact.Email == "" {
+		return nil, errors.New("Contact does not have an email")
+	}
+
 	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return models.Contact{}, nil, err
-	}
-
-	// Get the details of the current contact
-	currentId, err := utilities.StringIdToInt(id)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.Contact{}, nil, err
-	}
-
-	contact, err := getContact(c, r, currentId)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.Contact{}, nil, err
-	}
-
-	if contact.Email == "" {
-		return models.Contact{}, nil, errors.New("Contact does not have an email")
+		return nil, err
 	}
 
 	contactDetail, err := apiSearch.SearchContactDatabase(c, r, contact.Email)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return models.Contact{}, nil, err
+		return nil, err
 	}
 
 	if contactDetail.Data.Likelihood > 0.75 {
@@ -889,9 +876,33 @@ func EnrichProfile(c context.Context, r *http.Request, id string) (models.Contac
 			contact.Tags = contact.Tags[:j]
 		}
 
-		_, err = Save(c, r, &contact)
+		return nil, nil
 	}
 
+	return nil, nil
+}
+
+func EnrichProfile(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
+	// Get the details of the current contact
+	currentId, err := utilities.StringIdToInt(id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, err
+	}
+
+	contact, err := getContact(c, r, currentId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, err
+	}
+
+	_, err = EnrichContact(c, r, &contact)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, err
+	}
+
+	_, err = Save(c, r, &contact)
 	return contact, nil, nil
 }
 
@@ -1336,6 +1347,11 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return ct, err
+	}
+
+	_, err = EnrichContact(c, r, ct)
+	if err != nil {
+		log.Errorf(c, "%v", err)
 	}
 
 	ct.Create(c, r, currentUser)
