@@ -1557,12 +1557,15 @@ func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Conta
 			}
 
 			if !isEmailProvider {
-				publication, err := UploadFindOrCreatePublication(c, r, companyData.Data.Organization.Name, companyData.Data.Website)
-				if err == nil {
-					ct.Employers = append(ct.Employers, publication.Id)
-				} else {
-					log.Errorf(c, "%v", err)
-					log.Infof(c, "%v", companyData)
+				trimPublicationName := strings.Trim(companyData.Data.Organization.Name, " ")
+				if trimPublicationName != "" {
+					publication, err := UploadFindOrCreatePublication(c, r, companyData.Data.Organization.Name, companyData.Data.Website)
+					if err == nil {
+						ct.Employers = append(ct.Employers, publication.Id)
+					} else {
+						log.Errorf(c, "%v", err)
+						log.Infof(c, "%v", companyData)
+					}
 				}
 			}
 		} else {
