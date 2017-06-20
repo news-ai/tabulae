@@ -1024,7 +1024,7 @@ func GetHeadlinesForList(c context.Context, r *http.Request, id string) (interfa
 		return nil, nil, 0, 0, err
 	}
 
-	headlines, total, err := apiSearch.SearchHeadlinesByResourceId(c, r, feeds)
+	headlines, total, err := apiSearch.SearchHeadlinesByResourceId(c, r, feeds, []string{})
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err

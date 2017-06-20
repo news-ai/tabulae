@@ -1140,7 +1140,7 @@ func GetHeadlinesForContactById(c context.Context, r *http.Request, currentId in
 		return nil, nil, 0, 0, err
 	}
 
-	headlines, total, err := apiSearch.SearchHeadlinesByResourceId(c, r, feeds)
+	headlines, total, err := apiSearch.SearchHeadlinesByResourceId(c, r, feeds, []string{})
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err
@@ -1348,6 +1348,9 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 		log.Errorf(c, "%v", err)
 		return ct, err
 	}
+
+	ct.FormatName()
+	ct.Normalize()
 
 	_, err = EnrichContact(c, r, ct)
 	if err != nil {
