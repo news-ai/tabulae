@@ -1870,6 +1870,7 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 				}
 				emailSubjectArray := strings.Split(emailFilters[i], ":")
 				if len(emailSubjectArray) > 1 {
+					log.Infof(c, "%v", emailSubjectArray)
 					// Recover the pieces when split by colon
 					emailSubject = strings.Join(emailSubjectArray[1:], ":")
 					emailSubject = strings.Replace(emailSubject, "\\", "", -1)
@@ -1881,6 +1882,8 @@ func GetEmailSearch(c context.Context, r *http.Request) (interface{}, interface{
 					if emailSubject[0] == '"' {
 						emailSubject = emailSubject[1:]
 					}
+
+					log.Infof(c, "%v", emailSubject)
 				}
 			} else if strings.Contains(emailFilters[i], "baseSubject:") {
 				emailBaseSubjectArray := strings.Split(emailFilters[i], ":")

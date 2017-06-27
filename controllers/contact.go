@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -40,6 +41,8 @@ type copyContactsDetails struct {
 type deleteContactsDetails struct {
 	Contacts []int64 `json:"contacts"`
 }
+
+var emailRegexp = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 /*
 * Get methods
@@ -177,6 +180,8 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 		sync.InstagramSync(r, updatedContact.Instagram, currentUser.InstagramAuthKey)
 	}
 
+	previousEmail := contact.Email
+
 	utilities.UpdateIfNotBlank(&contact.FirstName, updatedContact.FirstName)
 	utilities.UpdateIfNotBlank(&contact.LastName, updatedContact.LastName)
 	utilities.UpdateIfNotBlank(&contact.Email, updatedContact.Email)
@@ -188,6 +193,13 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 	utilities.UpdateIfNotBlank(&contact.Notes, updatedContact.Notes)
 	utilities.UpdateIfNotBlank(&contact.Location, updatedContact.Location)
 	utilities.UpdateIfNotBlank(&contact.PhoneNumber, updatedContact.PhoneNumber)
+
+	if contact.Email != previousEmail {
+		_, err = EnrichContact(c, r, contact)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		}
+	}
 
 	if updatedContact.ListId != 0 {
 		contact.ListId = updatedContact.ListId
@@ -731,6 +743,10 @@ func EnrichContact(c context.Context, r *http.Request, contact *models.Contact) 
 	if contact.Email == "" {
 		return nil, errors.New("Contact does not have an email")
 	}
+
+	// if !emailRegexp.MatchString(contact.Email) {
+	// 	return nil, errors.New("Contact does not have a valid email")
+	// }
 
 	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {

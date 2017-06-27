@@ -271,3 +271,13 @@ func (ml *MediaList) Format(key *datastore.Key, modelType string) {
 		}
 	}
 }
+
+// Function to save a new user into App Engine
+func (ml *MediaList) Delete(c context.Context) (*MediaList, error) {
+	err := nds.Delete(c, ml.BaseKey(c, "MediaList"))
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	}
+	return ml, nil
+}

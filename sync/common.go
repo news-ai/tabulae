@@ -11,7 +11,7 @@ import (
 var (
 	PubsubClient             *pubsub.Client
 	InfluencerTopicID        = "influencer"
-	ListChangeTopicId        = "process-list-change"
+	ListChangeTopicID        = "process-list-change"
 	EmailChangeTopicID       = "process-email-change"
 	EmailBulkTopicID         = "process-email-change-bulk"
 	ContactChangeTopicID     = "process-contact-change"
@@ -92,11 +92,11 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 	}
 
 	// Create the topic for instagram if it doesn't exist.
-	if exists, err := PubsubClient.Topic(ListChangeTopicId).Exists(c); err != nil {
+	if exists, err := PubsubClient.Topic(ListChangeTopicID).Exists(c); err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	} else if !exists {
-		if _, err := PubsubClient.CreateTopic(c, ListChangeTopicId); err != nil {
+		if _, err := PubsubClient.CreateTopic(c, ListChangeTopicID); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}
