@@ -127,14 +127,6 @@ func ListUploadResourceBulkSync(r *http.Request, listId int64, contactIds []int6
 	return nil
 }
 
-func EmailSync(r *http.Request, email string) error {
-	data := map[string]string{
-		"email": email,
-	}
-
-	return sync(r, data, EnhanceTopicID)
-}
-
 func ResourceSync(r *http.Request, resourceId int64, resource string, method string) error {
 	data := map[string]string{
 		"Id":     strconv.FormatInt(resourceId, 10),

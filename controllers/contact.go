@@ -1378,7 +1378,6 @@ func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Con
 
 	// Sync with ES
 	sync.ResourceSync(r, ct.Id, "Contact", "create")
-	sync.EmailSync(r, ct.Email)
 
 	// If user is just created
 	if ct.Twitter != "" {

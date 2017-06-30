@@ -1226,16 +1226,37 @@ func DeleteMediaList(c context.Context, r *http.Request, id string) (interface{}
 		return nil, nil, err
 	}
 
+	contactIds := []int64{}
+	listId := mediaList.Id
+
+	// Delete contacts
+	for i := 0; i < len(mediaList.Contacts); i++ {
+		contact, err := getContact(c, r, mediaList.Contacts[i])
+		if err == nil {
+			if contact.CreatedBy == user.Id {
+				if contact.ListId != 0 {
+					listId = contact.ListId
+				}
+
+				contact.IsDeleted = true
+				contact.Save(c, r)
+
+				contactIds = append(contactIds, contact.Id)
+			}
+		}
+	}
+
+	// Pubsub to sync listid and contactids
+	sync.ListUploadResourceBulkSync(r, listId, contactIds, []int64{})
+
+	// Pubsub to remove ES contact
+	sync.ResourceSync(r, mediaList.Id, "List", "delete")
+
 	_, err = mediaList.Delete(c)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, err
 	}
-
-	// Pubsub to remove ES contact
-	sync.ResourceSync(r, mediaList.Id, "List", "delete")
-
-	// Delete contacts
 
 	return nil, nil, nil
 }
