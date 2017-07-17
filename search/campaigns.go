@@ -103,7 +103,7 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 			if emails[x].BaseSubject != "" {
 				emailSubject = emails[x].BaseSubject
 			}
-			if emailSubject == emailCampaign.Subject {
+			if emailSubject == emailCampaign.Subject && !emails[x].Archived {
 				if emailCampaign.Subject == "" {
 					emailCampaign.Subject = "(no subject)"
 				}
