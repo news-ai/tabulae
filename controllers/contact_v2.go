@@ -62,7 +62,7 @@ func getContactV2(c context.Context, r *http.Request, id int64) (models.ContactV
  */
 
 // Gets every single contact
-func GetContacts(c context.Context, r *http.Request) ([]models.ContactV2, interface{}, int, int, error) {
+func GetContactsV2(c context.Context, r *http.Request) ([]models.ContactV2, interface{}, int, int, error) {
 	user, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -99,7 +99,7 @@ func GetContacts(c context.Context, r *http.Request) ([]models.ContactV2, interf
 	return []models.ContactV2{}, nil, 0, 0, nil
 }
 
-func GetV2Contact(c context.Context, r *http.Request, id string) (models.ContactV2, interface{}, error) {
+func GetContactV2(c context.Context, r *http.Request, id string) (models.ContactV2, interface{}, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
 	if err != nil {
