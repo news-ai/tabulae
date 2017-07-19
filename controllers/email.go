@@ -1040,6 +1040,22 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 		return []models.Email{}, nil, 0, 0, err
 	}
 
+	user, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, 0, 0, err
+	}
+
+	// If user is not active then they can't send
+	// emails
+	if !user.IsActive {
+		return []models.Email{}, nil, 0, 0, err
+	}
+
+	if user.IsBanned {
+		return []models.Email{}, nil, 0, 0, err
+	}
+
 	emails := []models.Email{}
 	emailIds := []int64{}
 
