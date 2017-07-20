@@ -503,6 +503,84 @@ func CreateContactV2(c context.Context, r *http.Request) ([]models.ContactV2, in
 * Update methods
  */
 
+func UpdateSingleContactV2(c context.Context, r *http.Request, id string) (models.ContactV2, interface{}, error) {
+	// Get the details of the current contact
+	contact, _, err := GetContactV2(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.ContactV2{}, nil, err
+	}
+
+	user, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.ContactV2{}, nil, errors.New("Could not get user")
+	}
+
+	if !permissions.AccessToObject(contact.TeamId, user.TeamId) && !user.IsAdmin {
+		return models.ContactV2{}, nil, errors.New("You don't have permissions to edit these objects")
+	}
+
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var updatedContact models.ContactV2
+	err = decoder.Decode(buf, &updatedContact)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.ContactV2{}, nil, err
+	}
+
+	return updateContactV2(c, r, &contact, updatedContact)
+}
+
+func UpdateBatchContactV2(c context.Context, r *http.Request) ([]models.ContactV2, interface{}, int, int, error) {
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var updatedContacts []models.ContactV2
+	err := decoder.Decode(buf, &updatedContacts)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.ContactV2{}, nil, 0, 0, err
+	}
+
+	// Get logged in user
+	user, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.ContactV2{}, nil, 0, 0, errors.New("Could not get user")
+	}
+
+	// Check if each of the contacts have permissions before updating anything
+	currentContacts := []models.ContactV2{}
+	for i := 0; i < len(updatedContacts); i++ {
+		contact, err := getContactV2(c, r, updatedContacts[i].Id)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return []models.ContactV2{}, nil, 0, 0, err
+		}
+
+		if !permissions.AccessToObject(contact.TeamId, user.TeamId) && !user.IsAdmin {
+			return []models.ContactV2{}, nil, 0, 0, errors.New("Forbidden")
+		}
+
+		currentContacts = append(currentContacts, contact)
+	}
+
+	// Update each of the contacts
+	newContacts := []models.ContactV2{}
+	for i := 0; i < len(updatedContacts); i++ {
+		updatedContact, _, err := updateContactV2(c, r, &currentContacts[i], updatedContacts[i])
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return []models.ContactV2{}, nil, 0, 0, err
+		}
+
+		newContacts = append(newContacts, updatedContact)
+	}
+
+	return newContacts, nil, len(newContacts), 0, nil
+}
+
 /*
 * Delete methods
  */
