@@ -66,6 +66,96 @@ func getContactV2(c context.Context, r *http.Request, id int64) (models.ContactV
 	return models.ContactV2{}, errors.New("No contact by this id")
 }
 
+/*
+* Create methods
+ */
+
+func createV2Contact(c context.Context, r *http.Request, ct *models.ContactV2) (*models.ContactV2, error) {
+	currentUser, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return ct, err
+	}
+
+	ct.FormatName()
+	ct.Normalize()
+
+	_, err = enrichContactV2(c, r, ct)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+	}
+
+	ct.Create(c, r, currentUser)
+	_, err = saveContactV2(c, r, ct)
+
+	// Sync with ES
+	// sync.ResourceSync(r, ct.Id, "ContactV2", "create")
+
+	// If user is just created
+	if ct.Twitter != "" {
+		sync.TwitterSync(r, ct.Twitter)
+	}
+	if ct.Instagram != "" {
+		sync.InstagramSync(r, ct.Instagram, currentUser.InstagramAuthKey)
+	}
+
+	return ct, err
+}
+
+/*
+* Update methods
+ */
+
+// Function to save a new contact into App Engine
+func saveContactV2(c context.Context, r *http.Request, ct *models.ContactV2) (*models.ContactV2, error) {
+	ct.Normalize()
+
+	if ct.Email != "" && len(ct.Employers) == 0 {
+		contactURLArray := strings.Split(ct.Email, "@")
+		companyData, err := apiSearch.SearchCompanyDatabase(c, r, contactURLArray[1])
+		if err == nil {
+			isEmailProvider := false
+
+			for i := 0; i < len(companyData.Data.Category); i++ {
+				if companyData.Data.Category[i].Code == "EMAIL_PROVIDER" {
+					isEmailProvider = true
+				}
+			}
+
+			if !isEmailProvider {
+				trimPublicationName := strings.Trim(companyData.Data.Organization.Name, " ")
+				if trimPublicationName != "" {
+					publication, err := UploadFindOrCreatePublication(c, r, companyData.Data.Organization.Name, companyData.Data.Website)
+					if err == nil {
+						ct.Employers = append(ct.Employers, publication.Id)
+					} else {
+						log.Errorf(c, "%v", err)
+						log.Infof(c, "%v", companyData)
+					}
+				}
+			}
+		} else {
+			log.Errorf(c, "%v", err)
+			log.Infof(c, "%v", contactURLArray)
+		}
+	}
+
+	ct.Normalize()
+	ct.Save(c, r)
+	// sync.ResourceSync(r, ct.Id, "ContactV2", "create")
+	return ct, nil
+}
+
+func updateContactV2(c context.Context, r *http.Request, contact *models.ContactV2, updatedContact models.ContactV2) (models.ContactV2, interface{}, error) {
+	// currentUser, err := controllers.GetCurrentUser(c, r)
+	// if err != nil {
+	// 	log.Errorf(c, "%v", err)
+	// 	return *contact, nil, err
+	// }
+
+	return *contact, nil, nil
+}
+
 func enrichContactV2(c context.Context, r *http.Request, contact *models.ContactV2) (interface{}, error) {
 	if contact.Email == "" {
 		return nil, errors.New("Contact does not have an email")
@@ -219,96 +309,6 @@ func enrichContactV2(c context.Context, r *http.Request, contact *models.Contact
 	}
 
 	return nil, nil
-}
-
-/*
-* Create methods
- */
-
-func createV2Contact(c context.Context, r *http.Request, ct *models.ContactV2) (*models.ContactV2, error) {
-	currentUser, err := controllers.GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return ct, err
-	}
-
-	ct.FormatName()
-	ct.Normalize()
-
-	_, err = enrichContactV2(c, r, ct)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-	}
-
-	ct.Create(c, r, currentUser)
-	_, err = saveContactV2(c, r, ct)
-
-	// Sync with ES
-	// sync.ResourceSync(r, ct.Id, "ContactV2", "create")
-
-	// If user is just created
-	if ct.Twitter != "" {
-		sync.TwitterSync(r, ct.Twitter)
-	}
-	if ct.Instagram != "" {
-		sync.InstagramSync(r, ct.Instagram, currentUser.InstagramAuthKey)
-	}
-
-	return ct, err
-}
-
-/*
-* Update methods
- */
-
-// Function to save a new contact into App Engine
-func saveContactV2(c context.Context, r *http.Request, ct *models.ContactV2) (*models.ContactV2, error) {
-	ct.Normalize()
-
-	if ct.Email != "" && len(ct.Employers) == 0 {
-		contactURLArray := strings.Split(ct.Email, "@")
-		companyData, err := apiSearch.SearchCompanyDatabase(c, r, contactURLArray[1])
-		if err == nil {
-			isEmailProvider := false
-
-			for i := 0; i < len(companyData.Data.Category); i++ {
-				if companyData.Data.Category[i].Code == "EMAIL_PROVIDER" {
-					isEmailProvider = true
-				}
-			}
-
-			if !isEmailProvider {
-				trimPublicationName := strings.Trim(companyData.Data.Organization.Name, " ")
-				if trimPublicationName != "" {
-					publication, err := UploadFindOrCreatePublication(c, r, companyData.Data.Organization.Name, companyData.Data.Website)
-					if err == nil {
-						ct.Employers = append(ct.Employers, publication.Id)
-					} else {
-						log.Errorf(c, "%v", err)
-						log.Infof(c, "%v", companyData)
-					}
-				}
-			}
-		} else {
-			log.Errorf(c, "%v", err)
-			log.Infof(c, "%v", contactURLArray)
-		}
-	}
-
-	ct.Normalize()
-	ct.Save(c, r)
-	// sync.ResourceSync(r, ct.Id, "ContactV2", "create")
-	return ct, nil
-}
-
-func updateContactV2(c context.Context, r *http.Request, contact *models.ContactV2, updatedContact models.ContactV2) (models.ContactV2, interface{}, error) {
-	// currentUser, err := controllers.GetCurrentUser(c, r)
-	// if err != nil {
-	// 	log.Errorf(c, "%v", err)
-	// 	return *contact, nil, err
-	// }
-
-	return *contact, nil, nil
 }
 
 /*
