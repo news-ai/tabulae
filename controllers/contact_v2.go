@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"golang.org/x/net/context"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/news-ai/web/utilities"
 
 	"github.com/news-ai/api/controllers"
+	apiSearch "github.com/news-ai/api/search"
 
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/sync"
@@ -64,6 +66,161 @@ func getContactV2(c context.Context, r *http.Request, id int64) (models.ContactV
 	return models.ContactV2{}, errors.New("No contact by this id")
 }
 
+func enrichContactV2(c context.Context, r *http.Request, contact *models.ContactV2) (interface{}, error) {
+	if contact.Email == "" {
+		return nil, errors.New("Contact does not have an email")
+	}
+
+	currentUser, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	}
+
+	contactDetail, err := apiSearch.SearchContactDatabase(c, r, contact.Email)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	}
+
+	if contactDetail.Data.Likelihood > 0.75 {
+		// Add first name
+		if contact.FirstName == "" && contactDetail.Data.ContactInfo.GivenName != "" {
+			contact.FirstName = contactDetail.Data.ContactInfo.GivenName
+		}
+
+		// Add last name
+		if contact.LastName == "" && contactDetail.Data.ContactInfo.FamilyName != "" {
+			contact.LastName = contactDetail.Data.ContactInfo.FamilyName
+		}
+
+		// Add social profiles
+		if len(contactDetail.Data.SocialProfiles) > 0 {
+			for i := 0; i < len(contactDetail.Data.SocialProfiles); i++ {
+				if contactDetail.Data.SocialProfiles[i].TypeID == "linkedin" {
+					if contact.LinkedIn == "" {
+						contact.LinkedIn = contactDetail.Data.SocialProfiles[i].URL
+					}
+				}
+
+				if contactDetail.Data.SocialProfiles[i].TypeID == "twitter" {
+					if contact.Twitter == "" {
+						contact.Twitter = contactDetail.Data.SocialProfiles[i].Username
+						sync.TwitterSync(r, contact.Twitter)
+					}
+				}
+
+				if contactDetail.Data.SocialProfiles[i].TypeID == "instagram" {
+					if contact.Instagram == "" {
+						contact.Instagram = contactDetail.Data.SocialProfiles[i].URL
+						sync.InstagramSync(r, contact.Instagram, currentUser.InstagramAuthKey)
+					}
+				}
+			}
+		}
+
+		// Add jobs
+		if len(contactDetail.Data.Organizations) > 0 {
+			for i := 0; i < len(contactDetail.Data.Organizations); i++ {
+				if contactDetail.Data.Organizations[i].Name != "" {
+					// Get which publication it is in our database
+					publication, err := FindOrCreatePublication(c, r, contactDetail.Data.Organizations[i].Name, "")
+					if err != nil {
+						log.Errorf(c, "%v", err)
+						continue
+					}
+
+					previousJob := false
+
+					// Check if this position was in the past or current
+					if contactDetail.Data.Organizations[i].EndDate != "" {
+						previousJob = true
+					}
+
+					alreadyExists := false
+					for x := 0; x < len(contact.Employers); x++ {
+						currentPublication, err := getPublication(c, contact.Employers[x])
+						if err != nil {
+							log.Errorf(c, "%v", err)
+							continue
+						}
+
+						if currentPublication.Name == publication.Name {
+							alreadyExists = true
+						}
+
+						if currentPublication.Id == publication.Id {
+							alreadyExists = true
+						}
+					}
+
+					for x := 0; x < len(contact.PastEmployers); x++ {
+						currentPublication, err := getPublication(c, contact.PastEmployers[x])
+						if err != nil {
+							log.Errorf(c, "%v", err)
+							continue
+						}
+
+						if currentPublication.Name == publication.Name {
+							alreadyExists = true
+						}
+
+						if currentPublication.Id == publication.Id {
+							alreadyExists = true
+						}
+					}
+
+					// Add to list
+					if !alreadyExists {
+						if previousJob {
+							contact.PastEmployers = append(contact.PastEmployers, publication.Id)
+						} else {
+							contact.Employers = append(contact.Employers, publication.Id)
+						}
+					}
+
+				}
+			}
+		}
+
+		// Add location
+		contact.Location = contactDetail.Data.Demographics.LocationDeduced.NormalizedLocation
+
+		// Add website
+		if len(contactDetail.Data.ContactInfo.Websites) > 0 {
+			contact.Website = contactDetail.Data.ContactInfo.Websites[0].URL
+		}
+
+		// Add tags
+		if len(contactDetail.Data.DigitalFootprint.Topics) > 0 {
+			tags := []string{}
+			for i := 0; i < len(contactDetail.Data.DigitalFootprint.Topics); i++ {
+				if contactDetail.Data.DigitalFootprint.Topics[i].Value != "" {
+					tags = append(tags, contactDetail.Data.DigitalFootprint.Topics[i].Value)
+				}
+			}
+
+			contact.Tags = append(contact.Tags, tags...)
+
+			// Remove duplicates from tags
+			found := make(map[string]bool)
+			j := 0
+			for i, x := range contact.Tags {
+				if !found[x] {
+					found[x] = true
+					contact.Tags[j] = contact.Tags[i]
+					j++
+				}
+			}
+			contact.Tags = contact.Tags[:j]
+		}
+
+		return nil, nil
+	}
+
+	return nil, nil
+}
+
 /*
 * Create methods
  */
@@ -78,7 +235,7 @@ func createV2Contact(c context.Context, r *http.Request, ct *models.ContactV2) (
 	ct.FormatName()
 	ct.Normalize()
 
-	_, err = EnrichContactV2(c, r, ct)
+	_, err = enrichContactV2(c, r, ct)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 	}
@@ -159,7 +316,7 @@ func updateContactV2(c context.Context, r *http.Request, contact *models.Contact
  */
 
 /*
-* Normalization methods
+* Include methods
  */
 
 func contactsV2ToPublications(c context.Context, contacts []models.ContactV2) []models.Publication {
