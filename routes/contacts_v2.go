@@ -30,6 +30,9 @@ func handleContactsV2(c context.Context, w http.ResponseWriter, r *http.Request)
 	case "GET":
 		val, included, count, total, err := controllers.GetContactsV2(c, r)
 		return api.BaseResponseHandler(val, included, count, total, err, r)
+	case "POST":
+		val, included, count, total, err := controllers.CreateContactV2(c, r)
+		return api.BaseResponseHandler(val, included, count, total, err, r)
 	}
 	return nil, errors.New("method not implemented")
 }

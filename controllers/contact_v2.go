@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"io/ioutil"
 	"net/http"
 
 	"golang.org/x/net/context"
@@ -9,6 +10,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
+	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
 	"github.com/news-ai/web/permissions"
@@ -17,6 +19,7 @@ import (
 	"github.com/news-ai/api/controllers"
 
 	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/tabulae/sync"
 )
 
 /*
@@ -60,6 +63,104 @@ func getContactV2(c context.Context, r *http.Request, id int64) (models.ContactV
 
 	return models.ContactV2{}, errors.New("No contact by this id")
 }
+
+/*
+* Create methods
+ */
+
+func createV2Contact(c context.Context, r *http.Request, ct *models.ContactV2) (*models.ContactV2, error) {
+	currentUser, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return ct, err
+	}
+
+	ct.FormatName()
+	ct.Normalize()
+
+	_, err = EnrichContactV2(c, r, ct)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+	}
+
+	ct.Create(c, r, currentUser)
+	_, err = saveContactV2(c, r, ct)
+
+	// Sync with ES
+	// sync.ResourceSync(r, ct.Id, "ContactV2", "create")
+
+	// If user is just created
+	if ct.Twitter != "" {
+		sync.TwitterSync(r, ct.Twitter)
+	}
+	if ct.Instagram != "" {
+		sync.InstagramSync(r, ct.Instagram, currentUser.InstagramAuthKey)
+	}
+
+	return ct, err
+}
+
+/*
+* Update methods
+ */
+
+// Function to save a new contact into App Engine
+func saveContactV2(c context.Context, r *http.Request, ct *models.ContactV2) (*models.ContactV2, error) {
+	ct.Normalize()
+
+	if ct.Email != "" && len(ct.Employers) == 0 {
+		contactURLArray := strings.Split(ct.Email, "@")
+		companyData, err := apiSearch.SearchCompanyDatabase(c, r, contactURLArray[1])
+		if err == nil {
+			isEmailProvider := false
+
+			for i := 0; i < len(companyData.Data.Category); i++ {
+				if companyData.Data.Category[i].Code == "EMAIL_PROVIDER" {
+					isEmailProvider = true
+				}
+			}
+
+			if !isEmailProvider {
+				trimPublicationName := strings.Trim(companyData.Data.Organization.Name, " ")
+				if trimPublicationName != "" {
+					publication, err := UploadFindOrCreatePublication(c, r, companyData.Data.Organization.Name, companyData.Data.Website)
+					if err == nil {
+						ct.Employers = append(ct.Employers, publication.Id)
+					} else {
+						log.Errorf(c, "%v", err)
+						log.Infof(c, "%v", companyData)
+					}
+				}
+			}
+		} else {
+			log.Errorf(c, "%v", err)
+			log.Infof(c, "%v", contactURLArray)
+		}
+	}
+
+	ct.Normalize()
+	ct.Save(c, r)
+	// sync.ResourceSync(r, ct.Id, "ContactV2", "create")
+	return ct, nil
+}
+
+func updateContactV2(c context.Context, r *http.Request, contact *models.ContactV2, updatedContact models.ContactV2) (models.ContactV2, interface{}, error) {
+	// currentUser, err := controllers.GetCurrentUser(c, r)
+	// if err != nil {
+	// 	log.Errorf(c, "%v", err)
+	// 	return *contact, nil, err
+	// }
+
+	return *contact, nil, nil
+}
+
+/*
+* Filter methods
+ */
+
+/*
+* Normalization methods
+ */
 
 func contactsV2ToPublications(c context.Context, contacts []models.ContactV2) []models.Publication {
 	publicationIds := []int64{}
@@ -125,20 +226,6 @@ func getIncludesForContactsV2(c context.Context, r *http.Request, contacts []mod
 }
 
 /*
-* Update methods
- */
-
-func updateContactV2(c context.Context, r *http.Request, contact *models.ContactV2, updatedContact models.ContactV2) (models.ContactV2, interface{}, error) {
-	currentUser, err := controllers.GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return *contact, nil, err
-	}
-
-	return *contact, nil, err
-}
-
-/*
 * Public methods
  */
 
@@ -177,7 +264,7 @@ func GetContactsV2(c context.Context, r *http.Request) ([]models.ContactV2, inte
 		}
 
 		includes := getIncludesForContactsV2(c, r, contacts)
-		return contacts, nil, len(contacts), 0, nil
+		return contacts, includes, len(contacts), 0, nil
 	}
 
 	// If user is not active then return empty lists
@@ -199,5 +286,66 @@ func GetContactV2(c context.Context, r *http.Request, id string) (models.Contact
 	}
 
 	includes := getIncludesForContactsV2(c, r, []models.ContactV2{contact})
-	return contact, nil, nil
+	return contact, includes, nil
 }
+
+/*
+* Create methods
+ */
+
+func CreateContactV2(c context.Context, r *http.Request) ([]models.ContactV2, interface{}, int, int, error) {
+	buf, _ := ioutil.ReadAll(r.Body)
+
+	decoder := ffjson.NewDecoder()
+	var contact models.ContactV2
+	err := decoder.Decode(buf, &contact)
+
+	if err != nil {
+		var contacts []models.ContactV2
+
+		arrayDecoder := ffjson.NewDecoder()
+		err = arrayDecoder.Decode(buf, &contacts)
+
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return []models.ContactV2{}, nil, 0, 0, err
+		}
+
+		newContacts := []models.ContactV2{}
+		for i := 0; i < len(contacts); i++ {
+			// Check if the contact has been created yet or not
+
+			// If the contact hasn't been created then we create it
+			_, err = createV2Contact(c, r, &contacts[i])
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return []models.ContactV2{}, nil, 0, 0, err
+			}
+			newContacts = append(newContacts, contacts[i])
+		}
+
+		includes := getIncludesForContactsV2(c, r, newContacts)
+		return newContacts, includes, len(newContacts), 0, nil
+	}
+	// Check if the contact has been created yet or not
+
+	// Create contact
+	_, err = createV2Contact(c, r, &contact)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.ContactV2{}, nil, 0, 0, err
+	}
+
+	contacts := []models.ContactV2{contact}
+	includes := getIncludesForContactsV2(c, r, contacts)
+
+	return contacts, includes, 0, 0, nil
+}
+
+/*
+* Update methods
+ */
+
+/*
+* Delete methods
+ */
