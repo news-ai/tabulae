@@ -77,6 +77,8 @@ func createV2Contact(c context.Context, r *http.Request, ct *models.ContactV2) (
 		return ct, err
 	}
 
+	ct.TeamId = currentUser.TeamId
+
 	ct.FormatName()
 	ct.Normalize()
 
@@ -330,7 +332,7 @@ func filterContactsV2ByEmail(c context.Context, r *http.Request, email string) (
 	}
 
 	if len(ks) == 0 {
-		return []models.ContactV2{}, true, errors.New("No contact exists with same email")
+		return []models.ContactV2{}, false, errors.New("No contact exists with same email")
 	}
 
 	var contacts []models.ContactV2
@@ -338,13 +340,13 @@ func filterContactsV2ByEmail(c context.Context, r *http.Request, email string) (
 	err = nds.GetMulti(c, ks, contacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []models.ContactV2{}, false, err
+		return []models.ContactV2{}, true, err
 	}
 
 	for i := 0; i < len(contacts); i++ {
 		contacts[i].Format(ks[i], "contacts_v2")
 	}
-	return contacts, false, nil
+	return contacts, true, nil
 }
 
 /*
@@ -504,7 +506,7 @@ func CreateContactV2(c context.Context, r *http.Request) ([]models.ContactV2, in
 		for i := 0; i < len(contacts); i++ {
 			// Check if the contact has been created yet or not
 			duplicateContact, contactExists, err := filterContactsV2ByEmail(c, r, contacts[i].Email)
-			if contactExists {
+			if contactExists && err == nil {
 				newContacts = append(newContacts, duplicateContact[0])
 				continue
 			}
@@ -529,11 +531,15 @@ func CreateContactV2(c context.Context, r *http.Request) ([]models.ContactV2, in
 	}
 	// Check if the contact has been created yet or not
 	duplicateContact, contactExists, err := filterContactsV2ByEmail(c, r, contact.Email)
-	if contactExists {
+	if contactExists && err == nil {
 		contacts := []models.ContactV2{duplicateContact[0]}
 		includes := getIncludesForContactsV2(c, r, contacts)
 
 		return contacts, includes, 0, 0, nil
+	}
+
+	if err != nil {
+		log.Errorf(c, "%v", err)
 	}
 
 	// Create contact
