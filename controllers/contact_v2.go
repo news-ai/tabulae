@@ -19,6 +19,14 @@ import (
 	"github.com/news-ai/tabulae/models"
 )
 
+/*
+* Private methods
+ */
+
+/*
+* Get methods
+ */
+
 func getContactV2(c context.Context, r *http.Request, id int64) (models.ContactV2, error) {
 	if id == 0 {
 		return models.ContactV2{}, errors.New("datastore: no such entity")
@@ -51,6 +59,69 @@ func getContactV2(c context.Context, r *http.Request, id int64) (models.ContactV
 	}
 
 	return models.ContactV2{}, errors.New("No contact by this id")
+}
+
+func contactsV2ToPublications(c context.Context, contacts []models.ContactV2) []models.Publication {
+	publicationIds := []int64{}
+
+	for i := 0; i < len(contacts); i++ {
+		publicationIds = append(publicationIds, contacts[i].Employers...)
+		publicationIds = append(publicationIds, contacts[i].PastEmployers...)
+	}
+
+	// Work on includes
+	publications := []models.Publication{}
+	publicationExists := map[int64]bool{}
+	publicationExists = make(map[int64]bool)
+
+	for i := 0; i < len(publicationIds); i++ {
+		if _, ok := publicationExists[publicationIds[i]]; !ok {
+			publication, _ := getPublication(c, publicationIds[i])
+			publications = append(publications, publication)
+			publicationExists[publicationIds[i]] = true
+		}
+	}
+
+	return publications
+}
+
+func contactsV2ToLists(c context.Context, r *http.Request, contacts []models.ContactV2) []models.MediaList {
+	mediaListIds := []int64{}
+
+	for i := 0; i < len(contacts); i++ {
+		mediaListIds = append(mediaListIds, contacts[i].ListIds...)
+	}
+
+	// Work on includes
+	mediaLists := []models.MediaList{}
+	mediaListExists := map[int64]bool{}
+	mediaListExists = make(map[int64]bool)
+
+	for i := 0; i < len(mediaListIds); i++ {
+		if _, ok := mediaListExists[mediaListIds[i]]; !ok {
+			mediaList, _ := getMediaList(c, r, mediaListIds[i])
+			mediaLists = append(mediaLists, mediaList)
+			mediaListExists[mediaListIds[i]] = true
+		}
+	}
+
+	return mediaLists
+}
+
+func getIncludesForContactsV2(c context.Context, r *http.Request, contacts []models.ContactV2) interface{} {
+	mediaLists := contactsV2ToLists(c, r, contacts)
+	publications := contactsV2ToPublications(c, contacts)
+
+	includes := make([]interface{}, len(mediaLists)+len(publications))
+	for i := 0; i < len(mediaLists); i++ {
+		includes[i] = mediaLists[i]
+	}
+
+	for i := 0; i < len(publications); i++ {
+		includes[i+len(mediaLists)] = publications[i]
+	}
+
+	return includes
 }
 
 /*
@@ -91,7 +162,7 @@ func GetContactsV2(c context.Context, r *http.Request) ([]models.ContactV2, inte
 			contacts[i].Format(ks[i], "contacts_v2")
 		}
 
-		// includes := getIncludesForContact(c, r, contacts)
+		includes := getIncludesForContactsV2(c, r, contacts)
 		return contacts, nil, len(contacts), 0, nil
 	}
 
@@ -113,6 +184,6 @@ func GetContactV2(c context.Context, r *http.Request, id string) (models.Contact
 		return models.ContactV2{}, nil, err
 	}
 
-	// includes := getIncludesForContact(c, r, []models.Contact{contact})
+	includes := getIncludesForContactsV2(c, r, []models.Contact{contact})
 	return contact, nil, nil
 }

@@ -102,46 +102,6 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 * Update methods
  */
 
-func updateSameEmailContacts(c context.Context, r *http.Request, contact *models.Contact) error {
-	sameEmailContacts, err := filterContactByEmailForUser(c, r, contact.Id)
-	if err != nil {
-		return err
-	}
-
-	for i := 0; i < len(sameEmailContacts); i++ {
-		sameEmailContacts[i].FirstName = contact.FirstName
-		sameEmailContacts[i].LastName = contact.LastName
-
-		sameEmailContacts[i].Notes = contact.Notes
-
-		sameEmailContacts[i].Employers = contact.Employers
-		sameEmailContacts[i].PastEmployers = contact.PastEmployers
-
-		sameEmailContacts[i].LinkedIn = contact.LinkedIn
-		sameEmailContacts[i].Twitter = contact.Twitter
-		sameEmailContacts[i].Instagram = contact.Instagram
-		sameEmailContacts[i].MuckRack = contact.MuckRack
-		sameEmailContacts[i].Website = contact.Website
-		sameEmailContacts[i].Blog = contact.Blog
-
-		sameEmailContacts[i].TwitterInvalid = contact.TwitterInvalid
-		sameEmailContacts[i].InstagramInvalid = contact.InstagramInvalid
-
-		sameEmailContacts[i].TwitterPrivate = contact.TwitterPrivate
-		sameEmailContacts[i].InstagramPrivate = contact.InstagramPrivate
-
-		sameEmailContacts[i].Location = contact.Location
-		sameEmailContacts[i].PhoneNumber = contact.PhoneNumber
-
-		sameEmailContacts[i].IsOutdated = contact.IsOutdated
-		sameEmailContacts[i].EmailBounced = contact.EmailBounced
-
-		sameEmailContacts[i].Save(c, r)
-	}
-
-	return nil
-}
-
 func updateContact(c context.Context, r *http.Request, contact *models.Contact, updatedContact models.Contact) (models.Contact, interface{}, error) {
 	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
@@ -367,11 +327,6 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 			}
 		}
 	}
-
-	// err = updateSameEmailContacts(c, r, contact)
-	// if err != nil {
-	// 	log.Errorf(c, "%v", err)
-	// }
 
 	return *contact, nil, nil
 }
