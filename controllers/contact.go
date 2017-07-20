@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -41,8 +40,6 @@ type copyContactsDetails struct {
 type deleteContactsDetails struct {
 	Contacts []int64 `json:"contacts"`
 }
-
-var emailRegexp = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 /*
 * Get methods
@@ -585,7 +582,7 @@ func contactsToLists(c context.Context, r *http.Request, contacts []models.Conta
 	return mediaLists
 }
 
-func getIncludesForContact(c context.Context, r *http.Request, contacts []models.Contact) interface{} {
+func getIncludesForContacts(c context.Context, r *http.Request, contacts []models.Contact) interface{} {
 	mediaLists := contactsToLists(c, r, contacts)
 	publications := contactsToPublications(c, contacts)
 
@@ -627,7 +624,7 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 				if err != nil {
 					return []models.Contact{}, nil, 0, 0, err
 				}
-				includes := getIncludesForContact(c, r, contacts)
+				includes := getIncludesForContacts(c, r, contacts)
 				return contacts, includes, len(contacts), total, nil
 			} else {
 				selectedContacts, total, err := search.SearchContactsByFieldSelector(c, r, fieldSelector[0], fieldSelector[1], user.Id)
@@ -643,7 +640,7 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 					}
 				}
 
-				includes := getIncludesForContact(c, r, contacts)
+				includes := getIncludesForContacts(c, r, contacts)
 				return contacts, includes, len(contacts), total, nil
 			}
 		}
@@ -668,7 +665,7 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 			contacts[i].Format(ks[i], "contacts")
 		}
 
-		includes := getIncludesForContact(c, r, contacts)
+		includes := getIncludesForContacts(c, r, contacts)
 		return contacts, includes, len(contacts), 0, nil
 	}
 
@@ -690,7 +687,7 @@ func GetContact(c context.Context, r *http.Request, id string) (models.Contact, 
 		return models.Contact{}, nil, err
 	}
 
-	includes := getIncludesForContact(c, r, []models.Contact{contact})
+	includes := getIncludesForContacts(c, r, []models.Contact{contact})
 	return contact, includes, nil
 }
 
@@ -698,10 +695,6 @@ func EnrichContact(c context.Context, r *http.Request, contact *models.Contact) 
 	if contact.Email == "" {
 		return nil, errors.New("Contact does not have an email")
 	}
-
-	// if !emailRegexp.MatchString(contact.Email) {
-	// 	return nil, errors.New("Contact does not have a valid email")
-	// }
 
 	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
@@ -851,53 +844,6 @@ func EnrichContact(c context.Context, r *http.Request, contact *models.Contact) 
 	}
 
 	return nil, nil
-}
-
-func EnrichProfile(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
-	// Get the details of the current contact
-	currentId, err := utilities.StringIdToInt(id)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.Contact{}, nil, err
-	}
-
-	contact, err := getContact(c, r, currentId)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.Contact{}, nil, err
-	}
-
-	_, err = EnrichContact(c, r, &contact)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.Contact{}, nil, err
-	}
-
-	_, err = Save(c, r, &contact)
-	return contact, nil, nil
-}
-
-func GetEnrichProfile(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
-	// Get the details of the current user
-	currentId, err := utilities.StringIdToInt(id)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, err
-	}
-
-	contact, err := getContact(c, r, currentId)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, err
-	}
-
-	contactDetail, err := apiSearch.SearchContactDatabase(c, r, contact.Email)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, err
-	}
-
-	return contactDetail.Data, nil, nil
 }
 
 func GetTweetsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {
@@ -1177,128 +1123,6 @@ func GetFeedsForContact(c context.Context, r *http.Request, id string) (interfac
 	return feeds, nil, len(feeds), 0, nil
 }
 
-func GetSimilarContacts(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {
-	// Get the details of the current user
-	currentId, err := utilities.StringIdToInt(id)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, 0, 0, err
-	}
-
-	contact, err := getContact(c, r, currentId)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, 0, 0, err
-	}
-
-	currentUser, err := controllers.GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, 0, 0, err
-	}
-
-	allKeysMap := map[*datastore.Key]bool{}
-
-	if contact.LinkedIn != "" {
-		query := datastore.NewQuery("Contact").Filter("LinkedIn =", contact.LinkedIn).Filter("CreatedBy = ", currentUser.Id).Filter("IsMasterContact =", false)
-		ks, err := query.KeysOnly().GetAll(c, nil)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return nil, nil, 0, 0, err
-		}
-
-		for i := 0; i < len(ks); i++ {
-			allKeysMap[ks[i]] = true
-		}
-	}
-
-	if contact.Twitter != "" {
-		query := datastore.NewQuery("Contact").Filter("Twitter =", contact.Twitter).Filter("CreatedBy = ", currentUser.Id).Filter("IsMasterContact =", false)
-		ks, err := query.KeysOnly().GetAll(c, nil)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return nil, nil, 0, 0, err
-		}
-
-		for i := 0; i < len(ks); i++ {
-			allKeysMap[ks[i]] = true
-		}
-	}
-
-	if contact.Instagram != "" {
-		query := datastore.NewQuery("Contact").Filter("Instagram =", contact.Instagram).Filter("CreatedBy = ", currentUser.Id).Filter("IsMasterContact =", false)
-		ks, err := query.KeysOnly().GetAll(c, nil)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return nil, nil, 0, 0, err
-		}
-
-		for i := 0; i < len(ks); i++ {
-			allKeysMap[ks[i]] = true
-		}
-	}
-
-	if contact.Website != "" {
-		query := datastore.NewQuery("Contact").Filter("Website =", contact.Website).Filter("CreatedBy = ", currentUser.Id).Filter("IsMasterContact =", false)
-		ks, err := query.KeysOnly().GetAll(c, nil)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return nil, nil, 0, 0, err
-		}
-
-		for i := 0; i < len(ks); i++ {
-			allKeysMap[ks[i]] = true
-		}
-	}
-
-	if contact.Blog != "" {
-		query := datastore.NewQuery("Contact").Filter("Blog =", contact.Blog).Filter("CreatedBy = ", currentUser.Id).Filter("IsMasterContact =", false)
-		ks, err := query.KeysOnly().GetAll(c, nil)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return nil, nil, 0, 0, err
-		}
-
-		for i := 0; i < len(ks); i++ {
-			allKeysMap[ks[i]] = true
-		}
-	}
-
-	allKeys := []*datastore.Key{}
-	for k := range allKeysMap {
-		allKeys = append(allKeys, k)
-	}
-
-	offset := gcontext.Get(r, "offset").(int)
-	limit := gcontext.Get(r, "limit").(int)
-
-	startPosition := offset
-	endPosition := startPosition + limit
-
-	if len(allKeys) < startPosition {
-		return []models.Contact{}, nil, 0, 0, err
-	}
-
-	if len(allKeys) < endPosition {
-		endPosition = len(allKeys)
-	}
-
-	subsetIds := allKeys[startPosition:endPosition]
-	contacts := []models.Contact{}
-	contacts = make([]models.Contact, len(subsetIds))
-	err = nds.GetMulti(c, subsetIds, contacts)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return contacts, nil, 0, 0, err
-	}
-
-	for i := 0; i < len(contacts); i++ {
-		contacts[i].Format(subsetIds[i], "contacts")
-	}
-
-	return contacts, nil, len(contacts), 0, nil
-}
-
 func FilterContacts(c context.Context, r *http.Request, queryType, query string) ([]models.Contact, error) {
 	// User has to be logged in
 	_, err := controllers.GetCurrentUser(c, r)
@@ -1374,7 +1198,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interf
 			newContacts = append(newContacts, contacts[i])
 		}
 
-		includes := getIncludesForContact(c, r, newContacts)
+		includes := getIncludesForContacts(c, r, newContacts)
 		return newContacts, includes, len(newContacts), 0, nil
 	}
 
@@ -1386,7 +1210,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interf
 	}
 
 	contacts := []models.Contact{contact}
-	includes := getIncludesForContact(c, r, contacts)
+	includes := getIncludesForContacts(c, r, contacts)
 
 	return contacts, includes, 0, 0, nil
 }
@@ -1825,44 +1649,5 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 
 	// Pubsub to remove ES contact
 	sync.ResourceSync(r, contact.Id, "Contact", "delete")
-	return nil, nil, nil
-}
-
-func UnSubscribeContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
-	// Get the details of the current user
-	currentId, err := utilities.StringIdToInt(id)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, err
-	}
-
-	// Update contact
-	contact, err := getContact(c, r, currentId)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, err
-	}
-
-	mediaList, err := getMediaList(c, r, contact.ListId)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, err
-	}
-
-	user, err := controllers.GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, nil, err
-	}
-
-	// Double check permissions. Admins should not be able to delete.
-	if mediaList.TeamId != user.TeamId && !permissions.AccessToObject(contact.CreatedBy, user.Id) {
-		err = errors.New("Forbidden")
-		log.Errorf(c, "%v", err)
-		return nil, nil, err
-	}
-
-	// contact.Email
-
 	return nil, nil, nil
 }

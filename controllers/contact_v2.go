@@ -125,6 +125,20 @@ func getIncludesForContactsV2(c context.Context, r *http.Request, contacts []mod
 }
 
 /*
+* Update methods
+ */
+
+func updateContactV2(c context.Context, r *http.Request, contact *models.ContactV2, updatedContact models.ContactV2) (models.ContactV2, interface{}, error) {
+	currentUser, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return *contact, nil, err
+	}
+
+	return *contact, nil, err
+}
+
+/*
 * Public methods
  */
 
@@ -184,6 +198,6 @@ func GetContactV2(c context.Context, r *http.Request, id string) (models.Contact
 		return models.ContactV2{}, nil, err
 	}
 
-	includes := getIncludesForContactsV2(c, r, []models.Contact{contact})
+	includes := getIncludesForContactsV2(c, r, []models.ContactV2{contact})
 	return contact, nil, nil
 }

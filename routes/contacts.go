@@ -41,9 +41,6 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 			return api.BaseSingleResponseHandler(controllers.GetInstagramProfileForContact(c, r, id))
 		case "instagramtimeseries":
 			return api.BaseSingleResponseHandler(controllers.GetInstagramTimeseriesForContact(c, r, id))
-		case "similar":
-			val, included, count, total, err := controllers.GetSimilarContacts(c, r, id)
-			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "feeds":
 			val, included, count, total, err := controllers.GetFeedsForContact(c, r, id)
 			return api.BaseResponseHandler(val, included, count, total, err, r)
@@ -53,12 +50,6 @@ func handleContactAction(c context.Context, r *http.Request, id string, action s
 		case "lists":
 			val, included, count, total, err := controllers.GetListsForContact(c, r, id)
 			return api.BaseResponseHandler(val, included, count, total, err, r)
-		case "database-profile":
-			return api.BaseSingleResponseHandler(controllers.GetEnrichProfile(c, r, id))
-		case "enrich":
-			return api.BaseSingleResponseHandler(controllers.EnrichProfile(c, r, id))
-		case "unsubscribe":
-			return api.BaseSingleResponseHandler(controllers.UnSubscribeContact(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")
