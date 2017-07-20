@@ -315,6 +315,38 @@ func enrichContactV2(c context.Context, r *http.Request, contact *models.Contact
 * Filter methods
  */
 
+// Bool represents if the contact exists or not
+func filterContactsV2ByEmail(c context.Context, r *http.Request, email string) ([]models.ContactV2, bool, error) {
+	user, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.ContactV2{}, false, err
+	}
+
+	ks, err := datastore.NewQuery("ContactV2").Filter("TeamId =", user.TeamId).Filter("Email =", email).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.ContactV2{}, false, err
+	}
+
+	if len(ks) == 0 {
+		return []models.ContactV2{}, true, errors.New("No contact exists with same email")
+	}
+
+	var contacts []models.ContactV2
+	contacts = make([]models.ContactV2, len(ks))
+	err = nds.GetMulti(c, ks, contacts)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.ContactV2{}, false, err
+	}
+
+	for i := 0; i < len(contacts); i++ {
+		contacts[i].Format(ks[i], "contacts_v2")
+	}
+	return contacts, false, nil
+}
+
 /*
 * Include methods
  */
@@ -471,6 +503,17 @@ func CreateContactV2(c context.Context, r *http.Request) ([]models.ContactV2, in
 		newContacts := []models.ContactV2{}
 		for i := 0; i < len(contacts); i++ {
 			// Check if the contact has been created yet or not
+			duplicateContact, contactExists, err := filterContactsV2ByEmail(c, r, contacts[i].Email)
+			if contactExists {
+				newContacts = append(newContacts, duplicateContact[0])
+				continue
+			}
+
+			// If error from filterContactsV2ByEmail has an issue
+			// create the contact anyways
+			if err != nil {
+				log.Errorf(c, "%v", err)
+			}
 
 			// If the contact hasn't been created then we create it
 			_, err = createV2Contact(c, r, &contacts[i])
@@ -485,6 +528,13 @@ func CreateContactV2(c context.Context, r *http.Request) ([]models.ContactV2, in
 		return newContacts, includes, len(newContacts), 0, nil
 	}
 	// Check if the contact has been created yet or not
+	duplicateContact, contactExists, err := filterContactsV2ByEmail(c, r, contact.Email)
+	if contactExists {
+		contacts := []models.ContactV2{duplicateContact[0]}
+		includes := getIncludesForContactsV2(c, r, contacts)
+
+		return contacts, includes, 0, 0, nil
+	}
 
 	// Create contact
 	_, err = createV2Contact(c, r, &contact)
