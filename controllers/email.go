@@ -1405,7 +1405,9 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 
 	// Check to see if there is no sendat date or if date is in the past
 	if val.SendAt.IsZero() || val.SendAt.Before(time.Now()) {
-		emailSent, emailId, err := emails.SendEmail(r, *val, user, files)
+		userBilling, _ := controllers.GetUserBilling(c, r, user)
+		sendGridKey := emails.GetSendGridKeyForUser(userBilling)
+		emailSent, emailId, err := emails.SendEmail(r, *val, user, files, sendGridKey)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return *val, nil, err
@@ -1725,7 +1727,9 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 
 	// Check to see if there is no sendat date or if date is in the past
 	if val.SendAt.IsZero() || val.SendAt.Before(time.Now()) {
-		emailSent, emailId, err := emails.SendEmailAttachment(r, *val, user, files, bytesArray, attachmentType, fileNames)
+		userBilling, _ := controllers.GetUserBilling(c, r, user)
+		sendGridKey := emails.GetSendGridKeyForUser(userBilling)
+		emailSent, emailId, err := emails.SendEmailAttachment(r, *val, user, files, bytesArray, attachmentType, fileNames, sendGridKey)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return *val, nil, err
