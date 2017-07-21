@@ -78,7 +78,6 @@ func createV2Contact(c context.Context, r *http.Request, ct *models.ContactV2) (
 	}
 
 	ct.TeamId = currentUser.TeamId
-
 	ct.FormatName()
 	ct.Normalize()
 
@@ -486,73 +485,53 @@ func GetContactV2(c context.Context, r *http.Request, id string) (models.Contact
 
 func CreateContactV2(c context.Context, r *http.Request) ([]models.ContactV2, interface{}, int, int, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
-
 	decoder := ffjson.NewDecoder()
 	var contact models.ContactV2
 	err := decoder.Decode(buf, &contact)
 
+	contacts := []models.ContactV2{}
 	if err != nil {
-		var contacts []models.ContactV2
+		var parsedContacts []models.ContactV2
 
 		arrayDecoder := ffjson.NewDecoder()
-		err = arrayDecoder.Decode(buf, &contacts)
+		err = arrayDecoder.Decode(buf, &parsedContacts)
 
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return []models.ContactV2{}, nil, 0, 0, err
 		}
 
-		newContacts := []models.ContactV2{}
-		for i := 0; i < len(contacts); i++ {
-			// Check if the contact has been created yet or not
-			duplicateContact, contactExists, err := filterContactsV2ByEmail(c, r, contacts[i].Email)
-			if contactExists && err == nil {
-				newContacts = append(newContacts, duplicateContact[0])
-				continue
-			}
+		contacts = append(contacts, parsedContacts...)
+	} else {
+		contacts = append(contacts, contact)
+	}
 
-			// If error from filterContactsV2ByEmail has an issue
-			// create the contact anyways
-			if err != nil {
-				log.Errorf(c, "%v", err)
-			}
-
-			// If the contact hasn't been created then we create it
-			_, err = createV2Contact(c, r, &contacts[i])
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return []models.ContactV2{}, nil, 0, 0, err
-			}
-			newContacts = append(newContacts, contacts[i])
+	newContacts := []models.ContactV2{}
+	for i := 0; i < len(contacts); i++ {
+		// Check if the contact has been created yet or not
+		duplicateContact, contactExists, err := filterContactsV2ByEmail(c, r, contacts[i].Email)
+		if contactExists && err == nil {
+			newContacts = append(newContacts, duplicateContact[0])
+			continue
 		}
 
-		includes := getIncludesForContactsV2(c, r, newContacts)
-		return newContacts, includes, len(newContacts), 0, nil
-	}
-	// Check if the contact has been created yet or not
-	duplicateContact, contactExists, err := filterContactsV2ByEmail(c, r, contact.Email)
-	if contactExists && err == nil {
-		contacts := []models.ContactV2{duplicateContact[0]}
-		includes := getIncludesForContactsV2(c, r, contacts)
+		// If error from filterContactsV2ByEmail has an issue
+		// create the contact anyways
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		}
 
-		return contacts, includes, 0, 0, nil
-	}
-
-	if err != nil {
-		log.Errorf(c, "%v", err)
-	}
-
-	// Create contact
-	_, err = createV2Contact(c, r, &contact)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.ContactV2{}, nil, 0, 0, err
+		// If the contact hasn't been created then we create it
+		_, err = createV2Contact(c, r, &contacts[i])
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return []models.ContactV2{}, nil, 0, 0, err
+		}
+		newContacts = append(newContacts, contacts[i])
 	}
 
-	contacts := []models.ContactV2{contact}
-	includes := getIncludesForContactsV2(c, r, contacts)
-
-	return contacts, includes, 0, 0, nil
+	includes := getIncludesForContactsV2(c, r, newContacts)
+	return newContacts, includes, len(newContacts), 0, nil
 }
 
 /*
