@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -840,140 +839,19 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 		return []models.Contact{}, nil, 0, 0, err
 	}
 
-	instagramUsers := []string{}
-	twitterUsers := []string{}
-
 	for i := 0; i < len(contacts); i++ {
-		contacts[i].Id = subsetIds[i]
-		contacts[i].Type = "contacts"
-
-		if contacts[i].Instagram != "" {
-			instagramUsers = append(instagramUsers, contacts[i].Instagram)
-		}
-
-		if contacts[i].Twitter != "" {
-			twitterUsers = append(twitterUsers, contacts[i].Twitter)
-		}
-
 		if contacts[i].ListId == 0 {
 			contacts[i].ListId = mediaList.Id
 			contacts[i].Save(c, r)
 		}
+
+		contacts[i].Id = subsetIds[i]
+		contacts[i].Type = "contacts"
 	}
 
-	readOnlyPresent := []string{}
-	instagramTimeseries := []apiSearch.InstagramTimeseries{}
-	twitterTimeseries := []apiSearch.TwitterTimeseries{}
-
-	// Check if there are special fields we need to get data for
-	for i := 0; i < len(mediaList.FieldsMap); i++ {
-		if mediaList.FieldsMap[i].ReadOnly && !mediaList.FieldsMap[i].Hidden {
-			readOnlyPresent = append(readOnlyPresent, mediaList.FieldsMap[i].Value)
-			if strings.Contains(mediaList.FieldsMap[i].Value, "instagram") {
-				if len(instagramTimeseries) == 0 {
-					instagramTimeseries, _ = apiSearch.SearchInstagramTimeseriesByUsernames(c, r, instagramUsers)
-				}
-			}
-			if strings.Contains(mediaList.FieldsMap[i].Value, "twitter") {
-				if len(twitterTimeseries) == 0 {
-					twitterTimeseries, _ = apiSearch.SearchTwitterTimeseriesByUsernames(c, r, twitterUsers)
-				}
-			}
-		}
-	}
-
-	if len(readOnlyPresent) > 0 {
-		customFieldInstagramUsernameToValue := map[string]apiSearch.InstagramTimeseries{}
-		customFieldTwitterUsernameToValue := map[string]apiSearch.TwitterTimeseries{}
-
-		if len(instagramTimeseries) > 0 {
-			for i := 0; i < len(instagramTimeseries); i++ {
-				lowerCaseUsername := strings.ToLower(instagramTimeseries[i].Username)
-				customFieldInstagramUsernameToValue[lowerCaseUsername] = instagramTimeseries[i]
-			}
-		}
-
-		if len(twitterTimeseries) > 0 {
-			for i := 0; i < len(twitterTimeseries); i++ {
-				lowerCaseUsername := strings.ToLower(twitterTimeseries[i].Username)
-				customFieldTwitterUsernameToValue[lowerCaseUsername] = twitterTimeseries[i]
-			}
-		}
-
-		for i := 0; i < len(contacts); i++ {
-			for x := 0; x < len(readOnlyPresent); x++ {
-				customField := models.CustomContactField{}
-				customField.Name = readOnlyPresent[x]
-
-				lowerCaseInstagramUsername := strings.ToLower(contacts[i].Instagram)
-				lowerCaseTwitterUsername := strings.ToLower(contacts[i].Twitter)
-
-				if lowerCaseInstagramUsername != "" {
-					if _, ok := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]; ok {
-						instagramProfile := customFieldInstagramUsernameToValue[lowerCaseInstagramUsername]
-
-						if customField.Name == "instagramfollowers" {
-							customField.Value = strconv.Itoa(instagramProfile.Followers)
-						} else if customField.Name == "instagramfollowing" {
-							customField.Value = strconv.Itoa(instagramProfile.Following)
-						} else if customField.Name == "instagramlikes" {
-							customField.Value = strconv.Itoa(instagramProfile.Likes)
-						} else if customField.Name == "instagramcomments" {
-							customField.Value = strconv.Itoa(instagramProfile.Comments)
-						} else if customField.Name == "instagramposts" {
-							customField.Value = strconv.Itoa(instagramProfile.Posts)
-						}
-					}
-				}
-
-				if lowerCaseTwitterUsername != "" {
-					if _, ok := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]; ok {
-						twitterProfile := customFieldTwitterUsernameToValue[lowerCaseTwitterUsername]
-
-						if customField.Name == "twitterfollowers" {
-							customField.Value = strconv.Itoa(twitterProfile.Followers)
-						} else if customField.Name == "twitterfollowing" {
-							customField.Value = strconv.Itoa(twitterProfile.Following)
-						} else if customField.Name == "twitterlikes" {
-							customField.Value = strconv.Itoa(twitterProfile.Likes)
-						} else if customField.Name == "twitterretweets" {
-							customField.Value = strconv.Itoa(twitterProfile.Retweets)
-						} else if customField.Name == "twitterposts" {
-							customField.Value = strconv.Itoa(twitterProfile.Posts)
-						}
-					}
-				}
-
-				if customField.Name == "latestheadline" {
-					// Get the feed of the contact
-					headlines, _, _, _, err := GetHeadlinesForContactById(c, r, contacts[i].Id)
-
-					// Set the value of the post name to the user
-					if err == nil && len(headlines) > 0 {
-						customField.Value = headlines[0].Title
-					}
-				}
-
-				if customField.Name == "lastcontacted" {
-					emails, _, _, err := GetOrderedEmailsForContact(c, r, contacts[i])
-
-					// Set the value of the post name to the user
-					if err == nil && len(emails) > 0 {
-						// The processing here is a little more complex
-						// customField.Value = emails[0].Created
-						if !emails[0].SendAt.IsZero() {
-							customField.Value = emails[0].SendAt.Format(time.RFC3339)
-						} else {
-							customField.Value = emails[0].Created.Format(time.RFC3339)
-						}
-					}
-				}
-
-				if customField.Value != "" {
-					contacts[i].CustomFields = append(contacts[i].CustomFields, customField)
-				}
-			}
-		}
+	contacts, err = ContactsToDefaultFields(c, r, contacts, mediaList)
+	if err != nil {
+		log.Errorf(c, "%v", err)
 	}
 
 	// Add includes

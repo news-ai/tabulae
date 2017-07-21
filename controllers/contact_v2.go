@@ -11,6 +11,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 
+	gcontext "github.com/gorilla/context"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
@@ -433,6 +434,16 @@ func GetContactsV2(c context.Context, r *http.Request) ([]models.ContactV2, inte
 
 	// If the user is currently active
 	if user.IsActive {
+		// Search method
+		queryField := gcontext.Get(r, "q").(string)
+		if queryField != "" {
+			fieldSelector := strings.Split(queryField, ":")
+			if len(fieldSelector) != 2 {
+			} else {
+			}
+		}
+
+		// If there is no search query
 		query := datastore.NewQuery("ContactV2").Filter("TeamId =", user.TeamId)
 		query = controllers.ConstructQuery(query, r)
 		ks, err := query.KeysOnly().GetAll(c, nil)
@@ -615,7 +626,3 @@ func UpdateBatchContactV2(c context.Context, r *http.Request) ([]models.ContactV
 
 	return newContacts, nil, len(newContacts), 0, nil
 }
-
-/*
-* Delete methods
- */
