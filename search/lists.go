@@ -48,7 +48,7 @@ func (l *Lists) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchList(c context.Context, elasticQuery elastic.ElasticQueryMust) ([]Lists, int, error) {
+func searchList(c context.Context, elasticQuery interface{}) ([]Lists, int, error) {
 	hits, err := elasticList.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -109,7 +109,7 @@ func SearchListsByTag(c context.Context, r *http.Request, tag string, userId int
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	elasticQuery := elastic.ElasticQueryMust{}
+	elasticQuery := elastic.ElasticQueryMustWithSort{}
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
@@ -124,6 +124,11 @@ func SearchListsByTag(c context.Context, r *http.Request, tag string, userId int
 	elasticTagQuery := apiSearch.ElasticTagQuery{}
 	elasticTagQuery.Term.Tag = tag
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticTagQuery)
+
+	elasticCreatedQuery := apiSearch.ElasticSortDataCreatedQuery{}
+	elasticCreatedQuery.DataCreated.Order = "desc"
+	elasticCreatedQuery.DataCreated.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
 
 	elasticQuery.MinScore = float32(0.5)
 	return searchList(c, elasticQuery)

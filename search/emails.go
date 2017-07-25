@@ -174,9 +174,13 @@ func SearchEmailsByQueryFields(c context.Context, r *http.Request, user apiModel
 	elasticCancelQuery := apiSearch.ElasticCancelQuery{}
 	elasticCancelQuery.Term.Cancel = false
 
+	elasticArchivedQuery := apiSearch.ElasticArchivedQuery{}
+	elasticArchivedQuery.Term.Archived = false
+
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsSentQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCancelQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticArchivedQuery)
 
 	if emailDate != "" {
 		elasticCreatedFilterQuery := apiSearch.ElasticCreatedRangeQuery{}
@@ -243,6 +247,9 @@ func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user apiMo
 	elasticCancelQuery := apiSearch.ElasticCancelQuery{}
 	elasticCancelQuery.Term.Cancel = false
 
+	elasticDelieveredQuery := apiSearch.ElasticDelieveredQuery{}
+	elasticDelieveredQuery.Term.Delievered = true
+
 	elasticCreatedFilterQuery := apiSearch.ElasticCreatedRangeQuery{}
 	elasticCreatedFilterQuery.Range.DataCreated.From = emailDate + "T00:00:00"
 	elasticCreatedFilterQuery.Range.DataCreated.To = emailDate + "T23:59:59"
@@ -262,6 +269,7 @@ func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user apiMo
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsSentQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCancelQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedFilterQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticDelieveredQuery)
 
 	elasticCreatedQuery := apiSearch.ElasticSortDataCreatedQuery{}
 	elasticCreatedQuery.DataCreated.Order = "desc"

@@ -13,8 +13,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/models"
-	"github.com/news-ai/tabulae/notifications"
 	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/errors"
@@ -59,7 +57,6 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 		if singleEvent.SgMessageID == "" {
 			email, _, err := controllers.GetEmailUnauthorized(c, r, singleEvent.ID)
 			emailIds = append(emailIds, email.Id)
-			notification := models.NotificationChange{}
 
 			// If there is an error
 			if err != nil {
@@ -74,7 +71,7 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 			switch singleEvent.Event {
 			case "open":
 				for x := 0; x < singleEvent.Count; x++ {
-					_, notification, err = controllers.MarkOpened(c, r, &email)
+					_, err = controllers.MarkOpened(c, r, &email)
 					if err != nil {
 						hasErrors = true
 						log.Errorf(c, "%v", singleEvent)
@@ -83,7 +80,7 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 				}
 			case "click":
 				for x := 0; x < singleEvent.Count; x++ {
-					_, notification, err = controllers.MarkClicked(c, r, &email)
+					_, err = controllers.MarkClicked(c, r, &email)
 					if err != nil {
 						hasErrors = true
 						log.Errorf(c, "%v", singleEvent)
@@ -94,20 +91,11 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
 			}
-
-			// Send user notification
-			if notification.Verb != "" {
-				// Send the notification to the user if they have a socket open
-				notificationChanges := []models.NotificationChange{}
-				notificationChanges = append(notificationChanges, notification)
-				notifications.SendNotification(r, notificationChanges, email.CreatedBy)
-			}
 		} else {
 			// Validate email exists with particular SendGridId
 			sendGridId := strings.Split(singleEvent.SgMessageID, ".")[0]
 			email, err := controllers.FilterEmailBySendGridID(c, sendGridId)
 			emailIds = append(emailIds, email.Id)
-			notification := models.NotificationChange{}
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
@@ -119,7 +107,7 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 			// https://sendgrid.com/docs/API_Reference/Webhooks/event.html
 			switch singleEvent.Event {
 			case "bounce":
-				_, notification, err = controllers.MarkBounced(c, r, &email, singleEvent.Reason)
+				_, err = controllers.MarkBounced(c, r, &email, singleEvent.Reason)
 				if err != nil {
 					hasErrors = true
 					log.Errorf(c, "%v", singleEvent)
@@ -133,7 +121,7 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 					log.Errorf(c, "%v", err)
 				}
 			case "spamreport":
-				_, notification, err = controllers.MarkSpam(c, r, &email)
+				_, err = controllers.MarkSpam(c, r, &email)
 				if err != nil {
 					hasErrors = true
 					log.Errorf(c, "%v", singleEvent)
@@ -156,14 +144,6 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 			default:
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
-			}
-
-			// Send user notification
-			if notification.Verb != "" {
-				// Send the notification to the user if they have a socket open
-				notificationChanges := []models.NotificationChange{}
-				notificationChanges = append(notificationChanges, notification)
-				notifications.SendNotification(r, notificationChanges, email.CreatedBy)
 			}
 		}
 	}

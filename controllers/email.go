@@ -1761,9 +1761,8 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 	return *val, nil, nil
 }
 
-func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason string) (*models.Email, models.NotificationChange, error) {
+func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason string) (*models.Email, error) {
 	controllers.SetUser(c, r, e.CreatedBy)
-	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "BOUNCED", "")
 
 	contacts, err := filterContactByEmail(c, e.To)
 	if err != nil {
@@ -1776,21 +1775,19 @@ func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason str
 	}
 
 	_, err = e.MarkBounced(c, reason)
-	return e, notification, err
+	return e, err
 }
 
-func MarkSpam(c context.Context, r *http.Request, e *models.Email) (*models.Email, models.NotificationChange, error) {
+func MarkSpam(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
 	controllers.SetUser(c, r, e.CreatedBy)
-	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "SPAM", "")
 	_, err := e.MarkSpam(c)
-	return e, notification, err
+	return e, err
 }
 
-func MarkClicked(c context.Context, r *http.Request, e *models.Email) (*models.Email, models.NotificationChange, error) {
+func MarkClicked(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
 	controllers.SetUser(c, r, e.CreatedBy)
-	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "CLICKED", "")
 	_, err := e.MarkClicked(c)
-	return e, notification, err
+	return e, err
 }
 
 func MarkDelivered(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
@@ -1798,11 +1795,10 @@ func MarkDelivered(c context.Context, r *http.Request, e *models.Email) (*models
 	return e, err
 }
 
-func MarkOpened(c context.Context, r *http.Request, e *models.Email) (*models.Email, models.NotificationChange, error) {
+func MarkOpened(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
 	controllers.SetUser(c, r, e.CreatedBy)
-	notification, _ := LogNotificationForResource(c, r, "emails", e.Id, "OPENED", "")
 	_, err := e.MarkOpened(c)
-	return e, notification, err
+	return e, err
 }
 
 func MarkSendgridOpen(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
