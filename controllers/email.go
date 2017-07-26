@@ -170,7 +170,7 @@ func filterOrderedEmailbyContactId(c context.Context, r *http.Request, contact m
 		return []models.Email{}, err
 	}
 
-	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("To =", contact.Email).Filter("IsSent =", true).Order("-Created")
+	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("To =", contact.Email).Filter("IsSent =", true).Filter("Cancel =", false).Order("-Created")
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)

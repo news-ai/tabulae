@@ -690,12 +690,23 @@ func ContactsToDefaultFields(c context.Context, r *http.Request, contacts []mode
 
 					// Set the value of the post name to the user
 					if err == nil && len(emails) > 0 {
+						lastUnarchivedEmail := -1
+						for y := 0; y < len(emails); y++ {
+							if !emails[y].Archived {
+								lastUnarchivedEmail = y
+								break
+							}
+						}
 						// The processing here is a little more complex
 						// customField.Value = emails[0].Created
-						if !emails[0].SendAt.IsZero() {
-							customField.Value = emails[0].SendAt.Format(time.RFC3339)
-						} else {
-							customField.Value = emails[0].Created.Format(time.RFC3339)
+						// Also, don't count it if the email has been
+						// archived. So we look for the last unarchived email.
+						if lastUnarchivedEmail != -1 && lastUnarchivedEmail < len(emails) {
+							if !emails[lastUnarchivedEmail].SendAt.IsZero() {
+								customField.Value = emails[lastUnarchivedEmail].SendAt.Format(time.RFC3339)
+							} else {
+								customField.Value = emails[lastUnarchivedEmail].Created.Format(time.RFC3339)
+							}
 						}
 					}
 				}
