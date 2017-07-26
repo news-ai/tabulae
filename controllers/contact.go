@@ -1229,7 +1229,14 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interf
 		}
 
 		includes := getIncludesForContacts(c, r, newContacts)
-		return newContacts, includes, len(newContacts), 0, nil
+		mediaList, err := getMediaList(c, r, contacts[0].ListId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return newContacts, includes, len(newContacts), 0, nil
+		}
+
+		contactsWithDefaults, err := ContactsToDefaultFields(c, r, newContacts, mediaList)
+		return contactsWithDefaults, includes, len(contactsWithDefaults), 0, nil
 	}
 
 	// Create contact
@@ -1241,8 +1248,14 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interf
 
 	contacts := []models.Contact{contact}
 	includes := getIncludesForContacts(c, r, contacts)
+	mediaList, err := getMediaList(c, r, contacts[0].ListId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return contacts, includes, len(contacts), 0, nil
+	}
 
-	return contacts, includes, 0, 0, nil
+	contactsWithDefaults, err := ContactsToDefaultFields(c, r, contacts, mediaList)
+	return contactsWithDefaults, includes, 0, 0, nil
 }
 
 // Does a ES sync in parse package & Twitter sync here
