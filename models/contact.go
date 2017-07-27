@@ -79,7 +79,8 @@ type Contact struct {
 
 	Tags []string `json:"tags"`
 
-	TeamId int64 `json:"teamid"`
+	TeamId   int64 `json:"teamid"`
+	ClientId int64 `json:"clientid"`
 
 	LinkedInUpdated time.Time `json:"linkedinupdated"`
 }

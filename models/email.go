@@ -75,6 +75,7 @@ type Email struct {
 	ListId     int64 `json:"listid" apiModel:"List"`
 	TemplateId int64 `json:"templateid" apiModel:"Template"`
 	ContactId  int64 `json:"contactId" apiModel:"Contact"`
+	ClientId   int64 `json:"clientid"`
 
 	FromEmail string `json:"fromemail"`
 

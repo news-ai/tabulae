@@ -29,8 +29,10 @@ type CustomFieldsMap struct {
 type MediaList struct {
 	apiModels.Base
 
-	Name   string `json:"name"`
-	Client string `json:"client"`
+	Name string `json:"name"`
+
+	Client   string `json:"client"`
+	ClientId int64  `json:"clientid"`
 
 	Contacts []int64 `json:"contacts" apiModel:"Contact"`
 
