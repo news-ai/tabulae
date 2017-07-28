@@ -132,8 +132,9 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 		}
 
 		if emailCampaign.Delivered > 0 && emailCampaign.pastDelivered > 0 {
-			emailCampaign.UniqueOpensPercentage = 100 * float32(float32(emailCampaign.UniqueOpens)/float32(emailCampaign.Delivered))
-			emailCampaign.UniqueClicksPercentage = 100 * float32(float32(emailCampaign.UniqueClicks)/float32(emailCampaign.Delivered))
+			deliveredNumber := emailCampaign.Delivered - emailCampaign.Bounces
+			emailCampaign.UniqueOpensPercentage = 100 * float32(float32(emailCampaign.UniqueOpens)/float32(deliveredNumber))
+			emailCampaign.UniqueClicksPercentage = 100 * float32(float32(emailCampaign.UniqueClicks)/float32(deliveredNumber))
 			emailCampaign.Show = true
 		}
 
