@@ -283,3 +283,13 @@ func (ml *MediaList) Delete(c context.Context) (*MediaList, error) {
 	}
 	return ml, nil
 }
+
+func (ml *MediaList) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := apiModels.SetField(ml, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

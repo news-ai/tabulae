@@ -2,7 +2,6 @@ package search
 
 import (
 	"net/http"
-	"time"
 
 	"golang.org/x/net/context"
 
@@ -10,8 +9,9 @@ import (
 
 	"google.golang.org/appengine/log"
 
-	apiModels "github.com/news-ai/api/models"
 	apiSearch "github.com/news-ai/api/search"
+
+	tabulaeModels "github.com/news-ai/tabulae/models"
 
 	elastic "github.com/news-ai/elastic-appengine"
 )
@@ -20,47 +20,19 @@ var (
 	elasticList *elastic.Elastic
 )
 
-type Lists struct {
-	Type string `json:"type"`
-
-	Archived   bool      `json:"archived"`
-	Subscribed bool      `json:"subscribed"`
-	PublicList bool      `json:"publiclist"`
-	FileUpload int64     `json:"fileupload"`
-	Created    time.Time `json:"created"`
-	Updated    time.Time `json:"updated"`
-	CreatedBy  int64     `json:"createdby"`
-	Client     string    `json:"client"`
-	Name       string    `json:"name"`
-	Tags       []string  `json:"tags"`
-	Id         int64     `json:"id"`
-	TeamId     int64     `json:"teamid"`
-	IsDeleted  bool      `json:"isdeleted"`
-}
-
-func (l *Lists) FillStruct(m map[string]interface{}) error {
-	for k, v := range m {
-		err := apiModels.SetField(l, k, v)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func searchList(c context.Context, elasticQuery interface{}) ([]Lists, int, error) {
+func searchList(c context.Context, elasticQuery interface{}) ([]tabulaeModels.MediaList, int, error) {
 	hits, err := elasticList.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return []Lists{}, 0, err
+		return []tabulaeModels.MediaList{}, 0, err
 	}
 
 	listHits := hits.Hits
-	lists := []Lists{}
+	lists := []tabulaeModels.MediaList{}
 	for i := 0; i < len(listHits); i++ {
 		rawList := listHits[i].Source.Data
 		rawMap := rawList.(map[string]interface{})
-		contact := Lists{}
+		contact := tabulaeModels.MediaList{}
 		err := contact.FillStruct(rawMap)
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -73,9 +45,9 @@ func searchList(c context.Context, elasticQuery interface{}) ([]Lists, int, erro
 	return lists, hits.Total, nil
 }
 
-func SearchListsByClientName(c context.Context, r *http.Request, clientName string, userId int64) ([]Lists, int, error) {
+func SearchListsByClientName(c context.Context, r *http.Request, clientName string, userId int64) ([]tabulaeModels.MediaList, int, error) {
 	if clientName == "" {
-		return []Lists{}, 0, nil
+		return []tabulaeModels.MediaList{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -101,9 +73,9 @@ func SearchListsByClientName(c context.Context, r *http.Request, clientName stri
 	return searchList(c, elasticQuery)
 }
 
-func SearchListsByTag(c context.Context, r *http.Request, tag string, userId int64) ([]Lists, int, error) {
+func SearchListsByTag(c context.Context, r *http.Request, tag string, userId int64) ([]tabulaeModels.MediaList, int, error) {
 	if tag == "" {
-		return []Lists{}, 0, nil
+		return []tabulaeModels.MediaList{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -134,9 +106,9 @@ func SearchListsByTag(c context.Context, r *http.Request, tag string, userId int
 	return searchList(c, elasticQuery)
 }
 
-func SearchListsByAll(c context.Context, r *http.Request, query string, userId int64) ([]Lists, int, error) {
+func SearchListsByAll(c context.Context, r *http.Request, query string, userId int64) ([]tabulaeModels.MediaList, int, error) {
 	if query == "" {
-		return []Lists{}, 0, nil
+		return []tabulaeModels.MediaList{}, 0, nil
 	}
 
 	offset := gcontext.Get(r, "offset").(int)
@@ -162,7 +134,7 @@ func SearchListsByAll(c context.Context, r *http.Request, query string, userId i
 	return searchList(c, elasticQuery)
 }
 
-func SearchListsByFieldSelector(c context.Context, r *http.Request, fieldSelector string, query string, userId int64) ([]Lists, int, error) {
+func SearchListsByFieldSelector(c context.Context, r *http.Request, fieldSelector string, query string, userId int64) ([]tabulaeModels.MediaList, int, error) {
 	if fieldSelector == "client" {
 		return SearchListsByClientName(c, r, query, userId)
 	}
