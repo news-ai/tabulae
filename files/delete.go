@@ -23,10 +23,10 @@ func DeleteFile(r *http.Request, file models.File) error {
 	}
 
 	client, err := storage.NewClient(c)
+	defer client.Close()
 	if err != nil {
 		return err
 	}
-	defer client.Close()
 
 	// Setup the bucket to upload the file
 	clientBucket := client.Bucket(bucket)

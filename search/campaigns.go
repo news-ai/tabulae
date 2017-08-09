@@ -37,7 +37,8 @@ type EmailCampaignResponse struct {
 	UniqueClicksPercentage float32 `json:"uniqueClicksPercentage"`
 	Bounces                int     `json:"bounces"`
 
-	Show bool `json:"show"`
+	IsScheduled bool `json:"isscheduled"`
+	Show        bool `json:"show"`
 }
 
 type EmailCampaignRequest struct {

@@ -2,6 +2,7 @@ package search
 
 import (
 	"net/http"
+	"strings"
 
 	"golang.org/x/net/context"
 
@@ -14,6 +15,8 @@ import (
 
 	elastic "github.com/news-ai/elastic-appengine"
 	"github.com/news-ai/tabulae/models"
+
+	"github.com/news-ai/web/utilities"
 )
 
 var (
@@ -137,13 +140,20 @@ func SearchEmailsByQuery(c context.Context, r *http.Request, user apiModels.User
 	elasticCancelQuery := apiSearch.ElasticCancelQuery{}
 	elasticCancelQuery.Term.Cancel = false
 
-	elasticMatchQuery := elastic.ElasticMatchQuery{}
-	elasticMatchQuery.Match.All = searchQuery
-
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCreatedByQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsSentQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticCancelQuery)
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
+
+	email := strings.Replace(searchQuery, "\"", "", -1)
+	if utilities.ValidateEmailFormat(email) {
+		elasticEmailToQuery := apiSearch.ElasticEmailToQuery{}
+		elasticEmailToQuery.Term.To = email
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticEmailToQuery)
+	} else {
+		elasticMatchQuery := elastic.ElasticMatchQuery{}
+		elasticMatchQuery.Match.All = searchQuery
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
+	}
 
 	elasticCreatedQuery := apiSearch.ElasticSortDataCreatedQuery{}
 	elasticCreatedQuery.DataCreated.Order = "desc"

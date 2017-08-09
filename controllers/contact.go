@@ -1033,7 +1033,11 @@ func GetEmailsForContactById(c context.Context, r *http.Request, currentId int64
 		return nil, nil, 0, 0, err
 	}
 
-	emails, err := filterEmailbyContactId(c, r, contact.Id)
+	if contact.Email == "" {
+		return []models.Email{}, nil, 0, 0, nil
+	}
+
+	emails, err := filterEmailbyContactEmail(c, r, contact.Email)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, nil, 0, 0, err

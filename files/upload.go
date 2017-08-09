@@ -21,10 +21,10 @@ func UploadFile(r *http.Request, fileName string, file io.Reader, userId, listId
 	}
 
 	client, err := storage.NewClient(c)
+	defer client.Close()
 	if err != nil {
 		return models.File{}, err
 	}
-	defer client.Close()
 
 	// Setup the bucket to upload the file
 	clientBucket := client.Bucket(bucket)
@@ -61,10 +61,10 @@ func UploadImage(r *http.Request, originalFilename string, fileName string, file
 	}
 
 	client, err := storage.NewClient(c)
+	defer client.Close()
 	if err != nil {
 		return models.File{}, err
 	}
-	defer client.Close()
 
 	// Setup the bucket to upload the file
 	clientBucket := client.Bucket(bucket)
@@ -105,10 +105,10 @@ func UploadAttachment(r *http.Request, originalFilename, fileName string, file i
 	}
 
 	client, err := storage.NewClient(c)
+	defer client.Close()
 	if err != nil {
 		return models.File{}, err
 	}
-	defer client.Close()
 
 	// Setup the bucket to upload the file
 	clientBucket := client.Bucket(bucket)

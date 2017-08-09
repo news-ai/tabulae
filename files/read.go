@@ -17,10 +17,10 @@ func ReadFile(r *http.Request, fileId string) ([]byte, string, error) {
 	}
 
 	client, err := storage.NewClient(c)
+	defer client.Close()
 	if err != nil {
 		return nil, "", err
 	}
-	defer client.Close()
 
 	file, err := getFile(r, fileId)
 	if err != nil {
@@ -29,10 +29,10 @@ func ReadFile(r *http.Request, fileId string) ([]byte, string, error) {
 
 	clientBucket := client.Bucket(bucket)
 	rc, err := clientBucket.Object(file.FileName).NewReader(c)
+	defer rc.Close()
 	if err != nil {
 		return nil, "", err
 	}
-	defer rc.Close()
 
 	data, err := ioutil.ReadAll(rc)
 	if err != nil {
