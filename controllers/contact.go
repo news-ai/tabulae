@@ -692,7 +692,7 @@ func ContactsToDefaultFields(c context.Context, r *http.Request, contacts []mode
 					if err == nil && len(emails) > 0 {
 						lastUnarchivedEmail := -1
 						for y := 0; y < len(emails); y++ {
-							if !emails[y].Archived {
+							if !emails[y].Archived && !emails[y].Cancel {
 								lastUnarchivedEmail = y
 								break
 							}
@@ -706,6 +706,15 @@ func ContactsToDefaultFields(c context.Context, r *http.Request, contacts []mode
 								customField.Value = emails[lastUnarchivedEmail].SendAt.Format(time.RFC3339)
 							} else {
 								customField.Value = emails[lastUnarchivedEmail].Created.Format(time.RFC3339)
+							}
+
+							// Outliar checks
+							if customField.Value != "" && emails[lastUnarchivedEmail].IsSent {
+								// Sometimes email is marked as sent, but hasn't actually been sent
+								// because Gmail rejected it. This is to check that.
+								if emails[lastUnarchivedEmail].Method == "gmail" && emails[lastUnarchivedEmail].GmailId == "" {
+									customField.Value = ""
+								}
 							}
 						}
 					}
