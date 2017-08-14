@@ -138,7 +138,7 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 				// For some reason if more people opened it then the number of
 				// emails that were delivered then we set a ceiling of 100%
 				if emailCampaign.UniqueOpens > deliveredNumber {
-					emailCampaign.UniqueClicks = deliveredNumber
+					emailCampaign.UniqueOpens = deliveredNumber
 				}
 
 				emailCampaign.UniqueOpensPercentage = 100 * float32(float32(emailCampaign.UniqueOpens)/float32(deliveredNumber))

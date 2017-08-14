@@ -100,6 +100,26 @@ func EmailResourceBulkSync(r *http.Request, emailIds []int64) error {
 	return nil
 }
 
+func UserResourceBulkSync(r *http.Request, userIds []int64) error {
+	tempUserResourceIds := []string{}
+	for i := 0; i < len(userIds); i++ {
+		tempUserResourceIds = append(tempUserResourceIds, strconv.FormatInt(userIds[i], 10))
+	}
+
+	topicName := UserBulkTopicID
+	data := map[string]string{
+		"UserId": strings.Join(tempUserResourceIds, ","),
+		"Method": "create",
+	}
+
+	err := sync(r, data, topicName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func ListUploadResourceBulkSync(r *http.Request, listId int64, contactIds []int64, publicationIds []int64) error {
 	tempContactResourceIds := []string{}
 	for i := 0; i < len(contactIds); i++ {
