@@ -221,7 +221,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 		} else {
 			// If email is sent through SendGrid
 			// and if it doesn't have a sendGridId
-			// means that it hasn't been sent yet (for sure)
+			// means that it hasn't been sent yet (pretty sure)
 			// unless there was a freak event.
 			if !schedueled[i].SendAt.IsZero() && schedueled[i].SendGridId == "" {
 				log.Infof(c, "%v", schedueled[i])

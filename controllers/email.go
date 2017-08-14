@@ -431,6 +431,13 @@ func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, int
 		return []models.Email{}, nil, 0, 0, err
 	}
 
+	queryNoLimit := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("SendAt >=", time.Now()).Filter("Cancel =", false).Filter("IsSent =", true)
+	amountOfKeys, err := queryNoLimit.KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, nil, 0, 0, err
+	}
+
 	emails = make([]models.Email, len(ks))
 	err = nds.GetMulti(c, ks, emails)
 	if err != nil {
@@ -454,7 +461,7 @@ func GetScheduledEmails(c context.Context, r *http.Request) ([]models.Email, int
 		includes[i+len(mediaLists)] = contacts[i]
 	}
 
-	return emails, includes, len(emails), 0, nil
+	return emails, includes, len(emails), len(amountOfKeys), nil
 }
 
 func GetArchivedEmails(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {

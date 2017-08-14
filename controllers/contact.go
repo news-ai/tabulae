@@ -709,7 +709,8 @@ func ContactsToDefaultFields(c context.Context, r *http.Request, contacts []mode
 							}
 
 							// Outliar checks
-							if customField.Value != "" && emails[lastUnarchivedEmail].IsSent {
+							// First check if email is sent & delivered.
+							if customField.Value != "" && emails[lastUnarchivedEmail].IsSent && emails[lastUnarchivedEmail].Delievered {
 								// Sometimes email is marked as sent, but hasn't actually been sent
 								// because Gmail rejected it. This is to check that.
 								if emails[lastUnarchivedEmail].Method == "gmail" && emails[lastUnarchivedEmail].GmailId == "" {

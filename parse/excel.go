@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"errors"
 	"net/http"
 
 	"google.golang.org/appengine"
@@ -24,7 +25,7 @@ func FileToExcelHeader(r *http.Request, file []byte, contentType string) ([]goex
 	return goexcel.FileToExcelHeader(c, r, file, contentType)
 }
 
-func ExcelHeadersToListModel(r *http.Request, file []byte, fileName string, headers []string, mediaListid int64, contentType string) (models.MediaList, error) {
+func ExcelHeadersToListModel(r *http.Request, file []byte, fileName string, headerNames []string, headers []string, mediaListid int64, contentType string) (models.MediaList, error) {
 	c := appengine.NewContext(r)
 
 	// Batch get all the contacts
@@ -41,6 +42,14 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, fileName string, head
 		return models.MediaList{}, err
 	}
 
+	if len(headers) != len(headerNames) {
+		log.Infof(c, "%v", headers)
+		log.Infof(c, "%v", headerNames)
+
+		headerError := errors.New("Length of headers does not match length of header names")
+		return models.MediaList{}, headerError
+	}
+
 	// Create a media list
 	mediaListId := utilities.IntIdToString(mediaListid)
 	mediaList, _, err := controllers.GetMediaList(c, r, mediaListId)
@@ -49,7 +58,7 @@ func ExcelHeadersToListModel(r *http.Request, file []byte, fileName string, head
 		if _, ok := customFields[headers[i]]; ok {
 			if headers[i] != "ignore_column" {
 				customField := models.CustomFieldsMap{}
-				customField.Name = headers[i]
+				customField.Name = headerNames[i]
 				customField.Value = headers[i]
 				customField.CustomField = true
 				customField.Hidden = false

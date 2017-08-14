@@ -23,15 +23,17 @@ type File struct {
 
 	Url string `json:"url"`
 
-	Order []string `json:"order" datastore:",noindex"`
+	HeaderNames []string `json:"headernames" datastore:",noindex"`
+	Order       []string `json:"order" datastore:",noindex"`
 
 	Imported   bool `json:"imported"`
 	FileExists bool `json:"fileexists"`
 }
 
 type FileOrder struct {
-	Order []string `json:"order"`
-	Sheet string   `json:"string"`
+	HeaderNames []string `json:"headernames"`
+	Order       []string `json:"order"`
+	Sheet       string   `json:"string"`
 }
 
 /*
