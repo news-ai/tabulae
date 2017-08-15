@@ -669,6 +669,109 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 
 			sync.EmailResourceBulkSync(r, emailIds)
 			return emails, nil, err
+		} else if len(keys) > 2000 {
+			firstHalfKeys := []*datastore.Key{}
+			secondHalfKeys := []*datastore.Key{}
+			thirdHalfKeys := []*datastore.Key{}
+			fourHalfKeys := []*datastore.Key{}
+			fiveHalfKeys := []*datastore.Key{}
+
+			startOne := 0
+			endOne := 400
+
+			startTwo := 400
+			endTwo := 800
+
+			startThree := 800
+			endThree := 1200
+
+			startFour := 1200
+			endFour := 1600
+
+			startFive := 1600
+			endFive := 2000
+
+			err1 := nds.RunInTransaction(c, func(ctx context.Context) error {
+				contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+				firstHalfKeys, err = nds.PutMulti(contextWithTimeout, keys[startOne:endOne], emails[startOne:endOne])
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					return err
+				}
+				return nil
+			}, nil)
+
+			err2 := nds.RunInTransaction(c, func(ctx context.Context) error {
+				contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+				secondHalfKeys, err = nds.PutMulti(contextWithTimeout, keys[startTwo:endTwo], emails[startTwo:endTwo])
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					return err
+				}
+				return nil
+			}, nil)
+
+			err3 := nds.RunInTransaction(c, func(ctx context.Context) error {
+				contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+				thirdHalfKeys, err = nds.PutMulti(contextWithTimeout, keys[startThree:endThree], emails[startThree:endThree])
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					return err
+				}
+				return nil
+			}, nil)
+
+			err4 := nds.RunInTransaction(c, func(ctx context.Context) error {
+				contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+				fourHalfKeys, err = nds.PutMulti(contextWithTimeout, keys[startFour:endFour], emails[startFour:endFour])
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					return err
+				}
+				return nil
+			}, nil)
+
+			err5 := nds.RunInTransaction(c, func(ctx context.Context) error {
+				contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+				fiveHalfKeys, err = nds.PutMulti(contextWithTimeout, keys[startFive:endFive], emails[startFive:endFive])
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					return err
+				}
+				return nil
+			}, nil)
+
+			firstHalfKeys = append(firstHalfKeys, secondHalfKeys...)
+			firstHalfKeys = append(firstHalfKeys, thirdHalfKeys...)
+			firstHalfKeys = append(firstHalfKeys, fourHalfKeys...)
+			firstHalfKeys = append(firstHalfKeys, fiveHalfKeys...)
+
+			for i := 0; i < len(firstHalfKeys); i++ {
+				emails[i].Format(firstHalfKeys[i], "emails")
+				emailIds = append(emailIds, emails[i].Id)
+			}
+
+			if err1 != nil {
+				err = err1
+			}
+
+			if err2 != nil {
+				err = err2
+			}
+
+			if err3 != nil {
+				err = err3
+			}
+
+			if err4 != nil {
+				err = err4
+			}
+
+			if err5 != nil {
+				err = err5
+			}
+
+			return emails, nil, err
 		} else {
 			firstHalfKeys := []*datastore.Key{}
 			secondHalfKeys := []*datastore.Key{}

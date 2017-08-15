@@ -13,6 +13,7 @@ import (
 
 	"github.com/news-ai/api/models"
 	apiSearch "github.com/news-ai/api/search"
+	tabulaeModels "github.com/news-ai/tabulae/models"
 
 	elastic "github.com/news-ai/elastic-appengine"
 )
@@ -27,7 +28,6 @@ type EmailCampaignResponse struct {
 	UserId      string `json:"userid"`
 	BaseSubject string `json:"baseSubject"`
 
-	pastDelivered          int
 	Delivered              int     `json:"delivered"`
 	Opens                  int     `json:"opens"`
 	UniqueOpens            int     `json:"uniqueOpens"`
@@ -83,7 +83,9 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 	// Get all emails for each of the campaigns
 	emailCampaignsResponse := []EmailCampaignResponse{}
 	for i := 0; i < len(emailCampaigns); i++ {
-		emails, _, _, err := SearchEmailsByDateAndSubject(c, r, user, emailCampaigns[i].Date, emailCampaigns[i].Subject, emailCampaigns[i].BaseSubject)
+		limit := 750
+		emails, _, total, err := SearchEmailsByDateAndSubject(c, r, user, emailCampaigns[i].Date, emailCampaigns[i].Subject, emailCampaigns[i].BaseSubject, 0, limit)
+
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			continue
@@ -124,16 +126,55 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 				if emails[x].Bounced {
 					emailCampaign.Bounces += 1
 				}
-
-				// All emails that are delivered in the past
-				if emails[x].IsSent && emails[x].Delievered {
-					emailCampaign.pastDelivered += 1
-				}
 			}
 		}
 
-		if emailCampaign.Delivered > 0 && emailCampaign.pastDelivered > 0 {
+		emails = []tabulaeModels.Email{}
+
+		// If we have to loop through
+		if total > limit {
+			loops := int(float64(total) / float64(limit))
+			for x := 1; x < loops; x++ {
+				additionalEmails, _, _, err := SearchEmailsByDateAndSubject(c, r, user, emailCampaigns[i].Date, emailCampaigns[i].Subject, emailCampaigns[i].BaseSubject, limit*x, limit)
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					continue
+				}
+
+				for y := 0; y < len(additionalEmails); y++ {
+					emailSubject := additionalEmails[y].Subject
+					if additionalEmails[y].BaseSubject != "" {
+						emailSubject = additionalEmails[y].BaseSubject
+					}
+					if emailSubject == emailCampaign.Subject && !additionalEmails[y].Archived {
+						if emailCampaign.Subject == "" {
+							emailCampaign.Subject = "(no subject)"
+						}
+
+						emailCampaign.Delivered += 1
+						emailCampaign.Opens += additionalEmails[y].Opened
+						emailCampaign.Clicks += additionalEmails[y].Clicked
+
+						if additionalEmails[y].Opened > 0 {
+							emailCampaign.UniqueOpens += 1
+						}
+
+						if additionalEmails[y].Clicked > 0 {
+							emailCampaign.UniqueClicks += 1
+						}
+
+						if additionalEmails[y].Bounced {
+							emailCampaign.Bounces += 1
+						}
+					}
+				}
+				additionalEmails = []tabulaeModels.Email{}
+			}
+		}
+
+		if emailCampaign.Delivered > 0 {
 			deliveredNumber := emailCampaign.Delivered - emailCampaign.Bounces
+			log.Infof(c, "%v", deliveredNumber)
 			if deliveredNumber > 0 {
 				// For some reason if more people opened it then the number of
 				// emails that were delivered then we set a ceiling of 100%
@@ -146,8 +187,6 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 				emailCampaign.Show = true
 			}
 		}
-
-		log.Infof(c, "%v", emailCampaign)
 
 		emailCampaignsResponse = append(emailCampaignsResponse, emailCampaign)
 	}
