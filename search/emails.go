@@ -1,19 +1,14 @@
 package search
 
 import (
-	"bytes"
-	"encoding/json"
 	"net/http"
-	"os"
 	"strings"
-	"time"
 
 	"golang.org/x/net/context"
 
 	gcontext "github.com/gorilla/context"
 
 	"google.golang.org/appengine/log"
-	"google.golang.org/appengine/urlfetch"
 
 	apiModels "github.com/news-ai/api/models"
 	apiSearch "github.com/news-ai/api/search"
@@ -29,29 +24,6 @@ var (
 	elasticEmailTimeseries *elastic.Elastic
 	elasticEmails          *elastic.Elastic
 )
-
-type EmailElasticResponse struct {
-	Took     int  `json:"took"`
-	TimedOut bool `json:"timed_out"`
-	Shards   struct {
-		Total      int `json:"total"`
-		Successful int `json:"successful"`
-		Failed     int `json:"failed"`
-	} `json:"_shards"`
-	Hits struct {
-		Total    int     `json:"total"`
-		MaxScore float64 `json:"max_score"`
-		Hits     []struct {
-			Index  string  `json:"_index"`
-			Type   string  `json:"_type"`
-			ID     string  `json:"_id"`
-			Score  float64 `json:"_score"`
-			Source struct {
-				Data models.Email `json:"data"`
-			} `json:"_source"`
-		} `json:"hits"`
-	} `json:"hits"`
-}
 
 func searchEmail(c context.Context, elasticQuery interface{}) (interface{}, int, int, error) {
 	hits, err := elasticEmailLog.QueryStruct(c, elasticQuery)
@@ -314,43 +286,5 @@ func SearchEmailsByDateAndSubject(c context.Context, r *http.Request, user apiMo
 	elasticCreatedQuery.DataCreated.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
 
-	SearchQuery, err := json.Marshal(elasticQuery)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.Email{}, 0, 0, err
-	}
-
-	log.Infof(c, "%v", string(SearchQuery))
-	readerQuery := bytes.NewReader(SearchQuery)
-
-	contextWithTimeout, _ := context.WithTimeout(c, time.Second*30)
-	client := urlfetch.Client(contextWithTimeout)
-	getUrl := apiSearch.NewBaseURL + "/emails2/email/_search"
-
-	req, _ := http.NewRequest("POST", getUrl, readerQuery)
-	if os.Getenv("ELASTIC_PASS") != "" && os.Getenv("ELASTIC_PASS") != "" {
-		req.SetBasicAuth(os.Getenv("ELASTIC_USER"), os.Getenv("ELASTIC_PASS"))
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.Email{}, 0, 0, err
-	}
-	defer resp.Body.Close()
-
-	decoder := json.NewDecoder(resp.Body)
-	var emailElasticResponse EmailElasticResponse
-	err = decoder.Decode(&emailElasticResponse)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.Email{}, 0, 0, err
-	}
-
-	emails := []models.Email{}
-	for i := 0; i < len(emailElasticResponse.Hits.Hits); i++ {
-		emails = append(emails, emailElasticResponse.Hits.Hits[i].Source.Data)
-	}
-
-	return emails, len(emailElasticResponse.Hits.Hits), emailElasticResponse.Hits.Total, nil
+	return searchEmailQuery(c, elasticQuery)
 }
