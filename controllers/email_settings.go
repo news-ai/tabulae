@@ -251,6 +251,7 @@ func VerifyEmailSetting(c context.Context, r *http.Request, id string) (SMTPEmai
 		log.Errorf(c, "%v", err)
 		return SMTPEmailResponse{}, nil, err
 	}
+	defer resp.Body.Close()
 
 	decoder := json.NewDecoder(resp.Body)
 	var verifyResponse SMTPEmailResponse

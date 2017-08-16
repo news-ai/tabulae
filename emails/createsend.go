@@ -110,6 +110,7 @@ func ConfirmUserAccount(c context.Context, user apiModels.User, confirmationCode
 		log.Errorf(c, "%v", err)
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == 201 || resp.StatusCode == 202 || resp.StatusCode == 200 {
 		return nil
@@ -152,6 +153,7 @@ func ResetUserPassword(c context.Context, user apiModels.User, resetPasswordCode
 		log.Errorf(c, "%v", err)
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == 201 || resp.StatusCode == 202 || resp.StatusCode == 200 {
 		return nil
@@ -195,6 +197,7 @@ func AddUserToTabulaePremiumList(c context.Context, user apiModels.User, plan, d
 		log.Errorf(c, "%v", err)
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == 201 {
 		return nil
@@ -232,6 +235,7 @@ func AddUserToTabulaeTrialList(c context.Context, user apiModels.User) error {
 		log.Errorf(c, "%v", err)
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == 201 {
 		return nil
@@ -274,6 +278,7 @@ func AddEmailToUser(c context.Context, user apiModels.User, userToEmail, userEma
 		log.Errorf(c, "%v", err)
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == 201 || resp.StatusCode == 202 || resp.StatusCode == 200 {
 		return nil
@@ -319,6 +324,7 @@ func InviteUser(c context.Context, currentUser apiModels.User, userEmail, userRe
 		log.Errorf(c, "%v", err)
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == 201 || resp.StatusCode == 202 || resp.StatusCode == 200 {
 		return nil

@@ -1338,6 +1338,7 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 				log.Errorf(c, "%v", err)
 				return *val, nil, err
 			}
+			defer resp.Body.Close()
 
 			decoder := json.NewDecoder(resp.Body)
 			var verifyResponse SMTPEmailResponse
@@ -1672,6 +1673,7 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 				log.Errorf(c, "%v", err)
 				return *val, nil, err
 			}
+			defer resp.Body.Close()
 
 			decoder := json.NewDecoder(resp.Body)
 			var verifyResponse SMTPEmailResponse

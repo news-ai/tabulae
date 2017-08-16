@@ -193,6 +193,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 					log.Errorf(c, "%v", err)
 					hasErrors = true
 				}
+				defer resp.Body.Close()
 
 				decoder := json.NewDecoder(resp.Body)
 				var verifyResponse controllers.SMTPEmailResponse

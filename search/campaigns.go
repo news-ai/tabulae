@@ -2,8 +2,6 @@ package search
 
 import (
 	"net/http"
-	// "net/url"
-	// "time"
 
 	"golang.org/x/net/context"
 
