@@ -570,7 +570,7 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user apiModels.Us
 	singleContact.Employers = []int64{6399756150505472}
 	singleContact.Created = time.Now()
 	singleContact.ListId = mediaList.Id
-	_, err := Create(c, r, &singleContact)
+	_, err := createContact(c, r, &singleContact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return mediaList, nil, err
@@ -598,7 +598,7 @@ func CreateSampleMediaList(c context.Context, r *http.Request, user apiModels.Us
 	customField.Value = "This is a custom value"
 
 	fashionContact.CustomFields = append(fashionContact.CustomFields, customField)
-	_, err = Create(c, r, &fashionContact)
+	_, err = createContact(c, r, &fashionContact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return mediaList, nil, err

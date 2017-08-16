@@ -96,6 +96,42 @@ func getContact(c context.Context, r *http.Request, id int64) (models.Contact, e
 }
 
 /*
+* Create methods
+ */
+
+func createContact(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
+	currentUser, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return ct, err
+	}
+
+	ct.FormatName()
+	ct.Normalize()
+
+	_, err = EnrichContact(c, r, ct)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+	}
+
+	ct.Create(c, r, currentUser)
+	_, err = Save(c, r, ct)
+
+	// Sync with ES
+	sync.ResourceSync(r, ct.Id, "Contact", "create")
+
+	// If user is just created
+	if ct.Twitter != "" {
+		sync.TwitterSync(r, ct.Twitter)
+	}
+	if ct.Instagram != "" {
+		sync.InstagramSync(r, ct.Instagram, currentUser.InstagramAuthKey)
+	}
+
+	return ct, err
+}
+
+/*
 * Update methods
  */
 
@@ -1181,38 +1217,6 @@ func FilterContacts(c context.Context, r *http.Request, queryType, query string)
 * Create methods
  */
 
-func Create(c context.Context, r *http.Request, ct *models.Contact) (*models.Contact, error) {
-	currentUser, err := controllers.GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return ct, err
-	}
-
-	ct.FormatName()
-	ct.Normalize()
-
-	_, err = EnrichContact(c, r, ct)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-	}
-
-	ct.Create(c, r, currentUser)
-	_, err = Save(c, r, ct)
-
-	// Sync with ES
-	sync.ResourceSync(r, ct.Id, "Contact", "create")
-
-	// If user is just created
-	if ct.Twitter != "" {
-		sync.TwitterSync(r, ct.Twitter)
-	}
-	if ct.Instagram != "" {
-		sync.InstagramSync(r, ct.Instagram, currentUser.InstagramAuthKey)
-	}
-
-	return ct, err
-}
-
 func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, int, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 
@@ -1234,7 +1238,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interf
 
 		newContacts := []models.Contact{}
 		for i := 0; i < len(contacts); i++ {
-			_, err = Create(c, r, &contacts[i])
+			_, err = createContact(c, r, &contacts[i])
 			if err != nil {
 				log.Errorf(c, "%v", err)
 				return []models.Contact{}, nil, 0, 0, err
@@ -1254,7 +1258,7 @@ func CreateContact(c context.Context, r *http.Request) ([]models.Contact, interf
 	}
 
 	// Create contact
-	_, err = Create(c, r, &contact)
+	_, err = createContact(c, r, &contact)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, 0, err
