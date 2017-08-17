@@ -153,7 +153,10 @@ func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 		return
 	}
 
-	sync.EmailResourceBulkSync(r, emailIds)
+	if len(emailIds) > 0 {
+		sync.EmailResourceBulkSync(r, emailIds)
+	}
+
 	w.WriteHeader(200)
 	return
 }

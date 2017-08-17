@@ -81,6 +81,10 @@ func SocialSync(r *http.Request, socialField string, url string, contactId int64
 }
 
 func EmailResourceBulkSync(r *http.Request, emailIds []int64) error {
+	if len(emailIds) == 0 {
+		return nil
+	}
+
 	tempEmailResourceIds := []string{}
 	for i := 0; i < len(emailIds); i++ {
 		tempEmailResourceIds = append(tempEmailResourceIds, strconv.FormatInt(emailIds[i], 10))
@@ -101,6 +105,10 @@ func EmailResourceBulkSync(r *http.Request, emailIds []int64) error {
 }
 
 func UserResourceBulkSync(r *http.Request, userIds []int64) error {
+	if len(userIds) == 0 {
+		return nil
+	}
+
 	tempUserResourceIds := []string{}
 	for i := 0; i < len(userIds); i++ {
 		tempUserResourceIds = append(tempUserResourceIds, strconv.FormatInt(userIds[i], 10))
