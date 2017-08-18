@@ -109,7 +109,7 @@ func createContact(c context.Context, r *http.Request, ct *models.Contact) (*mod
 	ct.FormatName()
 	ct.Normalize()
 
-	_, err = EnrichContact(c, r, ct)
+	_, err = enrichContact(c, r, ct)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 	}
@@ -188,7 +188,7 @@ func updateContact(c context.Context, r *http.Request, contact *models.Contact, 
 	utilities.UpdateIfNotBlank(&contact.PhoneNumber, updatedContact.PhoneNumber)
 
 	if contact.Email != previousEmail {
-		_, err = EnrichContact(c, r, contact)
+		_, err = enrichContact(c, r, contact)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 		}
@@ -522,6 +522,165 @@ func getIncludesForContacts(c context.Context, r *http.Request, contacts []model
 }
 
 /*
+* Action methods
+ */
+
+func enrichContact(c context.Context, r *http.Request, contact *models.Contact) (interface{}, error) {
+	if contact.Email == "" {
+		return nil, errors.New("Contact does not have an email")
+	}
+
+	currentUser, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	}
+
+	contactDetail, err := apiSearch.SearchContactDatabase(c, r, contact.Email)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	}
+
+	if contactDetail.Data.Likelihood > 0.75 {
+		// Add first name
+		if contact.FirstName == "" && contactDetail.Data.ContactInfo.GivenName != "" {
+			contact.FirstName = contactDetail.Data.ContactInfo.GivenName
+		}
+
+		// Add last name
+		if contact.LastName == "" && contactDetail.Data.ContactInfo.FamilyName != "" {
+			contact.LastName = contactDetail.Data.ContactInfo.FamilyName
+		}
+
+		// Add social profiles
+		if len(contactDetail.Data.SocialProfiles) > 0 {
+			for i := 0; i < len(contactDetail.Data.SocialProfiles); i++ {
+				if contactDetail.Data.SocialProfiles[i].TypeID == "linkedin" {
+					if contact.LinkedIn == "" {
+						contact.LinkedIn = contactDetail.Data.SocialProfiles[i].URL
+					}
+				}
+
+				if contactDetail.Data.SocialProfiles[i].TypeID == "twitter" {
+					if contact.Twitter == "" {
+						contact.Twitter = contactDetail.Data.SocialProfiles[i].Username
+						sync.TwitterSync(r, contact.Twitter)
+					}
+				}
+
+				if contactDetail.Data.SocialProfiles[i].TypeID == "instagram" {
+					if contact.Instagram == "" {
+						contact.Instagram = contactDetail.Data.SocialProfiles[i].URL
+						sync.InstagramSync(r, contact.Instagram, currentUser.InstagramAuthKey)
+					}
+				}
+			}
+		}
+
+		// Add jobs
+		if len(contactDetail.Data.Organizations) > 0 {
+			for i := 0; i < len(contactDetail.Data.Organizations); i++ {
+				if contactDetail.Data.Organizations[i].Name != "" {
+					// Get which publication it is in our database
+					publication, err := FindOrCreatePublication(c, r, contactDetail.Data.Organizations[i].Name, "")
+					if err != nil {
+						log.Errorf(c, "%v", err)
+						continue
+					}
+
+					previousJob := false
+
+					// Check if this position was in the past or current
+					if contactDetail.Data.Organizations[i].EndDate != "" {
+						previousJob = true
+					}
+
+					alreadyExists := false
+					for x := 0; x < len(contact.Employers); x++ {
+						currentPublication, err := getPublication(c, contact.Employers[x])
+						if err != nil {
+							log.Errorf(c, "%v", err)
+							continue
+						}
+
+						if currentPublication.Name == publication.Name {
+							alreadyExists = true
+						}
+
+						if currentPublication.Id == publication.Id {
+							alreadyExists = true
+						}
+					}
+
+					for x := 0; x < len(contact.PastEmployers); x++ {
+						currentPublication, err := getPublication(c, contact.PastEmployers[x])
+						if err != nil {
+							log.Errorf(c, "%v", err)
+							continue
+						}
+
+						if currentPublication.Name == publication.Name {
+							alreadyExists = true
+						}
+
+						if currentPublication.Id == publication.Id {
+							alreadyExists = true
+						}
+					}
+
+					// Add to list
+					if !alreadyExists {
+						if previousJob {
+							contact.PastEmployers = append(contact.PastEmployers, publication.Id)
+						} else {
+							contact.Employers = append(contact.Employers, publication.Id)
+						}
+					}
+
+				}
+			}
+		}
+
+		// Add location
+		contact.Location = contactDetail.Data.Demographics.LocationDeduced.NormalizedLocation
+
+		// Add website
+		if len(contactDetail.Data.ContactInfo.Websites) > 0 {
+			contact.Website = contactDetail.Data.ContactInfo.Websites[0].URL
+		}
+
+		// Add tags
+		if len(contactDetail.Data.DigitalFootprint.Topics) > 0 {
+			tags := []string{}
+			for i := 0; i < len(contactDetail.Data.DigitalFootprint.Topics); i++ {
+				if contactDetail.Data.DigitalFootprint.Topics[i].Value != "" {
+					tags = append(tags, contactDetail.Data.DigitalFootprint.Topics[i].Value)
+				}
+			}
+
+			contact.Tags = append(contact.Tags, tags...)
+
+			// Remove duplicates from tags
+			found := make(map[string]bool)
+			j := 0
+			for i, x := range contact.Tags {
+				if !found[x] {
+					found[x] = true
+					contact.Tags[j] = contact.Tags[i]
+					j++
+				}
+			}
+			contact.Tags = contact.Tags[:j]
+		}
+
+		return nil, nil
+	}
+
+	return nil, nil
+}
+
+/*
 * Public methods
  */
 
@@ -765,161 +924,6 @@ func ContactsToDefaultFields(c context.Context, r *http.Request, contacts []mode
 	}
 
 	return contacts, nil
-}
-
-func EnrichContact(c context.Context, r *http.Request, contact *models.Contact) (interface{}, error) {
-	if contact.Email == "" {
-		return nil, errors.New("Contact does not have an email")
-	}
-
-	currentUser, err := controllers.GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, err
-	}
-
-	contactDetail, err := apiSearch.SearchContactDatabase(c, r, contact.Email)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, err
-	}
-
-	if contactDetail.Data.Likelihood > 0.75 {
-		// Add first name
-		if contact.FirstName == "" && contactDetail.Data.ContactInfo.GivenName != "" {
-			contact.FirstName = contactDetail.Data.ContactInfo.GivenName
-		}
-
-		// Add last name
-		if contact.LastName == "" && contactDetail.Data.ContactInfo.FamilyName != "" {
-			contact.LastName = contactDetail.Data.ContactInfo.FamilyName
-		}
-
-		// Add social profiles
-		if len(contactDetail.Data.SocialProfiles) > 0 {
-			for i := 0; i < len(contactDetail.Data.SocialProfiles); i++ {
-				if contactDetail.Data.SocialProfiles[i].TypeID == "linkedin" {
-					if contact.LinkedIn == "" {
-						contact.LinkedIn = contactDetail.Data.SocialProfiles[i].URL
-					}
-				}
-
-				if contactDetail.Data.SocialProfiles[i].TypeID == "twitter" {
-					if contact.Twitter == "" {
-						contact.Twitter = contactDetail.Data.SocialProfiles[i].Username
-						sync.TwitterSync(r, contact.Twitter)
-					}
-				}
-
-				if contactDetail.Data.SocialProfiles[i].TypeID == "instagram" {
-					if contact.Instagram == "" {
-						contact.Instagram = contactDetail.Data.SocialProfiles[i].URL
-						sync.InstagramSync(r, contact.Instagram, currentUser.InstagramAuthKey)
-					}
-				}
-			}
-		}
-
-		// Add jobs
-		if len(contactDetail.Data.Organizations) > 0 {
-			for i := 0; i < len(contactDetail.Data.Organizations); i++ {
-				if contactDetail.Data.Organizations[i].Name != "" {
-					// Get which publication it is in our database
-					publication, err := FindOrCreatePublication(c, r, contactDetail.Data.Organizations[i].Name, "")
-					if err != nil {
-						log.Errorf(c, "%v", err)
-						continue
-					}
-
-					previousJob := false
-
-					// Check if this position was in the past or current
-					if contactDetail.Data.Organizations[i].EndDate != "" {
-						previousJob = true
-					}
-
-					alreadyExists := false
-					for x := 0; x < len(contact.Employers); x++ {
-						currentPublication, err := getPublication(c, contact.Employers[x])
-						if err != nil {
-							log.Errorf(c, "%v", err)
-							continue
-						}
-
-						if currentPublication.Name == publication.Name {
-							alreadyExists = true
-						}
-
-						if currentPublication.Id == publication.Id {
-							alreadyExists = true
-						}
-					}
-
-					for x := 0; x < len(contact.PastEmployers); x++ {
-						currentPublication, err := getPublication(c, contact.PastEmployers[x])
-						if err != nil {
-							log.Errorf(c, "%v", err)
-							continue
-						}
-
-						if currentPublication.Name == publication.Name {
-							alreadyExists = true
-						}
-
-						if currentPublication.Id == publication.Id {
-							alreadyExists = true
-						}
-					}
-
-					// Add to list
-					if !alreadyExists {
-						if previousJob {
-							contact.PastEmployers = append(contact.PastEmployers, publication.Id)
-						} else {
-							contact.Employers = append(contact.Employers, publication.Id)
-						}
-					}
-
-				}
-			}
-		}
-
-		// Add location
-		contact.Location = contactDetail.Data.Demographics.LocationDeduced.NormalizedLocation
-
-		// Add website
-		if len(contactDetail.Data.ContactInfo.Websites) > 0 {
-			contact.Website = contactDetail.Data.ContactInfo.Websites[0].URL
-		}
-
-		// Add tags
-		if len(contactDetail.Data.DigitalFootprint.Topics) > 0 {
-			tags := []string{}
-			for i := 0; i < len(contactDetail.Data.DigitalFootprint.Topics); i++ {
-				if contactDetail.Data.DigitalFootprint.Topics[i].Value != "" {
-					tags = append(tags, contactDetail.Data.DigitalFootprint.Topics[i].Value)
-				}
-			}
-
-			contact.Tags = append(contact.Tags, tags...)
-
-			// Remove duplicates from tags
-			found := make(map[string]bool)
-			j := 0
-			for i, x := range contact.Tags {
-				if !found[x] {
-					found[x] = true
-					contact.Tags[j] = contact.Tags[i]
-					j++
-				}
-			}
-			contact.Tags = contact.Tags[:j]
-		}
-
-		return nil, nil
-	}
-
-	return nil, nil
 }
 
 func GetTweetsForContact(c context.Context, r *http.Request, id string) (interface{}, interface{}, int, int, error) {
@@ -1436,6 +1440,52 @@ func Save(c context.Context, r *http.Request, ct *models.Contact) (*models.Conta
 	ct.Save(c, r)
 	sync.ResourceSync(r, ct.Id, "Contact", "create")
 	return ct, nil
+}
+
+func EnrichContact(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
+	// Get the details of the current contact
+	contact, _, err := GetContact(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, err
+	}
+
+	user, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, errors.New("Could not get user")
+	}
+
+	mediaList, err := getMediaList(c, r, contact.ListId)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, err
+	}
+
+	if mediaList.TeamId != user.TeamId && !permissions.AccessToObject(contact.CreatedBy, user.Id) && !user.IsAdmin {
+		return models.Contact{}, nil, errors.New("You don't have permissions to edit these objects")
+	}
+
+	_, err = enrichContact(c, r, &contact)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Contact{}, nil, err
+	}
+
+	_, err = Save(c, r, &contact)
+
+	// Sync with ES
+	sync.ResourceSync(r, contact.Id, "Contact", "create")
+
+	// If user is just created
+	if contact.Twitter != "" {
+		sync.TwitterSync(r, contact.Twitter)
+	}
+	if contact.Instagram != "" {
+		sync.InstagramSync(r, contact.Instagram, user.InstagramAuthKey)
+	}
+
+	return contact, nil, nil
 }
 
 func UpdateSingleContact(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
