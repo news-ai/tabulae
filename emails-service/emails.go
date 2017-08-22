@@ -50,25 +50,31 @@ func sendSendGridEmail(c context.Context, r *http.Request, email tabulaeModels.E
 
 	// Check to see if there is no sendat date or if date is in the past
 	if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
-		emailSent, emailId, err := emails.SendEmailAttachment(r, email, user, files, bytesArray, attachmentType, fileNames, sendGridKey)
+		_, emailId, err := emails.SendEmailAttachment(r, email, user, files, bytesArray, attachmentType, fileNames, sendGridKey)
+		if err != nil {
+			log.Printf("%v", err)
+			return tabulaeModels.Email{}, nil, err
+		}
+
 		email.IsSent = true
 		email.Delievered = true
 		email.SendGridId = emailId
 	}
+
+	return tabulaeModels.Email{}, nil, nil
 }
 
-func getEmails(c context.Context, ids []int64) ([]tabulaeModels.Email, error) {
+func getEmails(c context.Context, ids []int64) ([]tabulaeModels.Email, apiModels.User, apiModels.Billing, error) {
 	var keys []*datastore.Key
 	for i := 0; i < len(ids); i++ {
 		emailId := datastore.IDKey("Email", ids[i], nil)
-		log.Println(emailId.Encode())
 		keys = append(keys, emailId)
 	}
 
 	emails := make([]tabulaeModels.Email, len(keys))
 	if err := datastoreClient.GetMulti(c, keys, emails); err != nil {
 		log.Printf("%v", err)
-		return []tabulaeModels.Email{}, err
+		return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, err
 	}
 
 	// Remove emails that have already been delivered
@@ -80,7 +86,32 @@ func getEmails(c context.Context, ids []int64) ([]tabulaeModels.Email, error) {
 		}
 	}
 
-	return emails, nil
+	if len(emails) == 0 {
+		return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, nil
+	}
+
+	user := apiModels.User{}
+	userId := datastore.IDKey("User", emails[0].CreatedBy, nil)
+	if err := datastoreClient.Get(c, userId, &user); err != nil {
+		log.Printf("%v", err)
+		return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, err
+	}
+
+	user.Id = emails[0].CreatedBy
+
+	userBillings := []apiModels.Billing{}
+	q := datastore.NewQuery("Billing").Filter("CreatedBy =", user.Id).Limit(1)
+	_, err := datastoreClient.GetAll(c, q, &userBillings)
+	if err != nil {
+		log.Printf("%v", err)
+		return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, err
+	}
+
+	if len(userBillings) == 0 {
+		return emails, user, apiModels.Billing{}, nil
+	}
+
+	return emails, user, userBillings[0], nil
 }
 
 func subscribe() {
@@ -94,7 +125,7 @@ func subscribe() {
 			return
 		}
 
-		emails, err := getEmails(c, ids)
+		emails, user, userBilling, err := getEmails(c, ids)
 		if err != nil {
 			log.Printf("%v", err)
 			msg.Ack()
@@ -102,6 +133,8 @@ func subscribe() {
 		}
 
 		log.Printf("%v", emails)
+		log.Printf("%v", user)
+		log.Printf("%v", userBilling.IsOnTrial)
 
 		msg.Ack()
 	})
