@@ -1349,6 +1349,7 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 	var keys []*datastore.Key
 	var contactIds []int64
 	var publicationIds []int64
+	var selectedContacts []models.Contact
 
 	currentUser, err := controllers.GetCurrentUser(c, r)
 	if err != nil {
@@ -1372,13 +1373,15 @@ func BatchCreateContactsForExcelUpload(c context.Context, r *http.Request, conta
 		for x := 0; x < len(contacts[i].PastEmployers); x++ {
 			publicationIds = append(publicationIds, contacts[i].PastEmployers[x])
 		}
+
+		selectedContacts = append(selectedContacts, contacts[i])
 	}
 
 	ks := []*datastore.Key{}
 
 	err = nds.RunInTransaction(c, func(ctx context.Context) error {
 		contextWithTimeout, _ := context.WithTimeout(c, time.Second*1000)
-		ks, err = nds.PutMulti(contextWithTimeout, keys, contacts)
+		ks, err = nds.PutMulti(contextWithTimeout, keys, selectedContacts)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return err
