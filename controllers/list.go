@@ -856,7 +856,7 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 
 	// Add includes
 	publications := contactsToPublications(c, contacts)
-	return contacts, publications, len(contacts), 0, nil
+	return contacts, publications, len(contacts), len(mediaList.Contacts), nil
 }
 
 func GetEmailsForList(c context.Context, r *http.Request, id string) ([]models.Email, interface{}, int, int, error) {

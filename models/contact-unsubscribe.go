@@ -17,6 +17,9 @@ import (
 type ContactUnsubscribe struct {
 	apiModels.Base
 
+	ListId    int64 `json:"listid"`
+	ContactId int64 `json:"contactid"`
+
 	Email        string `json:"email"`
 	Unsubscribed bool   `json:"unsubscribed"`
 }
