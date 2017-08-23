@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -12,6 +13,7 @@ import (
 
 	"cloud.google.com/go/datastore"
 	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/storage"
 
 	apiModels "github.com/news-ai/api/models"
 	tabulaeModels "github.com/news-ai/tabulae/models"
@@ -64,7 +66,7 @@ func sendSendGridEmail(c context.Context, r *http.Request, email tabulaeModels.E
 	return tabulaeModels.Email{}, nil, nil
 }
 
-func getEmails(c context.Context, ids []int64) ([]tabulaeModels.Email, apiModels.User, apiModels.Billing, error) {
+func getEmails(c context.Context, ids []int64) ([]tabulaeModels.Email, apiModels.User, apiModels.Billing, []tabulaeModels.File, error) {
 	var keys []*datastore.Key
 	for i := 0; i < len(ids); i++ {
 		emailId := datastore.IDKey("Email", ids[i], nil)
@@ -74,7 +76,7 @@ func getEmails(c context.Context, ids []int64) ([]tabulaeModels.Email, apiModels
 	emails := make([]tabulaeModels.Email, len(keys))
 	if err := datastoreClient.GetMulti(c, keys, emails); err != nil {
 		log.Printf("%v", err)
-		return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, err
+		return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, []tabulaeModels.File{}, err
 	}
 
 	// Remove emails that have already been delivered
@@ -87,16 +89,32 @@ func getEmails(c context.Context, ids []int64) ([]tabulaeModels.Email, apiModels
 	}
 
 	if len(emails) == 0 {
-		return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, nil
+		err := errors.New("Missing emails")
+		return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, []tabulaeModels.File{}, err
+	}
+
+	// Get files if there are attachments
+	var files []tabulaeModels.File
+	if len(emails[0].Attachments) > 0 {
+		var fileKeys []*datastore.Key
+		for i := 0; i < len(emails[0].Attachments); i++ {
+			fileId := datastore.IDKey("File", emails[0].Attachments[i], nil)
+			fileKeys = append(fileKeys, fileId)
+		}
+
+		files = make([]tabulaeModels.File, len(fileKeys))
+		if err := datastoreClient.GetMulti(c, fileKeys, files); err != nil {
+			log.Printf("%v", err)
+			return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, []tabulaeModels.File{}, err
+		}
 	}
 
 	user := apiModels.User{}
 	userId := datastore.IDKey("User", emails[0].CreatedBy, nil)
 	if err := datastoreClient.Get(c, userId, &user); err != nil {
 		log.Printf("%v", err)
-		return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, err
+		return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, []tabulaeModels.File{}, err
 	}
-
 	user.Id = emails[0].CreatedBy
 
 	userBillings := []apiModels.Billing{}
@@ -104,14 +122,59 @@ func getEmails(c context.Context, ids []int64) ([]tabulaeModels.Email, apiModels
 	_, err := datastoreClient.GetAll(c, q, &userBillings)
 	if err != nil {
 		log.Printf("%v", err)
-		return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, err
+		return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, []tabulaeModels.File{}, err
 	}
 
 	if len(userBillings) == 0 {
-		return emails, user, apiModels.Billing{}, nil
+		err := errors.New("Missing user billing")
+		return emails, user, apiModels.Billing{}, files, err
 	}
 
-	return emails, user, userBillings[0], nil
+	return emails, user, userBillings[0], files, nil
+}
+
+func getAttachment(c context.Context, file tabulaeModels.File) ([]byte, string, string, error) {
+	client, err := storage.NewClient(c)
+	if err != nil {
+		return nil, "", "", err
+	}
+	defer client.Close()
+
+	clientBucket := client.Bucket("tabulae-email-attachment")
+	rc, err := clientBucket.Object(file.FileName).NewReader(c)
+	if err != nil {
+		return nil, "", "", err
+	}
+	defer rc.Close()
+
+	data, err := ioutil.ReadAll(rc)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	return data, rc.ContentType(), file.OriginalName, nil
+}
+
+func getAttachments(c context.Context, files []tabulaeModels.File) ([][]byte, []string, []string, error) {
+	if len(files) == 0 {
+		return [][]byte{}, []string{}, []string{}, nil
+	}
+
+	bytesArray := [][]byte{}
+	attachmentTypes := []string{}
+	fileNames := []string{}
+	for i := 0; i < len(files); i++ {
+		currentBytes, attachmentType, fileName, err := getAttachment(c, files[i])
+		if err == nil {
+			bytesArray = append(bytesArray, currentBytes)
+			attachmentTypes = append(attachmentTypes, attachmentType)
+			fileNames = append(fileNames, fileName)
+		} else {
+			log.Printf("%v", err)
+		}
+	}
+
+	return bytesArray, attachmentTypes, fileNames, nil
 }
 
 func subscribe() {
@@ -125,7 +188,15 @@ func subscribe() {
 			return
 		}
 
-		emails, user, userBilling, err := getEmails(c, ids)
+		// Get emails, and details surrounding the emails
+		emails, user, userBilling, files, err := getEmails(c, ids)
+		if err != nil {
+			log.Printf("%v", err)
+			msg.Ack()
+			return
+		}
+
+		bytesArray, attachmentType, fileNames, err := getAttachments(c, files)
 		if err != nil {
 			log.Printf("%v", err)
 			msg.Ack()
@@ -134,7 +205,10 @@ func subscribe() {
 
 		log.Printf("%v", emails)
 		log.Printf("%v", user)
-		log.Printf("%v", userBilling.IsOnTrial)
+		log.Printf("%v", userBilling)
+		log.Printf("%v", bytesArray)
+		log.Printf("%v", attachmentType)
+		log.Printf("%v", fileNames)
 
 		msg.Ack()
 	})
