@@ -17,8 +17,6 @@ import (
 
 	apiModels "github.com/news-ai/api/models"
 	tabulaeModels "github.com/news-ai/tabulae/models"
-
-	"github.com/news-ai/web/emails"
 )
 
 var (
@@ -27,7 +25,7 @@ var (
 	datastoreClient *datastore.Client
 )
 
-func sendSendGridEmail(c context.Context, r *http.Request, email tabulaeModels.Email, files []tabulaeModels.File, user apiModels.User, bytesArray [][]byte, attachmentType []string, fileNames []string, sendGridKey string) (tabulaeModels.Email, interface{}, error) {
+func sendSendGridEmail(c context.Context, email tabulaeModels.Email, files []tabulaeModels.File, user apiModels.User, bytesArray [][]byte, attachmentType []string, fileNames []string, sendGridKey string) (tabulaeModels.Email, interface{}, error) {
 	email.Method = "sendgrid"
 	email.IsSent = true
 
@@ -52,7 +50,7 @@ func sendSendGridEmail(c context.Context, r *http.Request, email tabulaeModels.E
 
 	// Check to see if there is no sendat date or if date is in the past
 	if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
-		_, emailId, err := emails.SendEmailAttachment(r, email, user, files, bytesArray, attachmentType, fileNames, sendGridKey)
+		_, emailId, err := sendEmailAttachment(c, email, user, files, bytesArray, attachmentType, fileNames, sendGridKey)
 		if err != nil {
 			log.Printf("%v", err)
 			return tabulaeModels.Email{}, nil, err
@@ -189,7 +187,7 @@ func subscribe() {
 		}
 
 		// Get emails, and details surrounding the emails
-		emails, user, userBilling, files, err := getEmails(c, ids)
+		allEmails, user, userBilling, files, err := getEmails(c, ids)
 		if err != nil {
 			log.Printf("%v", err)
 			msg.Ack()
@@ -203,12 +201,11 @@ func subscribe() {
 			return
 		}
 
-		log.Printf("%v", emails)
-		log.Printf("%v", user)
-		log.Printf("%v", userBilling)
-		log.Printf("%v", bytesArray)
-		log.Printf("%v", attachmentType)
-		log.Printf("%v", fileNames)
+		sendGridKey := GetSendGridKeyForUser(userBilling)
+		log.Printf("%v", sendGridKey)
+		for i := 0; i < len(allEmails); i++ {
+			sendSendGridEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames, sendGridKey)
+		}
 
 		msg.Ack()
 	})

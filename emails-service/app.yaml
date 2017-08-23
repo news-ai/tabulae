@@ -6,3 +6,7 @@ version: 1
 
 manual_scaling:
   instances: 1
+
+env_variables:
+  SENDGRID_API_KEY: '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'
+  SENDGRID_INTERNAL_API_KEY: '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'

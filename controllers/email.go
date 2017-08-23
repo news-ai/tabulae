@@ -1754,7 +1754,7 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 	if val.SendAt.IsZero() || val.SendAt.Before(time.Now()) {
 		userBilling, _ := controllers.GetUserBilling(c, r, user)
 		sendGridKey := emails.GetSendGridKeyForUser(userBilling)
-		emailSent, emailId, err := emails.SendEmailAttachment(r, *val, user, files, bytesArray, attachmentType, fileNames, sendGridKey)
+		emailSent, emailId, err := emails.SendEmailAttachment(c, *val, user, files, bytesArray, attachmentType, fileNames, sendGridKey)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return *val, nil, err
