@@ -1109,7 +1109,7 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 
 		emailSplit := 200
 		if len(bulkEmailIds.EmailIds) < 200 {
-			emailSplit = 50
+			emailSplit = 40
 		}
 
 		betweenDelay := 60

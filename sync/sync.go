@@ -27,7 +27,19 @@ func sync(r *http.Request, data map[string]string, topicName string) error {
 	}
 
 	topic := PubsubClient.Topic(topicName)
-	topic.Publish(c, &pubsub.Message{Data: jsonData})
+	defer topic.Stop()
+
+	var results []*pubsub.PublishResult
+	res := topic.Publish(c, &pubsub.Message{Data: jsonData})
+	results = append(results, res)
+	for _, result := range results {
+		id, err := result.Get(c)
+		if err != nil {
+			log.Infof(c, "%v", err)
+			continue
+		}
+		log.Infof(c, "Published a message with a message ID: %s\n", id)
+	}
 
 	return nil
 }
