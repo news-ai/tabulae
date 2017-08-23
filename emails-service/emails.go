@@ -25,7 +25,7 @@ var (
 	datastoreClient *datastore.Client
 )
 
-func sendSendGridEmail(c context.Context, email tabulaeModels.Email, files []tabulaeModels.File, user apiModels.User, bytesArray [][]byte, attachmentType []string, fileNames []string, sendGridKey string) (tabulaeModels.Email, interface{}, error) {
+func sendSendGridEmail(c context.Context, email tabulaeModels.Email, files []tabulaeModels.File, user apiModels.User, bytesArray [][]byte, attachmentType []string, fileNames []string, sendGridKey string, sendGridDelay int) (tabulaeModels.Email, interface{}, error) {
 	email.Method = "sendgrid"
 	email.IsSent = true
 
@@ -50,15 +50,17 @@ func sendSendGridEmail(c context.Context, email tabulaeModels.Email, files []tab
 
 	// Check to see if there is no sendat date or if date is in the past
 	if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
-		_, emailId, err := sendEmailAttachment(c, email, user, files, bytesArray, attachmentType, fileNames, sendGridKey)
+		emailSent, emailId, err := sendEmailAttachment(c, email, user, files, bytesArray, attachmentType, fileNames, sendGridKey, sendGridDelay)
 		if err != nil {
 			log.Printf("%v", err)
 			return tabulaeModels.Email{}, nil, err
 		}
 
-		email.IsSent = true
-		email.Delievered = true
+		email.IsSent = emailSent
+		email.Delievered = emailSent
 		email.SendGridId = emailId
+
+		return email, nil, nil
 	}
 
 	return tabulaeModels.Email{}, nil, nil
@@ -201,10 +203,12 @@ func subscribe() {
 			return
 		}
 
-		sendGridKey := GetSendGridKeyForUser(userBilling)
-		log.Printf("%v", sendGridKey)
+		betweenDelay := 60
+		sendGridKey := getSendGridKeyForUser(userBilling)
 		for i := 0; i < len(allEmails); i++ {
-			sendSendGridEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames, sendGridKey)
+			delayAmount := int(float64(i) / float64(200))
+			sendGridDelay := delayAmount * betweenDelay
+			sendSendGridEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames, sendGridKey, sendGridDelay)
 		}
 
 		msg.Ack()

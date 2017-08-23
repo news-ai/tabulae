@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/news-ai/tabulae/models"
 
@@ -16,7 +17,7 @@ import (
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-func GetSendGridKeyForUser(userBilling apiModels.Billing) string {
+func getSendGridKeyForUser(userBilling apiModels.Billing) string {
 	if userBilling.IsOnTrial {
 		return os.Getenv("SENDGRID_INTERNAL_API_KEY")
 	}
@@ -25,7 +26,7 @@ func GetSendGridKeyForUser(userBilling apiModels.Billing) string {
 }
 
 // Send an email confirmation to a new user
-func sendEmailAttachment(c context.Context, email models.Email, user apiModels.User, files []models.File, bytesArray [][]byte, attachmentType []string, fileNames []string, sendGridKey string) (bool, string, error) {
+func sendEmailAttachment(c context.Context, email models.Email, user apiModels.User, files []models.File, bytesArray [][]byte, attachmentType []string, fileNames []string, sendGridKey string, sendGridDelay int) (bool, string, error) {
 
 	userFullName := strings.Join([]string{user.FirstName, user.LastName}, " ")
 	emailFullName := strings.Join([]string{email.FirstName, email.LastName}, " ")
@@ -102,6 +103,16 @@ func sendEmailAttachment(c context.Context, email models.Email, user apiModels.U
 			a.SetDisposition("attachment")
 			m.AddAttachment(a)
 		}
+	}
+
+	if sendGridDelay > 0 {
+		timeSend := time.Now()
+		timeSend = timeSend.Add(time.Hour*time.Duration(0) +
+			time.Minute*time.Duration(0) +
+			time.Second*time.Duration(sendGridDelay))
+
+		timeInt := int(timeSend.Unix())
+		m.SetSendAt(timeInt)
 	}
 
 	request := sendgrid.GetRequest(sendGridKey, "/v3/mail/send", "https://api.sendgrid.com")

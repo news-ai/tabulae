@@ -1,0 +1,5 @@
+application: newsai-1166
+version: dev
+runtime: go
+api_version: go1
+module: updates

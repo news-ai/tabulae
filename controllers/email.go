@@ -1107,8 +1107,12 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 			log.Errorf(c, "%v", err)
 		}
 
+		betweenDelay := 60
 		for i := 0; i < len(bulkEmailIds.EmailIds); i++ {
-			singleEmail, _, err := SendBulkEmailSingle(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10), files, bytesArray, attachmentType, fileNames)
+			delayAmount := int(float64(i) / float64(200))
+			emailDelay := delayAmount * betweenDelay
+
+			singleEmail, _, err := SendBulkEmailSingle(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10), files, bytesArray, attachmentType, fileNames, emailDelay)
 			if err != nil {
 				log.Errorf(c, "%v", err)
 			}
@@ -1469,7 +1473,7 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 	return *val, nil, nil
 }
 
-func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []models.File, bytesArray [][]byte, attachmentType []string, fileNames []string) (models.Email, interface{}, error) {
+func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []models.File, bytesArray [][]byte, attachmentType []string, fileNames []string, emailDelay int) (models.Email, interface{}, error) {
 	email, _, err := GetEmail(c, r, id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -1754,7 +1758,7 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 	if val.SendAt.IsZero() || val.SendAt.Before(time.Now()) {
 		userBilling, _ := controllers.GetUserBilling(c, r, user)
 		sendGridKey := emails.GetSendGridKeyForUser(userBilling)
-		emailSent, emailId, err := emails.SendEmailAttachment(c, *val, user, files, bytesArray, attachmentType, fileNames, sendGridKey)
+		emailSent, emailId, err := emails.SendEmailAttachment(c, *val, user, files, bytesArray, attachmentType, fileNames, sendGridKey, emailDelay)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			return *val, nil, err
