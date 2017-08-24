@@ -1469,6 +1469,10 @@ func EnrichContact(c context.Context, r *http.Request, id string) (models.Contac
 		return models.Contact{}, nil, errors.New("You don't have permissions to edit these objects")
 	}
 
+	contact.FirstName = strings.TrimSpace(contact.FirstName)
+	contact.LastName = strings.TrimSpace(contact.LastName)
+	contact.Email = strings.TrimSpace(contact.Email)
+
 	_, err = enrichContact(c, r, &contact)
 	if err != nil {
 		log.Errorf(c, "%v", err)

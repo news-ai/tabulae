@@ -17,6 +17,7 @@ import (
 
 	apiModels "github.com/news-ai/api/models"
 	tabulaeModels "github.com/news-ai/tabulae/models"
+	updateService "github.com/news-ai/tabulae/updates-service"
 )
 
 var (
@@ -24,6 +25,10 @@ var (
 	subscription    *pubsub.Subscription
 	datastoreClient *datastore.Client
 )
+
+func sendChangesToUpdateService(c context.Context) {
+
+}
 
 func sendSendGridEmail(c context.Context, email tabulaeModels.Email, files []tabulaeModels.File, user apiModels.User, bytesArray [][]byte, attachmentType []string, fileNames []string, sendGridKey string, sendGridDelay int) (tabulaeModels.Email, interface{}, error) {
 	email.Method = "sendgrid"
@@ -59,7 +64,6 @@ func sendSendGridEmail(c context.Context, email tabulaeModels.Email, files []tab
 		email.IsSent = emailSent
 		email.Delievered = emailSent
 		email.SendGridId = emailId
-
 		return email, nil, nil
 	}
 
@@ -77,6 +81,10 @@ func getEmails(c context.Context, ids []int64) ([]tabulaeModels.Email, apiModels
 	if err := datastoreClient.GetMulti(c, keys, emails); err != nil {
 		log.Printf("%v", err)
 		return []tabulaeModels.Email{}, apiModels.User{}, apiModels.Billing{}, []tabulaeModels.File{}, err
+	}
+
+	for i := 0; i < len(emails); i++ {
+		emails[i].Id = keys[i].ID
 	}
 
 	// Remove emails that have already been delivered
@@ -196,6 +204,7 @@ func subscribe() {
 			return
 		}
 
+		// Get the actual attachment files from Google storage
 		bytesArray, attachmentType, fileNames, err := getAttachments(c, files)
 		if err != nil {
 			log.Printf("%v", err)
@@ -203,13 +212,35 @@ func subscribe() {
 			return
 		}
 
+		// Check for duplicates in email Ids. In-case a "send" is clicked two
+		// for one particular email.
+
+		// Send emails using the SendGrid API
+		newEmails := []tabulaeModels.Email{}
 		betweenDelay := 60
 		sendGridKey := getSendGridKeyForUser(userBilling)
 		for i := 0; i < len(allEmails); i++ {
 			delayAmount := int(float64(i) / float64(200))
 			sendGridDelay := delayAmount * betweenDelay
-			sendSendGridEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames, sendGridKey, sendGridDelay)
+			emailWithId, _, err := sendSendGridEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames, sendGridKey, sendGridDelay)
+			if err != nil {
+				log.Printf("%v", err)
+				continue
+			}
+			newEmails = append(newEmails, emailWithId)
 		}
+
+		// Send message to updates-service that the data has been changed/updated
+		updates := []updateService.EmailSendUpdate{}
+		for i := 0; i < len(newEmails); i++ {
+			update := updateService.EmailSendUpdate{}
+			update.EmailId = newEmails[i].Id
+			update.Method = "sendgrid"
+			update.SendId = newEmails[i].SendGridId
+			updates = append(updates, update)
+		}
+
+		log.Printf("%v", updates)
 
 		msg.Ack()
 	})

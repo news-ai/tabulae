@@ -167,6 +167,9 @@ func (ct *Contact) Normalize() (*Contact, error) {
 	ct.Email = strings.ToLower(ct.Email)
 	ct.Email = strings.TrimSpace(ct.Email)
 
+	ct.FirstName = strings.TrimSpace(ct.FirstName)
+	ct.LastName = strings.TrimSpace(ct.LastName)
+
 	return ct, nil
 }
 
