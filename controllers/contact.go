@@ -536,11 +536,14 @@ func enrichContact(c context.Context, r *http.Request, contact *models.Contact) 
 		return nil, err
 	}
 
-	contactDetail, err := apiSearch.SearchContactDatabase(c, r, contact.Email)
+	contactVerifyDetail, err := apiSearch.SearchContactVerifyDatabase(c, r, contact.Email)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	}
+
+	log.Infof(c, "%v", contactVerifyDetail)
+	contactDetail := contactVerifyDetail.Data.Enrich
 
 	if contactDetail.Data.Likelihood > 0.75 {
 		// Add first name
