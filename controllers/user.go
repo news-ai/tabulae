@@ -52,13 +52,16 @@ func RegisterUser(r *http.Request, user models.User) (models.User, bool, error) 
 	if user.RefreshToken != "" {
 		existingUser.RefreshToken = user.RefreshToken
 	}
-	existingUser.TokenType = user.TokenType
-	existingUser.GoogleExpiresIn = user.GoogleExpiresIn
-	existingUser.Gmail = user.Gmail
-	existingUser.GoogleId = user.GoogleId
-	existingUser.AccessToken = user.AccessToken
-	existingUser.GoogleCode = user.GoogleCode
-	existingUser.Save(c)
+
+	if !existingUser.Gmail {
+		existingUser.TokenType = user.TokenType
+		existingUser.GoogleExpiresIn = user.GoogleExpiresIn
+		existingUser.Gmail = user.Gmail
+		existingUser.GoogleId = user.GoogleId
+		existingUser.AccessToken = user.AccessToken
+		existingUser.GoogleCode = user.GoogleCode
+		existingUser.Save(c)
+	}
 
 	return existingUser, false, errors.New("User with the email already exists")
 }

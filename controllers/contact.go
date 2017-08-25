@@ -544,6 +544,7 @@ func enrichContact(c context.Context, r *http.Request, contact *models.Contact) 
 
 	log.Infof(c, "%v", contactVerifyDetail)
 	contactDetail := contactVerifyDetail.Data.Enrich
+	// contactVerify := contactVerifyDetail.Data.Verify
 
 	if contactDetail.Data.Likelihood > 0.75 {
 		// Add first name
