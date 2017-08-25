@@ -1112,12 +1112,12 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 			emailSplit = 40
 		}
 
-		betweenDelay := 60
+		betweenDelay := 150
 		for i := 0; i < len(bulkEmailIds.EmailIds); i++ {
 			delayAmount := int(float64(i) / float64(emailSplit))
 			emailDelay := delayAmount * betweenDelay
 
-			singleEmail, _, err := SendBulkEmailSingle(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10), files, bytesArray, attachmentType, fileNames, emailDelay)
+			singleEmail, _, err := SendBulkEmailSingle(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10), files, bytesArray, att      achmentType, fileNames, emailDelay)
 			if err != nil {
 				log.Errorf(c, "%v", err)
 			}
