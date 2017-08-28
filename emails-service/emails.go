@@ -198,8 +198,15 @@ func subscribe() {
 					continue
 				}
 				newEmails = append(newEmails, emailWithId)
-			} else {
+			} else if allEmails[i].Method == "outlook" {
 				emailWithId, _, err := sendOutlookEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames)
+				if err != nil {
+					log.Printf("%v", err)
+					continue
+				}
+				newEmails = append(newEmails, emailWithId)
+			} else if allEmails[i].Method == "smtp" {
+				emailWithId, _, err := sendSMTPEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames)
 				if err != nil {
 					log.Printf("%v", err)
 					continue
@@ -223,7 +230,7 @@ func subscribe() {
 			} else if update.Method == "outlook" {
 				// no updates from Outlook
 			} else if update.Method == "smtp" {
-
+				// no updates from SMTP
 			}
 
 			updates = append(updates, update)
