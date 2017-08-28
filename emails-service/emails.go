@@ -191,8 +191,15 @@ func subscribe() {
 				}
 				newEmails = append(newEmails, emailWithId)
 				// } else if allEmails[i].Method == "gmail" {
-			} else {
+			} else if allEmails[i].Method == "gmail" {
 				emailWithId, _, err := sendGmailEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames)
+				if err != nil {
+					log.Printf("%v", err)
+					continue
+				}
+				newEmails = append(newEmails, emailWithId)
+			} else {
+				emailWithId, _, err := sendOutlookEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames)
 				if err != nil {
 					log.Printf("%v", err)
 					continue
@@ -213,6 +220,10 @@ func subscribe() {
 				update.ThreadId = newEmails[i].GmailThreadId
 			} else if update.Method == "sendgrid" {
 				update.SendId = newEmails[i].SendGridId
+			} else if update.Method == "outlook" {
+				// no updates from Outlook
+			} else if update.Method == "smtp" {
+
 			}
 
 			updates = append(updates, update)
