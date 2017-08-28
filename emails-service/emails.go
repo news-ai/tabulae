@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"time"
 
 	"golang.org/x/net/context"
 
@@ -28,46 +27,6 @@ var (
 
 func sendChangesToUpdateService(c context.Context) {
 
-}
-
-func sendSendGridEmail(c context.Context, email tabulaeModels.Email, files []tabulaeModels.File, user apiModels.User, bytesArray [][]byte, attachmentType []string, fileNames []string, sendGridKey string, sendGridDelay int) (tabulaeModels.Email, interface{}, error) {
-	email.Method = "sendgrid"
-	email.IsSent = true
-
-	// Test if the email we are sending with is in the user's SendGridFrom or is their Email
-	if email.FromEmail != "" {
-		userEmailValid := false
-		if user.Email == email.FromEmail {
-			userEmailValid = true
-		}
-
-		for i := 0; i < len(user.Emails); i++ {
-			if user.Emails[i] == email.FromEmail {
-				userEmailValid = true
-			}
-		}
-
-		// If this is if the email added is not valid in SendGridFrom
-		if !userEmailValid {
-			return email, nil, errors.New("The email requested is not confirmed by the user yet")
-		}
-	}
-
-	// Check to see if there is no sendat date or if date is in the past
-	if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
-		emailSent, emailId, err := sendEmailAttachment(c, email, user, files, bytesArray, attachmentType, fileNames, sendGridKey, sendGridDelay)
-		if err != nil {
-			log.Printf("%v", err)
-			return tabulaeModels.Email{}, nil, err
-		}
-
-		email.IsSent = emailSent
-		email.Delievered = emailSent
-		email.SendGridId = emailId
-		return email, nil, nil
-	}
-
-	return tabulaeModels.Email{}, nil, nil
 }
 
 func getEmails(c context.Context, ids []int64) ([]tabulaeModels.Email, apiModels.User, apiModels.Billing, []tabulaeModels.File, error) {
@@ -214,20 +173,32 @@ func subscribe() {
 
 		// Check for duplicates in email Ids. In-case a "send" is clicked two
 		// for one particular email.
-
-		// Send emails using the SendGrid API
 		newEmails := []tabulaeModels.Email{}
+
+		// These delay parameters are for the delay between emails
 		betweenDelay := 60
 		sendGridKey := getSendGridKeyForUser(userBilling)
 		for i := 0; i < len(allEmails); i++ {
-			delayAmount := int(float64(i) / float64(200))
-			sendGridDelay := delayAmount * betweenDelay
-			emailWithId, _, err := sendSendGridEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames, sendGridKey, sendGridDelay)
-			if err != nil {
-				log.Printf("%v", err)
-				continue
+			if allEmails[i].Method == "sendgrid" {
+				// Select delay to be used using Sendgrid
+				delayAmount := int(float64(i) / float64(200))
+				sendGridDelay := delayAmount * betweenDelay
+
+				emailWithId, _, err := sendSendGridEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames, sendGridKey, sendGridDelay)
+				if err != nil {
+					log.Printf("%v", err)
+					continue
+				}
+				newEmails = append(newEmails, emailWithId)
+				// } else if allEmails[i].Method == "gmail" {
+			} else {
+				emailWithId, _, err := sendGmailEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames)
+				if err != nil {
+					log.Printf("%v", err)
+					continue
+				}
+				newEmails = append(newEmails, emailWithId)
 			}
-			newEmails = append(newEmails, emailWithId)
 		}
 
 		// Send message to updates-service that the data has been changed/updated
@@ -235,8 +206,15 @@ func subscribe() {
 		for i := 0; i < len(newEmails); i++ {
 			update := updateService.EmailSendUpdate{}
 			update.EmailId = newEmails[i].Id
-			update.Method = "sendgrid"
-			update.SendId = newEmails[i].SendGridId
+			update.Method = newEmails[i].Method
+
+			if update.Method == "gmail" {
+				update.SendId = newEmails[i].GmailId
+				update.ThreadId = newEmails[i].GmailThreadId
+			} else if update.Method == "sendgrid" {
+				update.SendId = newEmails[i].SendGridId
+			}
+
 			updates = append(updates, update)
 		}
 

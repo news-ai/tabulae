@@ -35,8 +35,8 @@ import (
 var nonCustomHeaders = []string{"firstname", "lastname", "email", "employers", "pastemployers", "notes", "linkedin", "twitter", "instagram", "website", "blog", "phonenumber", "location"}
 var nonCustomHeadersName = []string{"First Name", "Last Name", "Email", "Employers", "Past Employers", "Notes", "Linkedin", "Twitter", "Instagram", "Website", "Blog", "Phone #", "Location"}
 
-var customHeaders = []string{"instagramfollowers", "instagramfollowing", "instagramlikes", "instagramcomments", "instagramposts", "twitterfollowers", "twitterfollowing", "twitterlikes", "twitterretweets", "twitterposts", "latestheadline", "lastcontacted"}
-var customHeadersName = []string{"Instagram Followers", "Instagram Following", "Instagram Likes", "Instagram Comments", "Instagram Posts", "Twitter Followers", "Twitter Following", "Twitter Likes", "Twitter Retweets", "Twitter Posts", "Latest Headline", "Last Contacted"}
+var customHeaders = []string{"instagramfollowers", "instagramfollowing", "instagramlikes", "instagramcomments", "instagramposts", "twitterfollowers", "twitterfollowing", "twitterlikes", "twitterretweets", "twitterposts", "latestheadline", "lastcontacted", "publicationlastcontacted"}
+var customHeadersName = []string{"Instagram Followers", "Instagram Following", "Instagram Likes", "Instagram Comments", "Instagram Posts", "Twitter Followers", "Twitter Following", "Twitter Likes", "Twitter Retweets", "Twitter Posts", "Latest Headline", "Last Contacted", "Publication Last Contacted"}
 
 type duplicateListDetails struct {
 	Name string `json:"name"`
@@ -662,21 +662,23 @@ func UpdateMediaList(c context.Context, r *http.Request, id string) (models.Medi
 		return models.MediaList{}, nil, err
 	}
 
-	utilities.UpdateIfNotBlank(&mediaList.Name, updatedMediaList.Name)
-
 	if len(updatedMediaList.Contacts) > 0 {
 		mediaList.Contacts = updatedMediaList.Contacts
 	} else {
-		if len(updatedMediaList.FieldsMap) == 0 {
-			utilities.UpdateIfNotBlank(&mediaList.Client, updatedMediaList.Client)
-			if len(updatedMediaList.Tags) > 0 {
-				mediaList.Tags = updatedMediaList.Tags
-			}
+		if mediaList.Name == updatedMediaList.Name {
+			if len(updatedMediaList.FieldsMap) == 0 {
+				utilities.UpdateIfNotBlank(&mediaList.Client, updatedMediaList.Client)
+				if len(updatedMediaList.Tags) > 0 {
+					mediaList.Tags = updatedMediaList.Tags
+				}
 
-			// If you want to empty a list
-			if len(mediaList.Tags) > 0 && len(updatedMediaList.Tags) == 0 {
-				mediaList.Tags = updatedMediaList.Tags
+				// If you want to empty a list
+				if len(mediaList.Tags) > 0 && len(updatedMediaList.Tags) == 0 {
+					mediaList.Tags = updatedMediaList.Tags
+				}
 			}
+		} else {
+			utilities.UpdateIfNotBlank(&mediaList.Name, updatedMediaList.Name)
 		}
 	}
 

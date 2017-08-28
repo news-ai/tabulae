@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/base64"
+	"errors"
 	"log"
 	"os"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"golang.org/x/net/context"
 
 	apiModels "github.com/news-ai/api/models"
+	tabulaeModels "github.com/news-ai/tabulae/models"
 
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
@@ -25,9 +27,48 @@ func getSendGridKeyForUser(userBilling apiModels.Billing) string {
 	return os.Getenv("SENDGRID_API_KEY")
 }
 
+func sendSendGridEmail(c context.Context, email tabulaeModels.Email, files []tabulaeModels.File, user apiModels.User, bytesArray [][]byte, attachmentType []string, fileNames []string, sendGridKey string, sendGridDelay int) (tabulaeModels.Email, interface{}, error) {
+	email.Method = "sendgrid"
+	email.IsSent = true
+
+	// Test if the email we are sending with is in the user's SendGridFrom or is their Email
+	if email.FromEmail != "" {
+		userEmailValid := false
+		if user.Email == email.FromEmail {
+			userEmailValid = true
+		}
+
+		for i := 0; i < len(user.Emails); i++ {
+			if user.Emails[i] == email.FromEmail {
+				userEmailValid = true
+			}
+		}
+
+		// If this is if the email added is not valid in SendGridFrom
+		if !userEmailValid {
+			return email, nil, errors.New("The email requested is not confirmed by the user yet")
+		}
+	}
+
+	// Check to see if there is no sendat date or if date is in the past
+	if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
+		emailSent, emailId, err := sendEmailAttachment(c, email, user, files, bytesArray, attachmentType, fileNames, sendGridKey, sendGridDelay)
+		if err != nil {
+			log.Printf("%v", err)
+			return tabulaeModels.Email{}, nil, err
+		}
+
+		email.IsSent = emailSent
+		email.Delievered = emailSent
+		email.SendGridId = emailId
+		return email, nil, nil
+	}
+
+	return tabulaeModels.Email{}, nil, nil
+}
+
 // Send an email confirmation to a new user
 func sendEmailAttachment(c context.Context, email models.Email, user apiModels.User, files []models.File, bytesArray [][]byte, attachmentType []string, fileNames []string, sendGridKey string, sendGridDelay int) (bool, string, error) {
-
 	userFullName := strings.Join([]string{user.FirstName, user.LastName}, " ")
 	emailFullName := strings.Join([]string{email.FirstName, email.LastName}, " ")
 

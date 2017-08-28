@@ -1107,6 +1107,18 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 			log.Errorf(c, "%v", err)
 		}
 
+		// Figure out what the emailMethod we should use
+		emailMethod := "sendgrid"
+		if user.SMTPValid && user.ExternalEmail && user.EmailSetting != 0 {
+			emailMethod = "smtp"
+		} else if user.AccessToken != "" && user.Gmail {
+			emailMethod = "gmail"
+		} else if user.OutlookAccessToken != "" && user.Outlook {
+			emailMethod = "outlook"
+		} else if user.UseSparkPost {
+			emailMethod = "sparkpost"
+		}
+
 		emailSplit := 200
 		if len(bulkEmailIds.EmailIds) < 200 {
 			emailSplit = 40
@@ -1117,7 +1129,7 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 			delayAmount := int(float64(i) / float64(emailSplit))
 			emailDelay := delayAmount * betweenDelay
 
-			singleEmail, _, err := SendBulkEmailSingle(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10), files, bytesArray, att      achmentType, fileNames, emailDelay)
+			singleEmail, _, err := SendBulkEmailSingle(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10), files, bytesArray, attachmentType, fileNames, emailDelay)
 			if err != nil {
 				log.Errorf(c, "%v", err)
 			}
@@ -1478,7 +1490,7 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 	return *val, nil, nil
 }
 
-func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []models.File, bytesArray [][]byte, attachmentType []string, fileNames []string, emailDelay int) (models.Email, interface{}, error) {
+func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []models.File, bytesArray [][]byte, attachmentType []string, fileNames []string, emailDelay int, method string) (models.Email, interface{}, error) {
 	email, _, err := GetEmail(c, r, id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -1510,11 +1522,12 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 		email.Subject = "(no subject)"
 	}
 
+	email.Method = method
 	emailId := strconv.FormatInt(email.Id, 10)
 	email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
 	email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
-	if user.SMTPValid && user.ExternalEmail && user.EmailSetting != 0 {
-		email.Method = "smtp"
+
+	if email.Method == "smtp" {
 		val, err := email.MarkSent(c, "")
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -1589,10 +1602,7 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 		}
 
 		return *val, nil, nil
-	}
-
-	// Send through gmail
-	if user.AccessToken != "" && user.Gmail {
+	} else if email.Method == "gmail" {
 		err = google.ValidateAccessToken(r, user)
 		// Refresh access token if err is nil
 		if err != nil {
@@ -1604,7 +1614,6 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 			}
 		}
 
-		email.Method = "gmail"
 		val, err := email.MarkSent(c, "")
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -1630,9 +1639,7 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 		}
 
 		return *val, nil, nil
-	}
-
-	if user.OutlookAccessToken != "" && user.Outlook {
+	} else if email.Method == "outlook" {
 		err = outlook.ValidateAccessToken(r, user)
 		// Refresh access token if err is nil
 		if err != nil {
@@ -1644,7 +1651,6 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 			}
 		}
 
-		email.Method = "outlook"
 		val, err := email.MarkSent(c, "")
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -1667,14 +1673,11 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 		}
 
 		return *val, nil, nil
-	}
-
-	if user.UseSparkPost {
+	} else if email.Method == "sparkpost" {
 		// Use SparkPost
 		log.Infof(c, "%v", "Using SparkPost")
 
 		// Mark email as sent again with "sparkpost" method
-		email.Method = "sparkpost"
 		val, err := email.MarkSent(c, "")
 		if err != nil {
 			log.Errorf(c, "%v", err)
@@ -1733,7 +1736,6 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 		return *val, nil, nil
 	}
 
-	email.Method = "sendgrid"
 	val, err := email.MarkSent(c, "")
 	if err != nil {
 		log.Errorf(c, "%v", err)
