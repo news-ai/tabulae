@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -14,7 +12,6 @@ import (
 
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
-	"google.golang.org/appengine/urlfetch"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/pquerna/ffjson/ffjson"
@@ -28,9 +25,6 @@ import (
 	"github.com/news-ai/tabulae/search"
 	"github.com/news-ai/tabulae/sync"
 
-	"github.com/news-ai/web/emails"
-	"github.com/news-ai/web/google"
-	"github.com/news-ai/web/outlook"
 	"github.com/news-ai/web/permissions"
 	"github.com/news-ai/web/utilities"
 )
@@ -1129,7 +1123,7 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 			delayAmount := int(float64(i) / float64(emailSplit))
 			emailDelay := delayAmount * betweenDelay
 
-			singleEmail, _, err := SendBulkEmailSingle(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10), files, bytesArray, attachmentType, fileNames, emailDelay)
+			singleEmail, _, err := SendBulkEmailSingle(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10), files, bytesArray, attachmentType, fileNames, emailDelay, emailMethod)
 			if err != nil {
 				log.Errorf(c, "%v", err)
 			}
@@ -1171,323 +1165,16 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 		return email, nil, errors.New("Invalid HTML")
 	}
 
-	files := []models.File{}
-	if len(email.Attachments) > 0 {
-		for i := 0; i < len(email.Attachments); i++ {
-			file, err := getFile(c, r, email.Attachments[i])
-			if err == nil {
-				files = append(files, file)
-			} else {
-				log.Errorf(c, "%v", err)
-			}
-		}
-	}
-
 	if email.Subject == "" {
 		email.Subject = "(no subject)"
 	}
 
+	email.Method = ""
 	emailId := strconv.FormatInt(email.Id, 10)
 	email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
 	email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
-	if user.SMTPValid && user.ExternalEmail && user.EmailSetting != 0 {
-		email.Method = "smtp"
-		val, err := email.MarkSent(c, "")
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return *val, nil, err
-		}
 
-		// Check to see if there is no sendat date or if date is in the past
-		if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
-			emailBody, err := emails.GenerateEmail(r, user, email, files)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return *val, nil, err
-			}
-
-			emailSetting, err := getEmailSetting(c, r, user.EmailSetting)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return *val, nil, err
-			}
-
-			SMTPPassword := string(user.SMTPPassword[:])
-
-			contextWithTimeout, _ := context.WithTimeout(c, time.Second*30)
-			client := urlfetch.Client(contextWithTimeout)
-			getUrl := "https://tabulae-smtp.newsai.org/send"
-
-			sendEmailRequest := models.SMTPEmailSettings{}
-			sendEmailRequest.Servername = emailSetting.SMTPServer + ":" + strconv.Itoa(emailSetting.SMTPPortSSL)
-			sendEmailRequest.EmailUser = user.SMTPUsername
-			sendEmailRequest.EmailPassword = SMTPPassword
-			sendEmailRequest.To = email.To
-			sendEmailRequest.Subject = email.Subject
-			sendEmailRequest.Body = emailBody
-
-			SendEmailRequest, err := json.Marshal(sendEmailRequest)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return *val, nil, err
-			}
-			log.Infof(c, "%v", string(SendEmailRequest))
-			sendEmailQuery := bytes.NewReader(SendEmailRequest)
-
-			req, _ := http.NewRequest("POST", getUrl, sendEmailQuery)
-
-			resp, err := client.Do(req)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return *val, nil, err
-			}
-			defer resp.Body.Close()
-
-			decoder := json.NewDecoder(resp.Body)
-			var verifyResponse SMTPEmailResponse
-			err = decoder.Decode(&verifyResponse)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return *val, nil, err
-			}
-
-			log.Infof(c, "%v", verifyResponse)
-
-			if verifyResponse.Status {
-				val, err = email.MarkDelivered(c)
-				if err != nil {
-					log.Errorf(c, "%v", err)
-					return *val, nil, err
-				}
-				return *val, nil, nil
-			}
-
-			if isNotBulk {
-				sync.ResourceSync(r, val.Id, "Email", "create")
-			}
-			return *val, nil, errors.New(verifyResponse.Error)
-		}
-
-		return *val, nil, nil
-	}
-
-	// Send through gmail
-	if user.AccessToken != "" && user.Gmail {
-		err = google.ValidateAccessToken(r, user)
-		// Refresh access token if err is nil
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			user, err = google.RefreshAccessToken(r, user)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return email, nil, errors.New("Could not refresh user token")
-			}
-		}
-
-		email.Method = "gmail"
-		val, err := email.MarkSent(c, "")
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return *val, nil, err
-		}
-
-		// Check to see if there is no sendat date or if date is in the past
-		if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
-			gmailId, gmailThreadId, err := emails.SendGmailEmail(r, user, email, files)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return email, nil, err
-			}
-
-			email.GmailId = gmailId
-			email.GmailThreadId = gmailThreadId
-
-			val, err = email.MarkDelivered(c)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return *val, nil, err
-			}
-		}
-
-		if isNotBulk {
-			sync.ResourceSync(r, val.Id, "Email", "create")
-		}
-		return *val, nil, nil
-	}
-
-	if user.OutlookAccessToken != "" && user.Outlook {
-		err = outlook.ValidateAccessToken(r, user)
-		// Refresh access token if err is nil
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			user, err = outlook.RefreshAccessToken(r, user)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return email, nil, errors.New("Could not refresh user token")
-			}
-		}
-
-		email.Method = "outlook"
-		val, err := email.MarkSent(c, "")
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return *val, nil, err
-		}
-
-		// Check to see if there is no sendat date or if date is in the past
-		if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
-			err := emails.SendOutlookEmail(r, user, email, files)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return email, nil, err
-			}
-
-			val, err = email.MarkDelivered(c)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return *val, nil, err
-			}
-		}
-
-		if isNotBulk {
-			sync.ResourceSync(r, val.Id, "Email", "create")
-		}
-		return *val, nil, nil
-	}
-
-	if user.UseSparkPost {
-		// Use SparkPost
-		log.Infof(c, "%v", "Using SparkPost")
-
-		// Mark email as sent again with "sparkpost" method
-		email.Method = "sparkpost"
-		val, err := email.MarkSent(c, "")
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return *val, nil, err
-		}
-
-		// Test if the email we are sending with is in the user's SendGridFrom or is their Email
-		if val.FromEmail != "" {
-			userEmailValid := false
-			if user.Email == val.FromEmail {
-				userEmailValid = true
-			}
-
-			for i := 0; i < len(user.Emails); i++ {
-				if user.Emails[i] == val.FromEmail {
-					userEmailValid = true
-				}
-			}
-
-			// If this is if the email added is not valid in SendGridFrom
-			if !userEmailValid {
-				return *val, nil, errors.New("The email requested is not confirmed by the user yet")
-			}
-		}
-
-		// Check to see if there is no sendat date or if date is in the past
-		if val.SendAt.IsZero() || val.SendAt.Before(time.Now()) {
-			emailSent, emailId, err := emails.SendSparkPostEmail(r, *val, user, files)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return *val, nil, err
-			}
-
-			val.SparkPostId = emailId
-			val, err = email.MarkSent(c, "")
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return *val, nil, err
-			}
-
-			val, err = email.MarkDelivered(c)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				return *val, nil, err
-			}
-
-			if emailSent {
-				// Set attachments for deletion
-				for i := 0; i < len(files); i++ {
-					files[i].Imported = true
-					files[i].Save(c)
-				}
-			}
-		}
-
-		if isNotBulk {
-			sync.ResourceSync(r, val.Id, "Email", "create")
-		}
-		return *val, nil, nil
-	}
-
-	email.Method = "sendgrid"
-	val, err := email.MarkSent(c, "")
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return *val, nil, err
-	}
-
-	// Test if the email we are sending with is in the user's SendGridFrom or is their Email
-	if val.FromEmail != "" {
-		userEmailValid := false
-		if user.Email == val.FromEmail {
-			userEmailValid = true
-		}
-
-		for i := 0; i < len(user.Emails); i++ {
-			if user.Emails[i] == val.FromEmail {
-				userEmailValid = true
-			}
-		}
-
-		// If this is if the email added is not valid in SendGridFrom
-		if !userEmailValid {
-			return *val, nil, errors.New("The email requested is not confirmed by the user yet")
-		}
-	}
-
-	// Check to see if there is no sendat date or if date is in the past
-	if val.SendAt.IsZero() || val.SendAt.Before(time.Now()) {
-		userBilling, _ := controllers.GetUserBilling(c, r, user)
-		sendGridKey := emails.GetSendGridKeyForUser(userBilling)
-		emailSent, emailId, err := emails.SendEmail(r, *val, user, files, sendGridKey)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return *val, nil, err
-		}
-
-		val, err = email.MarkSent(c, emailId)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return *val, nil, err
-		}
-
-		val, err = email.MarkDelivered(c)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return *val, nil, err
-		}
-
-		if emailSent {
-			// Set attachments for deletion
-			for i := 0; i < len(files); i++ {
-				files[i].Imported = true
-				files[i].Save(c)
-			}
-
-			if isNotBulk {
-				sync.ResourceSync(r, val.Id, "Email", "create")
-			}
-			return *val, nil, nil
-		}
-	}
-
-	if isNotBulk {
-		sync.ResourceSync(r, val.Id, "Email", "create")
-	}
-	return *val, nil, nil
+	return email, nil, nil
 }
 
 func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []models.File, bytesArray [][]byte, attachmentType []string, fileNames []string, emailDelay int, method string) (models.Email, interface{}, error) {
@@ -1527,6 +1214,7 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 	email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
 	email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
 
+	return email, nil, nil
 }
 
 func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason string) (*models.Email, error) {

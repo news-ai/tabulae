@@ -221,6 +221,7 @@ func subscribe() {
 			update := updateService.EmailSendUpdate{}
 			update.EmailId = newEmails[i].Id
 			update.Method = newEmails[i].Method
+			update.Delievered = true
 
 			if update.Method == "gmail" {
 				update.SendId = newEmails[i].GmailId
