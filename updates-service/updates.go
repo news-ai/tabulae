@@ -78,5 +78,6 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
+	http.HandleFunc("/incoming", internalTrackerHandler)
 	http.HandleFunc("/updates", incomingUpdates)
 }

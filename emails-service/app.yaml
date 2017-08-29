@@ -2,7 +2,6 @@ runtime: go
 env: flex
 service: emails
 api_version: go1
-version: 1
 
 manual_scaling:
   instances: 1

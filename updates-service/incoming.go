@@ -1,4 +1,4 @@
-package incoming
+package updates
 
 import (
 	"bytes"
@@ -9,8 +9,6 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
-
-	"github.com/julienschmidt/httprouter"
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/sync"
@@ -33,7 +31,7 @@ type InternalTrackerEvent struct {
 	Reason      string `json:"reason"`
 }
 
-func InternalTrackerHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 	hasErrors := false
 	c := appengine.NewContext(r)
 
