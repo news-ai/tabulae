@@ -602,6 +602,18 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 		return []models.Email{}, nil, err
 	}
 
+	// Figure out what the emailMethod we should use
+	emailMethod := "sendgrid"
+	if currentUser.SMTPValid && currentUser.ExternalEmail && currentUser.EmailSetting != 0 {
+		emailMethod = "smtp"
+	} else if currentUser.AccessToken != "" && currentUser.Gmail {
+		emailMethod = "gmail"
+	} else if currentUser.OutlookAccessToken != "" && currentUser.Outlook {
+		emailMethod = "outlook"
+	} else if currentUser.UseSparkPost {
+		emailMethod = "sparkpost"
+	}
+
 	decoder := ffjson.NewDecoder()
 	var email models.Email
 	err = decoder.Decode(buf, &email)
@@ -648,6 +660,7 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 			emails[i].Updated = time.Now()
 			emails[i].TeamId = currentUser.TeamId
 			emails[i].IsSent = false
+			emails[i].Method = emailMethod
 
 			keys = append(keys, emails[i].Key(c))
 		}
@@ -778,7 +791,12 @@ func CreateEmailTransition(c context.Context, r *http.Request) ([]models.Email, 
 		}
 	}
 
+	email.CreatedBy = currentUser.Id
+	email.Updated = time.Now()
+	email.Created = time.Now()
+	email.Method = emailMethod
 	email.TeamId = currentUser.TeamId
+	email.IsSent = false
 
 	// Create email
 	_, err = email.Create(c, r, currentUser)
@@ -1044,7 +1062,6 @@ func GetCurrentSchedueledEmails(c context.Context, r *http.Request) ([]models.Em
 	}
 
 	emailsToSend := []models.Email{}
-
 	for i := 0; i < len(emails); i++ {
 		emails[i].Format(ks[i], "emails")
 
@@ -1087,20 +1104,8 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 
 	// Since the emails should be the same, get the attachments here
 	if len(bulkEmailIds.EmailIds) > 0 {
-		// Figure out what the emailMethod we should use
-		emailMethod := "sendgrid"
-		if user.SMTPValid && user.ExternalEmail && user.EmailSetting != 0 {
-			emailMethod = "smtp"
-		} else if user.AccessToken != "" && user.Gmail {
-			emailMethod = "gmail"
-		} else if user.OutlookAccessToken != "" && user.Outlook {
-			emailMethod = "outlook"
-		} else if user.UseSparkPost {
-			emailMethod = "sparkpost"
-		}
-
 		for i := 0; i < len(bulkEmailIds.EmailIds); i++ {
-			singleEmail, _, err := SendBulkEmailSingle(c, r, bulkEmailIds.EmailIds[i], emailMethod)
+			singleEmail, _, err := SendEmail(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10), false)
 			if err != nil {
 				log.Errorf(c, "%v", err)
 			}
@@ -1146,52 +1151,16 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 		email.Subject = "(no subject)"
 	}
 
-	email.Method = ""
-	emailId := strconv.FormatInt(email.Id, 10)
-	email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
-	email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
-
-	return email, nil, nil
-}
-
-func SendBulkEmailSingle(c context.Context, r *http.Request, id int64, method string) (models.Email, interface{}, error) {
-	email, err := getEmail(c, r, id)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return models.Email{}, nil, err
-	}
-
-	user, err := controllers.GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return email, nil, err
-	}
-
-	if !user.EmailConfirmed {
-		return email, nil, errors.New("Users email is not confirmed - the user cannot send emails.")
-	}
-
-	// Check if email is already sent
-	if email.IsSent {
-		return email, nil, errors.New("Email has already been sent.")
-	}
-
-	// Validate if HTML is valid
-	validHTML := utilities.ValidateHTML(email.Body)
-	if !validHTML {
-		return email, nil, errors.New("Invalid HTML")
-	}
-
-	if email.Subject == "" {
-		email.Subject = "(no subject)"
-	}
-
-	email.Method = method
 	emailId := strconv.FormatInt(email.Id, 10)
 	email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
 	email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
 	email.IsSent = true
 	email.Save(c)
+
+	if isNotBulk {
+		emailIds := []int64{email.Id}
+		sync.SendEmailsToEmailService(r, emailIds)
+	}
 
 	return email, nil, nil
 }
