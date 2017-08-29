@@ -5,7 +5,8 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
-	"google.golang.org/cloud/pubsub"
+
+	"cloud.google.com/go/pubsub"
 )
 
 var (

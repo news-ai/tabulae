@@ -34,7 +34,7 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 
 		decoder := ffjson.NewDecoder()
 		var emailSendUpdate []EmailSendUpdate
-		err := decoder.Decode(buf, emailSendUpdate)
+		err := decoder.Decode(buf, &emailSendUpdate)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			nError.ReturnError(w, http.StatusInternalServerError, "Updates handing error", err.Error())
@@ -43,13 +43,15 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 
 		emailIds := []int64{}
 		for i := 0; i < len(emailSendUpdate); i++ {
-			email, err := tabulaeControllers.GetEmailById(c, r, emailSendUpdate[i].EmailId)
+			email, _, err := tabulaeControllers.GetEmailByIdUnauthorized(c, r, emailSendUpdate[i].EmailId)
 			if err != nil {
 				log.Errorf(c, "%v", err)
 				continue
 			}
 
+			email.IsSent = true
 			email.Delievered = emailSendUpdate[i].Delievered
+			email.Method = emailSendUpdate[i].Method
 
 			switch emailSendUpdate[i].Method {
 			case "sendgrid":

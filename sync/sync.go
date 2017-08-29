@@ -9,7 +9,8 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
-	"google.golang.org/cloud/pubsub"
+
+	"cloud.google.com/go/pubsub"
 )
 
 func sync(r *http.Request, data map[string]string, topicName string) error {

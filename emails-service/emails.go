@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -26,6 +27,23 @@ var (
 )
 
 func sendChangesToUpdateService(c context.Context, updates []updateService.EmailSendUpdate) error {
+	updatesRequest, err := json.Marshal(updates)
+	if err != nil {
+		log.Printf("%v", err)
+		return err
+	}
+	log.Printf("%v", string(updatesRequest))
+	updatesQuery := bytes.NewReader(updatesRequest)
+
+	req, _ := http.NewRequest("POST", "https://updates-dot-newsai-1166.appspot.com/updates", updatesQuery)
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("%v", err)
+		return err
+	}
+	defer resp.Body.Close()
 	return nil
 }
 
@@ -191,13 +209,6 @@ func subscribe() {
 				}
 				newEmails = append(newEmails, emailWithId)
 				// } else if allEmails[i].Method == "gmail" {
-			} else if allEmails[i].Method == "gmail" {
-				emailWithId, _, err := sendGmailEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames)
-				if err != nil {
-					log.Printf("%v", err)
-					continue
-				}
-				newEmails = append(newEmails, emailWithId)
 			} else if allEmails[i].Method == "outlook" {
 				emailWithId, _, err := sendOutlookEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames)
 				if err != nil {
@@ -207,6 +218,14 @@ func subscribe() {
 				newEmails = append(newEmails, emailWithId)
 			} else if allEmails[i].Method == "smtp" {
 				emailWithId, _, err := sendSMTPEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames)
+				if err != nil {
+					log.Printf("%v", err)
+					continue
+				}
+				newEmails = append(newEmails, emailWithId)
+			} else {
+				// else if allEmails[i].Method == "gmail" {
+				emailWithId, _, err := sendGmailEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames)
 				if err != nil {
 					log.Printf("%v", err)
 					continue

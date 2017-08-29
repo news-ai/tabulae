@@ -531,6 +531,16 @@ func GetEmailUnauthorized(c context.Context, r *http.Request, id string) (models
 	return email, nil, nil
 }
 
+func GetEmailByIdUnauthorized(c context.Context, r *http.Request, id int64) (models.Email, interface{}, error) {
+	email, err := getEmailUnauthorized(c, r, id)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Email{}, nil, err
+	}
+
+	return email, nil, nil
+}
+
 func GetEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
