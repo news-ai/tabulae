@@ -20,7 +20,6 @@ import (
 	"github.com/news-ai/api/controllers"
 	apiModels "github.com/news-ai/api/models"
 
-	"github.com/news-ai/tabulae/attach"
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/search"
 	"github.com/news-ai/tabulae/sync"
@@ -1088,29 +1087,6 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 
 	// Since the emails should be the same, get the attachments here
 	if len(bulkEmailIds.EmailIds) > 0 {
-		firstEmail, err := getEmail(c, r, bulkEmailIds.EmailIds[0])
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return []models.Email{}, nil, 0, 0, err
-		}
-
-		files := []models.File{}
-		if len(firstEmail.Attachments) > 0 {
-			for i := 0; i < len(firstEmail.Attachments); i++ {
-				file, err := getFile(c, r, firstEmail.Attachments[i])
-				if err == nil {
-					files = append(files, file)
-				} else {
-					log.Errorf(c, "%v", err)
-				}
-			}
-		}
-
-		bytesArray, attachmentType, fileNames, err := attach.GetAttachmentsForEmail(r, firstEmail, files)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-		}
-
 		// Figure out what the emailMethod we should use
 		emailMethod := "sendgrid"
 		if user.SMTPValid && user.ExternalEmail && user.EmailSetting != 0 {
@@ -1123,17 +1099,8 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 			emailMethod = "sparkpost"
 		}
 
-		emailSplit := 200
-		if len(bulkEmailIds.EmailIds) < 200 {
-			emailSplit = 40
-		}
-
-		betweenDelay := 150
 		for i := 0; i < len(bulkEmailIds.EmailIds); i++ {
-			delayAmount := int(float64(i) / float64(emailSplit))
-			emailDelay := delayAmount * betweenDelay
-
-			singleEmail, _, err := SendBulkEmailSingle(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10), files, bytesArray, attachmentType, fileNames, emailDelay, emailMethod)
+			singleEmail, _, err := SendBulkEmailSingle(c, r, bulkEmailIds.EmailIds[i], emailMethod)
 			if err != nil {
 				log.Errorf(c, "%v", err)
 			}
@@ -1141,7 +1108,7 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 			emailIds = append(emailIds, singleEmail.Id)
 		}
 
-		sync.EmailResourceBulkSync(r, emailIds)
+		sync.SendEmailsToEmailService(r, emailIds)
 	}
 
 	return emails, nil, len(emails), 0, nil
@@ -1187,8 +1154,8 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 	return email, nil, nil
 }
 
-func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []models.File, bytesArray [][]byte, attachmentType []string, fileNames []string, emailDelay int, method string) (models.Email, interface{}, error) {
-	email, _, err := GetEmail(c, r, id)
+func SendBulkEmailSingle(c context.Context, r *http.Request, id int64, method string) (models.Email, interface{}, error) {
+	email, err := getEmail(c, r, id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Email{}, nil, err
@@ -1223,6 +1190,8 @@ func SendBulkEmailSingle(c context.Context, r *http.Request, id string, files []
 	emailId := strconv.FormatInt(email.Id, 10)
 	email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
 	email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
+	email.IsSent = true
+	email.Save(c)
 
 	return email, nil, nil
 }

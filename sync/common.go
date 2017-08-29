@@ -11,6 +11,7 @@ import (
 
 var (
 	PubsubClient             *pubsub.Client
+	EmailServiceTopicID      = "tabulae-emails-service"
 	InfluencerTopicID        = "influencer"
 	ListChangeTopicID        = "process-list-change"
 	EmailChangeTopicID       = "process-email-change"
@@ -38,7 +39,6 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		return nil, err
 	}
 
-	// Create the topic for influencers if it doesn't exist.
 	if exists, err := PubsubClient.Topic(InfluencerTopicID).Exists(c); err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
@@ -49,7 +49,6 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		}
 	}
 
-	// Create the topic for twitter if it doesn't exist.
 	if exists, err := PubsubClient.Topic(TwitterTopicID).Exists(c); err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
@@ -60,7 +59,6 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		}
 	}
 
-	// Create the topic for rss if it doesn't exist.
 	if exists, err := PubsubClient.Topic(RSSFeedTopicID).Exists(c); err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
@@ -71,7 +69,6 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		}
 	}
 
-	// Create the topic for instagram if it doesn't exist.
 	if exists, err := PubsubClient.Topic(InstagramTopicID).Exists(c); err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
@@ -82,7 +79,6 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		}
 	}
 
-	// Create the topic for instagram if it doesn't exist.
 	if exists, err := PubsubClient.Topic(EnhanceTopicID).Exists(c); err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
@@ -93,7 +89,6 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		}
 	}
 
-	// Create the topic for instagram if it doesn't exist.
 	if exists, err := PubsubClient.Topic(ListChangeTopicID).Exists(c); err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
@@ -104,7 +99,6 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		}
 	}
 
-	// Create the topic for instagram if it doesn't exist.
 	if exists, err := PubsubClient.Topic(EmailBulkTopicID).Exists(c); err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
@@ -115,12 +109,21 @@ func configurePubsub(r *http.Request) (*pubsub.Client, error) {
 		}
 	}
 
-	// Create the topic for instagram if it doesn't exist.
 	if exists, err := PubsubClient.Topic(UserBulkTopicID).Exists(c); err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	} else if !exists {
 		if _, err := PubsubClient.CreateTopic(c, UserBulkTopicID); err != nil {
+			log.Errorf(c, "%v", err)
+			return nil, err
+		}
+	}
+
+	if exists, err := PubsubClient.Topic(EmailServiceTopicID).Exists(c); err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	} else if !exists {
+		if _, err := PubsubClient.CreateTopic(c, EmailServiceTopicID); err != nil {
 			log.Errorf(c, "%v", err)
 			return nil, err
 		}

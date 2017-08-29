@@ -89,6 +89,49 @@ func SocialSync(r *http.Request, socialField string, url string, contactId int64
 	return sync(r, data, InfluencerTopicID)
 }
 
+func SendEmailsToEmailService(r *http.Request, emailIds []int64) error {
+	if len(emailIds) == 0 {
+		return nil
+	}
+
+	c := appengine.NewContext(r)
+	topicName := EmailServiceTopicID
+	data := map[string][]int64{
+		"EmailIds": emailIds,
+	}
+
+	log.Infof(c, "%v", emailIds)
+
+	PubsubClient, err := configurePubsub(r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return err
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return err
+	}
+
+	topic := PubsubClient.Topic(topicName)
+	defer topic.Stop()
+
+	var results []*pubsub.PublishResult
+	res := topic.Publish(c, &pubsub.Message{Data: jsonData})
+	results = append(results, res)
+	for _, result := range results {
+		id, err := result.Get(c)
+		if err != nil {
+			log.Infof(c, "%v", err)
+			continue
+		}
+		log.Infof(c, "Published a message with a message ID: %s\n", id)
+	}
+
+	return nil
+}
+
 func EmailResourceBulkSync(r *http.Request, emailIds []int64) error {
 	if len(emailIds) == 0 {
 		return nil

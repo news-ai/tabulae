@@ -165,7 +165,7 @@ func getAttachments(c context.Context, files []tabulaeModels.File) ([][]byte, []
 func subscribe() {
 	c := context.Background()
 	err := subscription.Receive(c, func(c context.Context, msg *pubsub.Message) {
-		var ids []int64
+		var ids map[string][]int64
 		if err := json.Unmarshal(msg.Data, &ids); err != nil {
 			log.Printf("%v", err)
 			log.Printf("could not decode message data: %#v", msg)
@@ -174,7 +174,7 @@ func subscribe() {
 		}
 
 		// Get emails, and details surrounding the emails
-		allEmails, user, userBilling, files, err := getEmails(c, ids)
+		allEmails, user, userBilling, files, err := getEmails(c, ids["EmailIds"])
 		if err != nil {
 			log.Printf("%v", err)
 			msg.Ack()
@@ -223,8 +223,7 @@ func subscribe() {
 					continue
 				}
 				newEmails = append(newEmails, emailWithId)
-			} else {
-				// else if allEmails[i].Method == "gmail" {
+			} else if allEmails[i].Method == "gmail" {
 				emailWithId, _, err := sendGmailEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames)
 				if err != nil {
 					log.Printf("%v", err)
@@ -256,9 +255,11 @@ func subscribe() {
 			updates = append(updates, update)
 		}
 
-		err = sendChangesToUpdateService(c, updates)
-		if err != nil {
-			log.Fatal("%v", err)
+		if len(updates) > 0 {
+			err = sendChangesToUpdateService(c, updates)
+			if err != nil {
+				log.Fatal("%v", err)
+			}
 		}
 
 		msg.Ack()
