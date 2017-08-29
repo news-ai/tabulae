@@ -25,8 +25,8 @@ var (
 	datastoreClient *datastore.Client
 )
 
-func sendChangesToUpdateService(c context.Context) {
-
+func sendChangesToUpdateService(c context.Context, updates []updateService.EmailSendUpdate) error {
+	return nil
 }
 
 func getEmails(c context.Context, ids []int64) ([]tabulaeModels.Email, apiModels.User, apiModels.Billing, []tabulaeModels.File, error) {
@@ -236,7 +236,10 @@ func subscribe() {
 			updates = append(updates, update)
 		}
 
-		log.Printf("%v", updates)
+		err = sendChangesToUpdateService(c, updates)
+		if err != nil {
+			log.Fatal("%v", err)
+		}
 
 		msg.Ack()
 	})
