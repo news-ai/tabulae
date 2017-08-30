@@ -17,6 +17,8 @@ import (
 	"github.com/news-ai/tabulae/controllers"
 	"google.golang.org/appengine/log"
 
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/sync"
 
@@ -25,10 +27,25 @@ import (
 	"github.com/news-ai/web/outlook"
 )
 
-// When the email is "Delievered == false" and has a "SendAt" date
-// And "Cancel == false"
+func getUser(c context.Context, id int64) (apiModels.User, error) {
+	// Get the current signed in user details by Id
+	var user apiModels.User
+	userId := datastore.NewKey(c, "User", "", id, nil)
+	err := datastoreClient.Get(c, userId, &user)
 
-func GetCurrentSchedueledEmails(c context.Context, r *http.Request) ([]models.Email, error) {
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return apiModels.User{}, err
+	}
+
+	if user.Email != "" {
+		user.Format(userId, "users")
+		return user, nil
+	}
+	return apiModels.User{}, errors.New("No user by this id")
+}
+
+func getCurrentSchedueledEmails(c context.Context) ([]models.Email, error) {
 	emails := []models.Email{}
 
 	timeNow := time.Now()
@@ -45,8 +62,7 @@ func GetCurrentSchedueledEmails(c context.Context, r *http.Request) ([]models.Em
 	}
 
 	emails = make([]models.Email, len(ks))
-	err = nds.GetMulti(c, ks, emails)
-	if err != nil {
+	if err := datastoreClient.GetMulti(c, keys, emails); err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Email{}, err
 	}
@@ -66,7 +82,7 @@ func GetCurrentSchedueledEmails(c context.Context, r *http.Request) ([]models.Em
 func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	hasErrors := false
-	schedueled, err := GetCurrentSchedueledEmails(c, r)
+	schedueled, err := getCurrentSchedueledEmails(r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		w.WriteHeader(500)
@@ -78,7 +94,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 	// Loop through the emails and send them
 	emailIds := []int64{}
 	for i := 0; i < len(schedueled); i++ {
-		user, err := apiControllers.GetUserByIdUnauthorized(c, r, schedueled[i].CreatedBy)
+		user, err := getUser(c, schedueled[i].CreatedBy)
 		if err != nil {
 			hasErrors = true
 			log.Errorf(c, "%v", err)
