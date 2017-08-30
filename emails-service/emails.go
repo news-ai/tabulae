@@ -168,7 +168,7 @@ func subscribe() {
 		var ids map[string][]int64
 		if err := json.Unmarshal(msg.Data, &ids); err != nil {
 			log.Printf("%v", err)
-			log.Printf("could not decode message data: %#v", msg)
+			log.Printf("error decoding message data: %#v", msg)
 			msg.Ack()
 			return
 		}
@@ -176,7 +176,7 @@ func subscribe() {
 		// Get emails, and details surrounding the emails
 		allEmails, user, userBilling, files, err := getEmails(c, ids["EmailIds"])
 		if err != nil {
-			log.Printf("%v", err)
+			log.Printf("error getting emails: %v", err)
 			msg.Ack()
 			return
 		}
@@ -184,7 +184,7 @@ func subscribe() {
 		// Get the actual attachment files from Google storage
 		bytesArray, attachmentType, fileNames, err := getAttachments(c, files)
 		if err != nil {
-			log.Printf("%v", err)
+			log.Printf("error getting attachments: %v", err)
 			msg.Ack()
 			return
 		}
@@ -204,7 +204,8 @@ func subscribe() {
 
 				emailWithId, _, err := sendSendGridEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames, sendGridKey, sendGridDelay)
 				if err != nil {
-					log.Printf("%v", err)
+					log.Printf("error emailId: %v", emailWithId.Id)
+					log.Printf("error sending sendgrid email: %v", err)
 					continue
 				}
 				newEmails = append(newEmails, emailWithId)
@@ -212,21 +213,24 @@ func subscribe() {
 			} else if allEmails[i].Method == "outlook" {
 				emailWithId, _, err := sendOutlookEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames)
 				if err != nil {
-					log.Printf("%v", err)
+					log.Printf("error emailId: %v", emailWithId.Id)
+					log.Printf("error sending outlook email: %v", err)
 					continue
 				}
 				newEmails = append(newEmails, emailWithId)
 			} else if allEmails[i].Method == "smtp" {
 				emailWithId, _, err := sendSMTPEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames)
 				if err != nil {
-					log.Printf("%v", err)
+					log.Printf("error emailId: %v", emailWithId.Id)
+					log.Printf("error sending smtp email: %v", err)
 					continue
 				}
 				newEmails = append(newEmails, emailWithId)
 			} else if allEmails[i].Method == "gmail" {
 				emailWithId, _, err := sendGmailEmail(c, allEmails[i], files, user, bytesArray, attachmentType, fileNames)
 				if err != nil {
-					log.Printf("%v", err)
+					log.Printf("error emailId: %v", emailWithId.Id)
+					log.Printf("error sending gmail email: %v", err)
 					continue
 				}
 				newEmails = append(newEmails, emailWithId)
@@ -258,7 +262,8 @@ func subscribe() {
 		if len(updates) > 0 {
 			err = sendChangesToUpdateService(c, updates)
 			if err != nil {
-				log.Fatal("%v", err)
+				log.Printf("error updates: %v", updates)
+				log.Printf("error sending emails to update service: %v", err)
 			}
 		}
 
@@ -285,9 +290,10 @@ func main() {
 	datastoreClient, err = datastore.NewClient(c, projectID)
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
-	go subscribe()
 
+	go subscribe()
 	http.HandleFunc("/", handle)
 	log.Print("Listening on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
