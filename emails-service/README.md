@@ -1,3 +1,0 @@
-### Deployment:
-
-`gcloud app deploy`
