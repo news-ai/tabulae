@@ -27,24 +27,6 @@ import (
 	"github.com/news-ai/web/outlook"
 )
 
-func getUser(c context.Context, id int64) (apiModels.User, error) {
-	// Get the current signed in user details by Id
-	var user apiModels.User
-	userId := datastore.NewKey(c, "User", "", id, nil)
-	err := datastoreClient.Get(c, userId, &user)
-
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return apiModels.User{}, err
-	}
-
-	if user.Email != "" {
-		user.Format(userId, "users")
-		return user, nil
-	}
-	return apiModels.User{}, errors.New("No user by this id")
-}
-
 func getCurrentSchedueledEmails(c context.Context) ([]models.Email, error) {
 	emails := []models.Email{}
 
@@ -94,25 +76,7 @@ func SchedueleEmailTask(w http.ResponseWriter, r *http.Request) {
 	// Loop through the emails and send them
 	emailIds := []int64{}
 	for i := 0; i < len(schedueled); i++ {
-		user, err := getUser(c, schedueled[i].CreatedBy)
-		if err != nil {
-			hasErrors = true
-			log.Errorf(c, "%v", err)
-			continue
-		}
-
-		files := []models.File{}
-		if len(schedueled[i].Attachments) > 0 {
-			for x := 0; x < len(schedueled[i].Attachments); x++ {
-				file, _, err := controllers.GetFileByIdUnauthorized(c, r, schedueled[i].Attachments[x])
-				if err == nil {
-					files = append(files, file)
-				} else {
-					hasErrors = true
-					log.Errorf(c, "%v", err)
-				}
-			}
-		}
+		allEmails, user, userBilling, files, err := getEmails(c, []int64{schedueled[i].Id})
 
 		if schedueled[i].Method == "gmail" {
 			if user.AccessToken != "" && user.Gmail {
