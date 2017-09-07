@@ -156,13 +156,7 @@ func filterEmailbyListId(c context.Context, r *http.Request, listId int64) ([]mo
 func filterOrderedEmailbyContactId(c context.Context, r *http.Request, contact models.Contact) ([]models.Email, error) {
 	emails := []models.Email{}
 
-	user, err := controllers.GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.Email{}, err
-	}
-
-	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("To =", contact.Email).Filter("IsSent =", true).Filter("Cancel =", false).Filter("Archived =", false).Order("-Created")
+	query := datastore.NewQuery("Email").Filter("CreatedBy =", contact.CreatedBy).Filter("To =", contact.Email).Filter("IsSent =", true).Filter("Cancel =", false).Filter("Archived =", false).Order("-Created")
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -1110,7 +1104,11 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 				log.Errorf(c, "%v", err)
 			}
 			emails = append(emails, singleEmail)
-			emailIds = append(emailIds, singleEmail.Id)
+
+			// Check if email has been scheduled or not
+			if singleEmail.SendAt.IsZero() || singleEmail.SendAt.Before(time.Now()) {
+				emailIds = append(emailIds, singleEmail.Id)
+			}
 		}
 
 		sync.SendEmailsToEmailService(r, emailIds)
@@ -1159,7 +1157,11 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 
 	if isNotBulk {
 		emailIds := []int64{email.Id}
-		sync.SendEmailsToEmailService(r, emailIds)
+
+		// Check if email has been scheduled or not
+		if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
+			sync.SendEmailsToEmailService(r, emailIds)
+		}
 	}
 
 	return email, nil, nil

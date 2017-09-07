@@ -914,6 +914,8 @@ func ContactsToDefaultFields(c context.Context, r *http.Request, contacts []mode
 								// because Gmail rejected it. This is to check that.
 								if emails[lastUnarchivedEmail].Method == "gmail" && emails[lastUnarchivedEmail].GmailId == "" {
 									customField.Value = ""
+								} else if emails[lastUnarchivedEmail].Method == "sendgrid" && emails[lastUnarchivedEmail].SendGridId == "" {
+									customField.Value = ""
 								}
 							}
 						}
