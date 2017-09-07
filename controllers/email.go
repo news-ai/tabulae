@@ -1032,41 +1032,6 @@ func ArchiveEmail(c context.Context, r *http.Request, id string) (models.Email, 
 	return email, nil, nil
 }
 
-func GetCurrentSchedueledEmails(c context.Context, r *http.Request) ([]models.Email, error) {
-	emails := []models.Email{}
-
-	timeNow := time.Now()
-	currentTime := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), timeNow.Hour(), timeNow.Minute(), 0, 0, time.FixedZone("GMT", 0))
-
-	// When the email is "Delievered == false" and has a "SendAt" date
-	// And "Cancel == false". Also a filer if the user has sent it already or not
-	query := datastore.NewQuery("Email").Filter("SendAt <=", currentTime).Filter("IsSent =", true).Filter("Delievered =", false).Filter("Cancel =", false)
-
-	ks, err := query.KeysOnly().GetAll(c, nil)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.Email{}, err
-	}
-
-	emails = make([]models.Email, len(ks))
-	err = nds.GetMulti(c, ks, emails)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.Email{}, err
-	}
-
-	emailsToSend := []models.Email{}
-	for i := 0; i < len(emails); i++ {
-		emails[i].Format(ks[i], "emails")
-
-		if !emails[i].SendAt.IsZero() {
-			emailsToSend = append(emailsToSend, emails[i])
-		}
-	}
-
-	return emailsToSend, nil
-}
-
 func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interface{}, int, int, error) {
 	buf, _ := ioutil.ReadAll(r.Body)
 	decoder := ffjson.NewDecoder()
@@ -1102,7 +1067,9 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 			singleEmail, _, err := SendEmail(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10), false)
 			if err != nil {
 				log.Errorf(c, "%v", err)
+				continue
 			}
+
 			emails = append(emails, singleEmail)
 
 			// Check if email has been scheduled or not
@@ -1149,11 +1116,32 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 		email.Subject = "(no subject)"
 	}
 
+	userEmails := map[string]bool{}
+	for i := 0; i < len(user.Emails); i++ {
+		userEmails[user.Emails[i]] = true
+	}
+
 	emailId := strconv.FormatInt(email.Id, 10)
 	email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
 	email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
 	email.IsSent = true
 	email.Save(c)
+
+	// Check if the user's email is valid for sending
+	if email.Method == "sendgrid" && email.FromEmail != "" {
+		userEmailValid := false
+		if user.Email == email.FromEmail {
+			userEmailValid = true
+		}
+
+		if _, ok := userEmails[email.FromEmail]; ok {
+			userEmailValid = true
+		}
+
+		if !userEmailValid {
+			return models.Email{}, nil, errors.New("The email requested is not confirmed by the user yet")
+		}
+	}
 
 	if isNotBulk {
 		emailIds := []int64{email.Id}
