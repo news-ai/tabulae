@@ -1,6 +1,7 @@
 package search
 
 import (
+	"math"
 	"net/http"
 
 	"golang.org/x/net/context"
@@ -105,10 +106,12 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 				emailSubject = emails[x].BaseSubject
 			}
 
-			if emails[x].Method == "sendgrid" && emails[x].SendGridId == "" {
-				continue
-			} else if emails[x].Method == "gmail" && emails[x].GmailId == "" {
-				continue
+			if emails[x].Opened == 0 {
+				if emails[x].Method == "sendgrid" && emails[x].SendGridId == "" {
+					continue
+				} else if emails[x].Method == "gmail" && emails[x].GmailId == "" {
+					continue
+				}
 			}
 
 			if emailSubject == emailCampaign.Subject && !emails[x].Archived {
@@ -138,7 +141,7 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 
 		// If we have to loop through
 		if total > limit {
-			loops := int(float64(total) / float64(limit))
+			loops := int(math.Ceil(float64(total) / float64(limit)))
 			for x := 1; x < loops; x++ {
 				additionalEmails, _, _, err := SearchEmailsByDateAndSubject(c, r, user, emailCampaigns[i].Date, emailCampaigns[i].Subject, emailCampaigns[i].BaseSubject, limit*x, limit)
 				if err != nil {
