@@ -73,6 +73,14 @@ func searchEmailQuery(c context.Context, elasticQuery interface{}) ([]models.Ema
 			log.Errorf(c, "%v", err)
 		}
 
+		if email.Opened == 0 {
+			if email.Method == "sendgrid" && email.SendGridId == "" {
+				continue
+			} else if email.Method == "gmail" && email.GmailId == "" {
+				continue
+			}
+		}
+
 		email.Type = "emails"
 		emailLogHits = append(emailLogHits, email)
 	}

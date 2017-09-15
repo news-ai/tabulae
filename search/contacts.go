@@ -92,10 +92,14 @@ func SearchContactsByList(c context.Context, r *http.Request, search string, use
 	elasticListIdQuery := apiSearch.ElasticListIdQuery{}
 	elasticListIdQuery.Term.ListId = listId
 
+	elasticIsDeletedQuery := apiSearch.ElasticIsDeletedQuery{}
+	elasticIsDeletedQuery.Term.IsDeleted = false
+
 	elasticMatchQuery := elastic.ElasticMatchQuery{}
 	elasticMatchQuery.Match.All = search
 
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticListIdQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsDeletedQuery)
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchQuery)
 
 	return searchContact(c, elasticQuery)

@@ -139,7 +139,9 @@ func EmailResourceBulkSync(r *http.Request, emailIds []int64) error {
 
 	tempEmailResourceIds := []string{}
 	for i := 0; i < len(emailIds); i++ {
-		tempEmailResourceIds = append(tempEmailResourceIds, strconv.FormatInt(emailIds[i], 10))
+		if emailIds[i] != 0 {
+			tempEmailResourceIds = append(tempEmailResourceIds, strconv.FormatInt(emailIds[i], 10))
+		}
 	}
 
 	topicName := EmailBulkTopicID
@@ -163,7 +165,9 @@ func UserResourceBulkSync(r *http.Request, userIds []int64) error {
 
 	tempUserResourceIds := []string{}
 	for i := 0; i < len(userIds); i++ {
-		tempUserResourceIds = append(tempUserResourceIds, strconv.FormatInt(userIds[i], 10))
+		if userIds[i] != 0 {
+			tempUserResourceIds = append(tempUserResourceIds, strconv.FormatInt(userIds[i], 10))
+		}
 	}
 
 	topicName := UserBulkTopicID
@@ -183,12 +187,16 @@ func UserResourceBulkSync(r *http.Request, userIds []int64) error {
 func ListUploadResourceBulkSync(r *http.Request, listId int64, contactIds []int64, publicationIds []int64) error {
 	tempContactResourceIds := []string{}
 	for i := 0; i < len(contactIds); i++ {
-		tempContactResourceIds = append(tempContactResourceIds, strconv.FormatInt(contactIds[i], 10))
+		if contactIds[i] != 0 {
+			tempContactResourceIds = append(tempContactResourceIds, strconv.FormatInt(contactIds[i], 10))
+		}
 	}
 
 	tempPublicationResourceIds := []string{}
 	for i := 0; i < len(publicationIds); i++ {
-		tempPublicationResourceIds = append(tempPublicationResourceIds, strconv.FormatInt(publicationIds[i], 10))
+		if publicationIds[i] != 0 {
+			tempPublicationResourceIds = append(tempPublicationResourceIds, strconv.FormatInt(publicationIds[i], 10))
+		}
 	}
 
 	topicName := ListUploadTopicID
