@@ -5,15 +5,19 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/memcache"
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/errors"
+	"github.com/news-ai/web/utilities"
 )
 
 type InternalTrackerEvent struct {
@@ -29,6 +33,14 @@ type InternalTrackerEvent struct {
 	Email       string `json:"email"`
 	Timestamp   int    `json:"timestamp"`
 	Reason      string `json:"reason"`
+}
+
+func formatCampaignName(campaignName string) string {
+	campaignName = utilities.RemoveSpecialCharacters(campaignName)
+	campaignName = strings.ToLower(campaignName)
+	campaignName = strings.Trim(campaignName, " ")
+	campaignName = strings.Replace(campaignName, " ", "-", -1)
+	return campaignName
 }
 
 func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,6 +61,7 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	emailIds := []int64{}
+	memcacheKeys := []string{}
 
 	for i := 0; i < len(allEvents); i++ {
 		singleEvent := allEvents[i]
@@ -89,6 +102,18 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
 			}
+
+			emailSubject := email.Subject
+			if email.BaseSubject != "" {
+				emailSubject = email.BaseSubject
+			}
+
+			// Invalidate memcache for this particular campaign
+			userIdString := strconv.FormatInt(email.CreatedBy, 10)
+			dayFormat := time.Now().Format("2006-01-02")
+			campaignName := formatCampaignName(emailSubject)
+			memcacheKey := userIdString + "-" + dayFormat + "-" + campaignName
+			memcacheKeys = append(memcacheKeys, memcacheKey)
 		} else {
 			// Validate email exists with particular SendGridId
 			sendGridId := strings.Split(singleEvent.SgMessageID, ".")[0]
@@ -149,6 +174,15 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 	if hasErrors {
 		errors.ReturnError(w, http.StatusInternalServerError, "Internal Tracker handling error", "Problem parsing data")
 		return
+	}
+
+	if len(memcacheKeys) > 0 {
+		noDuplicatesMemcache := utilities.RemoveDuplicatesUnordered(memcacheKeys)
+		log.Infof(c, "%v", noDuplicatesMemcache)
+		err = memcache.DeleteMulti(c, noDuplicatesMemcache)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		}
 	}
 
 	if len(emailIds) > 0 {

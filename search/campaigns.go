@@ -9,6 +9,7 @@ import (
 	gcontext "github.com/gorilla/context"
 
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/memcache"
 
 	"github.com/news-ai/api/models"
 	apiSearch "github.com/news-ai/api/search"
@@ -41,6 +42,8 @@ type EmailCampaignResponse struct {
 }
 
 type EmailCampaignRequest struct {
+	Id string `json:"id"`
+
 	Date        string `json:"date"`
 	Subject     string `json:"subject"`
 	UserId      string `json:"userid"`
@@ -76,124 +79,143 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 			continue
 		}
 
+		emailCampaign.Id = hits.Hits[i].ID
 		emailCampaigns = append(emailCampaigns, emailCampaign)
 	}
 
 	// Get all emails for each of the campaigns
 	emailCampaignsResponse := []EmailCampaignResponse{}
 	for i := 0; i < len(emailCampaigns); i++ {
-		limit := 750
-		emails, _, total, err := SearchEmailsByDateAndSubject(c, r, user, emailCampaigns[i].Date, emailCampaigns[i].Subject, emailCampaigns[i].BaseSubject, 0, limit)
-
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			continue
-		}
-
-		if emailCampaigns[i].BaseSubject != "" {
-			log.Infof(c, "%v", len(emails))
-		}
+		memcacheKey := emailCampaigns[i].Id
 
 		emailCampaign := EmailCampaignResponse{}
-		emailCampaign.Date = emailCampaigns[i].Date
-		emailCampaign.UserId = emailCampaigns[i].UserId
-		emailCampaign.Subject = emailCampaigns[i].Subject
-		emailCampaign.BaseSubject = emailCampaigns[i].BaseSubject
+		_, err := memcache.Gob.Get(c, memcacheKey, &emailCampaign)
+		if err != nil {
+			limit := 750
+			emails, _, total, err := SearchEmailsByDateAndSubject(c, r, user, emailCampaigns[i].Date, emailCampaigns[i].Subject, emailCampaigns[i].BaseSubject, 0, limit)
 
-		for x := 0; x < len(emails); x++ {
-			emailSubject := emails[x].Subject
-			if emails[x].BaseSubject != "" {
-				emailSubject = emails[x].BaseSubject
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				continue
 			}
 
-			if emails[x].Opened == 0 {
-				if emails[x].Method == "sendgrid" && emails[x].SendGridId == "" {
-					continue
-				} else if emails[x].Method == "gmail" && emails[x].GmailId == "" {
-					continue
-				}
+			if emailCampaigns[i].BaseSubject != "" {
+				log.Infof(c, "%v", len(emails))
 			}
 
-			if emailSubject == emailCampaign.Subject && !emails[x].Archived {
-				if emailCampaign.Subject == "" {
-					emailCampaign.Subject = "(no subject)"
+			emailCampaign.Date = emailCampaigns[i].Date
+			emailCampaign.UserId = emailCampaigns[i].UserId
+			emailCampaign.Subject = emailCampaigns[i].Subject
+			emailCampaign.BaseSubject = emailCampaigns[i].BaseSubject
+
+			for x := 0; x < len(emails); x++ {
+				emailSubject := emails[x].Subject
+				if emails[x].BaseSubject != "" {
+					emailSubject = emails[x].BaseSubject
 				}
 
-				emailCampaign.Delivered += 1
-				emailCampaign.Opens += emails[x].Opened
-				emailCampaign.Clicks += emails[x].Clicked
-
-				if emails[x].Opened > 0 {
-					emailCampaign.UniqueOpens += 1
-				}
-
-				if emails[x].Clicked > 0 {
-					emailCampaign.UniqueClicks += 1
-				}
-
-				if emails[x].Bounced {
-					emailCampaign.Bounces += 1
-				}
-			}
-		}
-
-		emails = []tabulaeModels.Email{}
-
-		// If we have to loop through
-		if total > limit {
-			loops := int(math.Ceil(float64(total) / float64(limit)))
-			for x := 1; x < loops; x++ {
-				additionalEmails, _, _, err := SearchEmailsByDateAndSubject(c, r, user, emailCampaigns[i].Date, emailCampaigns[i].Subject, emailCampaigns[i].BaseSubject, limit*x, limit)
-				if err != nil {
-					log.Errorf(c, "%v", err)
-					continue
-				}
-
-				for y := 0; y < len(additionalEmails); y++ {
-					emailSubject := additionalEmails[y].Subject
-					if additionalEmails[y].BaseSubject != "" {
-						emailSubject = additionalEmails[y].BaseSubject
-					}
-					if emailSubject == emailCampaign.Subject && !additionalEmails[y].Archived {
-						if emailCampaign.Subject == "" {
-							emailCampaign.Subject = "(no subject)"
-						}
-
-						emailCampaign.Delivered += 1
-						emailCampaign.Opens += additionalEmails[y].Opened
-						emailCampaign.Clicks += additionalEmails[y].Clicked
-
-						if additionalEmails[y].Opened > 0 {
-							emailCampaign.UniqueOpens += 1
-						}
-
-						if additionalEmails[y].Clicked > 0 {
-							emailCampaign.UniqueClicks += 1
-						}
-
-						if additionalEmails[y].Bounced {
-							emailCampaign.Bounces += 1
-						}
+				if emails[x].Opened == 0 {
+					if emails[x].Method == "sendgrid" && emails[x].SendGridId == "" {
+						continue
+					} else if emails[x].Method == "gmail" && emails[x].GmailId == "" {
+						continue
 					}
 				}
-				additionalEmails = []tabulaeModels.Email{}
-			}
-		}
 
-		if emailCampaign.Delivered > 0 {
-			deliveredNumber := emailCampaign.Delivered - emailCampaign.Bounces
-			log.Infof(c, "%v", deliveredNumber)
-			if deliveredNumber > 0 {
-				// For some reason if more people opened it then the number of
-				// emails that were delivered then we set a ceiling of 100%
-				if emailCampaign.UniqueOpens > deliveredNumber {
-					emailCampaign.UniqueOpens = deliveredNumber
+				if emailSubject == emailCampaign.Subject && !emails[x].Archived {
+					if emailCampaign.Subject == "" {
+						emailCampaign.Subject = "(no subject)"
+					}
+
+					emailCampaign.Delivered += 1
+					emailCampaign.Opens += emails[x].Opened
+					emailCampaign.Clicks += emails[x].Clicked
+
+					if emails[x].Opened > 0 {
+						emailCampaign.UniqueOpens += 1
+					}
+
+					if emails[x].Clicked > 0 {
+						emailCampaign.UniqueClicks += 1
+					}
+
+					if emails[x].Bounced {
+						emailCampaign.Bounces += 1
+					}
 				}
-
-				emailCampaign.UniqueOpensPercentage = 100 * float32(float32(emailCampaign.UniqueOpens)/float32(deliveredNumber))
-				emailCampaign.UniqueClicksPercentage = 100 * float32(float32(emailCampaign.UniqueClicks)/float32(deliveredNumber))
-				emailCampaign.Show = true
 			}
+
+			emails = []tabulaeModels.Email{}
+
+			// If we have to loop through
+			if total > limit {
+				loops := int(math.Ceil(float64(total) / float64(limit)))
+				for x := 1; x < loops; x++ {
+					additionalEmails, _, _, err := SearchEmailsByDateAndSubject(c, r, user, emailCampaigns[i].Date, emailCampaigns[i].Subject, emailCampaigns[i].BaseSubject, limit*x, limit)
+					if err != nil {
+						log.Errorf(c, "%v", err)
+						continue
+					}
+
+					for y := 0; y < len(additionalEmails); y++ {
+						emailSubject := additionalEmails[y].Subject
+						if additionalEmails[y].BaseSubject != "" {
+							emailSubject = additionalEmails[y].BaseSubject
+						}
+						if emailSubject == emailCampaign.Subject && !additionalEmails[y].Archived {
+							if emailCampaign.Subject == "" {
+								emailCampaign.Subject = "(no subject)"
+							}
+
+							emailCampaign.Delivered += 1
+							emailCampaign.Opens += additionalEmails[y].Opened
+							emailCampaign.Clicks += additionalEmails[y].Clicked
+
+							if additionalEmails[y].Opened > 0 {
+								emailCampaign.UniqueOpens += 1
+							}
+
+							if additionalEmails[y].Clicked > 0 {
+								emailCampaign.UniqueClicks += 1
+							}
+
+							if additionalEmails[y].Bounced {
+								emailCampaign.Bounces += 1
+							}
+						}
+					}
+					additionalEmails = []tabulaeModels.Email{}
+				}
+			}
+
+			if emailCampaign.Delivered > 0 {
+				deliveredNumber := emailCampaign.Delivered - emailCampaign.Bounces
+				log.Infof(c, "%v", deliveredNumber)
+				if deliveredNumber > 0 {
+					// For some reason if more people opened it then the number of
+					// emails that were delivered then we set a ceiling of 100%
+					if emailCampaign.UniqueOpens > deliveredNumber {
+						emailCampaign.UniqueOpens = deliveredNumber
+					}
+
+					emailCampaign.UniqueOpensPercentage = 100 * float32(float32(emailCampaign.UniqueOpens)/float32(deliveredNumber))
+					emailCampaign.UniqueClicksPercentage = 100 * float32(float32(emailCampaign.UniqueClicks)/float32(deliveredNumber))
+					emailCampaign.Show = true
+				}
+			}
+
+			emailCampaignsResponse = append(emailCampaignsResponse, emailCampaign)
+
+			item1 := &memcache.Item{
+				Key:    memcacheKey,
+				Object: &emailCampaign,
+			}
+			err = memcache.Gob.Set(c, item1)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+			}
+		} else {
+			log.Infof(c, "memcache: %v", emailCampaign)
 		}
 
 		emailCampaignsResponse = append(emailCampaignsResponse, emailCampaign)
