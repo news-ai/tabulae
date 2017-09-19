@@ -124,10 +124,7 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Invalidate memcache for this particular campaign
-			userIdString := strconv.FormatInt(email.CreatedBy, 10)
-			dayFormat := email.Created.Format("2006-01-02")
-			campaignName := formatCampaignName(emailSubject)
-			memcacheKey := userIdString + "-" + dayFormat + "-" + campaignName
+			memcacheKey := controllers.GetEmailCampaignKey(email)
 			memcacheKeys = append(memcacheKeys, memcacheKey)
 		} else {
 			// Validate email exists with particular SendGridId

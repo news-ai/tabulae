@@ -1431,3 +1431,22 @@ func GetEmailProviderLimits(c context.Context, r *http.Request) (interface{}, in
 
 	return emailProviderLimits, nil, nil
 }
+
+func GetEmailCampaignKey(email models.Email) string {
+	emailSubject := email.Subject
+	if email.BaseSubject != "" {
+		emailSubject = email.BaseSubject
+	}
+
+	userIdString := strconv.FormatInt(email.CreatedBy, 10)
+	dayFormat := email.Created.Format("2006-01-02")
+
+	// Generate campaign name in the way that the memcache wants it
+	campaignName := utilities.RemoveSpecialCharacters(emailSubject)
+	campaignName = strings.ToLower(campaignName)
+	campaignName = strings.Trim(campaignName, " ")
+	campaignName = strings.Replace(campaignName, " ", "-", -1)
+
+	memcacheKey := userIdString + "-" + dayFormat + "-" + campaignName
+	return memcacheKey
+}

@@ -204,8 +204,7 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 				}
 			}
 
-			emailCampaignsResponse = append(emailCampaignsResponse, emailCampaign)
-
+			// Save the emailCampaign in cache so we can load it later
 			item1 := &memcache.Item{
 				Key:    memcacheKey,
 				Object: &emailCampaign,
@@ -218,7 +217,9 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 			log.Infof(c, "memcache: %v", emailCampaign)
 		}
 
-		emailCampaignsResponse = append(emailCampaignsResponse, emailCampaign)
+		if emailCampaign.Show {
+			emailCampaignsResponse = append(emailCampaignsResponse, emailCampaign)
+		}
 	}
 
 	return emailCampaignsResponse, len(emailCampaignsResponse), hits.Total, nil
