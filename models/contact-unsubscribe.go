@@ -19,6 +19,7 @@ type ContactUnsubscribe struct {
 
 	ListId    int64 `json:"listid"`
 	ContactId int64 `json:"contactid"`
+	EmailId   int64 `json:"emailid"`
 
 	Email        string `json:"email"`
 	Unsubscribed bool   `json:"unsubscribed"`
@@ -36,8 +37,7 @@ func (cu *ContactUnsubscribe) Key(c context.Context) *datastore.Key {
 * Create methods
  */
 
-func (cu *ContactUnsubscribe) Create(c context.Context, r *http.Request, currentUser apiModels.User) (*ContactUnsubscribe, error) {
-	cu.CreatedBy = currentUser.Id
+func (cu *ContactUnsubscribe) Create(c context.Context, r *http.Request) (*ContactUnsubscribe, error) {
 	cu.Created = time.Now()
 
 	_, err := cu.Save(c, r)

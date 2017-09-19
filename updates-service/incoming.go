@@ -13,6 +13,7 @@ import (
 	"google.golang.org/appengine/memcache"
 
 	"github.com/news-ai/tabulae/controllers"
+	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/errors"
@@ -94,6 +95,21 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 					if err != nil {
 						hasErrors = true
 						log.Errorf(c, "%v", singleEvent)
+						log.Errorf(c, "%v", err)
+					}
+				}
+			case "unsubscribe":
+				if email.To != "" {
+					unsubscribe := models.ContactUnsubscribe{}
+					unsubscribe.CreatedBy = email.CreatedBy
+					unsubscribe.ListId = email.ListId
+					unsubscribe.ContactId = email.ContactId
+
+					unsubscribe.Email = email.To
+					unsubscribe.Unsubscribed = true
+					_, err = unsubscribe.Create(c, r)
+					if err != nil {
+						hasErrors = true
 						log.Errorf(c, "%v", err)
 					}
 				}
