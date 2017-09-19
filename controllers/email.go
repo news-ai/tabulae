@@ -12,6 +12,7 @@ import (
 
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/memcache"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/pquerna/ffjson/ffjson"
@@ -1028,6 +1029,11 @@ func ArchiveEmail(c context.Context, r *http.Request, id string) (models.Email, 
 
 	email.Archived = true
 	email.Save(c)
+
+	// Remove memcache object for the campaign
+	memcacheKey := GetEmailCampaignKey(email)
+	memcache.Delete(c, memcacheKey)
+
 	sync.ResourceSync(r, email.Id, "Email", "create")
 	return email, nil, nil
 }

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"google.golang.org/appengine"
@@ -33,14 +32,6 @@ type InternalTrackerEvent struct {
 	Email       string `json:"email"`
 	Timestamp   int    `json:"timestamp"`
 	Reason      string `json:"reason"`
-}
-
-func formatCampaignName(campaignName string) string {
-	campaignName = utilities.RemoveSpecialCharacters(campaignName)
-	campaignName = strings.ToLower(campaignName)
-	campaignName = strings.Trim(campaignName, " ")
-	campaignName = strings.Replace(campaignName, " ", "-", -1)
-	return campaignName
 }
 
 func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
@@ -118,11 +109,6 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 				log.Errorf(c, "%v", singleEvent)
 			}
 
-			emailSubject := email.Subject
-			if email.BaseSubject != "" {
-				emailSubject = email.BaseSubject
-			}
-
 			// Invalidate memcache for this particular campaign
 			memcacheKey := controllers.GetEmailCampaignKey(email)
 			memcacheKeys = append(memcacheKeys, memcacheKey)
@@ -193,7 +179,7 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 		log.Infof(c, "%v", noDuplicatesMemcache)
 		err = memcache.DeleteMulti(c, noDuplicatesMemcache)
 		if err != nil {
-			log.Errorf(c, "%v", err)
+			log.Warningf(c, "%v", err)
 		}
 	}
 

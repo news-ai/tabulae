@@ -13,6 +13,7 @@ import (
 	"github.com/news-ai/tabulae/sync"
 
 	nError "github.com/news-ai/web/errors"
+	"github.com/news-ai/web/utilities"
 )
 
 type EmailSendUpdate struct {
@@ -26,6 +27,8 @@ type EmailSendUpdate struct {
 
 func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
+
+	memcacheKeys := []string{}
 
 	// Only listens to POST method
 	switch r.Method {
@@ -61,8 +64,21 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 				email.GmailThreadId = emailSendUpdate[i].ThreadId
 			}
 
+			// Invalidate memcache for this particular campaign
+			memcacheKey := controllers.GetEmailCampaignKey(email)
+			memcacheKeys = append(memcacheKeys, memcacheKey)
+
 			email.Save(c)
 			emailIds = append(emailIds, email.Id)
+		}
+
+		if len(memcacheKeys) > 0 {
+			noDuplicatesMemcache := utilities.RemoveDuplicatesUnordered(memcacheKeys)
+			log.Infof(c, "%v", noDuplicatesMemcache)
+			err = memcache.DeleteMulti(c, noDuplicatesMemcache)
+			if err != nil {
+				log.Warningf(c, "%v", err)
+			}
 		}
 
 		if len(emailIds) > 0 {
