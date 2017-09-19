@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
@@ -110,7 +109,7 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 
 			// Invalidate memcache for this particular campaign
 			userIdString := strconv.FormatInt(email.CreatedBy, 10)
-			dayFormat := time.Now().Format("2006-01-02")
+			dayFormat := email.Created.Format("2006-01-02")
 			campaignName := formatCampaignName(emailSubject)
 			memcacheKey := userIdString + "-" + dayFormat + "-" + campaignName
 			memcacheKeys = append(memcacheKeys, memcacheKey)
