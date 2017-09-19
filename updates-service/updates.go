@@ -8,6 +8,7 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/memcache"
 
 	tabulaeControllers "github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/sync"
@@ -28,8 +29,6 @@ type EmailSendUpdate struct {
 func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
-	memcacheKeys := []string{}
-
 	// Only listens to POST method
 	switch r.Method {
 	case "POST":
@@ -44,6 +43,7 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		memcacheKeys := []string{}
 		emailIds := []int64{}
 		for i := 0; i < len(emailSendUpdate); i++ {
 			email, _, err := tabulaeControllers.GetEmailByIdUnauthorized(c, r, emailSendUpdate[i].EmailId)
@@ -65,7 +65,7 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Invalidate memcache for this particular campaign
-			memcacheKey := controllers.GetEmailCampaignKey(email)
+			memcacheKey := tabulaeControllers.GetEmailCampaignKey(email)
 			memcacheKeys = append(memcacheKeys, memcacheKey)
 
 			email.Save(c)

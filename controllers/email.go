@@ -1066,6 +1066,7 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 
 	emails := []models.Email{}
 	emailIds := []int64{}
+	memcacheKey := ""
 
 	// Since the emails should be the same, get the attachments here
 	if len(bulkEmailIds.EmailIds) > 0 {
@@ -1080,8 +1081,15 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 
 			// Check if email has been scheduled or not
 			if singleEmail.SendAt.IsZero() || singleEmail.SendAt.Before(time.Now()) {
+				memcacheKey = GetEmailCampaignKey(singleEmail)
 				emailIds = append(emailIds, singleEmail.Id)
 			}
+		}
+
+		// Delete a single memcache key since the emails should all have
+		// the same subject (or baseSubject)
+		if memcacheKey != "" {
+			memcache.Delete(c, memcacheKey)
 		}
 
 		sync.SendEmailsToEmailService(r, emailIds)
@@ -1150,10 +1158,16 @@ func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (m
 	}
 
 	if isNotBulk {
-		emailIds := []int64{email.Id}
-
 		// Check if email has been scheduled or not
 		if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
+			// Remove memcache key for this particular email campaign
+			memcacheKey := GetEmailCampaignKey(email)
+			if memcacheKey != "" {
+				memcache.Delete(c, memcacheKey)
+			}
+
+			// Sync email with email service if this is not a bulk email
+			emailIds := []int64{email.Id}
 			sync.SendEmailsToEmailService(r, emailIds)
 		}
 	}
