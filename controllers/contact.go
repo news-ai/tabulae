@@ -468,15 +468,27 @@ func contactsToPublications(c context.Context, contacts []models.Contact) []mode
 
 	// Work on includes
 	publications := []models.Publication{}
+	filteredPublicationIds := []*datastore.Key{}
 	publicationExists := map[int64]bool{}
 	publicationExists = make(map[int64]bool)
 
 	for i := 0; i < len(publicationIds); i++ {
 		if _, ok := publicationExists[publicationIds[i]]; !ok {
-			publication, _ := getPublication(c, publicationIds[i])
-			publications = append(publications, publication)
+			filteredPublicationIds = append(filteredPublicationIds, datastore.NewKey(c, "Publication", "", publicationIds[i], nil))
+
 			publicationExists[publicationIds[i]] = true
 		}
+	}
+
+	err := nds.GetMulti(c, filteredPublicationIds, publications)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Publication{}
+	}
+
+	for i := 0; i < len(publications); i++ {
+		publications[i].Id = filteredPublicationIds[i].IntID()
+		publications[i].Type = "publications"
 	}
 
 	return publications
