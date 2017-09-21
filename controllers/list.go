@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	// "strconv"
 	"strings"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
+	// "google.golang.org/appengine/memcache"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/pquerna/ffjson/ffjson"
@@ -834,6 +836,51 @@ func GetContactsForList(c context.Context, r *http.Request, id string) ([]models
 
 	var contacts []models.Contact
 	contacts = make([]models.Contact, len(subsetIds))
+
+	// Check memcache of this cluster of contacts are in memcache
+	// Current case is if limit is 50 (as a prototype) so we don't
+	// have to look for expiration keys
+	// if limit == 50 {
+	// 	memcacheKey := id + "_" + strconv.Itoa(startPosition) + "_" + strconv.Itoa(endPosition)
+	// 	_, err := memcache.Gob.Get(c, memcacheKey, &contacts)
+
+	// 	if err != nil {
+	// 		err = nds.GetMulti(c, subsetKeyIds, contacts)
+	// 		if err != nil {
+	// 			log.Errorf(c, "%v", err)
+	// 			return []models.Contact{}, nil, 0, 0, err
+	// 		}
+
+	// 		for i := 0; i < len(contacts); i++ {
+	// 			if contacts[i].ListId == 0 {
+	// 				contacts[i].ListId = mediaList.Id
+	// 				contacts[i].Save(c, r)
+	// 			}
+
+	// 			contacts[i].Id = subsetIds[i]
+	// 			contacts[i].Type = "contacts"
+	// 		}
+
+	// 		contacts, err = ContactsToDefaultFields(c, r, contacts, mediaList)
+	// 		if err != nil {
+	// 			log.Errorf(c, "%v", err)
+	// 		}
+
+	// 		item1 := &memcache.Item{
+	// 			Key:    memcacheKey,
+	// 			Object: &contacts,
+	// 		}
+	// 		err = memcache.Gob.Set(c, item1)
+	// 		if err != nil {
+	// 			log.Errorf(c, "%v", err)
+	// 		}
+	// 	} else {
+	// 		log.Infof(c, "memcache: %v", contacts)
+	// 	}
+
+	// 	publications := contactsToPublications(c, contacts)
+	// 	return contacts, publications, len(contacts), len(mediaList.Contacts), nil
+	// }
 
 	err = nds.GetMulti(c, subsetKeyIds, contacts)
 	if err != nil {

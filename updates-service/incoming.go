@@ -53,7 +53,6 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 
 	emailIds := []int64{}
 	memcacheKeys := []string{}
-
 	for i := 0; i < len(allEvents); i++ {
 		singleEvent := allEvents[i]
 		if singleEvent.SgMessageID == "" {

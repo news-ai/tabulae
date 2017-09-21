@@ -38,7 +38,6 @@ func getTemplate(c context.Context, id int64) (models.Template, error) {
 	templateId := datastore.NewKey(c, "Template", "", id, nil)
 
 	err := nds.Get(c, templateId, &template)
-
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Template{}, err

@@ -1092,7 +1092,9 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 			memcache.Delete(c, memcacheKey)
 		}
 
-		sync.SendEmailsToEmailService(r, emailIds)
+		if len(emailIds) > 0 {
+			sync.SendEmailsToEmailService(r, emailIds)
+		}
 	}
 
 	return emails, nil, len(emails), 0, nil
