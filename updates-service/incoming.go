@@ -118,14 +118,18 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			sendGridId := strings.Split(singleEvent.SgMessageID, ".")[0]
 
-			email := models.Email{}
-			err := nil
+			// Get email
+			var email models.Email
+			var err error
 			if singleEvent.EmailId != "" {
+				log.Infof(c, "%v", singleEvent.EmailId)
 				email, _, err = controllers.GetEmailUnauthorized(c, r, singleEvent.EmailId)
 			} else {
 				// Validate email exists with particular SendGridId
 				email, err = controllers.FilterEmailBySendGridID(c, sendGridId)
 			}
+
+			// Check if there's any errors
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
