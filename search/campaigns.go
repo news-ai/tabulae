@@ -217,9 +217,7 @@ func searchEmailCampaigns(c context.Context, r *http.Request, elasticQuery inter
 			log.Infof(c, "memcache: %v", emailCampaign)
 		}
 
-		if emailCampaign.Show {
-			emailCampaignsResponse = append(emailCampaignsResponse, emailCampaign)
-		}
+		emailCampaignsResponse = append(emailCampaignsResponse, emailCampaign)
 	}
 
 	return emailCampaignsResponse, len(emailCampaignsResponse), hits.Total, nil

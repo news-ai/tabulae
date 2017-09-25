@@ -354,6 +354,8 @@ func GetSentEmails(c context.Context, r *http.Request) ([]models.Email, interfac
 		return []models.Email{}, nil, 0, 0, err
 	}
 
+	// Check if in the memcache there is a userid_emailAddress => timeLatsEmailSent
+
 	// Filter all emails that are in the future (scheduled for later)
 	query := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("IsSent =", true).Filter("Cancel =", false).Filter("Delievered =", true).Filter("Archived =", false)
 	query = controllers.ConstructQuery(query, r)

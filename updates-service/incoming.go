@@ -32,6 +32,10 @@ type InternalTrackerEvent struct {
 	Email       string `json:"email"`
 	Timestamp   int    `json:"timestamp"`
 	Reason      string `json:"reason"`
+
+	// Sendgrid<->Tabulae data
+	EmailId   string `json:"emailId"`
+	CreatedBy string `json:"createdBy"`
 }
 
 func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
@@ -112,16 +116,26 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 			memcacheKey := controllers.GetEmailCampaignKey(email)
 			memcacheKeys = append(memcacheKeys, memcacheKey)
 		} else {
-			// Validate email exists with particular SendGridId
 			sendGridId := strings.Split(singleEvent.SgMessageID, ".")[0]
-			email, err := controllers.FilterEmailBySendGridID(c, sendGridId)
-			emailIds = append(emailIds, email.Id)
+
+			email := models.Email{}
+			err := nil
+			if singleEvent.EmailId != "" {
+				email, _, err = controllers.GetEmailUnauthorized(c, r, singleEvent.EmailId)
+			} else {
+				// Validate email exists with particular SendGridId
+				email, err = controllers.FilterEmailBySendGridID(c, sendGridId)
+			}
 			if err != nil {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
 				log.Errorf(c, "%v with value %v", err, sendGridId)
 				continue
 			}
+
+			// Add sendgrid ID and add email for syncing with ES later
+			email.SendGridId = sendGridId
+			emailIds = append(emailIds, email.Id)
 
 			// Add to appropriate Email model
 			// https://sendgrid.com/docs/API_Reference/Webhooks/event.html
