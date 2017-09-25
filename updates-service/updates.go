@@ -3,14 +3,21 @@ package updates
 import (
 	"io/ioutil"
 	"net/http"
+	"time"
+
+	"golang.org/x/net/context"
 
 	"github.com/pquerna/ffjson/ffjson"
 
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/memcache"
 
+	"github.com/qedus/nds"
+
 	tabulaeControllers "github.com/news-ai/tabulae/controllers"
+	"github.com/news-ai/tabulae/models"
 	"github.com/news-ai/tabulae/sync"
 
 	nError "github.com/news-ai/web/errors"
@@ -43,8 +50,10 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		emails := []models.Email{}
 		memcacheKeys := []string{}
 		emailIds := []int64{}
+		keys := []*datastore.Key{}
 		for i := 0; i < len(emailSendUpdate); i++ {
 			email, _, err := tabulaeControllers.GetEmailByIdUnauthorized(c, r, emailSendUpdate[i].EmailId)
 			if err != nil {
@@ -68,8 +77,24 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 			memcacheKey := tabulaeControllers.GetEmailCampaignKey(email)
 			memcacheKeys = append(memcacheKeys, memcacheKey)
 
-			email.Save(c)
+			keys = append(keys, email.Key(c))
 			emailIds = append(emailIds, email.Id)
+			emails = append(emails, email)
+		}
+
+		ks := []*datastore.Key{}
+		err = nds.RunInTransaction(c, func(ctx context.Context) error {
+			contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+			ks, err = nds.PutMulti(contextWithTimeout, keys, emails)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return err
+			}
+			return nil
+		}, nil)
+
+		if err != nil {
+			log.Errorf(c, "%v", err)
 		}
 
 		if len(memcacheKeys) > 0 {
