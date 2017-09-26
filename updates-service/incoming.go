@@ -55,6 +55,33 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	emailIdsDatastore := []int64{}
+	emailIdsSendgrid := []string{}
+
+	for i := 0; i < len(allEvents); i++ {
+		if singleEvent.SgMessageID == "" {
+			emailId, err := utilities.StringIdToInt(allEvents[i].ID)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				continue
+			}
+			emailIdsDatastore = append(emailIdsDatastore, emailId)
+		} else {
+			if singleEvent.EmailId != "" {
+				emailId, err := utilities.StringIdToInt(allEvents[i].EmailId)
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					continue
+				}
+				emailIdsDatastore = append(emailIdsDatastore, emailId)
+			} else {
+				// Validate email exists with particular SendGridId
+				sendGridId := strings.Split(allEvents[i].SgMessageID, ".")[0]
+				emailIdsSendgrid = append(emailIdsSendgrid, sendGridId)
+			}
+		}
+	}
+
 	emailIds := []int64{}
 	memcacheKeys := []string{}
 	for i := 0; i < len(allEvents); i++ {

@@ -51,13 +51,13 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Bulk get emails
-		emailIdsToGet := []int64{}
+		emailIds := []int64{}
 		for i := 0; i < len(emailSendUpdate); i++ {
-			emailIdsToGet = append(emailIdsToGet, emailSendUpdate[i].EmailId)
+			emailIds = append(emailIds, emailSendUpdate[i].EmailId)
 		}
 
 		emailIdToEmail := map[int64]models.Email{}
-		emails, _, err := tabulaeControllers.GetEmailUnauthorizedBulk(c, r, emailIdsToGet)
+		emails, _, err := tabulaeControllers.GetEmailUnauthorizedBulk(c, r, emailIds)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			nError.ReturnError(w, http.StatusInternalServerError, "Updates handing error", err.Error())
@@ -69,7 +69,6 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 		}
 
 		memcacheKeys := []string{}
-		emailIds := []int64{}
 		updatedEmails := []models.Email{}
 		keys := []*datastore.Key{}
 		for i := 0; i < len(emailSendUpdate); i++ {
@@ -91,7 +90,6 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 			memcacheKeys = append(memcacheKeys, memcacheKey)
 
 			keys = append(keys, email.Key(c))
-			emailIds = append(emailIds, email.Id)
 			updatedEmails = append(updatedEmails, email)
 		}
 
