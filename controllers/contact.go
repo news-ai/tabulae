@@ -772,6 +772,29 @@ func GetContacts(c context.Context, r *http.Request) ([]models.Contact, interfac
 	return []models.Contact{}, nil, 0, 0, nil
 }
 
+func GetContactsByIds(c context.Context, r *http.Request, ids []int64) ([]models.Contact, error) {
+	var ks []*datastore.Key
+
+	for i := 0; i < len(ids); i++ {
+		contactKey := datastore.NewKey(c, "Contact", "", ids[i], nil)
+		ks = append(ks, contactKey)
+	}
+
+	var contacts []models.Contact
+	contacts = make([]models.Contact, len(ks))
+	err := nds.GetMulti(c, ks, contacts)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, err
+	}
+
+	for i := 0; i < len(contacts); i++ {
+		contacts[i].Format(ks[i], "contacts")
+	}
+
+	return contacts, nil
+}
+
 func GetContact(c context.Context, r *http.Request, id string) (models.Contact, interface{}, error) {
 	// Get the details of the current user
 	currentId, err := utilities.StringIdToInt(id)
