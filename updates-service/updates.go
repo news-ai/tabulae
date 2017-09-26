@@ -57,23 +57,23 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 		}
 
 		emailIdToEmail := map[int64]models.Email{}
-		emails, err := tabulaeControllers.GetEmailUnauthorizedBulk(c, r, emailIdsToGet)
+		emails, _, err := tabulaeControllers.GetEmailUnauthorizedBulk(c, r, emailIdsToGet)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			nError.ReturnError(w, http.StatusInternalServerError, "Updates handing error", err.Error())
 			return
 		}
 
-		for i := 0; i < emails; i++ {
+		for i := 0; i < len(emails); i++ {
 			emailIdToEmail[emails[i].Id] = emails[i]
 		}
 
 		memcacheKeys := []string{}
 		emailIds := []int64{}
+		updatedEmails := []models.Email{}
 		keys := []*datastore.Key{}
 		for i := 0; i < len(emailSendUpdate); i++ {
 			email := emailIdToEmail[emailSendUpdate[i].EmailId]
-
 			email.IsSent = true
 			email.Delievered = emailSendUpdate[i].Delievered
 			email.Method = emailSendUpdate[i].Method
@@ -92,13 +92,16 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 
 			keys = append(keys, email.Key(c))
 			emailIds = append(emailIds, email.Id)
-			emails = append(emails, email)
+			updatedEmails = append(updatedEmails, email)
 		}
+
+		log.Infof(c, "%v", len(keys))
+		log.Infof(c, "%v", len(updatedEmails))
 
 		ks := []*datastore.Key{}
 		err = nds.RunInTransaction(c, func(ctx context.Context) error {
 			contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
-			ks, err = nds.PutMulti(contextWithTimeout, keys, emails)
+			ks, err = nds.PutMulti(contextWithTimeout, keys, updatedEmails)
 			if err != nil {
 				log.Errorf(c, "%v", err)
 				return err
