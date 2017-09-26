@@ -467,7 +467,7 @@ func contactsToPublications(c context.Context, contacts []models.Contact) []mode
 	}
 
 	// Work on includes
-	publications := []models.Publication{}
+	var publications []models.Publication
 	filteredPublicationIds := []*datastore.Key{}
 	publicationExists := map[int64]bool{}
 	publicationExists = make(map[int64]bool)
@@ -480,6 +480,7 @@ func contactsToPublications(c context.Context, contacts []models.Contact) []mode
 		}
 	}
 
+	publications = make([]models.Publication, len(filteredPublicationIds))
 	err := nds.GetMulti(c, filteredPublicationIds, publications)
 	if err != nil {
 		log.Errorf(c, "%v", err)

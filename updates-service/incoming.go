@@ -82,6 +82,13 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	datastoreEmails, _, err := tabulaeControllers.GetEmailUnauthorizedBulk(c, r, emailIdsDatastore)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		nError.ReturnError(w, http.StatusInternalServerError, "Updates handing error", err.Error())
+		return
+	}
+
 	emailIds := []int64{}
 	memcacheKeys := []string{}
 	for i := 0; i < len(allEvents); i++ {
