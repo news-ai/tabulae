@@ -50,16 +50,29 @@ func incomingUpdates(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		emails := []models.Email{}
+		// Bulk get emails
+		emailIdsToGet := []int64{}
+		for i := 0; i < len(emailSendUpdate); i++ {
+			emailIdsToGet = append(emailIdsToGet, emailSendUpdate[i].EmailId)
+		}
+
+		emailIdToEmail := map[int64]models.Email{}
+		emails, err := tabulaeControllers.GetEmailUnauthorizedBulk(c, r, emailIdsToGet)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			nError.ReturnError(w, http.StatusInternalServerError, "Updates handing error", err.Error())
+			return
+		}
+
+		for i := 0; i < emails; i++ {
+			emailIdToEmail[emails[i].Id] = emails[i]
+		}
+
 		memcacheKeys := []string{}
 		emailIds := []int64{}
 		keys := []*datastore.Key{}
 		for i := 0; i < len(emailSendUpdate); i++ {
-			email, _, err := tabulaeControllers.GetEmailByIdUnauthorized(c, r, emailSendUpdate[i].EmailId)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				continue
-			}
+			email := emailIdToEmail[emailSendUpdate[i].EmailId]
 
 			email.IsSent = true
 			email.Delievered = emailSendUpdate[i].Delievered

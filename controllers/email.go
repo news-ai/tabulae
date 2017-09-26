@@ -92,6 +92,29 @@ func getEmailUnauthorized(c context.Context, r *http.Request, id int64) (models.
 	return models.Email{}, errors.New("No email by this id")
 }
 
+func getEmailUnauthorizedBulk(c context.Context, r *http.Request, ids []int64) ([]models.Email, error) {
+	var ks []*datastore.Key
+
+	for i := 0; i < ids; i++ {
+		emailKey := datastore.NewKey(c, "Email", "", ids[i], nil)
+		ks = append(ks, emailKey)
+	}
+
+	var emails []models.Email
+	emails = make([]models.Email, len(ks))
+	err = nds.GetMulti(c, ks, emails)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Email{}, 0, err
+	}
+
+	for i := 0; i < len(emails); i++ {
+		emails[i].Format(ks[i], "emails")
+	}
+
+	return emails, len(emails), nil
+}
+
 /*
 * Filter methods
  */
@@ -508,6 +531,16 @@ func GetEmailById(c context.Context, r *http.Request, id int64) (models.Email, e
 		return models.Email{}, err
 	}
 	return email, nil
+}
+
+func GetEmailUnauthorizedBulk(c context.Context, r *http.Request, ids []int64) (models.Email, interface{}, error) {
+	email, err := getEmailUnauthorizedBulk(c, r, ids)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.Email{}, nil, err
+	}
+
+	return email, nil, nil
 }
 
 func GetEmailUnauthorized(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
