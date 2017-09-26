@@ -58,7 +58,7 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 	emailIdsDatastore := []int64{}
 
 	for i := 0; i < len(allEvents); i++ {
-		if singleEvent.SgMessageID == "" {
+		if allEvents[i].SgMessageID == "" {
 			emailId, err := utilities.StringIdToInt(allEvents[i].ID)
 			if err != nil {
 				log.Errorf(c, "%v", err)
@@ -66,7 +66,7 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			emailIdsDatastore = append(emailIdsDatastore, emailId)
 		} else {
-			if singleEvent.EmailId != "" {
+			if allEvents[i].EmailId != "" {
 				emailId, err := utilities.StringIdToInt(allEvents[i].EmailId)
 				if err != nil {
 					log.Errorf(c, "%v", err)
@@ -78,10 +78,10 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	emailIdToEmail := map[int64]models.Email{}
-	datastoreEmails, _, err := tabulaeControllers.GetEmailUnauthorizedBulk(c, r, emailIdsDatastore)
+	datastoreEmails, _, err := controllers.GetEmailUnauthorizedBulk(c, r, emailIdsDatastore)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		nError.ReturnError(w, http.StatusInternalServerError, "Updates handing error", err.Error())
+		errors.ReturnError(w, http.StatusInternalServerError, "Updates handing error", err.Error())
 		return
 	}
 
@@ -94,7 +94,12 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < len(allEvents); i++ {
 		singleEvent := allEvents[i]
 		if singleEvent.SgMessageID == "" {
-			email := emailIdToEmail[singleEvent.ID]
+			emailId, err := utilities.StringIdToInt(allEvents[i].ID)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				continue
+			}
+			email := emailIdToEmail[emailId]
 			emailIds = append(emailIds, email.Id)
 
 			// If there is an error
@@ -157,7 +162,13 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 			var err error
 			if singleEvent.EmailId != "" {
 				log.Infof(c, "%v", singleEvent.EmailId)
-				email = emailIdToEmail[singleEvent.EmailId]
+				emailId, err := utilities.StringIdToInt(allEvents[i].EmailId)
+				if err != nil {
+					log.Errorf(c, "%v", err)
+					continue
+				}
+
+				email = emailIdToEmail[emailId]
 			} else {
 				// Validate email exists with particular SendGridId
 				email, err = controllers.FilterEmailBySendGridID(c, sendGridId)
