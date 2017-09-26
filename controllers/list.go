@@ -1170,8 +1170,6 @@ func DeleteMediaList(c context.Context, r *http.Request, id string) (interface{}
 		}
 
 		contacts[i].IsDeleted = true
-		contacts[i].Save(c, r)
-
 		keys = append(keys, contacts[i].Key(c))
 		contactIds = append(contactIds, contacts[i].Id)
 	}

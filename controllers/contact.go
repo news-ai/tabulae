@@ -12,6 +12,7 @@ import (
 
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
+	// "google.golang.org/appengine/memcache"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/pquerna/ffjson/ffjson"
@@ -817,6 +818,12 @@ func ContactsToDefaultFields(c context.Context, r *http.Request, contacts []mode
 	instagramUsers := []string{}
 	twitterUsers := []string{}
 
+	// user, err := controllers.GetCurrentUser(c, r)
+	// if err != nil {
+	// 	log.Errorf(c, "%v", err)
+	// 	return []models.Contact{}, errors.New("Could not get user")
+	// }
+
 	for i := 0; i < len(contacts); i++ {
 		if contacts[i].Instagram != "" {
 			instagramUsers = append(instagramUsers, contacts[i].Instagram)
@@ -920,7 +927,10 @@ func ContactsToDefaultFields(c context.Context, r *http.Request, contacts []mode
 					}
 				}
 
-				if customField.Name == "lastcontacted" {
+				if customField.Name == "lastcontacted" && contacts[i].Email != "" {
+					// lastCreatedMemcacheKey := "lastcontacted" + strconv.FormatInt(user.Id, 10) + contacts[i].Email
+					// item, err := memcache.Get(c, lastCreatedMemcacheKey)
+					// if err != nil {
 					emails, _, _, err := GetOrderedEmailsForContact(c, r, contacts[i])
 
 					// Set the value of the post name to the user
@@ -953,9 +963,24 @@ func ContactsToDefaultFields(c context.Context, r *http.Request, contacts []mode
 								} else if emails[lastUnarchivedEmail].Method == "sendgrid" && emails[lastUnarchivedEmail].SendGridId == "" {
 									customField.Value = ""
 								}
+								// else {
+								// 	item1 := &memcache.Item{
+								// 		Key:   lastCreatedMemcacheKey,
+								// 		Value: []byte(customField.Value),
+								// 	}
+								// 	err = memcache.Set(c, item1)
+								// 	if err != nil {
+								// 		log.Errorf(c, "%v", err)
+								// 	}
+								// }
 							}
 						}
 					}
+					// } else {
+					// 	emailDate := string(item.Value[:])
+					// 	log.Debugf(c, "memcache: %v", emailDate)
+					// 	customField.Value = emailDate
+					// }
 				}
 
 				if customField.Value != "" {
@@ -1349,7 +1374,6 @@ func BatchCreateContactsForDuplicateList(c context.Context, r *http.Request, con
 	}
 
 	ks := []*datastore.Key{}
-
 	err = nds.RunInTransaction(c, func(ctx context.Context) error {
 		contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
 		ks, err = nds.PutMulti(contextWithTimeout, keys, contacts)

@@ -317,6 +317,61 @@ func emailsToContacts(c context.Context, r *http.Request, emails []models.Email)
 	return contacts
 }
 
+func sendEmail(c context.Context, r *http.Request, email models.Email) (models.Email, error) {
+	user, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return email, err
+	}
+
+	if !user.EmailConfirmed {
+		return email, errors.New("Users email is not confirmed - the user cannot send emails.")
+	}
+
+	// Check if email is already sent
+	if email.IsSent {
+		return email, errors.New("Email has already been sent.")
+	}
+
+	// Validate if HTML is valid
+	validHTML := utilities.ValidateHTML(email.Body)
+	if !validHTML {
+		return email, errors.New("Invalid HTML")
+	}
+
+	if email.Subject == "" {
+		email.Subject = "(no subject)"
+	}
+
+	userEmails := map[string]bool{}
+	for i := 0; i < len(user.Emails); i++ {
+		userEmails[user.Emails[i]] = true
+	}
+
+	emailId := strconv.FormatInt(email.Id, 10)
+	email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
+	email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
+	email.IsSent = true
+
+	// Check if the user's email is valid for sending
+	if email.Method == "sendgrid" && email.FromEmail != "" {
+		userEmailValid := false
+		if user.Email == email.FromEmail {
+			userEmailValid = true
+		}
+
+		if _, ok := userEmails[email.FromEmail]; ok {
+			userEmailValid = true
+		}
+
+		if !userEmailValid {
+			return models.Email{}, errors.New("The email requested is not confirmed by the user yet")
+		}
+	}
+
+	return email, nil
+}
+
 /*
 * Public methods
  */
@@ -1099,27 +1154,58 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 		return []models.Email{}, nil, 0, 0, err
 	}
 
-	emails := []models.Email{}
+	var keys []*datastore.Key
+	updatedEmails := []models.Email{}
 	emailIds := []int64{}
 	memcacheKey := ""
 
 	// Since the emails should be the same, get the attachments here
 	if len(bulkEmailIds.EmailIds) > 0 {
-		for i := 0; i < len(bulkEmailIds.EmailIds); i++ {
-			singleEmail, _, err := SendEmail(c, r, strconv.FormatInt(bulkEmailIds.EmailIds[i], 10), false)
+		emails, err := getEmailUnauthorizedBulk(c, r, bulkEmailIds.EmailIds)
+		if err != nil {
+			return []models.Email{}, nil, 0, 0, err
+		}
+
+		for i := 0; i < len(emails); i++ {
+			singleEmail, err := sendEmail(c, r, emails[i])
 			if err != nil {
 				log.Errorf(c, "%v", err)
 				continue
 			}
 
-			emails = append(emails, singleEmail)
+			keys = append(keys, singleEmail.Key(c))
+			updatedEmails = append(updatedEmails, singleEmail)
+
+			// sentTime := ""
 
 			// Check if email has been scheduled or not
 			if singleEmail.SendAt.IsZero() || singleEmail.SendAt.Before(time.Now()) {
 				memcacheKey = GetEmailCampaignKey(singleEmail)
 				emailIds = append(emailIds, singleEmail.Id)
+				// sentTime = singleEmail.Created.Format(time.RFC3339)
 			}
+			// else {
+			// 	sentTime = singleEmail.SendAt.Format(time.RFC3339)
+			// }
+
+			// lastCreatedMemcacheKey := "lastcontacted" + strconv.FormatInt(user.Id, 10) + emails[i].To
+			// item1 := &memcache.Item{
+			// 	Key:   lastCreatedMemcacheKey,
+			// 	Value: []byte(sentTime),
+			// }
+			// memcache.Set(c, item1)
 		}
+
+		ks := []*datastore.Key{}
+		err = nds.RunInTransaction(c, func(ctx context.Context) error {
+			contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+			ks, err = nds.PutMulti(contextWithTimeout, keys, updatedEmails)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return err
+			}
+			return nil
+		}, nil)
 
 		// Delete a single memcache key since the emails should all have
 		// the same subject (or baseSubject)
@@ -1132,84 +1218,37 @@ func BulkSendEmail(c context.Context, r *http.Request) ([]models.Email, interfac
 		}
 	}
 
-	return emails, nil, len(emails), 0, nil
+	return updatedEmails, nil, len(updatedEmails), 0, nil
 }
 
-func SendEmail(c context.Context, r *http.Request, id string, isNotBulk bool) (models.Email, interface{}, error) {
+func SendEmail(c context.Context, r *http.Request, id string) (models.Email, interface{}, error) {
 	email, _, err := GetEmail(c, r, id)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Email{}, nil, err
 	}
 
-	user, err := controllers.GetCurrentUser(c, r)
+	singleEmail, err := sendEmail(c, r, email)
 	if err != nil {
 		log.Errorf(c, "%v", err)
-		return email, nil, err
+		return models.Email{}, nil, err
 	}
+	singleEmail.Save(c)
 
-	if !user.EmailConfirmed {
-		return email, nil, errors.New("Users email is not confirmed - the user cannot send emails.")
-	}
-
-	// Check if email is already sent
-	if email.IsSent {
-		return email, nil, errors.New("Email has already been sent.")
-	}
-
-	// Validate if HTML is valid
-	validHTML := utilities.ValidateHTML(email.Body)
-	if !validHTML {
-		return email, nil, errors.New("Invalid HTML")
-	}
-
-	if email.Subject == "" {
-		email.Subject = "(no subject)"
-	}
-
-	userEmails := map[string]bool{}
-	for i := 0; i < len(user.Emails); i++ {
-		userEmails[user.Emails[i]] = true
-	}
-
-	emailId := strconv.FormatInt(email.Id, 10)
-	email.Body = utilities.AppendHrefWithLink(c, email.Body, emailId, "https://email2.newsai.co/a")
-	email.Body += "<img src=\"https://email2.newsai.co/?id=" + emailId + "\" alt=\"NewsAI\" />"
-	email.IsSent = true
-	email.Save(c)
-
-	// Check if the user's email is valid for sending
-	if email.Method == "sendgrid" && email.FromEmail != "" {
-		userEmailValid := false
-		if user.Email == email.FromEmail {
-			userEmailValid = true
+	// Check if email has been scheduled or not
+	if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
+		// Remove memcache key for this particular email campaign
+		memcacheKey := GetEmailCampaignKey(email)
+		if memcacheKey != "" {
+			memcache.Delete(c, memcacheKey)
 		}
 
-		if _, ok := userEmails[email.FromEmail]; ok {
-			userEmailValid = true
-		}
-
-		if !userEmailValid {
-			return models.Email{}, nil, errors.New("The email requested is not confirmed by the user yet")
-		}
+		// Sync email with email service if this is not a bulk email
+		emailIds := []int64{email.Id}
+		sync.SendEmailsToEmailService(r, emailIds)
 	}
 
-	if isNotBulk {
-		// Check if email has been scheduled or not
-		if email.SendAt.IsZero() || email.SendAt.Before(time.Now()) {
-			// Remove memcache key for this particular email campaign
-			memcacheKey := GetEmailCampaignKey(email)
-			if memcacheKey != "" {
-				memcache.Delete(c, memcacheKey)
-			}
-
-			// Sync email with email service if this is not a bulk email
-			emailIds := []int64{email.Id}
-			sync.SendEmailsToEmailService(r, emailIds)
-		}
-	}
-
-	return email, nil, nil
+	return singleEmail, nil, nil
 }
 
 func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason string) (*models.Email, error) {
