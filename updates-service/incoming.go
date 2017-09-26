@@ -56,7 +56,6 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	emailIdsDatastore := []int64{}
-	emailIdsSendgrid := []string{}
 
 	for i := 0; i < len(allEvents); i++ {
 		if singleEvent.SgMessageID == "" {
@@ -74,14 +73,11 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 				emailIdsDatastore = append(emailIdsDatastore, emailId)
-			} else {
-				// Validate email exists with particular SendGridId
-				sendGridId := strings.Split(allEvents[i].SgMessageID, ".")[0]
-				emailIdsSendgrid = append(emailIdsSendgrid, sendGridId)
 			}
 		}
 	}
 
+	emailIdToEmail := map[int64]models.Email{}
 	datastoreEmails, _, err := tabulaeControllers.GetEmailUnauthorizedBulk(c, r, emailIdsDatastore)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -89,12 +85,16 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for i := 0; i < len(datastoreEmails); i++ {
+		emailIdToEmail[datastoreEmails[i].Id] = datastoreEmails[i]
+	}
+
 	emailIds := []int64{}
 	memcacheKeys := []string{}
 	for i := 0; i < len(allEvents); i++ {
 		singleEvent := allEvents[i]
 		if singleEvent.SgMessageID == "" {
-			email, _, err := controllers.GetEmailUnauthorized(c, r, singleEvent.ID)
+			email := emailIdToEmail[singleEvent.ID]
 			emailIds = append(emailIds, email.Id)
 
 			// If there is an error
@@ -157,7 +157,7 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 			var err error
 			if singleEvent.EmailId != "" {
 				log.Infof(c, "%v", singleEvent.EmailId)
-				email, _, err = controllers.GetEmailUnauthorized(c, r, singleEvent.EmailId)
+				email = emailIdToEmail[singleEvent.EmailId]
 			} else {
 				// Validate email exists with particular SendGridId
 				email, err = controllers.FilterEmailBySendGridID(c, sendGridId)
