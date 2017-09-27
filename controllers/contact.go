@@ -42,6 +42,12 @@ type deleteContactsDetails struct {
 	Contacts []int64 `json:"contacts"`
 }
 
+type moveContactsDetails struct {
+	Contacts       []int64 `json:"contacts"`
+	PreviousListId int64   `json:"previouslistid"`
+	NewListId      int64   `json:"newlistid"`
+}
+
 /*
 * Get methods
  */
@@ -1834,4 +1840,85 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 	// Pubsub to remove ES contact
 	sync.ResourceSync(r, contact.Id, "Contact", "delete")
 	return nil, nil, nil
+}
+
+func MoveContacts(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, int, error) {
+	// Get logged in user
+	user, err := controllers.GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, nil, 0, 0, errors.New("Could not get user")
+	}
+
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var moveContacts moveContactsDetails
+	err = decoder.Decode(buf, &moveContacts)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []models.Contact{}, nil, 0, 0, err
+	}
+
+	newContacts := []models.Contact{}
+	newContactIds := []int64{}
+
+	// Add contact to the other media list
+	newMediaList, err := getMediaListBasic(c, r, moveContacts.NewListId)
+	if err != nil {
+		return []models.Contact{}, nil, 0, 0, err
+	}
+
+	mediaListFields := map[string]bool{}
+	for i := 0; i < len(newMediaList.FieldsMap); i++ {
+		if newMediaList.FieldsMap[i].CustomField && !newMediaList.FieldsMap[i].ReadOnly {
+			if _, ok := mediaListFields[newMediaList.FieldsMap[i].Value]; !ok {
+				mediaListFields[newMediaList.FieldsMap[i].Value] = true
+			}
+		}
+	}
+
+	for i := 0; i < len(moveContacts.Contacts); i++ {
+		contact, err := getContact(c, r, moveContacts.Contacts[i])
+		if err == nil {
+			contact.Updated = time.Now()
+			contact.ListId = moveContacts.ListId
+
+			previousCustomFields := contact.CustomFields
+			contact.CustomFields = []models.CustomContactField{}
+
+			for x := 0; x < len(previousCustomFields); x++ {
+				customFieldName := previousCustomFields[x].Name
+				if _, ok := mediaListFields[customFieldName]; ok {
+					contact.CustomFields = append(contact.CustomFields, previousCustomFields[x])
+				}
+			}
+
+			contact.Normalize()
+			contact.Save(c, r)
+
+			newContactIds = append(newContactIds, contact.Id)
+			newContacts = append(newContacts, contact)
+
+			// Copy all of their feeds
+			feeds, err := GetFeedsByResourceId(c, r, "ContactId", contact.Id)
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				return nil, nil, 0, 0, err
+			}
+
+			for x := 0; x < len(feeds); x++ {
+				feeds[x].Updated = time.Now()
+				feeds[x].ListId = moveContacts.ListId
+				feeds[x].Save(c)
+			}
+		}
+	}
+
+	// Append media list
+	newMediaList.Contacts = append(newMediaList.Contacts, newContactIds...)
+	newMediaList.Save(c)
+
+	// Sync all the contacts in bulk here
+	sync.ListUploadResourceBulkSync(r, newMediaList.Id, newMediaList.Contacts, []int64{})
+	return newContacts, nil, 0, 0, nil
 }
