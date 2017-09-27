@@ -1881,7 +1881,7 @@ func MoveContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 		contact, err := getContact(c, r, moveContacts.Contacts[i])
 		if err == nil {
 			contact.Updated = time.Now()
-			contact.ListId = moveContacts.ListId
+			contact.ListId = moveContacts.NewListId
 
 			previousCustomFields := contact.CustomFields
 			contact.CustomFields = []models.CustomContactField{}
@@ -1908,7 +1908,7 @@ func MoveContacts(c context.Context, r *http.Request) ([]models.Contact, interfa
 
 			for x := 0; x < len(feeds); x++ {
 				feeds[x].Updated = time.Now()
-				feeds[x].ListId = moveContacts.ListId
+				feeds[x].ListId = moveContacts.NewListId
 				feeds[x].Save(c)
 			}
 		}

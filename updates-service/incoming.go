@@ -89,47 +89,88 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 		emailIdToEmail[datastoreEmails[i].Id] = datastoreEmails[i]
 	}
 
+	var keys []*datastore.Key
+	updatedEmails := []models.Email{}
 	emailIds := []int64{}
 	memcacheKeys := []string{}
 	for i := 0; i < len(allEvents); i++ {
 		singleEvent := allEvents[i]
-		if singleEvent.SgMessageID == "" {
-			emailId, err := utilities.StringIdToInt(allEvents[i].ID)
-			if err != nil {
-				log.Errorf(c, "%v", err)
-				continue
-			}
-			email := emailIdToEmail[emailId]
-			emailIds = append(emailIds, email.Id)
+		var email models.Email
+		var err error
 
-			// If there is an error
+		if singleEvent.SgMessageID == "" {
+			emailId, err := utilities.StringIdToInt(singleEvent.ID)
 			if err != nil {
 				hasErrors = true
-				log.Errorf(c, "%v", singleEvent)
+				log.Debugf(c, "%v", singleEvent)
 				log.Errorf(c, "%v", err)
-				errors.ReturnError(w, http.StatusInternalServerError, "Internal Tracker issue", err.Error())
 				continue
 			}
+			email = emailIdToEmail[emailId]
+		} else {
+			if singleEvent.EmailId != "" {
+				log.Infof(c, "%v", singleEvent.EmailId)
+				emailId, err := utilities.StringIdToInt(singleEvent.EmailId)
+				if err != nil {
+					hasErrors = true
+					log.Debugf(c, "%v", singleEvent)
+					log.Errorf(c, "%v", err)
+					continue
+				}
+				email = emailIdToEmail[emailId]
+			} else {
+				// Validate email exists with particular SendGridId
+				sendGridId := strings.Split(singleEvent.SgMessageID, ".")[0]
+				email, err = controllers.FilterEmailBySendGridID(c, sendGridId)
 
-			// Add to appropriate Email model
+				// Check if there's any errors
+				if err != nil {
+					hasErrors = true
+					log.Debugf(c, "%v", singleEvent)
+					log.Errorf(c, "%v with value %v", err, sendGridId)
+					continue
+				}
+
+				// Set the email sendgrid id
+				email.SendGridId = sendGridId
+			}
+		}
+
+		keys = append(keys, email.Key(c))
+		emailIds = append(emailIds, email.Id)
+
+		if singleEvent.SgMessageID != "" {
+			// Sendgrid event
+			switch singleEvent.Event {
+			case "bounce":
+				email.BouncedReason = singleEvent.Reason
+				email.Delievered = true
+				email.Bounced = true
+			case "delivered":
+				email.Delievered = true
+			case "spamreport":
+				email.Delievered = true
+				email.Spam = true
+			case "open":
+				email.Delievered = true
+				email.SendGridOpened += 1
+			case "dropped":
+				email.Delievered = true
+				email.Dropped = true
+			default:
+				hasErrors = true
+				log.Errorf(c, "%v", singleEvent)
+			}
+		} else {
+			// Track event
 			switch singleEvent.Event {
 			case "open":
 				for x := 0; x < singleEvent.Count; x++ {
-					_, err = controllers.MarkOpened(c, r, &email)
-					if err != nil {
-						hasErrors = true
-						log.Errorf(c, "%v", singleEvent)
-						log.Errorf(c, "%v", err)
-					}
+					email.Opened += 1
 				}
 			case "click":
 				for x := 0; x < singleEvent.Count; x++ {
-					_, err = controllers.MarkClicked(c, r, &email)
-					if err != nil {
-						hasErrors = true
-						log.Errorf(c, "%v", singleEvent)
-						log.Errorf(c, "%v", err)
-					}
+					email.Clicked += 1
 				}
 			case "unsubscribe":
 				if email.To != "" {
@@ -150,92 +191,30 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 				hasErrors = true
 				log.Errorf(c, "%v", singleEvent)
 			}
-
-			// Invalidate memcache for this particular campaign
-			memcacheKey := controllers.GetEmailCampaignKey(email)
-			memcacheKeys = append(memcacheKeys, memcacheKey)
-		} else {
-			sendGridId := strings.Split(singleEvent.SgMessageID, ".")[0]
-
-			// Get email
-			var email models.Email
-			var err error
-			if singleEvent.EmailId != "" {
-				log.Infof(c, "%v", singleEvent.EmailId)
-				emailId, err := utilities.StringIdToInt(allEvents[i].EmailId)
-				if err != nil {
-					log.Errorf(c, "%v", err)
-					continue
-				}
-
-				email = emailIdToEmail[emailId]
-			} else {
-				// Validate email exists with particular SendGridId
-				email, err = controllers.FilterEmailBySendGridID(c, sendGridId)
-			}
-
-			// Check if there's any errors
-			if err != nil {
-				hasErrors = true
-				log.Errorf(c, "%v", singleEvent)
-				log.Errorf(c, "%v with value %v", err, sendGridId)
-				continue
-			}
-
-			// Add sendgrid ID and add email for syncing with ES later
-			email.SendGridId = sendGridId
-			emailIds = append(emailIds, email.Id)
-
-			// Add to appropriate Email model
-			// https://sendgrid.com/docs/API_Reference/Webhooks/event.html
-			switch singleEvent.Event {
-			case "bounce":
-				_, err = controllers.MarkBounced(c, r, &email, singleEvent.Reason)
-				if err != nil {
-					hasErrors = true
-					log.Errorf(c, "%v", singleEvent)
-					log.Errorf(c, "%v", err)
-				}
-			case "delivered":
-				_, err = controllers.MarkDelivered(c, r, &email)
-				if err != nil {
-					hasErrors = true
-					log.Errorf(c, "%v", singleEvent)
-					log.Errorf(c, "%v", err)
-				}
-			case "spamreport":
-				_, err = controllers.MarkSpam(c, r, &email)
-				if err != nil {
-					hasErrors = true
-					log.Errorf(c, "%v", singleEvent)
-					log.Errorf(c, "%v", err)
-				}
-			case "open":
-				_, err = controllers.MarkSendgridOpen(c, r, &email)
-				if err != nil {
-					hasErrors = true
-					log.Errorf(c, "%v", singleEvent)
-					log.Errorf(c, "%v", err)
-				}
-			case "dropped":
-				_, err = controllers.MarkSendgridDrop(c, r, &email)
-				if err != nil {
-					hasErrors = true
-					log.Errorf(c, "%v", singleEvent)
-					log.Errorf(c, "%v", err)
-				}
-			default:
-				hasErrors = true
-				log.Errorf(c, "%v", singleEvent)
-			}
 		}
+
+		// Invalidate memcache for this particular campaign
+		memcacheKey := controllers.GetEmailCampaignKey(email)
+		memcacheKeys = append(memcacheKeys, memcacheKey)
+
+		updatedEmails = append(updatedEmails, email)
 	}
 
-	if hasErrors {
-		errors.ReturnError(w, http.StatusInternalServerError, "Internal Tracker handling error", "Problem parsing data")
-		return
+	err = nds.RunInTransaction(c, func(ctx context.Context) error {
+		contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
+		ks, err = nds.PutMulti(contextWithTimeout, keys, updatedEmails)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return err
+		}
+		return nil
+	}, nil)
+
+	if err != nil {
+		log.Errorf(c, "%v", err)
 	}
 
+	// Even if error let's sync the data correctly first
 	if len(memcacheKeys) > 0 {
 		noDuplicatesMemcache := utilities.RemoveDuplicatesUnordered(memcacheKeys)
 		log.Infof(c, "%v", noDuplicatesMemcache)
@@ -247,6 +226,11 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 
 	if len(emailIds) > 0 {
 		sync.EmailResourceBulkSync(r, emailIds)
+	}
+
+	if hasErrors {
+		errors.ReturnError(w, http.StatusInternalServerError, "Internal Tracker handling error", "Problem parsing data")
+		return
 	}
 
 	w.WriteHeader(200)

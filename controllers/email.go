@@ -1251,58 +1251,6 @@ func SendEmail(c context.Context, r *http.Request, id string) (models.Email, int
 	return singleEmail, nil, nil
 }
 
-func MarkBounced(c context.Context, r *http.Request, e *models.Email, reason string) (*models.Email, error) {
-	controllers.SetUser(c, r, e.CreatedBy)
-
-	contacts, err := filterContactByEmail(c, e.To)
-	if err != nil {
-		log.Infof(c, "%v", err)
-	}
-
-	for i := 0; i < len(contacts); i++ {
-		contacts[i].EmailBounced = true
-		contacts[i].Save(c, r)
-	}
-
-	_, err = e.MarkBounced(c, reason)
-	return e, err
-}
-
-func MarkSpam(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
-	controllers.SetUser(c, r, e.CreatedBy)
-	_, err := e.MarkSpam(c)
-	return e, err
-}
-
-func MarkClicked(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
-	controllers.SetUser(c, r, e.CreatedBy)
-	_, err := e.MarkClicked(c)
-	return e, err
-}
-
-func MarkDelivered(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
-	_, err := e.MarkDelivered(c)
-	return e, err
-}
-
-func MarkOpened(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
-	controllers.SetUser(c, r, e.CreatedBy)
-	_, err := e.MarkOpened(c)
-	return e, err
-}
-
-func MarkSendgridOpen(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
-	controllers.SetUser(c, r, e.CreatedBy)
-	_, err := e.MarkSendgridOpened(c)
-	return e, err
-}
-
-func MarkSendgridDrop(c context.Context, r *http.Request, e *models.Email) (*models.Email, error) {
-	controllers.SetUser(c, r, e.CreatedBy)
-	_, err := e.MarkSendgridDropped(c)
-	return e, err
-}
-
 func GetEmailLogs(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
 	email, _, err := GetEmail(c, r, id)
 	if err != nil {
