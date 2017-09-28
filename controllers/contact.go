@@ -1843,17 +1843,10 @@ func DeleteContact(c context.Context, r *http.Request, id string) (interface{}, 
 }
 
 func MoveContacts(c context.Context, r *http.Request) ([]models.Contact, interface{}, int, int, error) {
-	// Get logged in user
-	user, err := controllers.GetCurrentUser(c, r)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return []models.Contact{}, nil, 0, 0, errors.New("Could not get user")
-	}
-
 	buf, _ := ioutil.ReadAll(r.Body)
 	decoder := ffjson.NewDecoder()
 	var moveContacts moveContactsDetails
-	err = decoder.Decode(buf, &moveContacts)
+	err := decoder.Decode(buf, &moveContacts)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return []models.Contact{}, nil, 0, 0, err

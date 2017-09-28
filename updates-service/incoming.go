@@ -6,10 +6,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
+
+	"golang.org/x/net/context"
 
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/memcache"
+
+	"github.com/qedus/nds"
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/models"
@@ -55,29 +61,35 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	emailIdsDatastore := []int64{}
-
+	emailIdsDatastoreMap := map[int64]bool{}
 	for i := 0; i < len(allEvents); i++ {
+		// Find which emailId to convert
+		idToConvert := ""
 		if allEvents[i].SgMessageID == "" {
-			emailId, err := utilities.StringIdToInt(allEvents[i].ID)
+			idToConvert = allEvents[i].ID
+		} else {
+			if allEvents[i].EmailId != "" {
+				idToConvert = allEvents[i].EmailId
+			}
+		}
+
+		// Convert id to int64
+		if idToConvert != "" {
+			emailId, err := utilities.StringIdToInt(idToConvert)
 			if err != nil {
 				log.Errorf(c, "%v", err)
 				continue
 			}
-			emailIdsDatastore = append(emailIdsDatastore, emailId)
-		} else {
-			if allEvents[i].EmailId != "" {
-				emailId, err := utilities.StringIdToInt(allEvents[i].EmailId)
-				if err != nil {
-					log.Errorf(c, "%v", err)
-					continue
-				}
-				emailIdsDatastore = append(emailIdsDatastore, emailId)
-			}
+			emailIdsDatastoreMap[emailId] = true
 		}
 	}
 
-	emailIdToEmail := map[int64]models.Email{}
+	// Convert keys in map to int64 ids array
+	emailIdsDatastore := []int64{}
+	for k := range emailIdsDatastoreMap {
+		emailIdsDatastore = append(emailIdsDatastore, k)
+	}
+
 	datastoreEmails, _, err := controllers.GetEmailUnauthorizedBulk(c, r, emailIdsDatastore)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -85,21 +97,20 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Convert datastore emails to a dictionary for easy lookup
+	emailIdToEmail := map[int64]models.Email{}
 	for i := 0; i < len(datastoreEmails); i++ {
 		emailIdToEmail[datastoreEmails[i].Id] = datastoreEmails[i]
 	}
 
-	var keys []*datastore.Key
-	updatedEmails := []models.Email{}
-	emailIds := []int64{}
-	memcacheKeys := []string{}
 	for i := 0; i < len(allEvents); i++ {
 		singleEvent := allEvents[i]
-		var email models.Email
+		var emailId int64
 		var err error
+		var email models.Email
 
 		if singleEvent.SgMessageID == "" {
-			emailId, err := utilities.StringIdToInt(singleEvent.ID)
+			emailId, err = utilities.StringIdToInt(singleEvent.ID)
 			if err != nil {
 				hasErrors = true
 				log.Debugf(c, "%v", singleEvent)
@@ -121,7 +132,7 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				// Validate email exists with particular SendGridId
 				sendGridId := strings.Split(singleEvent.SgMessageID, ".")[0]
-				email, err = controllers.FilterEmailBySendGridID(c, sendGridId)
+				email, err := controllers.FilterEmailBySendGridID(c, sendGridId)
 
 				// Check if there's any errors
 				if err != nil {
@@ -132,12 +143,11 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 				}
 
 				// Set the email sendgrid id
+				emailId = email.Id
+				email = emailIdToEmail[emailId]
 				email.SendGridId = sendGridId
 			}
 		}
-
-		keys = append(keys, email.Key(c))
-		emailIds = append(emailIds, email.Id)
 
 		if singleEvent.SgMessageID != "" {
 			// Sendgrid event
@@ -193,13 +203,25 @@ func internalTrackerHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		emailIdToEmail[emailId] = email
+	}
+
+	var keys []*datastore.Key
+	updatedEmails := []models.Email{}
+	emailIds := []int64{}
+	memcacheKeys := []string{}
+	for _, email := range emailIdToEmail {
 		// Invalidate memcache for this particular campaign
 		memcacheKey := controllers.GetEmailCampaignKey(email)
 		memcacheKeys = append(memcacheKeys, memcacheKey)
 
+		emailIds = append(emailIds, email.Id)
+
+		keys = append(keys, email.Key(c))
 		updatedEmails = append(updatedEmails, email)
 	}
 
+	var ks []*datastore.Key
 	err = nds.RunInTransaction(c, func(ctx context.Context) error {
 		contextWithTimeout, _ := context.WithTimeout(c, time.Second*150)
 		ks, err = nds.PutMulti(contextWithTimeout, keys, updatedEmails)
